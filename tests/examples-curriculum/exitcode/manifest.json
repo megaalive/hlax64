@@ -1,0 +1,6 @@
+{
+  "name": "curriculum-exitcode",
+  "source": "../../../examples/00-getting-started/exitcode.hla64",
+  "expectedExitCode": 42,
+  "description": "Curriculum: exit code via rax"
+}

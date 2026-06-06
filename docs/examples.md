@@ -24,6 +24,16 @@ Each folder has a README with build/run commands.
 
 16 samples with `manifest.json`, run via `hla64 test tests/samples`.
 
+## 2b. Curriculum manifests (`tests/examples-curriculum/`)
+
+18 manifests reference structured programs under `examples/`:
+
+```bash
+hla64 test tests/examples-curriculum
+```
+
+See [tutorials/01-getting-started.md](tutorials/01-getting-started.md).
+
 | Sample | Topic |
 |--------|-------|
 | `hello/`, `exitcode/`, `add_two/`, `count/`, `simple/` | Core language |

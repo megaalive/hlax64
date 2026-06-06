@@ -1,0 +1,6 @@
+{
+  "name": "curriculum-simple",
+  "source": "../../../examples/01-arithmetic/simple.hla64",
+  "expectedExitCode": 3,
+  "description": "Curriculum: mov and add"
+}

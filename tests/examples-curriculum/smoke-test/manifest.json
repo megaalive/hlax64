@@ -1,0 +1,6 @@
+{
+  "name": "curriculum-smoke-test",
+  "source": "../../../examples/08-ai-agent/smoke-test.hla64",
+  "expectedStdout": "verified routine ok\n",
+  "description": "Curriculum: MCP agent smoke test"
+}

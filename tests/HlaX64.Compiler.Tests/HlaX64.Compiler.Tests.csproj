@@ -33,6 +33,9 @@
     <None Include="..\..\tests\samples\**\manifest.json" Link="tests\samples\%(RecursiveDir)%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\..\tests\examples-curriculum\**\manifest.json" Link="tests\examples-curriculum\%(RecursiveDir)%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

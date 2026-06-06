@@ -1,0 +1,6 @@
+{
+  "name": "curriculum-callee-saved",
+  "source": "../../../examples/06-abi/callee-saved.hla64",
+  "expectedStdout": "7 doubled = 14\n",
+  "description": "Curriculum: callee-saved registers"
+}

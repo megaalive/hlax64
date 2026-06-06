@@ -35,6 +35,15 @@ jobs:
       - name: Publish MCP server
         run: dotnet publish src/HlaX64.McpServer/HlaX64.McpServer.csproj -c Release -r ${{ matrix.rid }} --self-contained false -o publish/${{ matrix.rid }}/mcp
 
+      - name: Bundle legal and readme
+        shell: bash
+        run: |
+          cp LICENSE publish/${{ matrix.rid }}/
+          cp README.md publish/${{ matrix.rid }}/
+
+      - name: Generate dependency SBOM
+        run: dotnet list src/HlaX64.Cli/HlaX64.Cli.csproj package --include-transitive --format json > sbom-deps.json
+
       - name: Pack Linux archive
         if: runner.os == 'Linux'
         run: |
@@ -57,4 +66,5 @@ jobs:
           files: |
             ${{ matrix.archive }}
             checksums.txt
+            sbom-deps.json
           generate_release_notes: true

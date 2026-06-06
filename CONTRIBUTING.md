@@ -129,10 +129,20 @@ Every new language feature must update:
 
 ## Adding Examples
 
-- Place example programs in `examples/`
+- Place example programs in `examples/` (structured curriculum folders)
 - Follow the naming convention: `kebab-case.hla64`
 - Include a comment header describing the purpose
-- Add a test manifest in `tests/samples/` if the example should be CI-tested
+- Add a manifest in `tests/samples/` or `tests/examples-curriculum/` for CI native tests
+
+## Git hooks (optional)
+
+To strip accidental `Co-authored-by: Cursor` trailers from commit messages:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Also disable **Cursor Settings → Agent → Attribution → Commit Attribution** for IDE commits.
 
 ## Updating the Specification
 
