@@ -1,6 +1,10 @@
+using HlaX64.Backend.Nasm.Emitters;
+using HlaX64.Compiler;
+using HlaX64.Compiler.Abi;
 using HlaX64.Compiler.Ast;
 using HlaX64.Compiler.Formatting;
 using HlaX64.Compiler.Lexing;
+using HlaX64.Compiler.Options;
 using HlaX64.Compiler.Parsing;
 
 namespace HlaX64.LanguageServer;
@@ -230,6 +234,52 @@ public static class LanguageServerEditorServices
         {
             return null;
         }
+    }
+
+    public static string? GetVirtualDocument(string kind, string source, string? filePath = null)
+    {
+        var path = filePath ?? "(virtual)";
+        var result = new Compilation(path, source, CompilationOptions.Default).Process();
+        if (!result.Success)
+            return string.Join('\n', result.Diagnostics);
+
+        var emitter = new NasmEmitter();
+        var nasm = emitter.Emit(result.LoweredFunctions, result.StringLiterals, result.GlobalData);
+
+        return kind.ToLowerInvariant() switch
+        {
+            "ir" => string.Join("\n\n", result.IrFunctions.Select(f => f.ToString())),
+            "nasm" => nasm,
+            "stack" => string.Join("\n\n", result.LoweredFunctions.Select(DescribeStackLayout)),
+            _ => null
+        };
+    }
+
+    private static string DescribeStackLayout(LoweredFunction fn)
+    {
+        var lines = new List<string>
+        {
+            $"procedure {fn.Name}",
+            $"  stack frame: {fn.StackFrameSize} bytes",
+            $"  preserved: {string.Join(", ", fn.PreservedRegisters)}"
+        };
+        foreach (var p in fn.Parameters)
+            lines.Add($"  param[{p.Index}] {p.Name}");
+        return string.Join('\n', lines);
+    }
+
+    public static object? ExecuteCommand(string command, string source, string? filePath)
+    {
+        var kind = command switch
+        {
+            "hla64.showIr" => "ir",
+            "hla64.showNasm" => "nasm",
+            "hla64.showStackLayout" => "stack",
+            _ => null
+        };
+        if (kind == null) return null;
+        var text = GetVirtualDocument(kind, source, filePath) ?? "";
+        return new { title = $"HlaX64 {kind.ToUpperInvariant()}", content = text };
     }
 
     public static string GetWordAt(string source, int line, int character)

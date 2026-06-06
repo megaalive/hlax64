@@ -1,0 +1,13 @@
+// sse2-add.hla64 — SSE2 scalar double add (requires --features +sse2)
+
+program sse2_add;
+
+procedure AddDoubles(a: float64; b: float64); @returns("xmm0");
+begin AddDoubles;
+    movsd(a, xmm0);
+    addsd(b, xmm0);
+end AddDoubles;
+
+begin sse2_add;
+    mov(0, rax);
+end sse2_add;

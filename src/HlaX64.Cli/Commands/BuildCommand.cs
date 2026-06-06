@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using HlaX64.Cli.Json;
+using HlaX64.Cli.Services;
 using HlaX64.Cli.Toolchain;
 using HlaX64.Compiler;
 using HlaX64.Compiler.Options;
@@ -54,6 +55,30 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
         [Description("Enable all Phase 18 verification warnings")]
         [CommandOption("--warn-verify")]
         public bool WarnVerify { get; set; }
+
+        [Description("Emit source map sidecar (.hlamap.json)")]
+        [CommandOption("--source-map")]
+        public bool SourceMap { get; set; }
+
+        [Description("Emit DWARF line info stub (Linux only)")]
+        [CommandOption("--debug-info")]
+        public bool DebugInfo { get; set; }
+
+        [Description("Optimization level: O0 (default) or O1")]
+        [CommandOption("--optimize")]
+        public string? Optimize { get; set; }
+
+        [Description("Emit proof bundle directory")]
+        [CommandOption("--proof-bundle")]
+        public bool ProofBundle { get; set; }
+
+        [Description("CPU baseline profile")]
+        [CommandOption("--cpu")]
+        public string? Cpu { get; set; }
+
+        [Description("CPU feature toggles (+sse2,-avx2)")]
+        [CommandOption("--features")]
+        public string[] Features { get; set; } = [];
     }
 
     protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation)
@@ -69,7 +94,9 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
 
         var options = CliCompilationOptions.FromCli(
             settings.Target, settings.RuntimeMode, settings.WarnBounds,
-            settings.WarnDefinite, settings.WarnUnreachable, settings.WarnLiveness, settings.WarnVerify);
+            settings.WarnDefinite, settings.WarnUnreachable, settings.WarnLiveness, settings.WarnVerify,
+            settings.Optimize, settings.SourceMap, settings.DebugInfo,
+            features: settings.Features, cpu: settings.Cpu);
         var targetTriple = options.Target;
 
         bool isWindows = options.Target.Abi.Equals("msabi", StringComparison.OrdinalIgnoreCase);
@@ -91,15 +118,19 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
                 Console.WriteLine($"Compiling {sourceFile}...");
 
             var sourceText = File.ReadAllText(sourceFile);
-            var compileResult = CompilePipeline.Process(sourceFile, sourceText, options);
-            if (!compileResult.Success)
-                throw new InvalidOperationException(string.Join("\n", compileResult.Diagnostics));
-
-            var emitter = new HlaX64.Backend.Nasm.Emitters.NasmEmitter();
-            var nasmCode = emitter.Emit(compileResult.LoweredFunctions, compileResult.StringLiterals, compileResult.GlobalData);
-            File.WriteAllText(nasmFile, nasmCode);
+            var artifacts = CompilePipeline.Compile(sourceFile, sourceText, options);
+            var compileResult = artifacts.Result;
+            File.WriteAllText(nasmFile, artifacts.NasmCode);
             if (!settings.Json)
                 Console.WriteLine($"  -> {nasmFile}");
+
+            if (settings.SourceMap && artifacts.SourceMap != null)
+            {
+                var mapFile = Path.Combine(outputDir, $"{sourceName}.hlamap.json");
+                File.WriteAllText(mapFile, artifacts.SourceMap.ToJson());
+                if (!settings.Json)
+                    Console.WriteLine($"  -> {mapFile}");
+            }
 
             if (!settings.Json)
                 Console.WriteLine("Assembling with NASM...");
@@ -151,6 +182,15 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
                 catch { }
             }
 
+            string? proofBundleDir = null;
+            if (settings.ProofBundle)
+            {
+                proofBundleDir = ProofBundleWriter.Write(
+                    sourceFile, sourceText, options, outputDir, artifacts, nasmFile, objFile, outputFile);
+                if (!settings.Json)
+                    Console.WriteLine($"  -> proof bundle: {proofBundleDir}");
+            }
+
             if (settings.Json)
             {
                 CliJson.Write(new
@@ -163,7 +203,9 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
                     outputKind,
                     nasmFile,
                     objectFile = objFile,
-                    outputFile
+                    outputFile,
+                    sourceMapFile = settings.SourceMap ? Path.Combine(outputDir, $"{sourceName}.hlamap.json") : null,
+                    proofBundleDir
                 });
             }
             else

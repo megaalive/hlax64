@@ -47,6 +47,30 @@ app.Configure(config =>
 
     config.AddCommand<DoctorCommand>("doctor")
         .WithDescription("Check development toolchain and environment");
+
+    config.AddCommand<DisasmCommand>("disasm")
+        .WithDescription("Disassemble NASM or binary with optional source map");
+
+    config.AddCommand<DebugCommand>("debug")
+        .WithDescription("Debug adapter protocol stub (--stdio)");
+
+    config.AddCommand<DiffCommand>("diff")
+        .WithDescription("Semantic diff between two .hla64 files");
+
+    config.AddCommand<PlanCommand>("plan")
+        .WithDescription("Show compilation plan and toolchain commands");
+
+    config.AddCommand<NewCommand>("new")
+        .WithDescription("Create a new project from a template (console)");
+
+    config.AddCommand<RestoreCommand>("restore")
+        .WithDescription("Read hla64.toml manifest (restore stub)");
+
+    config.AddCommand<VerifyReproducibleCommand>("verify-reproducible")
+        .WithDescription("Verify build.json source hash and compiler version");
+
+    config.AddCommand<ListInstructionsCommand>("list-instructions")
+        .WithDescription("List instruction mnemonics from the instruction database");
 });
 
 return app.Run(args);

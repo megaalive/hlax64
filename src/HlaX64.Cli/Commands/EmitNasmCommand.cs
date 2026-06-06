@@ -1,32 +1,8 @@
 using System.ComponentModel;
-using HlaX64.Backend.Nasm.Emitters;
-using HlaX64.Compiler;
-using HlaX64.Compiler.Options;
+using HlaX64.Compiler.Debug;
 using Spectre.Console.Cli;
 
 namespace HlaX64.Cli.Commands;
-
-public static class CompilePipeline
-{
-    public static string EmitNasm(string sourcePath, string sourceText, CompilationOptions? options = null)
-    {
-        var compilation = new Compilation(sourcePath, sourceText, options);
-        var result = compilation.Process();
-
-        if (!result.Success)
-            throw new InvalidOperationException(
-                string.Join("\n", result.Diagnostics));
-
-        var emitter = new NasmEmitter();
-        return emitter.Emit(result.LoweredFunctions, result.StringLiterals, result.GlobalData);
-    }
-
-    public static CompilationResult Process(string sourcePath, string sourceText, CompilationOptions? options = null)
-    {
-        var compilation = new Compilation(sourcePath, sourceText, options);
-        return compilation.Process();
-    }
-}
 
 public sealed class EmitNasmCommand : Command<EmitNasmCommand.Settings>
 {
@@ -47,6 +23,26 @@ public sealed class EmitNasmCommand : Command<EmitNasmCommand.Settings>
         [Description("Target triple: linux-x64-sysv (default) or windows-x64-msabi")]
         [CommandOption("--target")]
         public string? Target { get; set; }
+
+        [Description("Emit source map sidecar (.hlamap.json)")]
+        [CommandOption("--source-map")]
+        public bool SourceMap { get; set; }
+
+        [Description("Emit DWARF line info stub (Linux only)")]
+        [CommandOption("--debug-info")]
+        public bool DebugInfo { get; set; }
+
+        [Description("Optimization level: O0 (default) or O1")]
+        [CommandOption("--optimize")]
+        public string? Optimize { get; set; }
+
+        [Description("CPU baseline profile")]
+        [CommandOption("--cpu")]
+        public string? Cpu { get; set; }
+
+        [Description("CPU feature toggles (+sse2,-avx2)")]
+        [CommandOption("--features")]
+        public string[] Features { get; set; } = [];
 
         [Description("Warn when a literal array index may be out of bounds")]
         [CommandOption("--warn-bounds")]
@@ -76,20 +72,31 @@ public sealed class EmitNasmCommand : Command<EmitNasmCommand.Settings>
         var sourceText = File.ReadAllText(settings.Source);
         var options = CliCompilationOptions.FromCli(
             settings.Target, settings.RuntimeMode, settings.WarnBounds,
-            settings.WarnDefinite, settings.WarnUnreachable, settings.WarnLiveness, settings.WarnVerify);
+            settings.WarnDefinite, settings.WarnUnreachable, settings.WarnLiveness, settings.WarnVerify,
+            settings.Optimize, settings.SourceMap, settings.DebugInfo,
+            features: settings.Features, cpu: settings.Cpu);
 
         try
         {
-            var nasmOutput = CompilePipeline.EmitNasm(settings.Source, sourceText, options);
+            var artifacts = CompilePipeline.Compile(settings.Source, sourceText, options);
 
             if (settings.OutputPath != null)
             {
-                File.WriteAllText(settings.OutputPath, nasmOutput);
+                File.WriteAllText(settings.OutputPath, artifacts.NasmCode);
                 Console.WriteLine($"NASM output written to: {settings.OutputPath}");
             }
             else
             {
-                Console.WriteLine(nasmOutput);
+                Console.WriteLine(artifacts.NasmCode);
+            }
+
+            if (settings.SourceMap && artifacts.SourceMap != null)
+            {
+                var mapPath = settings.OutputPath != null
+                    ? Path.ChangeExtension(settings.OutputPath, ".hlamap.json")
+                    : Path.ChangeExtension(settings.Source, ".hlamap.json");
+                File.WriteAllText(mapPath, artifacts.SourceMap.ToJson());
+                Console.WriteLine($"Source map written to: {mapPath}");
             }
 
             return 0;

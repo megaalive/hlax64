@@ -1,4 +1,5 @@
 using HlaX64.Compiler.Ast;
+using HlaX64.Compiler.Cpu;
 using HlaX64.Compiler.Diagnostics;
 using HlaX64.Compiler.Options;
 using HlaX64.Compiler.Types;
@@ -12,6 +13,8 @@ namespace HlaX64.Compiler.Semantic;
 public sealed class SemanticAnalyzer
 {
     private readonly CompilerWarnings _warnings;
+    private readonly CpuFeatureSet _cpuFeatures;
+    private readonly InstructionDatabase _instructionDb = InstructionDatabase.LoadDefault();
     private readonly DiagnosticCollection _diagnostics = new();
     private readonly ConstExpressionEvaluator _constEvaluator = new();
     private readonly EnumTypeRegistry _enumRegistry = new();
@@ -42,6 +45,8 @@ public sealed class SemanticAnalyzer
         "rax", "rbx", "rcx", "rdx",
         "rsi", "rdi", "rbp", "rsp",
         "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15",
+        "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7",
+        "xmm8", "xmm9", "xmm10", "xmm11", "xmm12", "xmm13", "xmm14", "xmm15",
         // 32-bit
         "eax", "ebx", "ecx", "edx",
         "esi", "edi", "ebp", "esp",
@@ -55,7 +60,7 @@ public sealed class SemanticAnalyzer
     private static readonly HashSet<string> KnownMnemonics = new(StringComparer.OrdinalIgnoreCase)
     {
         "mov", "add", "sub", "imul", "xor", "and", "or", "cmp",
-        "movsd", "movss", "movd", "movq",
+        "movsd", "movss", "movd", "movq", "addsd", "subsd", "ucomisd",
         "lea", "push", "pop", "inc", "dec", "neg", "not",
         "shl", "shr", "sar", "rol", "ror",
         "jmp", "call", "ret", "syscall",
@@ -69,6 +74,9 @@ public sealed class SemanticAnalyzer
         ["movss"] = (2, 2),
         ["movd"] = (2, 2),
         ["movq"] = (2, 2),
+        ["addsd"] = (2, 2),
+        ["subsd"] = (2, 2),
+        ["ucomisd"] = (2, 2),
         ["add"] = (2, 2),
         ["sub"] = (2, 2),
         ["imul"] = (1, 3),
@@ -94,9 +102,10 @@ public sealed class SemanticAnalyzer
         ["hlt"] = (0, 0),
     };
 
-    public SemanticAnalyzer(CompilerWarnings? warnings = null)
+    public SemanticAnalyzer(CompilerWarnings? warnings = null, CpuFeatureSet? cpuFeatures = null)
     {
         _warnings = warnings ?? new CompilerWarnings();
+        _cpuFeatures = cpuFeatures ?? CpuFeatureSet.BaselineX64;
     }
 
     public DiagnosticCollection Analyze(ProgramNode program)
@@ -500,6 +509,8 @@ public sealed class SemanticAnalyzer
             }
         }
 
+        ValidateCpuFeatures(instr, mnemonic);
+
         // Check operands
         foreach (var op in instr.Operands)
         {
@@ -525,6 +536,22 @@ public sealed class SemanticAnalyzer
                     }
                 }
             }
+        }
+    }
+
+    private void ValidateCpuFeatures(InstructionNode instr, string mnemonic)
+    {
+        if (!_instructionDb.TryGet(mnemonic, out var info) || info == null || info.Features.Count == 0)
+            return;
+
+        foreach (var feature in info.Features)
+        {
+            if (_cpuFeatures.HasFeature(feature)) continue;
+            _diagnostics.Error(
+                "HLAX0070",
+                $"Instruction '{instr.Mnemonic}' requires CPU feature '{feature}' (enable with --features +{feature})",
+                instr.Line, instr.Column);
+            return;
         }
     }
 
@@ -1022,6 +1049,8 @@ public sealed class SemanticAnalyzer
             if (_procedureNames.Contains(ident.Name))
                 return;
             if (_floatVariables.Contains(ident.Name))
+                return;
+            if (KnownRegisters.Contains(ident.Name))
                 return;
 
             // Check if this identifier looks like a misspelled register

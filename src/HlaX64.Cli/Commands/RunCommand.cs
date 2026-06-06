@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using HlaX64.Cli.Commands;
 using HlaX64.Cli.Toolchain;
 using Spectre.Console.Cli;
 using System.Diagnostics;
@@ -13,6 +12,10 @@ public sealed class RunCommand : Command<RunCommand.Settings>
         [Description("Path to the .hla64 source file")]
         [CommandArgument(0, "<source>")]
         public string Source { get; set; } = string.Empty;
+
+        [Description("Emit procedure entry/exit trace comments in NASM (MVP stub)")]
+        [CommandOption("--trace")]
+        public bool Trace { get; set; }
 
         [Description("Warn when a literal array index may be out of bounds")]
         [CommandOption("--warn-bounds")]
@@ -51,16 +54,15 @@ public sealed class RunCommand : Command<RunCommand.Settings>
 
         try
         {
-            // 1. Compile .hla64 -> NASM via pipeline
             Console.WriteLine($"Compiling {sourceFile}...");
             var sourceText = File.ReadAllText(sourceFile);
             var options = CliCompilationOptions.FromCli(
                 null, null, settings.WarnBounds,
-                settings.WarnDefinite, settings.WarnUnreachable, settings.WarnLiveness, settings.WarnVerify);
-            var nasmCode = CompilePipeline.EmitNasm(sourceFile, sourceText, options);
-            File.WriteAllText(nasmFile, nasmCode);
+                settings.WarnDefinite, settings.WarnUnreachable, settings.WarnLiveness, settings.WarnVerify,
+                traceProcedures: settings.Trace);
+            var artifacts = CompilePipeline.Compile(sourceFile, sourceText, options);
+            File.WriteAllText(nasmFile, artifacts.NasmCode);
 
-            // 2. Assemble NASM -> .o
             Console.WriteLine("Assembling with NASM...");
             if (!NasmTool.TryFindNasm(out var nasmPath))
             {
@@ -75,7 +77,6 @@ public sealed class RunCommand : Command<RunCommand.Settings>
                 return 1;
             }
 
-            // 3. Link .o -> executable
             Console.WriteLine("Linking...");
             if (!LinkerTool.TryLink(objFile, exeFile, out var linkError, out var requiresWslRun))
             {
@@ -83,7 +84,6 @@ public sealed class RunCommand : Command<RunCommand.Settings>
                 return 1;
             }
 
-            // 4. Make executable
             if (!requiresWslRun)
             {
                 try
@@ -99,7 +99,6 @@ public sealed class RunCommand : Command<RunCommand.Settings>
                 catch { }
             }
 
-            // 5. Run
             ProcessStartInfo psi;
             if (requiresWslRun)
             {

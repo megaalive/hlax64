@@ -80,26 +80,26 @@ Opcodes include `Move`, `Add`, `Subtract`, `Multiply`, `Divide`, `Compare`, `Bra
 
 | Area | Notes |
 |------|-------|
-| LSP | Diagnostics, hover, completion, go-to-definition, symbols, format-on-save — not full semantic IDE |
-| Bounds warnings | Literal / const indices only; no range analysis for register indices |
+| LSP virtual documents | IR/NASM/stack via executeCommand — read-only, no debug session |
+| Source maps / DWARF | Sidecar JSON + Linux `%line` stub; Windows PDB deferred |
+| O1 optimizer | Local constant fold + peephole only |
+| CPU feature gates | SSE2 MVP; AVX2/intrinsics deferred |
+| Proof bundle | Static capability manifest; not formal verification |
+| DAP | `hla64 debug --stdio` stub only |
+| Bounds warnings | Literal / const indices only |
 | Windows backend | CI smoke tests; fewer native run manifests than Linux |
-| Fuzz coverage | Early parser/lexer fuzz; not exhaustive |
 
 ---
 
-## Planned
+## Planned (post-MVP hardening)
 
-| Area | Target phase | Notes |
-|------|--------------|-------|
-| Runtime expressions `:=` | 16 | RFC 0004 Sprint 2 |
-| Struct, `sizeof`, `alignof` | 16 | Audit §5.4 |
-| Stack arguments >6 (SysV) / >4 (Windows) | 17 | ABI completion |
-| DWARF / source map | 19 | Debug visibility |
-| Optimizer (DCE, const fold at IR) | 20 | After verification pass |
-| SIMD / intrinsics | 21 | After instruction DB |
-| Modules / packages | 22 | Project manifest |
-
-> Features listed as “future” in older docs (IR pipeline, Windows ABI, shared libraries, MCP) are **implemented** in 0.1.x unless they appear in the Planned table above.
+| Area | Notes |
+|------|-------|
+| Phase 15 GUI | Avalonia/WPF Assembly Lab — skipped |
+| Assisted regalloc | `--register-mode assisted` |
+| Full DWARF/PDB | Debuggers on Windows |
+| Package resolver | `hla64.lock` enforcement |
+| Differential testing | RFC 0014 Sprint 7 |
 
 ---
 

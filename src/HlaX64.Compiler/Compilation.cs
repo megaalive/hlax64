@@ -3,6 +3,7 @@ using HlaX64.Compiler.Diagnostics;
 using HlaX64.Compiler.Ir;
 using HlaX64.Compiler.Lexing;
 using HlaX64.Compiler.Options;
+using HlaX64.Compiler.Optimization;
 using HlaX64.Compiler.Parsing;
 using HlaX64.Compiler.Semantic;
 using HlaX64.Compiler.Types;
@@ -22,6 +23,7 @@ public sealed class CompilationResult
     public RecordTypeRegistry RecordTypes { get; set; } = new();
     public List<string> Diagnostics { get; set; } = new();
     public List<Diagnostic> StructuredDiagnostics { get; set; } = new();
+    public Debug.SourceMapDocument? SourceMap { get; set; }
 }
 
 public class Compilation
@@ -57,7 +59,7 @@ public class Compilation
             var program = parser.Parse();
 
             // 3. Semantic analysis
-            var semantic = new SemanticAnalyzer(Options.Warnings);
+            var semantic = new SemanticAnalyzer(Options.Warnings, Options.CpuFeatures);
             var semDiags = semantic.Analyze(program);
             foreach (var diag in semDiags.Diagnostics)
             {
@@ -90,6 +92,10 @@ public class Compilation
 
             result.IrFunctions.Add(entryIr);
             result.IrFunctions.AddRange(procedures);
+
+            // 4b. IR optimization
+            IrOptimizer.Optimize(result.IrFunctions, Options.Optimization);
+
             result.GlobalData = semantic.GlobalData.Globals.Values.ToList();
             result.ExternProcedures = semantic.ExternProcedures;
             result.ProcedureTypes = semantic.ProcedureTypes;
@@ -118,6 +124,9 @@ public class Compilation
                 var lowered = abiLowerer.Lower(irFunc, Options, globalMap, procTypes, recordTypes, semantic.ExternProcedures);
                 result.LoweredFunctions.Add(lowered);
             }
+
+            if (Options.Optimization != OptimizationLevel.None)
+                PeepholeOptimizer.OptimizeLowered(result.LoweredFunctions);
 
             result.StringLiterals = abiLowerer.StringLiterals.ToList();
             result.Success = true;
