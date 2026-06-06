@@ -58,7 +58,7 @@
 | Area                | Status | Details |
 |---------------------|--------|---------|
 | **CLI**             | ✅     | `build`, `emit-nasm`, `run`, `bench`, `test`, `explain-abi`, `generate-header`, `generate-pinvoke` |
-| **Test runner**     | ✅     | 77 unit tests + 16 sample integration tests |
+| **Test runner**     | ✅     | 83 unit tests + 16 sample integration tests |
 | **Benchmark runner**| ✅     | `hla64 bench` with warmup, median, binary size, JSON manifest |
 | **MCP server**      | ✅     | 9 tools via stdio JSON-RPC for AI agents: compile, build, run, test, explain-abi, generate-header, generate-pinvoke, get-version, list-instructions |
 | **ABI explainer**   | ✅     | `hla64 explain-abi --target linux-x64-sysv` (or `windows-x64-msabi`) |
@@ -163,7 +163,7 @@ HlaX64/
 │  ├─ HlaX64.Runtime/         # Runtime library (Linux + Windows)
 │  └─ HlaX64.McpServer/       # MCP server for AI agent integration
 ├─ tests/
-│  ├─ HlaX64.Compiler.Tests/  # xUnit suite (77 tests)
+│  ├─ HlaX64.Compiler.Tests/  # xUnit suite (83 tests)
 │  └─ samples/                # Integration test manifests + expected output
 ├─ benchmarks/                # Benchmark manifests
 ├─ examples/                  # *.hla64 sample programs
@@ -191,7 +191,7 @@ HlaX64/
 
 ```
 $ dotnet test
-Passed!  - Failed: 0, Passed: 77, Skipped: 0, Total: 77
+Passed!  - Failed: 0, Passed: 83, Skipped: 0, Total: 83
 ```
 
 | Suite               | Count | Coverage |
@@ -202,7 +202,7 @@ Passed!  - Failed: 0, Passed: 77, Skipped: 0, Total: 77
 | `SemanticAnalyzerTests` | ~7 | Register & instruction validation, diagnostics |
 | `TestRunnerTests`   | ~8    | Manifest loading, runner flow, source resolution |
 | `WindowsAbiLowererTests` | ~11 | MS x64 arg regs, shadow space, stack alignment, calls, epilogue |
-| **Total**           | **77** | All passing ✅ |
+| **Total**           | **83** | All passing ✅ |
 
 ---
 
