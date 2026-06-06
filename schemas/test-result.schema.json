@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/megaalive/hlax64/schemas/test-result.schema.json",
+  "title": "HlaX64 Test Run Result",
+  "type": "object",
+  "required": ["schemaVersion", "success", "passed", "failed", "total"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "success": { "type": "boolean" },
+    "version": { "type": "string" },
+    "directory": { "type": "string" },
+    "passed": { "type": "integer" },
+    "failed": { "type": "integer" },
+    "total": { "type": "integer" },
+    "durationMs": { "type": "number" },
+    "tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "passed"],
+        "properties": {
+          "name": { "type": "string" },
+          "passed": { "type": "boolean" },
+          "durationMs": { "type": "number" },
+          "error": { "type": "string" },
+          "compileFailed": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

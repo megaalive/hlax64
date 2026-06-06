@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using HlaX64.Cli.Json;
 using HlaX64.Compiler;
 using HlaX64.Cli.Toolchain;
 using Spectre.Console;
@@ -42,10 +43,14 @@ public sealed class DoctorCommand : Command<DoctorCommand.Settings>
 
         if (settings.Json)
         {
-            Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(
-                new { version = Compilation.GetVersion(), checks = results },
-                new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
-            return 0;
+            CliJson.Write(new
+            {
+                schemaVersion = CliJson.SchemaVersion,
+                success = results.All(r => r.Passed),
+                version = Compilation.GetVersion(),
+                checks = results
+            });
+            return results.All(r => r.Passed) ? 0 : 1;
         }
 
         AnsiConsole.MarkupLine($"[bold]HlaX64 Doctor[/] — v{Compilation.GetVersion()}");

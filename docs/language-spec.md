@@ -229,3 +229,37 @@ Windows ABI lowering (NASM `win64` format + `lld-link`/`link.exe`).
 
 ```hla
 #pragma target("windows-x64-msabi")
+```
+
+---
+
+## Normative vs non-normative text
+
+Sections describing **implemented** syntax are normative. Planned features are informative until marked implemented in [roadmap.md](roadmap.md).
+
+## Reserved keywords
+
+```text
+program begin end procedure call export var
+if else endif while endwhile do then
+mov add sub imul xor and or cmp lea push pop inc dec neg not
+shl shr sar rol ror jmp ret syscall nop int3 hlt
+include pragma target
+int8 int16 int32 int64 uint8 uint16 uint32 uint64 byte word dword qword ptr
+true false null nil nl stdout stderr stdin
+```
+
+## Overflow and signedness
+
+- Untyped register arithmetic wraps at the operand width (two's complement).
+- Typed variables use `int*` (signed) and `uint*` (unsigned) for semantic checks.
+- Implicit narrowing assignments are rejected (`HLAX0021`).
+
+## Undefined behavior
+
+Not fully diagnosed in v0.1: uninitialized reads, stack misalignment before foreign calls, out-of-bounds memory access.
+
+## Compatibility
+
+See [compatibility.md](compatibility.md) and [diagnostics.md](diagnostics.md).
+

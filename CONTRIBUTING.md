@@ -41,7 +41,7 @@ The build produces:
 After `dotnet build`, run `.hla64` programs:
 
 ```bash
-dotnet run --project src/HlaX64.Cli -- run examples/hello.hla64
+dotnet run --project src/HlaX64.Cli -- run examples/00-getting-started/hello.hla64
 dotnet run --project src/HlaX64.Cli -- test examples/
 dotnet run --project src/HlaX64.Cli -- bench examples/hello.hla64
 ```
@@ -121,7 +121,7 @@ Every new language feature must update:
 
 ## Adding Diagnostics
 
-- Use error codes: `HLAX1xxx` (lexer/parser), `HLAX2xxx` (semantic/type), `HLAX3xxx` (ABI/codegen), `HLAX4xxx` (linker/runtime), `HLAX5xxx` (MCP/integration)
+- Use error codes documented in [docs/diagnostics.md](docs/diagnostics.md): `HLAX000x` (general/semantic), `HLAX002x` (types). Reserved ranges: `HLAX1xxx` lexer/parser, `HLAX3xxx` ABI, `HLAX4xxx` toolchain, `HLAX5xxx` MCP.
 - Each diagnostic must have a clear message, source location, and remediation hint
 - Document new diagnostics in `docs/diagnostics.md`
 

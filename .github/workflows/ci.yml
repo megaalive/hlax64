@@ -25,6 +25,10 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y nasm gcc
 
+      - name: Install NASM (Windows)
+        if: runner.os == 'Windows'
+        run: choco install nasm -y
+
       - name: Build
         run: dotnet build
 
@@ -38,4 +42,9 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           dotnet run --project src/HlaX64.Cli -- test tests/samples/
-          dotnet run --project src/HlaX64.Cli -- run examples/hello.hla64
+          dotnet run --project src/HlaX64.Cli -- run examples/00-getting-started/hello.hla64
+
+      - name: Windows MS ABI build smoke test
+        if: runner.os == 'Windows'
+        run: |
+          dotnet run --project src/HlaX64.Cli -- build examples/00-getting-started/exitcode.hla64 --target windows-x64-msabi -o build/win-exitcode --json

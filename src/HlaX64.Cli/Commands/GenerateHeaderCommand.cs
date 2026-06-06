@@ -1,5 +1,7 @@
 using System.ComponentModel;
 using HlaX64.Cli.CodeGen;
+using HlaX64.Cli.Json;
+using HlaX64.Compiler;
 using Spectre.Console.Cli;
 
 namespace HlaX64.Cli.Commands;
@@ -19,6 +21,10 @@ public sealed class GenerateHeaderCommand : Command<GenerateHeaderCommand.Settin
         [Description("Output header file path (default: stdout)")]
         [CommandOption("-o|--output")]
         public string? OutputPath { get; set; }
+
+        [Description("Output result as JSON")]
+        [CommandOption("--json")]
+        public bool Json { get; set; }
     }
 
     protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation)
@@ -36,12 +42,27 @@ public sealed class GenerateHeaderCommand : Command<GenerateHeaderCommand.Settin
         {
             var header = InteropGenerator.GenerateCHeader(sourceText, libName);
 
+            if (settings.Json)
+            {
+                CliJson.Write(new
+                {
+                    schemaVersion = CliJson.SchemaVersion,
+                    success = true,
+                    version = Compilation.GetVersion(),
+                    source = Path.GetFullPath(settings.Source),
+                    library = libName,
+                    outputPath = settings.OutputPath,
+                    content = settings.OutputPath == null ? header : null
+                });
+            }
+
             if (settings.OutputPath != null)
             {
                 File.WriteAllText(settings.OutputPath, header);
-                Console.WriteLine($"Header written to: {settings.OutputPath}");
+                if (!settings.Json)
+                    Console.WriteLine($"Header written to: {settings.OutputPath}");
             }
-            else
+            else if (!settings.Json)
             {
                 Console.WriteLine(header);
             }
@@ -50,7 +71,21 @@ public sealed class GenerateHeaderCommand : Command<GenerateHeaderCommand.Settin
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Error: {ex.Message}");
+            if (settings.Json)
+            {
+                CliJson.Write(new
+                {
+                    schemaVersion = CliJson.SchemaVersion,
+                    success = false,
+                    version = Compilation.GetVersion(),
+                    source = settings.Source,
+                    error = ex.Message
+                });
+            }
+            else
+            {
+                Console.Error.WriteLine($"Error: {ex.Message}");
+            }
             return 1;
         }
     }

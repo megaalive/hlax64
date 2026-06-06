@@ -1,0 +1,32 @@
+name: Toolchain Problem
+description: NASM, linker, WSL, or platform toolchain issue
+labels: ["type: bug", "area: CLI"]
+body:
+  - type: textarea
+    id: command
+    attributes:
+      label: Command run
+      placeholder: hla64 build examples/hello.hla64 --target windows-x64-msabi
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Error output
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `hla64 doctor`
+      description: Paste plain text or JSON from `hla64 doctor --json`
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: |
+        OS: Windows 11 / Ubuntu 24.04
+        NASM: 2.16.x
+        Linker: gcc / lld-link / WSL
+        .NET: 10.0.x

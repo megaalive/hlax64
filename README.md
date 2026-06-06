@@ -75,13 +75,13 @@ dotnet build
 dotnet test
 
 # 3. Compile a .hla64 file to NASM
-dotnet run --project src/HlaX64.Cli -- emit-nasm examples/hello.hla64
+dotnet run --project src/HlaX64.Cli -- emit-nasm examples/00-getting-started/hello.hla64
 
 # 4. Build a .hla64 file into a Linux ELF executable
-dotnet run --project src/HlaX64.Cli -- build examples/exitcode.hla64 -o build/exitcode
+dotnet run --project src/HlaX64.Cli -- build examples/00-getting-started/exitcode.hla64 -o build/exitcode
 
 # 5. Compile and run
-dotnet run --project src/HlaX64.Cli -- run examples/hello.hla64
+dotnet run --project src/HlaX64.Cli -- run examples/00-getting-started/hello.hla64
 ```
 
 > Toolchain: `dotnet` 10.0+ on the build machine, plus `nasm` and `gcc` (or
@@ -142,7 +142,13 @@ begin count;
 end count;
 ```
 
-More examples live under [`examples/`](./examples).
+More examples live under [`examples/`](./examples) (structured by topic).
+
+---
+
+## Acknowledgement
+
+HlaX64 is inspired by the educational ideas of Randall Hyde's High Level Assembly language and *The Art of Assembly Language*. HlaX64 is an independent project and is not affiliated with or endorsed by Randall Hyde. See [docs/classic-hla-comparison.md](./docs/classic-hla-comparison.md).
 
 ---
 
@@ -202,9 +208,7 @@ Passed!  - Failed: 0, Passed: 77, Skipped: 0, Total: 77
 
 ## 🗺 Roadmap
 
-Phases from [`HlaX64_Project_Plan.md`](./HlaX64_Project_Plan.md) (konsolidasi).
-Detail per fase ada di plan; ringkasan visual ada di
-[`docs/roadmap.md`](./docs/roadmap.md).
+Phases are summarized in [`docs/roadmap.md`](./docs/roadmap.md).
 
 | Fase | Description                          | Status |
 |------|--------------------------------------|--------|
@@ -226,15 +230,18 @@ Detail per fase ada di plan; ringkasan visual ada di
 | 14   | LSP & editor tooling                 | ⏳      |
 | 15   | AI Assembly Lab / IDE plugin         | ⏳      |
 
-> **Aturan**: jangan sentuh Fase 14–15 sebelum 15-item Definition of Done
-> Fase 9.5 terpenuhi. Lihat [`HlaX64_Project_Plan.md` §9.5](./HlaX64_Project_Plan.md).
+> **Aturan**: jangan sentuh Fase 14–15 sebelum Definition of Done Fase 9.5 terpenuhi. Lihat [`docs/roadmap.md`](./docs/roadmap.md).
 
 ### 📚 Dokumentasi tambahan
 
 - [`docs/roadmap.md`](./docs/roadmap.md) — peta fase + Tier eksekusi aktif.
 - [`docs/compiler-architecture.md`](./docs/compiler-architecture.md) — diagram pipeline IR + 7 workstream.
 - [`docs/runtime-contract.md`](./docs/runtime-contract.md) — format clobber metadata + kontrak SysV/Windows.
+- [`docs/runtime-matrix.md`](./docs/runtime-matrix.md) — target × output kind defaults.
+- [`docs/compatibility.md`](./docs/compatibility.md) — breaking change policy.
+- [`docs/diagnostics.md`](./docs/diagnostics.md) — diagnostic code catalog.
 - [`docs/examples.md`](./docs/examples.md) — katalog program contoh & cara menjalankan.
+- [`docs/classic-hla-comparison.md`](./docs/classic-hla-comparison.md) — perbandingan dengan HLA klasik.
 
 ---
 
@@ -260,9 +267,12 @@ See [`docs/language-spec.md`](./docs/language-spec.md) for full details.
 ## 🤝 Community
 
 - [Contributing Guide](CONTRIBUTING.md) — how to build, test, and submit changes
+- [Development Guide](docs/development.md) — local setup and CI parity
+- [Governance](GOVERNANCE.md) — decision process and labels
 - [Code of Conduct](CODE_OF_CONDUCT.md) — our community standards
 - [Security Policy](SECURITY.md) — how to report vulnerabilities
 - [Support](SUPPORT.md) — documentation and getting help
+- [Changelog](CHANGELOG.md) — release history
 
 ## 📄 License
 

@@ -1,5 +1,7 @@
 using System.ComponentModel;
+using HlaX64.Cli.Json;
 using HlaX64.Cli.Toolchain;
+using HlaX64.Compiler;
 using HlaX64.Compiler.Options;
 using Spectre.Console.Cli;
 
@@ -28,15 +30,16 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
         [Description("Target triple: linux-x64-sysv (default) or windows-x64-msabi")]
         [CommandOption("--target")]
         public string? Target { get; set; }
+
+        [Description("Output build result as JSON")]
+        [CommandOption("--json")]
+        public bool Json { get; set; }
     }
 
     protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation)
     {
         if (!File.Exists(settings.Source))
-        {
-            Console.Error.WriteLine($"Error: Source file '{settings.Source}' not found.");
-            return 1;
-        }
+            return Fail(settings, settings.Source, null, null, null, null, $"Source file '{settings.Source}' not found.");
 
         var sourceFile = Path.GetFullPath(settings.Source);
         var sourceName = Path.GetFileNameWithoutExtension(sourceFile);
@@ -60,55 +63,53 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
         var nasmFile = Path.Combine(outputDir, $"{sourceName}.nasm");
         var objFile = Path.Combine(outputDir, $"{sourceName}{objExt}");
         var outputFile = Path.Combine(outputDir, $"{libPrefix}{sourceName}{ext}");
+        var targetName = settings.Target ?? "linux-x64-sysv";
+        var outputKind = settings.OutputKind ?? "executable";
 
         try
         {
-            // 1. Compile .hla64 -> NASM via pipeline
-            Console.WriteLine($"Compiling {sourceFile}...");
+            if (!settings.Json)
+                Console.WriteLine($"Compiling {sourceFile}...");
+
             var sourceText = File.ReadAllText(sourceFile);
             var nasmCode = CompilePipeline.EmitNasm(sourceFile, sourceText, options);
             File.WriteAllText(nasmFile, nasmCode);
-            Console.WriteLine($"  -> {nasmFile}");
+            if (!settings.Json)
+                Console.WriteLine($"  -> {nasmFile}");
 
-            // 2. Assemble NASM -> .o
-            Console.WriteLine("Assembling with NASM...");
+            if (!settings.Json)
+                Console.WriteLine("Assembling with NASM...");
             if (!NasmTool.TryFindNasm(out var nasmPath))
-            {
-                Console.Error.WriteLine("Error: NASM not found. Install NASM (https://nasm.us)");
-                Console.Error.WriteLine($"  NASM output saved at: {nasmFile}");
-                return 1;
-            }
-            Console.WriteLine($"  NASM: {nasmPath}");
+                return Fail(settings, sourceFile, targetName, outputKind, nasmFile, null,
+                    "NASM not found. Install NASM (https://nasm.us)");
+
+            if (!settings.Json)
+                Console.WriteLine($"  NASM: {nasmPath}");
 
             var nasmTool = new NasmTool(nasmPath);
             if (!nasmTool.TryAssemble(nasmFile, objFile, out var nasmError, format: nasmFormat))
-            {
-                Console.Error.WriteLine($"Assembly error:\n{nasmError}");
-                return 1;
-            }
-            Console.WriteLine($"  -> {objFile}");
+                return Fail(settings, sourceFile, targetName, outputKind, nasmFile, objFile, nasmError);
 
-            // 3. Link -> output
-            Console.WriteLine(isShared ? "Linking shared library..." : "Linking...");
+            if (!settings.Json)
+                Console.WriteLine($"  -> {objFile}");
+
+            if (!settings.Json)
+                Console.WriteLine(isShared ? "Linking shared library..." : "Linking...");
+
             bool linkSuccess;
             bool requiresWslRun = false;
             string linkError = "";
             if (isWindows)
-            {
                 linkSuccess = LinkerTool.TryLinkWindows(objFile, outputFile, out linkError, shared: isShared);
-            }
             else
-            {
                 linkSuccess = LinkerTool.TryLink(objFile, outputFile, out linkError, out requiresWslRun, shared: isShared);
-            }
-            if (!linkSuccess)
-            {
-                Console.Error.WriteLine($"Link error:\n{linkError}");
-                return 1;
-            }
-            Console.WriteLine($"  -> {outputFile}");
 
-            // 4. Make executable (if on Unix) — skip for shared libraries
+            if (!linkSuccess)
+                return Fail(settings, sourceFile, targetName, outputKind, nasmFile, objFile, linkError);
+
+            if (!settings.Json)
+                Console.WriteLine($"  -> {outputFile}");
+
             if (!isWindows && !requiresWslRun && !isShared)
             {
                 try
@@ -121,23 +122,66 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
                     };
                     System.Diagnostics.Process.Start(chmod)?.WaitForExit(2000);
                 }
-                catch
-                {
-                }
+                catch { }
             }
 
-            Console.WriteLine($"\nBuild successful: {outputFile}");
+            if (settings.Json)
+            {
+                CliJson.Write(new
+                {
+                    schemaVersion = CliJson.SchemaVersion,
+                    success = true,
+                    version = Compilation.GetVersion(),
+                    source = sourceFile,
+                    target = targetName,
+                    outputKind,
+                    nasmFile,
+                    objectFile = objFile,
+                    outputFile
+                });
+            }
+            else
+            {
+                Console.WriteLine($"\nBuild successful: {outputFile}");
+            }
+
             return 0;
         }
         catch (InvalidOperationException ex)
         {
-            Console.Error.WriteLine(ex.Message);
-            return 1;
+            return Fail(settings, sourceFile, targetName, outputKind, nasmFile, objFile, ex.Message);
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Error: {ex.Message}");
-            return 1;
+            return Fail(settings, sourceFile, targetName, outputKind, nasmFile, objFile, ex.Message);
         }
+    }
+
+    private static int Fail(Settings settings, string? source, string? target, string? outputKind,
+        string? nasmFile, string? objFile, string error)
+    {
+        if (settings.Json)
+        {
+            CliJson.Write(new
+            {
+                schemaVersion = CliJson.SchemaVersion,
+                success = false,
+                version = Compilation.GetVersion(),
+                source,
+                target,
+                outputKind,
+                nasmFile,
+                objectFile = objFile,
+                error
+            });
+        }
+        else
+        {
+            Console.Error.WriteLine(error.StartsWith("Error:", StringComparison.OrdinalIgnoreCase) ? error : $"Error: {error}");
+            if (nasmFile != null && error.Contains("NASM", StringComparison.OrdinalIgnoreCase))
+                Console.Error.WriteLine($"  NASM output saved at: {nasmFile}");
+        }
+
+        return 1;
     }
 }

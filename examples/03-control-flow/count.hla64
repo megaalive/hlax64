@@ -1,0 +1,10 @@
+// count.hla64 — while loop, comparison, register print
+program count;
+begin count;
+    mov(0, rcx);
+
+    while(rcx < 5) do
+        stdout.put("count = ", rcx, nl);
+        add(1, rcx);
+    endwhile;
+end count;

@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+            archive: hla64-linux-x64.tar.gz
+          - os: windows-latest
+            rid: win-x64
+            archive: hla64-win-x64.zip
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish CLI
+        run: dotnet publish src/HlaX64.Cli/HlaX64.Cli.csproj -c Release -r ${{ matrix.rid }} --self-contained false -o publish/${{ matrix.rid }}
+
+      - name: Publish MCP server
+        run: dotnet publish src/HlaX64.McpServer/HlaX64.McpServer.csproj -c Release -r ${{ matrix.rid }} --self-contained false -o publish/${{ matrix.rid }}/mcp
+
+      - name: Pack Linux archive
+        if: runner.os == 'Linux'
+        run: |
+          cd publish/linux-x64
+          tar czf ../../${{ matrix.archive }} .
+          cd ../..
+          sha256sum ${{ matrix.archive }} > checksums.txt
+
+      - name: Pack Windows archive
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path publish/win-x64/* -DestinationPath ${{ matrix.archive }}
+          $hash = (Get-FileHash ${{ matrix.archive }} -Algorithm SHA256).Hash.ToLower()
+          "${hash}  ${{ matrix.archive }}" | Out-File -Encoding utf8 checksums.txt
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ matrix.archive }}
+            checksums.txt
+          generate_release_notes: true

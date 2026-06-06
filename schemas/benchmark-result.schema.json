@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/megaalive/hlax64/schemas/benchmark-result.schema.json",
+  "title": "HlaX64 Benchmark Result",
+  "type": "object",
+  "required": ["schemaVersion"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "version": { "type": "string" },
+    "results": { "type": "array" }
+  }
+}

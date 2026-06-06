@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using HlaX64.Cli.Json;
 using HlaX64.Cli.Toolchain;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -71,7 +72,7 @@ public sealed class BenchCommand : Command<BenchCommand.Settings>
                 PrintResult(result, settings.Json);
             }
             if (settings.Json)
-                Console.WriteLine(JsonSerializer.Serialize(results, JsonOpts));
+                WriteBenchJson(results);
             return 0;
         }
 
@@ -117,7 +118,7 @@ public sealed class BenchCommand : Command<BenchCommand.Settings>
         }
 
         if (settings.Json)
-            Console.WriteLine(JsonSerializer.Serialize(allResults, JsonOpts));
+            WriteBenchJson(allResults);
         return 0;
     }
 
@@ -130,8 +131,18 @@ public sealed class BenchCommand : Command<BenchCommand.Settings>
         var result = BenchmarkBinary(Path.GetFileNameWithoutExtension(file), exeFile, compileOk, wslRun, compileSw.Elapsed.TotalMilliseconds, settings.Warmup, settings.Iterations);
         PrintResult(result, settings.Json);
         if (settings.Json)
-            Console.WriteLine(JsonSerializer.Serialize(result, JsonOpts));
+            WriteBenchJson(new List<BenchmarkResult> { result });
         return 0;
+    }
+
+    private static void WriteBenchJson(object results)
+    {
+        CliJson.Write(new
+        {
+            schemaVersion = CliJson.SchemaVersion,
+            version = HlaX64.Compiler.Compilation.GetVersion(),
+            results
+        });
     }
 
     private static void PrintResult(BenchmarkResult r, bool json)
