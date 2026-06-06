@@ -1,0 +1,11 @@
+// Iterative factorial: 5! = 120 (exit code via rax)
+program factorial;
+begin factorial;
+    mov(1, rax);
+    mov(1, rcx);
+
+    while(rcx < 6) do
+        imul(rcx, rax);
+        add(1, rcx);
+    endwhile;
+end factorial;

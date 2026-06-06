@@ -1,11 +1,12 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Text.Json;
+using HlaX64.Backend.Nasm.Emitters;
 using HlaX64.Cli.Commands;
+using HlaX64.Cli.Services;
 using HlaX64.Cli.Toolchain;
 using HlaX64.Compiler;
 using HlaX64.Compiler.Options;
-using HlaX64.Backend.Nasm.Emitters;
 using ModelContextProtocol.Server;
 
 namespace HlaX64.McpServer.Tools;
@@ -317,5 +318,73 @@ public class HlaX64Tools
             "call", "ret"
         };
         return JsonSerializer.Serialize(new { instructions }, JsonOpts);
+    }
+
+    [McpServerTool, Description("Show IR, ABI lowering, and NASM for a .hla64 source file")]
+    public static string Explain(
+        string source,
+        string? target = null)
+    {
+        if (!File.Exists(source))
+            throw new FileNotFoundException($"Source file '{source}' not found.");
+
+        var sourceText = File.ReadAllText(source);
+        var triple = TargetTriple.Parse(target ?? "linux-x64-sysv");
+        var options = CompilationOptions.Default with { Target = triple };
+        var report = HlaX64.Cli.Services.ExplainReport.Create(source, sourceText, options);
+
+        return JsonSerializer.Serialize(new
+        {
+            schemaVersion = HlaX64.Cli.Json.CliJson.SchemaVersion,
+            success = report.Success,
+            version = Compilation.GetVersion(),
+            source = report.SourcePath,
+            target = target ?? "linux-x64-sysv",
+            diagnostics = report.StructuredDiagnostics.Select(d => new
+            {
+                code = d.Code,
+                message = d.Message,
+                line = d.Line,
+                column = d.Column
+            }),
+            ir = report.Success ? report.IrFunctions.Select(f => f.ToString()).ToArray() : null,
+            lowered = report.Success ? report.LoweredFunctions.Select(HlaX64.Cli.Services.ExplainReport.DescribeLowered).ToArray() : null,
+            nasm = report.Nasm
+        }, JsonOpts);
+    }
+
+    [McpServerTool, Description("Format a .hla64 source file in place")]
+    public static string FormatSource(
+        string source,
+        bool? check = null)
+    {
+        if (!File.Exists(source))
+            throw new FileNotFoundException($"Source file '{source}' not found.");
+
+        var (changed, _) = HlaX64.Cli.Services.FormatService.FormatFile(source, write: check != true);
+        if (check == true && changed)
+            throw new InvalidOperationException("File needs formatting.");
+
+        return JsonSerializer.Serialize(new
+        {
+            schemaVersion = HlaX64.Cli.Json.CliJson.SchemaVersion,
+            success = true,
+            source = Path.GetFullPath(source),
+            checkOnly = check == true,
+            changed
+        }, JsonOpts);
+    }
+
+    [McpServerTool, Description("Check development toolchain (.NET, NASM, linker, runtime files)")]
+    public static string Doctor()
+    {
+        var report = HlaX64.Cli.Services.DoctorReport.Run();
+        return JsonSerializer.Serialize(new
+        {
+            schemaVersion = HlaX64.Cli.Json.CliJson.SchemaVersion,
+            success = report.Success,
+            version = report.Version,
+            checks = report.Checks
+        }, JsonOpts);
     }
 }

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/megaalive/hlax64/schemas/explain-result.schema.json",
+  "title": "HlaX64 Explain Result",
+  "type": "object",
+  "required": ["schemaVersion", "success"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "success": { "type": "boolean" },
+    "version": { "type": "string" },
+    "source": { "type": "string" },
+    "target": { "type": "string" },
+    "diagnostics": { "type": "array" },
+    "ir": { "type": "array", "items": { "type": "string" } },
+    "lowered": { "type": "array", "items": { "type": "string" } },
+    "nasm": { "type": "string" },
+    "error": { "type": "string" }
+  }
+}

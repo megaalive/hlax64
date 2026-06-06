@@ -1,0 +1,7 @@
+program inc_dec;
+begin inc_dec;
+    mov(5, rax);
+    inc(rax);
+    dec(rax);
+    add(1, rax);
+end inc_dec;

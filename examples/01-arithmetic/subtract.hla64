@@ -1,0 +1,5 @@
+program subtract;
+begin subtract;
+    mov(10, rax);
+    sub(3, rax);
+end subtract;

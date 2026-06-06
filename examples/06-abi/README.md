@@ -7,4 +7,8 @@
 
 Use `hla64 explain-abi --target linux-x64-sysv` for register assignment tables.
 
-Windows MS ABI: add `--target windows-x64-msabi` to build commands.
+Windows MS ABI build:
+
+```bash
+hla64 build examples/06-abi/windows-exitcode.hla64 --target windows-x64-msabi -o build/win-exit
+```

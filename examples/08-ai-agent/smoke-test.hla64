@@ -1,0 +1,8 @@
+program smoke;
+
+#include("stdlib64.hhf")
+
+begin smoke;
+    mov(1, rax);
+    stdout.put("verified routine ok", nl);
+end smoke;
