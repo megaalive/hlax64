@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.IO;
+using System.Runtime.Versioning;
 
 namespace HlaX64.Cli.Toolchain;
 
@@ -23,6 +25,9 @@ public sealed class NasmTool
             "/usr/bin/nasm",
             "/usr/local/bin/nasm",
             "/opt/homebrew/bin/nasm",
+            // Local project NASM (from src/HlaX64.Cli/bin/Debug/net10.0/)
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "nasm", "nasm.exe"),
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "nasm", "nasm"),
         };
 
         foreach (var candidate in candidates)

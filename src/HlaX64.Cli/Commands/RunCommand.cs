@@ -65,36 +65,59 @@ public sealed class RunCommand : Command<RunCommand.Settings>
 
             // 3. Link .o -> executable
             Console.WriteLine("Linking...");
-            if (!LinkerTool.TryLink(objFile, exeFile, out var linkError))
+            if (!LinkerTool.TryLink(objFile, exeFile, out var linkError, out var requiresWslRun))
             {
                 Console.Error.WriteLine($"Link error:\n{linkError}");
                 return 1;
             }
 
-            // 4. Make executable
-            try
+            // 4. Make executable (needed for native Linux, WSL handles this differently)
+            if (!requiresWslRun)
             {
-                var chmod = new ProcessStartInfo
+                try
                 {
-                    FileName = "chmod",
-                    Arguments = $"+x \"{exeFile}\"",
-                    UseShellExecute = false
-                };
-                Process.Start(chmod)?.WaitForExit(2000);
+                    var chmod = new ProcessStartInfo
+                    {
+                        FileName = "chmod",
+                        Arguments = $"+x \"{exeFile}\"",
+                        UseShellExecute = false
+                    };
+                    Process.Start(chmod)?.WaitForExit(2000);
+                }
+                catch { }
             }
-            catch { }
 
             // 5. Run
-            Console.WriteLine($"\nRunning: {exeFile}\n");
-            Console.WriteLine("--- Program output ---");
-
-            var psi = new ProcessStartInfo
+            ProcessStartInfo psi;
+            if (requiresWslRun)
             {
-                FileName = exeFile,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false
-            };
+                // Run via WSL
+                string wslExeFile = LinkerTool.ToWslPath(exeFile);
+                Console.WriteLine($"\nRunning via WSL: {wslExeFile}\n");
+                Console.WriteLine("--- Program output ---");
+
+                psi = new ProcessStartInfo
+                {
+                    FileName = "wsl",
+                    Arguments = wslExeFile,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false
+                };
+            }
+            else
+            {
+                Console.WriteLine($"\nRunning: {exeFile}\n");
+                Console.WriteLine("--- Program output ---");
+
+                psi = new ProcessStartInfo
+                {
+                    FileName = exeFile,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false
+                };
+            }
 
             using var process = Process.Start(psi);
             if (process == null)

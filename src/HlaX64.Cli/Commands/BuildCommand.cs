@@ -72,27 +72,30 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
 
             // 3. Link .o -> executable
             Console.WriteLine("Linking...");
-            if (!LinkerTool.TryLink(objFile, exeFile, out var linkError))
+            if (!LinkerTool.TryLink(objFile, exeFile, out var linkError, out var requiresWslRun))
             {
                 Console.Error.WriteLine($"Link error:\n{linkError}");
                 return 1;
             }
             Console.WriteLine($"  -> {exeFile}");
 
-            // 4. Make executable (if on Unix)
-            try
+            // 4. Make executable (if on Unix, not needed for WSL)
+            if (!requiresWslRun)
             {
-                var chmod = new System.Diagnostics.ProcessStartInfo
+                try
                 {
-                    FileName = "chmod",
-                    Arguments = $"+x \"{exeFile}\"",
-                    UseShellExecute = false
-                };
-                System.Diagnostics.Process.Start(chmod)?.WaitForExit(2000);
-            }
-            catch
-            {
-                // chmod may not exist on Windows, that's fine
+                    var chmod = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = "chmod",
+                        Arguments = $"+x \"{exeFile}\"",
+                        UseShellExecute = false
+                    };
+                    System.Diagnostics.Process.Start(chmod)?.WaitForExit(2000);
+                }
+                catch
+                {
+                    // chmod may not exist on Windows, that's fine
+                }
             }
 
             Console.WriteLine($"\nBuild successful: {exeFile}");
