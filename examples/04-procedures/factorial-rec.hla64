@@ -1,0 +1,19 @@
+// Recursive factorial: 5! = 120 (exit code via rax)
+program factorial_rec;
+
+procedure Factorial(n:int64); @returns("rax");
+begin Factorial;
+    if(n < 2) then
+        mov(1, rax);
+    else
+        mov(n, rbx);
+        mov(n, rcx);
+        sub(1, rcx);
+        call Factorial(rcx);
+        imul(rbx, rax);
+    endif;
+end Factorial;
+
+begin factorial_rec;
+    call Factorial(5);
+end factorial_rec;

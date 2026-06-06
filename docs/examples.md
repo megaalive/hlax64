@@ -26,7 +26,7 @@ Each folder has a README with build/run commands.
 
 ## 2b. Curriculum manifests (`tests/examples-curriculum/`)
 
-18 manifests reference structured programs under `examples/`:
+19 manifests reference structured programs under `examples/`:
 
 ```bash
 hla64 test tests/examples-curriculum

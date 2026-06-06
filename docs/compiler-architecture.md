@@ -1,8 +1,8 @@
 # HlaX64 — Compiler Architecture
 
 > **Status**: Draft · bagian dari **Fase 9.5 — Stabilisasi Arsitektur**
-> **Lihat juga**: [`HlaX64_Project_Plan.md` §6](../HlaX64_Project_Plan.md) ·
-> [`HlaX64_Technical_Review_and_Next_Priorities.md` §3.3](../HlaX64_Technical_Review_and_Next_Priorities.md) ·
+> **Lihat juga**: [`docs/architecture.md`](./architecture.md) ·
+> [`docs/runtime-matrix.md`](./runtime-matrix.md) ·
 > [`docs/runtime-contract.md`](./runtime-contract.md)
 
 Dokumen ini menjelaskan pipeline kompilasi HlaX64 setelah Fase 9.5

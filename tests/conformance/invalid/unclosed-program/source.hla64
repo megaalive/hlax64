@@ -1,0 +1,3 @@
+program unclosed;
+begin unclosed;
+    mov(1, rax);
