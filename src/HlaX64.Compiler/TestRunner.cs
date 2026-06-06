@@ -36,7 +36,7 @@ public sealed class TestRunner
         {
             Directory.CreateDirectory(buildDir);
 
-            var sourcePath = ResolveSourcePath(test.Source);
+            var sourcePath = ResolveSourcePath(test.Source, test.ManifestPath);
             if (!File.Exists(sourcePath))
             {
                 result.Passed = false;
@@ -193,6 +193,11 @@ public sealed class TestRunner
     /// <summary>
     /// Resolves a source path for the test. If the path is absolute it is
     /// used as-is. If relative, the runner searches in this order:
+    ///   0. Relative to the directory containing the manifest file
+    ///      (<paramref name="manifestPath"/>) — this is the convention
+    ///      that makes "source": "hello.hla64" inside
+    ///      <c>tests/samples/hello/manifest.json</c> find the sibling
+    ///      source file.
     ///   1. Relative to the current working directory.
     ///   2. Relative to the runner's base directory
     ///      (<c>AppContext.BaseDirectory</c>, where csproj-copied test
@@ -201,13 +206,25 @@ public sealed class TestRunner
     ///      filesystem root is reached (covers repo-root layouts).
     /// The first match wins.
     /// </summary>
-    private static string ResolveSourcePath(string source)
+    private static string ResolveSourcePath(string source, string? manifestPath)
     {
         if (string.IsNullOrEmpty(source))
             return source;
 
         if (Path.IsPathRooted(source) && File.Exists(source))
             return source;
+
+        // 0. Manifest's own directory
+        if (!string.IsNullOrEmpty(manifestPath))
+        {
+            var manifestDir = Path.GetDirectoryName(manifestPath);
+            if (!string.IsNullOrEmpty(manifestDir))
+            {
+                var manifestCandidate = Path.Combine(manifestDir, source);
+                if (File.Exists(manifestCandidate))
+                    return Path.GetFullPath(manifestCandidate);
+            }
+        }
 
         // 1. CWD
         var cwdCandidate = Path.GetFullPath(source);

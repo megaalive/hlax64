@@ -94,6 +94,29 @@ public sealed class Parser
         if (token.Type == TokenType.Procedure || token.Type == TokenType.Export)
             return ParseProcedure();
 
+        // "call" is treated as a soft keyword: call ProcName(arg1, arg2);
+        if (token.Type == TokenType.Identifier && token.Value == "call" &&
+            _pos + 1 < _tokens.Count && _tokens[_pos + 1].Type == TokenType.Identifier &&
+            _pos + 2 < _tokens.Count && _tokens[_pos + 2].Type == TokenType.LeftParen)
+        {
+            Advance(); // skip "call"
+            var procName = Expect(TokenType.Identifier).Value;
+            Expect(TokenType.LeftParen);
+            var callArgs = new List<AstNode>();
+            if (Peek().Type != TokenType.RightParen)
+            {
+                callArgs.Add(ParseOperand());
+                while (Peek().Type == TokenType.Comma)
+                {
+                    Advance();
+                    callArgs.Add(ParseOperand());
+                }
+            }
+            Expect(TokenType.RightParen);
+            Expect(TokenType.Semicolon);
+            return new CallNode(procName, callArgs);
+        }
+
         // stdout.put(...) — function call with dot
         if (token.Type == TokenType.Identifier && _pos + 1 < _tokens.Count && _tokens[_pos + 1].Type == TokenType.Dot)
         {

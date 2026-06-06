@@ -17,6 +17,9 @@ app.Configure(config =>
 
     config.AddCommand<RunCommand>("run")
         .WithDescription("Build and run a .hla64 source file");
+
+    config.AddCommand<TestCommand>("test")
+        .WithDescription("Run all test manifests in a directory");
 });
 
 return app.Run(args);

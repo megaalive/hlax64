@@ -171,4 +171,25 @@ public class ParserTests
         Assert.Equal("total", ((VariableNode)proc.Variables[0]).Name);
         Assert.Equal("i", ((VariableNode)proc.Variables[1]).Name);
     }
+
+    [Fact]
+    public void Parse_CallProcName_ParsesAsCallNode()
+    {
+        // `call AddTwo(10, 20);` is the procedure-call syntax documented
+        // in docs/abi-linux-x64.md. The "call" word is a soft keyword.
+        var source = "program main;\n\nprocedure AddTwo(a:int64; b:int64); @returns(\"rax\");\nbegin AddTwo;\nend AddTwo;\n\nbegin main;\n    call AddTwo(10, 20);\nend main;";
+        var lexer = new Lexer(source);
+        var tokens = lexer.Tokenize();
+        var parser = new Parser(tokens);
+        var program = parser.Parse();
+
+        // The body of `begin main;` is program.Statements[1] (after the proc).
+        var call = Assert.IsType<CallNode>(program.Statements[1]);
+        Assert.Equal("AddTwo", call.Name);
+        Assert.Equal(2, call.Arguments.Count);
+        Assert.IsType<IntegerLiteralNode>(call.Arguments[0]);
+        Assert.IsType<IntegerLiteralNode>(call.Arguments[1]);
+        Assert.Equal(10, ((IntegerLiteralNode)call.Arguments[0]).Value);
+        Assert.Equal(20, ((IntegerLiteralNode)call.Arguments[1]).Value);
+    }
 }

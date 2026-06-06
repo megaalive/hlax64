@@ -1,1 +1,6 @@
-﻿{\ name\:\hello\,\source\:\hello.hla64\,\expected_stdout\:\Hello from HlaX64\n\,\description\:\Hello world program\}
+﻿{
+  "name": "hello",
+  "source": "hello.hla64",
+  "expectedStdout": "Hello from HlaX64\n",
+  "description": "Hello world program"
+}

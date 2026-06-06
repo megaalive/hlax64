@@ -1,0 +1,27 @@
+// add_two.hla64
+// Demonstrates a procedure call with the Linux x64 System V ABI.
+//
+// Calling convention (Linux System V):
+//   1st arg  -> rdi
+//   2nd arg  -> rsi
+//   3rd arg  -> rdx
+//   4th arg  -> rcx
+//   5th arg  -> r8
+//   6th arg  -> r9
+//   return   -> rax
+//
+// Stack frame: caller pushes rbp, saves rbp into stack, allocates locals
+// at [rbp-N] for each var / param (in declaration order).
+
+program main;
+
+procedure AddTwo(a:int64; b:int64); @returns("rax");
+begin AddTwo;
+    mov(a, rax);
+    add(b, rax);
+end AddTwo;
+
+begin main;
+    call AddTwo(10, 20);
+    stdout.put("10 + 20 = ", rax, nl);
+end main;

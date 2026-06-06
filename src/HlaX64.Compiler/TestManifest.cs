@@ -15,17 +15,26 @@ public sealed class TestManifest
     public int TimeoutMs { get; set; } = 10000;
 
     /// <summary>
+    /// Absolute path to the manifest JSON file. Set automatically by
+    /// <see cref="LoadFromJson"/> and <see cref="LoadAll"/>. Used by the
+    /// runner to resolve <see cref="Source"/> relative to the manifest.
+    /// </summary>
+    public string? ManifestPath { get; set; }
+
+    /// <summary>
     /// Load a test manifest from a JSON file.
     /// </summary>
     public static TestManifest LoadFromJson(string path)
     {
         var json = File.ReadAllText(path);
-        return JsonSerializer.Deserialize<TestManifest>(json, new JsonSerializerOptions
+        var manifest = JsonSerializer.Deserialize<TestManifest>(json, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
             ReadCommentHandling = JsonCommentHandling.Skip,
             AllowTrailingCommas = true
         }) ?? throw new InvalidOperationException($"Failed to deserialize test manifest from '{path}'");
+        manifest.ManifestPath = Path.GetFullPath(path);
+        return manifest;
     }
 
     /// <summary>
