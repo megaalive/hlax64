@@ -22,3 +22,9 @@ artifacts/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local NASM binary download (not part of source)
+nasm/
+
+# Personal NASM test files
+nasm-test/
