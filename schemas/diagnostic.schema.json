@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/megaalive/hlax64/schemas/diagnostic.schema.json",
+  "title": "HlaX64 Diagnostic",
+  "type": "object",
+  "required": ["code", "severity", "message"],
+  "properties": {
+    "code": { "type": "string", "pattern": "^HLAX[0-9]{4}$" },
+    "severity": { "type": "string", "enum": ["error", "warning", "info"] },
+    "message": { "type": "string" },
+    "line": { "type": "integer" },
+    "column": { "type": "integer" },
+    "suggestion": { "type": "string" }
+  }
+}

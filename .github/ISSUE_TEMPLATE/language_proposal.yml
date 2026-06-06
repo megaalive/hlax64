@@ -1,0 +1,57 @@
+name: Language Proposal
+description: Propose a syntax or semantics change to HlaX64
+labels: ["needs design", "type: feature"]
+body:
+  - type: markdown
+    attributes:
+      value: Language changes need motivation, semantics, and a compatibility plan. See [CONTRIBUTING.md](../CONTRIBUTING.md) and [docs/compatibility.md](../docs/compatibility.md).
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: What problem does this solve? Who benefits?
+    validations:
+      required: true
+  - type: textarea
+    id: syntax
+    attributes:
+      label: Proposed Syntax
+      description: Example source code or grammar sketch
+    validations:
+      required: true
+  - type: textarea
+    id: semantics
+    attributes:
+      label: Semantics & Type Behavior
+      description: Runtime behavior, types, conversions, errors
+    validations:
+      required: true
+  - type: textarea
+    id: ir-impact
+    attributes:
+      label: IR / ABI Impact
+      description: Does this affect IR, calling convention, or code generation?
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility
+      description: Breaking or additive? Migration path?
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: New error codes or messages (see docs/diagnostics.md)
+  - type: textarea
+    id: test-plan
+    attributes:
+      label: Test Plan
+      description: Unit tests, native samples, negative cases
+    validations:
+      required: true
+  - type: textarea
+    id: docs-plan
+    attributes:
+      label: Documentation Plan
+      description: language-spec, examples, release notes

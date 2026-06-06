@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/megaalive/hlax64/schemas/build-result.schema.json",
+  "title": "HlaX64 Build Result",
+  "type": "object",
+  "required": ["schemaVersion", "success"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "success": { "type": "boolean" },
+    "version": { "type": "string" },
+    "source": { "type": "string" },
+    "target": { "type": "string" },
+    "outputKind": { "type": "string" },
+    "nasmFile": { "type": "string" },
+    "objectFile": { "type": "string" },
+    "outputFile": { "type": "string" },
+    "error": { "type": "string" }
+  }
+}

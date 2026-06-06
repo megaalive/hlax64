@@ -1,39 +1,29 @@
 # HlaX64 Examples
 
-Each example is a standalone `.hla64` program. Run with:
+Structured sample programs for learning and smoke testing. Each folder has a short README.
 
 ```bash
-hla64 run examples/<name>.hla64
-# or
-dotnet run --project src/HlaX64.Cli -- run examples/<name>.hla64
+hla64 run examples/00-getting-started/hello.hla64
+dotnet run --project src/HlaX64.Cli -- test tests/samples
 ```
 
-## Getting Started
+## Curriculum
 
-| Example | Description |
-|---------|-------------|
-| [`hello.hla64`](hello.hla64) | Print "Hello from HlaX64" to stdout |
-| [`exitcode.hla64`](exitcode.hla64) | Return a specific exit code (42) |
+| Folder | Topic | Programs |
+|--------|-------|----------|
+| [00-getting-started/](00-getting-started/) | Hello world, exit codes | `hello`, `exitcode` |
+| [01-arithmetic/](01-arithmetic/) | Register arithmetic | `simple` |
+| [03-control-flow/](03-control-flow/) | Loops and branches | `count`, `if-else` |
+| [04-procedures/](04-procedures/) | Procedures & ABI | `add-two` |
 
-## Arithmetic
+More integration tests live under [`tests/samples/`](../tests/samples/). See [docs/examples.md](../docs/examples.md) and [docs/classic-hla-comparison.md](../docs/classic-hla-comparison.md).
 
-| Example | Description |
-|---------|-------------|
-| [`add_two.hla64`](add_two.hla64) | Procedure with two arguments using `add` |
-| [`simple.hla64`](simple.hla64) | Basic arithmetic operations |
+## Run any example
 
-## Control Flow
+```bash
+hla64 run examples/<folder>/<name>.hla64
+hla64 emit-nasm examples/00-getting-started/hello.hla64
+hla64 explain-abi --target linux-x64-sysv
+```
 
-| Example | Description |
-|---------|-------------|
-| [`count.hla64`](count.hla64) | `while` loop counting 0 to 4 with register print |
-
-## Full List
-
-| File | Topic | Features Demonstrated |
-|------|-------|----------------------|
-| `hello.hla64` | Hello world | `stdout.put`, string literal, newline |
-| `exitcode.hla64` | Exit code | `mov`, program exit via `rax` |
-| `add_two.hla64` | Procedure | `procedure`, `@returns`, `call`, `add` |
-| `simple.hla64` | Arithmetic | Register moves, basic instructions |
-| `count.hla64` | Loop | `while`/`endwhile`, comparison, `stdout.put` with register |
+Examples are **clean-room** HlaX64 code (see [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)).

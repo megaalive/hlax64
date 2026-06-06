@@ -1,0 +1,31 @@
+name: Documentation
+description: Improve or fix project documentation
+labels: ["type: docs"]
+body:
+  - type: textarea
+    id: page
+    attributes:
+      label: Page or File
+      placeholder: docs/language-spec.md, README.md, etc.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's wrong or missing?
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement
+  - type: checkboxes
+    id: areas
+    attributes:
+      label: Affected docs
+      options:
+        - label: Language specification
+        - label: Compiler architecture
+        - label: Examples / tutorials
+        - label: Contributor guides
+        - label: ABI / runtime

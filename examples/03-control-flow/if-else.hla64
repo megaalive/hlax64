@@ -1,0 +1,13 @@
+program if_else;
+
+#include("stdlib64.hhf")
+
+begin if_else;
+    mov(7, rax);
+
+    if(rax > 5) then
+        stdout.put("big", nl);
+    else
+        stdout.put("small", nl);
+    endif;
+end if_else;

@@ -1,12 +1,12 @@
 using System.ComponentModel;
+using HlaX64.Cli.Json;
+using HlaX64.Compiler;
 using Spectre.Console.Cli;
 
 namespace HlaX64.Cli.Commands;
 
 /// <summary>
 /// Prints ABI details for a given target triple.
-/// Currently supports linux-x64-sysv and windows-x64-msabi (planned).
-/// This is a documentation/exploration tool, not part of the build pipeline.
 /// </summary>
 public sealed class ExplainAbiCommand : Command<ExplainAbiCommand.Settings>
 {
@@ -16,98 +16,125 @@ public sealed class ExplainAbiCommand : Command<ExplainAbiCommand.Settings>
         [CommandOption("-t|--target")]
         [DefaultValue("linux-x64-sysv")]
         public string Target { get; set; } = "linux-x64-sysv";
+
+        [Description("Output ABI details as JSON")]
+        [CommandOption("--json")]
+        public bool Json { get; set; }
     }
 
     protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation)
     {
-        return settings.Target.ToLowerInvariant() switch
+        var info = GetAbiInfo(settings.Target);
+        if (info == null)
         {
-            "linux-x64-sysv"   => PrintLinuxSysV(),
-            "windows-x64-msabi" => PrintWindowsMsAbi(),
-            _ => PrintUnknown(settings.Target)
-        };
+            if (settings.Json)
+            {
+                CliJson.Write(new
+                {
+                    schemaVersion = CliJson.SchemaVersion,
+                    success = false,
+                    version = Compilation.GetVersion(),
+                    target = settings.Target,
+                    error = $"Unknown target '{settings.Target}'."
+                });
+            }
+            else
+            {
+                PrintUnknown(settings.Target);
+            }
+            return 1;
+        }
+
+        if (settings.Json)
+        {
+            CliJson.Write(new
+            {
+                schemaVersion = CliJson.SchemaVersion,
+                success = true,
+                version = Compilation.GetVersion(),
+                abi = info
+            });
+            return 0;
+        }
+
+        PrintHumanReadable(info);
+        return 0;
     }
 
-    private static int PrintLinuxSysV()
+    private static AbiInfo? GetAbiInfo(string target) => target.ToLowerInvariant() switch
     {
-        Console.WriteLine("ABI: linux-x64-sysv (Linux x64 System V ABI, AMD64)");
+        "linux-x64-sysv" => new AbiInfo
+        {
+            Target = "linux-x64-sysv",
+            Name = "Linux x64 System V ABI (AMD64)",
+            Status = "implemented",
+            ArgumentRegisters = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"],
+            ReturnRegister = "rax",
+            CallerSaved = ["rax", "rcx", "rdx", "rsi", "rdi", "r8", "r9", "r10", "r11"],
+            CalleeSaved = ["rbx", "rbp", "r12", "r13", "r14", "r15"],
+            StackAlignment = "RSP mod 16 == 0 before call",
+            ShadowSpaceBytes = 0,
+            Reference = "https://refspecs.linuxfoundation.org/elf/x86_64-abi-0.99.pdf"
+        },
+        "windows-x64-msabi" => new AbiInfo
+        {
+            Target = "windows-x64-msabi",
+            Name = "Microsoft x64 calling convention",
+            Status = "implemented",
+            ArgumentRegisters = ["rcx", "rdx", "r8", "r9"],
+            ReturnRegister = "rax",
+            CallerSaved = ["rax", "rcx", "rdx", "r8", "r9", "r10", "r11"],
+            CalleeSaved = ["rbx", "rbp", "rdi", "rsi", "r12", "r13", "r14", "r15"],
+            StackAlignment = "RSP mod 16 == 8 before call",
+            ShadowSpaceBytes = 32,
+            Reference = "https://learn.microsoft.com/en-us/cpp/build/x64-calling-convention"
+        },
+        _ => null
+    };
+
+    private static void PrintHumanReadable(AbiInfo info)
+    {
+        Console.WriteLine($"ABI: {info.Target} ({info.Name})");
         Console.WriteLine(new string('-', 60));
+        Console.WriteLine();
+        Console.WriteLine($"STATUS: {info.Status}.");
         Console.WriteLine();
         Console.WriteLine("Argument registers (left-to-right):");
-        Console.WriteLine("  arg1 -> rdi");
-        Console.WriteLine("  arg2 -> rsi");
-        Console.WriteLine("  arg3 -> rdx");
-        Console.WriteLine("  arg4 -> rcx");
-        Console.WriteLine("  arg5 -> r8");
-        Console.WriteLine("  arg6 -> r9");
-        Console.WriteLine("  arg7+ -> stack (caller-allocated, right-to-left push)");
+        for (int i = 0; i < info.ArgumentRegisters.Count; i++)
+            Console.WriteLine($"  arg{i + 1} -> {info.ArgumentRegisters[i]}");
         Console.WriteLine();
-        Console.WriteLine("Return value:");
-        Console.WriteLine("  64-bit int/ptr -> rax");
-        Console.WriteLine("  struct <= 16 bytes -> rax + rdx");
-        Console.WriteLine("  larger struct -> caller-allocated memory, rax = pointer");
+        Console.WriteLine($"Return value: {info.ReturnRegister}");
         Console.WriteLine();
-        Console.WriteLine("Caller-saved (may be clobbered by callee):");
-        Console.WriteLine("  rax, rcx, rdx, rsi, rdi, r8, r9, r10, r11");
+        Console.WriteLine("Caller-saved: " + string.Join(", ", info.CallerSaved));
+        Console.WriteLine("Callee-saved: " + string.Join(", ", info.CalleeSaved));
         Console.WriteLine();
-        Console.WriteLine("Callee-saved (preserved across call):");
-        Console.WriteLine("  rbx, rbp, r12, r13, r14, r15");
+        Console.WriteLine($"Stack alignment: {info.StackAlignment}");
+        if (info.ShadowSpaceBytes > 0)
+            Console.WriteLine($"Shadow space: {info.ShadowSpaceBytes} bytes");
         Console.WriteLine();
-        Console.WriteLine("Scratch / temporaries: rax, rcx, rdx, rsi, rdi, r8..r11");
-        Console.WriteLine();
-        Console.WriteLine("Stack alignment: RSP must be 0 (mod 16) just BEFORE `call`.");
-        Console.WriteLine("  i.e. just after the call instruction executes, RSP is 8 (mod 16).");
-        Console.WriteLine();
-        Console.WriteLine("Red zone: 128 bytes below RSP, leaf functions may use without adjusting.");
-        Console.WriteLine("  HlaX64 v0.1 does NOT rely on the red zone (for portability).");
-        Console.WriteLine();
-        Console.WriteLine("Float / SSE args (planned, not MVP):");
-        Console.WriteLine("  XMM0..XMM7 for float/double, XMM0+XMM1 for struct of 2.");
-        Console.WriteLine();
-        Console.WriteLine("Reference:");
-        Console.WriteLine("  System V ABI x86-64: https://refspecs.linuxfoundation.org/elf/x86_64-abi-0.99.pdf");
-        return 0;
-    }
-
-    private static int PrintWindowsMsAbi()
-    {
-        Console.WriteLine("ABI: windows-x64-msabi (Microsoft x64, x64 calling convention)");
-        Console.WriteLine(new string('-', 60));
-        Console.WriteLine();
-        Console.WriteLine("STATUS: implemented (Fase 11).");
-        Console.WriteLine();
-        Console.WriteLine("Argument registers:");
-        Console.WriteLine("  arg1 -> rcx");
-        Console.WriteLine("  arg2 -> rdx");
-        Console.WriteLine("  arg3 -> r8");
-        Console.WriteLine("  arg4 -> r9");
-        Console.WriteLine("  arg5+ -> stack (caller-allocated, right-to-left push)");
-        Console.WriteLine();
-        Console.WriteLine("Return value: rax (scalar <= 64 bit), XMM0 (float/double).");
-        Console.WriteLine();
-        Console.WriteLine("Caller-saved: rax, rcx, rdx, r8, r9, r10, r11");
-        Console.WriteLine("Callee-saved: rbx, rbp, rdi, rsi, r12, r13, r14, r15");
-        Console.WriteLine();
-        Console.WriteLine("Shadow space: 32 bytes (4 quadwords) reserved by the caller just");
-        Console.WriteLine("  above the return address. The callee may use it freely but must");
-        Console.WriteLine("  preserve it across nested calls.");
-        Console.WriteLine();
-        Console.WriteLine("Stack alignment: RSP must be 8 (mod 16) just BEFORE `call`.");
-        Console.WriteLine("  i.e. just after the call instruction executes, RSP is 0 (mod 16).");
-        Console.WriteLine();
-        Console.WriteLine("Float / SSE args (planned): XMM0..XMM3.");
-        Console.WriteLine();
-        Console.WriteLine("Reference:");
-        Console.WriteLine("  Microsoft x64 ABI: https://learn.microsoft.com/en-us/cpp/build/x64-calling-convention");
-        return 0;
+        Console.WriteLine("Reference: " + info.Reference);
     }
 
     private static int PrintUnknown(string target)
     {
         Console.Error.WriteLine($"Unknown target '{target}'.");
         Console.Error.WriteLine("Supported targets:");
-        Console.Error.WriteLine("  linux-x64-sysv     (implemented, MVP)");
-        Console.Error.WriteLine("  windows-x64-msabi  (implemented, Fase 11)");
+        Console.Error.WriteLine("  linux-x64-sysv");
+        Console.Error.WriteLine("  windows-x64-msabi");
         return 1;
+    }
+
+    private sealed class AbiInfo
+    {
+        public string Target { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string Status { get; set; } = "";
+        public List<string> ArgumentRegisters { get; set; } = [];
+        public string ReturnRegister { get; set; } = "";
+        public List<string> CallerSaved { get; set; } = [];
+        public List<string> CalleeSaved { get; set; } = [];
+        public string StackAlignment { get; set; } = "";
+        public int ShadowSpaceBytes { get; set; }
+        public string Reference { get; set; } = "";
     }
 }

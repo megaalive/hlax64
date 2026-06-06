@@ -1,146 +1,79 @@
 # HlaX64 — Examples & How to Run
 
-> **Status**: Aktif · selaras dengan [`HlaX64_Project_Plan.md`](../HlaX64_Project_Plan.md) §13.
-> **Direktori**: [`examples/`](../examples) untuk program demo ·
-> [`tests/samples/`](../tests/samples) untuk integration tests.
+> **Direktori**: [`examples/`](../examples) (structured curriculum) ·
+> [`tests/samples/`](../tests/samples) (integration tests with manifests).
 
-Dokumen ini adalah katalog singkat program contoh HlaX64 dan cara
-menjalankannya. Untuk detail bahasa, lihat
-[`docs/language-spec.md`](./language-spec.md) (akan di-rename ke
-*Language Reference v0.1*).
+Katalog program contoh HlaX64. Lihat [`language-spec.md`](./language-spec.md) untuk referensi bahasa.
 
 ---
 
-## 1. Daftar contoh (`examples/`)
+## 1. Structured examples (`examples/`)
 
-| File | Topik | Fase | Target |
-|------|-------|------|--------|
-| [`hello.hla64`](../examples/hello.hla64) | hello world + `stdout.put` | 4 | MVP |
-| [`add_two.hla64`](../examples/add_two.hla64) | procedure 2-arg + call | 6 | MVP |
-| [`count.hla64`](../examples/count.hla64) | while loop + register | 7 | MVP |
-| [`simple.hla64`](../examples/simple.hla64) | mov + add | 2/3 | MVP |
+| Folder | Programs | Topic |
+|--------|----------|-------|
+| [`00-getting-started/`](../examples/00-getting-started/) | `hello`, `exitcode` | Hello world, exit codes |
+| [`01-arithmetic/`](../examples/01-arithmetic/) | `simple` | `mov`, `add` |
+| [`03-control-flow/`](../examples/03-control-flow/) | `count`, `if-else` | Loops, branches |
+| [`04-procedures/`](../examples/04-procedures/) | `add-two` | Procedures & SysV ABI |
 
----
-
-## 2. Daftar sample tests (`tests/samples/`)
-
-Sample di folder ini punya `manifest.json` dan dijalankan lewat
-`hla64 test tests/samples`. Saat ini tersedia **16 sample**, semuanya PASS.
-
-| Sample | Topik | Status |
-|--------|-------|--------|
-| `hello/` | hello + `stdout.put` | ✅ |
-| `exitcode/` | exit code via `rax` | ✅ |
-| `add_two/` | procedure call | ✅ |
-| `count/` | while loop | ✅ |
-| `simple/` | mov + add | ✅ |
-| `local_var/` | `var` block | ✅ |
-| `if_else/` | `if/else/endif` | ✅ |
-| `procedure_0arg/` | procedure tanpa argumen | ✅ |
-| `procedure_1arg/` | procedure 1 argumen | ✅ |
-| `procedure_6args/` | procedure 6 argumen (max SysV) | ✅ |
-| `comparison_signed/` | signed `jg` / `jl` | ✅ |
-| `comparison_unsigned/` | unsigned `ja` / `jb` | ✅ |
-| `stdout_int64/` | stdout.put dengan register int64 | ✅ |
-| `callee_saved/` | callee-saved register preservation | ✅ |
-| `stack_alignment/` | cek RSP mod 16 | ✅ |
-| `export_lib/` | shared library export + C# P/Invoke | ✅ |
+Each folder has a README with build/run commands.
 
 ---
 
-## 3. Cara menjalankan
+## 2. Integration samples (`tests/samples/`)
 
-### 3.1 Prasyarat
+16 samples with `manifest.json`, run via `hla64 test tests/samples`.
 
-- `dotnet` 10.0+ di build machine.
-- `nasm` dan `gcc` di runtime machine (atau WSL2 / MinGW).
+| Sample | Topic |
+|--------|-------|
+| `hello/`, `exitcode/`, `add_two/`, `count/`, `simple/` | Core language |
+| `local_var/`, `if_else/` | Variables, control flow |
+| `procedure_*` | 0, 1, 6 arguments |
+| `comparison_*` | Signed / unsigned compares |
+| `stdout_int64/`, `callee_saved/`, `stack_alignment/` | ABI edge cases |
+| `export_lib/` | Shared library + interop |
 
-Build toolchain:
+---
+
+## 3. Commands
 
 ```bash
 dotnet build
-```
 
-### 3.2 Compile & run satu program
+# Emit NASM
+dotnet run --project src/HlaX64.Cli -- emit-nasm examples/00-getting-started/hello.hla64
 
-```bash
-# Emit NASM saja
-dotnet run --project src/HlaX64.Cli -- emit-nasm examples/hello.hla64
+# Build executable
+dotnet run --project src/HlaX64.Cli -- build examples/00-getting-started/exitcode.hla64 -o build/exitcode
 
-# Build menjadi executable
-dotnet run --project src/HlaX64.Cli -- build examples/hello.hla64 -o build/hello
+# Run
+dotnet run --project src/HlaX64.Cli -- run examples/00-getting-started/hello.hla64
 
-# Compile + run
-dotnet run --project src/HlaX64.Cli -- run examples/hello.hla64
-```
-
-Output biner ada di `build/<name>/<name>` (atau `-o`).
-
-### 3.3 Menjalankan test runner
-
-```bash
-# Semua sample di folder
+# Test suite
 dotnet run --project src/HlaX64.Cli -- test tests/samples
-
-# Filter berdasarkan nama
 dotnet run --project src/HlaX64.Cli -- test tests/samples --filter hello
-
-# Output JSON (untuk agent)
 dotnet run --project src/HlaX64.Cli -- test tests/samples --json
 ```
 
-### 3.4 Format manifest
+Machine-readable schemas: [`schemas/`](../schemas/).
 
-Setiap sample di `tests/samples/<name>/manifest.json`:
+---
+
+## 4. Manifest format
 
 ```json
 {
   "name": "hello",
   "source": "hello.hla64",
-  "expected_stdout": "Hello from HlaX64\n",
-  "expected_exit_code": 0
+  "expectedStdout": "Hello from HlaX64\n",
+  "expectedExitCode": 0
 }
 ```
 
-Field:
-
-- `name` — nama sample (untuk pelaporan).
-- `source` — file `.hla64` (path relatif terhadap folder sample).
-- `expected_stdout` — stdout persis yang diharapkan.
-- `expected_exit_code` — exit code integer.
-
-### 3.5 Aturan Linux CI (planned, Fase 9.5)
-
-```bash
-dotnet restore
-dotnet build --no-restore
-dotnet test --no-build
-
-# Build & run sample binaries
-for s in tests/samples/*/; do
-  dotnet run --project src/HlaX64.Cli -- build "$s*.hla64"
-done
-```
-
-CI gagal jika ada binary yang crash, stdout berbeda, atau exit code
-berbeda dari manifest.
-
 ---
 
-## 4. Konvensi penamaan
+## 5. See also
 
-- File program: `snake_case.hla64` (lowercase + underscore).
-- Folder sample test: `snake_case/` dengan manifest dan source di
-  dalamnya.
-- Procedure: `PascalCase` (`AddTwo`, `CountDelimiter`).
-- Local variable: `snake_case` (`total`, `byte_count`).
-- Register: lowercase sesuai arsitektur (`rax`, `rdi`, `r10d`).
-
----
-
-## 5. Lihat juga
-
-- [`HlaX64_Project_Plan.md` §13 Sample Program Target](../HlaX64_Project_Plan.md) — deskripsi program contoh.
-- [`HlaX64_Project_Plan.md` §13.5 Native integration test samples](../HlaX64_Project_Plan.md) — daftar untuk Fase 9.5.
-- [`docs/abi-linux-x64.md`](./abi-linux-x64.md) — detail ABI Linux SysV.
-- [`docs/runtime-contract.md`](./runtime-contract.md) — kontrak runtime.
+- [`runtime-matrix.md`](./runtime-matrix.md) — target × output defaults
+- [`classic-hla-comparison.md`](./classic-hla-comparison.md) — HLA vs HlaX64
+- [`development.md`](./development.md) — contributor setup

@@ -52,7 +52,7 @@ public class TestRunnerTests
         var manifest = new TestManifest
         {
             Name = "simple",
-            Source = "examples/simple.hla64"
+            Source = "examples/01-arithmetic/simple.hla64"
         };
 
         var buildDir = Path.Combine(Path.GetTempPath(), "hlax64_test_" + Guid.NewGuid().ToString("N")[..8]);
@@ -100,7 +100,7 @@ public class TestRunnerTests
         var manifest = new TestManifest
         {
             Name = "test",
-            Source = "examples/simple.hla64"
+            Source = "examples/01-arithmetic/simple.hla64"
         };
 
         var buildDir = Path.Combine(Path.GetTempPath(), "hlax64_test_" + Guid.NewGuid().ToString("N")[..8]);
@@ -158,7 +158,7 @@ public class TestRunnerTests
         var manifest = new TestManifest
         {
             Name = "hello",
-            Source = "examples/hello.hla64"
+            Source = "examples/00-getting-started/hello.hla64"
         };
 
         var buildDir = Path.Combine(Path.GetTempPath(), "hlax64_test_" + Guid.NewGuid().ToString("N")[..8]);
