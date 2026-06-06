@@ -6,7 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- README demo GIF (`docs/assets/demo.gif`) and `scripts/generate-demo-gif.py`
+- GitHub issue backlog script (`scripts/create-issue-backlog.ps1`); 20 curated issues (#1–#20)
 
 ## [0.1.0-alpha] - 2026-06-06
 

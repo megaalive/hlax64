@@ -24,15 +24,15 @@ See [architecture.md](architecture.md) for the Mermaid pipeline diagram (renders
 
 ## Demo recording (maintainers)
 
-Record a short terminal GIF for the README:
+Regenerate the README GIF (uses real `hla64` CLI output):
 
-1. `hla64 doctor`
-2. `hla64 run examples/00-getting-started/hello.hla64`
-3. `hla64 explain examples/08-ai-agent/smoke-test.hla64 | head`
+```bash
+python scripts/generate-demo-gif.py
+```
 
-Suggested tools: [asciinema](https://asciinema.org/) + [agg](https://github.com/asciinema/agg), or ScreenToGif on Windows.
+Output: `docs/assets/demo.gif` (linked from README).
 
-Save as `docs/assets/demo.gif` and link from README when ready.
+Manual recording alternative: [asciinema](https://asciinema.org/) + [agg](https://github.com/asciinema/agg).
 
 ## Release announcement checklist
 
@@ -41,7 +41,7 @@ When tagging `v0.1.0-alpha`:
 - [ ] Verify Linux + Windows archives and checksums on Releases
 - [ ] Update README install link to [install.md](install.md)
 - [ ] Post short summary: compiler + MCP + 20 examples + `hla64 doctor`
-- [ ] Tag issues with `good first issue` as they are created
+- [ ] Tag issues with `good first issue` as they are created — see [open issues](https://github.com/megaalive/hlax64/issues?q=is%3Aissue+is%3Aopen)
 
 ## Repository metadata (GitHub UI)
 
