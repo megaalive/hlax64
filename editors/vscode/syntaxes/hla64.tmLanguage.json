@@ -1,0 +1,63 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "HlaX64",
+  "scopeName": "source.hla64",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#directives" },
+    { "include": "#keywords" },
+    { "include": "#types" },
+    { "include": "#registers" },
+    { "include": "#numbers" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [{
+        "name": "comment.line.double-slash.hla64",
+        "match": "//.*$"
+      }]
+    },
+    "strings": {
+      "patterns": [{
+        "name": "string.quoted.double.hla64",
+        "begin": "\"",
+        "end": "\"",
+        "patterns": [{ "name": "constant.character.escape.hla64", "match": "\\\\." }]
+      }]
+    },
+    "directives": {
+      "patterns": [{
+        "name": "meta.preprocessor.hla64",
+        "match": "#(include|pragma)\\([^)]*\\)"
+      }]
+    },
+    "keywords": {
+      "patterns": [{
+        "name": "keyword.control.hla64",
+        "match": "\\b(program|begin|end|procedure|call|export|var|if|else|endif|while|endwhile|do|then|returns)\\b"
+      }, {
+        "name": "keyword.other.hla64",
+        "match": "\\b(mov|add|sub|imul|xor|and|or|cmp|lea|push|pop|inc|dec|neg|not|shl|shr|sar|jmp|call|ret|syscall|nop|hlt|stdout|stderr|stdin|nl)\\b"
+      }]
+    },
+    "types": {
+      "patterns": [{
+        "name": "storage.type.hla64",
+        "match": "\\b(int8|int16|int32|int64|uint8|uint16|uint32|uint64|byte|word|dword|qword|ptr)\\b"
+      }]
+    },
+    "registers": {
+      "patterns": [{
+        "name": "variable.other.register.hla64",
+        "match": "\\b(rax|rbx|rcx|rdx|rsi|rdi|rbp|rsp|r[8-9]|r1[0-5]|e[a-z]{2}|r[8-9]d|r1[0-5]d|ax|bx|cx|dx|al|bl|cl|dl)\\b"
+      }]
+    },
+    "numbers": {
+      "patterns": [{
+        "name": "constant.numeric.hla64",
+        "match": "\\b-?[0-9]+\\b"
+      }]
+    }
+  }
+}

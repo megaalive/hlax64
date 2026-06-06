@@ -1,0 +1,15 @@
+program callee_saved;
+
+#include("stdlib64.hhf")
+
+procedure Double(x:int64); @returns("rax");
+begin Double;
+    mov(x, rax);
+    add(rax, rax);
+end Double;
+
+begin callee_saved;
+    mov(7, rax);
+    call Double(rax);
+    stdout.put("7 doubled = ", rax, nl);
+end callee_saved;

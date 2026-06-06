@@ -1,0 +1,15 @@
+program sum_1_to_5;
+
+#include("stdlib64.hhf")
+
+begin sum_1_to_5;
+    mov(0, rax);
+    mov(1, rcx);
+
+    while(rcx < 6) do
+        add(rcx, rax);
+        add(1, rcx);
+    endwhile;
+
+    stdout.put("sum 1..5 = ", rax, nl);
+end sum_1_to_5;

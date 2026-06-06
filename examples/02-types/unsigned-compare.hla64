@@ -1,0 +1,12 @@
+program unsigned_compare;
+
+#include("stdlib64.hhf")
+
+begin unsigned_compare;
+    mov(-1, rax);
+    mov(1, rcx);
+
+    if(rax >? rcx) then
+        stdout.put("unsigned: greater", nl);
+    endif;
+end unsigned_compare;

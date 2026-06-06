@@ -1,0 +1,4 @@
+program minimal;
+begin minimal;
+    mov(0, rax);
+end minimal;

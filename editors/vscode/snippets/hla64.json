@@ -1,0 +1,23 @@
+{
+  "Hello World Program": {
+    "prefix": "hello",
+    "body": [
+      "program ${1:name};",
+      "",
+      "#include(\"stdlib64.hhf\")",
+      "",
+      "begin ${1:name};",
+      "    stdout.put(\"${2:Hello from HlaX64}\", nl);",
+      "end ${1:name};"
+    ]
+  },
+  "Procedure": {
+    "prefix": "proc",
+    "body": [
+      "procedure ${1:Name}(${2:a:int64}); @returns(\"rax\");",
+      "begin ${1:Name};",
+      "    $0",
+      "end ${1:Name};"
+    ]
+  }
+}

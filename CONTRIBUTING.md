@@ -43,7 +43,9 @@ After `dotnet build`, run `.hla64` programs:
 ```bash
 dotnet run --project src/HlaX64.Cli -- run examples/00-getting-started/hello.hla64
 dotnet run --project src/HlaX64.Cli -- test examples/
-dotnet run --project src/HlaX64.Cli -- bench examples/hello.hla64
+dotnet run --project src/HlaX64.Cli -- bench benchmarks/count.json
+dotnet run --project src/HlaX64.Cli -- explain examples/04-procedures/add-two.hla64
+dotnet run --project src/HlaX64.Cli -- format examples --check
 ```
 
 On Windows, the CLI auto-detects WSL2 for building and running ELF binaries.

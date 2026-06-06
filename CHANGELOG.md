@@ -8,18 +8,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ### Added
 
-- Open-source community foundation: LICENSE, GOVERNANCE, issue templates, contributor docs
-- CLI machine-readable output (`--json`) with `schemaVersion` for build, test, bench, doctor, explain-abi, generate-header, generate-pinvoke
-- JSON Schema definitions under `schemas/`
-- Structured example programs under `examples/`
-- Runtime target matrix documentation
-- Windows native build step in CI
-- Release workflow for downloadable CLI archives
+- `hla64 explain` — IR, ABI lowering, and NASM for a source file (`--json`)
+- `hla64 format` / `format --check` — source normalization
+- VS Code extension skeleton under `editors/vscode/`
+- `tests/conformance/` valid/invalid suites with diagnostic codes
+- RFC index (`rfcs/`) with language versioning and pointer model drafts
+- 16 structured examples across curriculum folders
+- .NET global tool packaging (`dotnet tool install --global HlaX64.Cli`)
 
 ### Changed
 
-- README and docs aligned with current capabilities and compatibility policy
-- Diagnostic catalog documented in `docs/diagnostics.md`
+- `CompilationResult.StructuredDiagnostics` for coded diagnostics in tooling
 
 ## [0.1.0-alpha] - 2026-06-06
 

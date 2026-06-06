@@ -1,0 +1,16 @@
+// Clean-room example inspired by classic assembly curriculum (signed compare).
+program signed_compare;
+
+#include("stdlib64.hhf")
+
+begin signed_compare;
+    mov(0, rax);
+    sub(3, rax);
+    mov(5, rcx);
+
+    if(rax < rcx) then
+        stdout.put("negative is less (signed correct)", nl);
+    else
+        stdout.put("WRONG: signed compare failed", nl);
+    endif;
+end signed_compare;

@@ -1,29 +1,20 @@
-# HlaX64 Examples
+# Structured example programs for learning and smoke testing.
 
-Structured sample programs for learning and smoke testing. Each folder has a short README.
+| Folder | Programs | Topic |
+|--------|----------|-------|
+| [00-getting-started/](00-getting-started/) | hello, exitcode | First programs |
+| [01-arithmetic/](01-arithmetic/) | simple, move-values | Register arithmetic |
+| [02-types/](02-types/) | signed-compare, unsigned-compare | Comparisons |
+| [03-control-flow/](03-control-flow/) | count, if-else | Loops & branches |
+| [04-procedures/](04-procedures/) | add-two, no-args, six-args | Procedures & ABI args |
+| [05-memory/](05-memory/) | sum-1-to-5 | Accumulator patterns |
+| [06-abi/](06-abi/) | stack-alignment, callee-saved | ABI conventions |
+| [07-interop/](07-interop/) | export-lib | C / C# interop |
+
+**16 programs** — clean-room HlaX64 code. See [docs/classic-hla-comparison.md](../docs/classic-hla-comparison.md).
 
 ```bash
 hla64 run examples/00-getting-started/hello.hla64
-dotnet run --project src/HlaX64.Cli -- test tests/samples
+hla64 explain examples/04-procedures/add-two.hla64
+hla64 format examples --check
 ```
-
-## Curriculum
-
-| Folder | Topic | Programs |
-|--------|-------|----------|
-| [00-getting-started/](00-getting-started/) | Hello world, exit codes | `hello`, `exitcode` |
-| [01-arithmetic/](01-arithmetic/) | Register arithmetic | `simple` |
-| [03-control-flow/](03-control-flow/) | Loops and branches | `count`, `if-else` |
-| [04-procedures/](04-procedures/) | Procedures & ABI | `add-two` |
-
-More integration tests live under [`tests/samples/`](../tests/samples/). See [docs/examples.md](../docs/examples.md) and [docs/classic-hla-comparison.md](../docs/classic-hla-comparison.md).
-
-## Run any example
-
-```bash
-hla64 run examples/<folder>/<name>.hla64
-hla64 emit-nasm examples/00-getting-started/hello.hla64
-hla64 explain-abi --target linux-x64-sysv
-```
-
-Examples are **clean-room** HlaX64 code (see [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)).
