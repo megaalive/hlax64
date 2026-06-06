@@ -1,0 +1,7 @@
+{
+  "name": "comparison_uint64_boundary",
+  "source": "comparison_uint64_boundary.hla64",
+  "expectedStdout": "unsigned: high bit greater\nsigned: not greater\n",
+  "expectedExitCode": 0,
+  "description": "uint64 boundary: 0x8000000000000000 vs 1 (unsigned vs signed)"
+}

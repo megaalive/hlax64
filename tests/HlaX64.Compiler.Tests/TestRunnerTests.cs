@@ -212,5 +212,6 @@ public class TestRunnerTests
         var manifests = TestManifest.LoadAll("tests/samples");
         Assert.NotEmpty(manifests);
         Assert.Contains(manifests, m => m.Name == "exitcode");
+        Assert.Contains(manifests, m => m.Name == "comparison_uint64_boundary");
     }
 }
