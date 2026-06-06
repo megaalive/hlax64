@@ -5,10 +5,24 @@
 > assemble, link, and run — all from a single `hla64` CLI.
 
 [![Status](https://img.shields.io/badge/Fase%200%E2%80%9313-Done-green)](./docs/roadmap.md)
-[![Tests](https://img.shields.io/badge/tests-117%2F117%20+%2016%2F16%20native-2ea44f)](#test-status)
+[![Tests](https://img.shields.io/badge/tests-118%2F118%20+%2016%2F16%20native%20+%2018%20curriculum-2ea44f)](#test-status)
 [![Target](https://img.shields.io/badge/target-linux--x64--sysv%20|%20windows--x64--msabi-1f6feb)](#targets)
 [![Language](https://img.shields.io/badge/language-v0.1%20Draft-blueviolet)](#language-reference)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](#license)
+[![Pages](https://img.shields.io/badge/docs-GitHub%20Pages-2ea44f)](https://megaalive.github.io/hlax64/playground/index.html)
+
+---
+
+## Install
+
+Pre-built archives, global tool, or clone — see **[docs/install.md](docs/install.md)**.
+
+```bash
+hla64 doctor
+hla64 run examples/00-getting-started/hello.hla64
+```
+
+Tutorials: [Getting started](docs/tutorials/01-getting-started.md) · [Native routines](docs/tutorials/02-native-routines.md) · [C# interop](docs/tutorials/03-csharp-interop.md) · [MCP agents](docs/tutorials/04-mcp-agent.md)
 
 ---
 
@@ -58,7 +72,7 @@
 | Area                | Status | Details |
 |---------------------|--------|---------|
 | **CLI**             | ✅     | `build`, `emit-nasm`, `run`, `test`, `bench`, `explain`, `explain-abi`, `format`, `generate-header`, `generate-pinvoke`, `doctor` |
-| **Test runner**     | ✅     | 117 unit tests (+ 20 example compile guards) + 16 native integration tests |
+| **Test runner**     | ✅     | 118 unit tests (+ 20 example compile guards) + 16 native samples + 18 curriculum manifests |
 | **Benchmark runner**| ✅     | `hla64 bench` with warmup, median, binary size, JSON manifest |
 | **MCP server**      | ✅     | 12 tools via stdio JSON-RPC: compile, build, run, test, explain, explain-abi, format-source, doctor, generate-header, generate-pinvoke, get-version, list-instructions |
 | **ABI explainer**   | ✅     | `hla64 explain-abi --target linux-x64-sysv` (or `windows-x64-msabi`) |
@@ -241,6 +255,9 @@ Phases are summarized in [`docs/roadmap.md`](./docs/roadmap.md).
 - [`docs/compatibility.md`](./docs/compatibility.md) — breaking change policy.
 - [`docs/diagnostics.md`](./docs/diagnostics.md) — diagnostic code catalog.
 - [`docs/examples.md`](./docs/examples.md) — katalog program contoh & cara menjalankan.
+- [`docs/install.md`](./docs/install.md) — unduh release, global tool, uninstall.
+- [`docs/architecture.md`](./docs/architecture.md) — pipeline diagram & project map.
+- [`docs/tutorials/`](./docs/tutorials/) — tutorial series (beginner → MCP).
 - [`docs/classic-hla-comparison.md`](./docs/classic-hla-comparison.md) — perbandingan dengan HLA klasik.
 
 ---
@@ -267,6 +284,7 @@ See [`docs/language-spec.md`](./docs/language-spec.md) for full details.
 ## 🤝 Community
 
 - [Contributing Guide](CONTRIBUTING.md) — how to build, test, and submit changes
+- [Install Guide](docs/install.md) — release archives and global tool
 - [Development Guide](docs/development.md) — local setup and CI parity
 - [Governance](GOVERNANCE.md) — decision process and labels
 - [Code of Conduct](CODE_OF_CONDUCT.md) — our community standards

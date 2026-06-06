@@ -1,0 +1,6 @@
+{
+  "name": "curriculum-add-two",
+  "source": "../../../examples/04-procedures/add-two.hla64",
+  "expectedStdout": "10 + 20 = 30\n",
+  "description": "Curriculum: two-arg procedure"
+}

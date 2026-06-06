@@ -1,0 +1,6 @@
+{
+  "name": "curriculum-if-else",
+  "source": "../../../examples/03-control-flow/if-else.hla64",
+  "expectedStdout": "big\n",
+  "description": "Curriculum: if/else branch"
+}

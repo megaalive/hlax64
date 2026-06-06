@@ -15,6 +15,8 @@ Run `hla64 doctor` (or `dotnet run --project src/HlaX64.Cli -- doctor`) to verif
 
 ### Install as global tool
 
+See [install.md](install.md) for release archives and uninstall steps.
+
 ```bash
 dotnet pack src/HlaX64.Cli/HlaX64.Cli.csproj -c Release
 dotnet tool install --global --add-source ./src/HlaX64.Cli/bin/Release HlaX64.Cli
@@ -58,8 +60,11 @@ dotnet run --project src/HlaX64.Cli -- test tests/samples
 
 Sample programs under `tests/samples/` each have a `manifest.json` with expected stdout and exit code.
 
+Curriculum examples use `tests/examples-curriculum/` (paths into `examples/`).
+
 ```bash
 dotnet run --project src/HlaX64.Cli -- test tests/samples
+dotnet run --project src/HlaX64.Cli -- test tests/examples-curriculum
 dotnet run --project src/HlaX64.Cli -- test tests/samples --filter hello
 dotnet run --project src/HlaX64.Cli -- test tests/samples --json
 ```

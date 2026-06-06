@@ -1,0 +1,6 @@
+{
+  "name": "curriculum-stack-alignment",
+  "source": "../../../examples/06-abi/stack-alignment.hla64",
+  "expectedStdout": "10 + 5 = 15\n",
+  "description": "Curriculum: stack alignment on call"
+}

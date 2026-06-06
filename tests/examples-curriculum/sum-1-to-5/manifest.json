@@ -1,0 +1,6 @@
+{
+  "name": "curriculum-sum-1-to-5",
+  "source": "../../../examples/05-memory/sum-1-to-5.hla64",
+  "expectedStdout": "sum 1..5 = 15\n",
+  "description": "Curriculum: accumulation loop"
+}

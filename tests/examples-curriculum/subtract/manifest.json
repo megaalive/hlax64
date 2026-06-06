@@ -1,0 +1,6 @@
+{
+  "name": "curriculum-subtract",
+  "source": "../../../examples/01-arithmetic/subtract.hla64",
+  "expectedExitCode": 7,
+  "description": "Curriculum: sub instruction"
+}

@@ -1,0 +1,6 @@
+{
+  "name": "curriculum-factorial-iter",
+  "source": "../../../examples/04-procedures/factorial-iter.hla64",
+  "expectedExitCode": 120,
+  "description": "Curriculum: iterative factorial (5!)"
+}

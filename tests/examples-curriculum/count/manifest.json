@@ -1,0 +1,6 @@
+{
+  "name": "curriculum-count",
+  "source": "../../../examples/03-control-flow/count.hla64",
+  "expectedStdout": "count = 0\ncount = 1\ncount = 2\ncount = 3\ncount = 4\n",
+  "description": "Curriculum: while loop"
+}
