@@ -65,6 +65,9 @@ public enum TokenType
     GreaterThanUnsigned,
     Plus,
     Minus,
+    Ampersand,
+    LeftBracket,
+    RightBracket,
     
     // Special
     NewLine,

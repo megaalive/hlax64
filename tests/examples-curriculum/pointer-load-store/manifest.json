@@ -1,0 +1,6 @@
+{
+  "name": "curriculum-pointer-load-store",
+  "source": "../../../examples/05-memory/pointer-load-store.hla64",
+  "expectedExitCode": 42,
+  "description": "Curriculum: pointer address-of and memory load"
+}

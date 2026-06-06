@@ -392,6 +392,36 @@ public sealed class Parser
     {
         var token = Peek();
 
+        if (token.Type == TokenType.Ampersand)
+        {
+            Advance();
+            var nameToken = Peek();
+            string name;
+            if (nameToken.Type == TokenType.Identifier)
+            {
+                name = Advance().Value;
+            }
+            else if (IsRegisterToken(nameToken.Type))
+            {
+                name = Advance().Value.ToLowerInvariant();
+            }
+            else
+            {
+                throw new ParseException(
+                    $"Expected variable name after '&' but got '{nameToken.Type}' ('{nameToken.Value}') at line {nameToken.Line}, column {nameToken.Column}");
+            }
+
+            return WithLocation(new AddressOfNode(name), nameToken);
+        }
+
+        if (token.Type == TokenType.LeftBracket)
+        {
+            Advance();
+            var inner = ParseOperand();
+            Expect(TokenType.RightBracket);
+            return new MemoryRefNode(inner);
+        }
+
         switch (token.Type)
         {
             case TokenType.Minus:
@@ -436,6 +466,18 @@ public sealed class Parser
                 return new IdentifierNode(token.Value);
         }
     }
+
+    private static bool IsRegisterToken(TokenType type)
+        => type is TokenType.RAX or TokenType.RBX or TokenType.RCX or TokenType.RDX
+            or TokenType.RSI or TokenType.RDI or TokenType.RBP or TokenType.RSP
+            or TokenType.R8 or TokenType.R9 or TokenType.R10 or TokenType.R11
+            or TokenType.R12 or TokenType.R13 or TokenType.R14 or TokenType.R15
+            or TokenType.EAX or TokenType.EBX or TokenType.ECX or TokenType.EDX
+            or TokenType.ESI or TokenType.EDI or TokenType.EBP or TokenType.ESP
+            or TokenType.R8D or TokenType.R9D or TokenType.R10D or TokenType.R11D
+            or TokenType.R12D or TokenType.R13D or TokenType.R14D or TokenType.R15D
+            or TokenType.AX or TokenType.BX or TokenType.CX or TokenType.DX
+            or TokenType.AL or TokenType.BL or TokenType.CL or TokenType.DL;
 
     private Token Peek()
     {

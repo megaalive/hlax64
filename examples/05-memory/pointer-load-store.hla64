@@ -1,0 +1,15 @@
+// RFC 0002 minimal: address-of (&var) and load through [reg]
+program pointer_load_store;
+
+procedure LoadViaPtr; @returns("rax");
+var
+    slot: int64;
+begin LoadViaPtr;
+    mov(42, slot);
+    mov(&slot, rcx);
+    mov([rcx], rax);
+end LoadViaPtr;
+
+begin pointer_load_store;
+    call LoadViaPtr();
+end pointer_load_store;

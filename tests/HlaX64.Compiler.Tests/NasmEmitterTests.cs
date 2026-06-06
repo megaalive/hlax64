@@ -242,6 +242,25 @@ end hello;";
         throw new FileNotFoundException(
             $"Could not locate sample {sampleDir}/{fileName} starting from {AppContext.BaseDirectory}");
     }
+
+    [Fact]
+    public void Emit_PointerLoadStore_EmitsLeaAndMemLoad()
+    {
+        var source = @"program t;
+procedure P; @returns(""rax"");
+var slot: int64;
+begin P;
+    mov(42, slot);
+    mov(&slot, rcx);
+    mov([rcx], rax);
+end P;
+begin t;
+    mov(0, rax);
+end t;";
+        var nasm = Emit(source);
+        Assert.Contains("lea rcx, [rbp-", nasm);
+        Assert.Contains("mov rax, [rcx]", nasm);
+    }
 }
 
 public class WindowsMsAbiLowererTests

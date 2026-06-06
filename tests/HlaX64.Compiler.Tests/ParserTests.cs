@@ -194,6 +194,20 @@ public class ParserTests
     }
 
     [Fact]
+    public void Parse_AddressOfAndMemoryRef_ParsesCorrectly()
+    {
+        var source = "program t;\nprocedure P; @returns(\"rax\");\nvar v: int64;\nbegin P;\n    mov(&v, rcx);\n    mov([rcx], rax);\nend P;\nbegin t;\nend t;";
+        var program = new Parser(new Lexer(source).Tokenize()).Parse();
+        var proc = Assert.IsType<ProcedureNode>(program.Statements[0]);
+        var movAddr = Assert.IsType<InstructionNode>(proc.Body[0]);
+        var addr = Assert.IsType<AddressOfNode>(movAddr.Operands[0]);
+        Assert.Equal("v", addr.VariableName);
+        var movLoad = Assert.IsType<InstructionNode>(proc.Body[1]);
+        var mem = Assert.IsType<MemoryRefNode>(movLoad.Operands[0]);
+        Assert.IsType<RegisterNode>(mem.Inner);
+    }
+
+    [Fact]
     public void Parse_Int64MinLiteral_ParsesCorrectly()
     {
         var source = "program t;\nbegin t;\n    mov(-9223372036854775808, rax);\nend t;";

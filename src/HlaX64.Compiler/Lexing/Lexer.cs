@@ -102,6 +102,9 @@ public sealed class Lexer
             case ':': Advance(); return CreateToken(TokenType.Colon, ":", line, col);
             case '+': Advance(); return CreateToken(TokenType.Plus, "+", line, col);
             case '-': Advance(); return CreateToken(TokenType.Minus, "-", line, col);
+            case '&': Advance(); return CreateToken(TokenType.Ampersand, "&", line, col);
+            case '[': Advance(); return CreateToken(TokenType.LeftBracket, "[", line, col);
+            case ']': Advance(); return CreateToken(TokenType.RightBracket, "]", line, col);
 
             case '=':
                 Advance();

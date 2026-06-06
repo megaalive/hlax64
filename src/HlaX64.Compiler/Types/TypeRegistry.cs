@@ -15,6 +15,7 @@ public static class TypeRegistry
     public static readonly IntegerTypeSymbol Word = new("word", 16, false);
     public static readonly IntegerTypeSymbol DWord = new("dword", 32, false);
     public static readonly IntegerTypeSymbol QWord = new("qword", 64, false);
+    public static readonly IntegerTypeSymbol Ptr = new("ptr", 64, false);
 
     private static readonly Dictionary<string, IntegerTypeSymbol> _types = new()
     {
@@ -30,6 +31,7 @@ public static class TypeRegistry
         ["word"] = Word,
         ["dword"] = DWord,
         ["qword"] = QWord,
+        ["ptr"] = Ptr,
     };
 
     public static IntegerTypeSymbol? Lookup(string name)
