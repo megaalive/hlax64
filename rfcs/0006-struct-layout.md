@@ -29,7 +29,7 @@ end P;
 - Each field aligned to its natural size (platform-neutral default).
 - Padding inserted between fields as required.
 - Total record size rounded up to maximum field alignment.
-- `packed` attribute deferred to a future sprint.
+- **`packed` record** — implemented (Phase 16 Sprint 5+): `record Name packed` / no inter-field padding.
 
 ## Builtins
 
