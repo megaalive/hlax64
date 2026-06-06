@@ -19,6 +19,7 @@ public sealed class CompilationResult
     public List<string> LinkLibraries { get; set; } = new();
     public ExternProcedureRegistry ExternProcedures { get; set; } = new();
     public ProcedureTypeRegistry ProcedureTypes { get; set; } = new();
+    public RecordTypeRegistry RecordTypes { get; set; } = new();
     public List<string> Diagnostics { get; set; } = new();
     public List<Diagnostic> StructuredDiagnostics { get; set; } = new();
 }
@@ -70,6 +71,17 @@ public class Compilation
                 return result;
             }
 
+            if (Options.Warnings.DefiniteAssignment || Options.Warnings.Unreachable || Options.Warnings.Liveness)
+            {
+                var verification = new Verification.VerificationAnalyzer(Options.Warnings);
+                var verifyDiags = verification.Analyze(program);
+                foreach (var diag in verifyDiags.Diagnostics)
+                {
+                    result.StructuredDiagnostics.Add(diag);
+                    result.Diagnostics.Add(diag.ToString());
+                }
+            }
+
             // 4. Lower AST to IR
             var lowering = new AstToIrLowering(semantic.ConstTable, semantic.RecordTypes, semantic.GlobalData,
                 semantic.ExternProcedures, semantic.ProcedureTypes);
@@ -81,6 +93,7 @@ public class Compilation
             result.GlobalData = semantic.GlobalData.Globals.Values.ToList();
             result.ExternProcedures = semantic.ExternProcedures;
             result.ProcedureTypes = semantic.ProcedureTypes;
+            result.RecordTypes = semantic.RecordTypes;
             result.LinkLibraries = semantic.ExternProcedures
                 .ResolveLinkLibraries(Options.Target.Abi.Equals("msabi", StringComparison.OrdinalIgnoreCase))
                 .ToList();

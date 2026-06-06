@@ -25,7 +25,7 @@ public static class DiagnosticService
             var lexer = new Lexer(sourceText);
             var parser = new Parser(lexer.Tokenize());
             var program = parser.Parse();
-            var sem = new SemanticAnalyzer(warnings ?? new CompilerWarnings(Bounds: true));
+            var sem = new SemanticAnalyzer(warnings ?? CompilerWarnings.LanguageServerDefaults);
             var diags = sem.Analyze(program);
             return new AnalysisResult
             {

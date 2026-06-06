@@ -9,7 +9,7 @@ namespace HlaX64.Cli.Commands;
 
 public sealed class BuildCommand : Command<BuildCommand.Settings>
 {
-    public sealed class Settings : CommandSettings
+    public sealed class Settings : CommandSettings, IVerificationCliOptions
     {
         [Description("Path to the .hla64 source file")]
         [CommandArgument(0, "<source>")]
@@ -38,6 +38,22 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
         [Description("Warn when a literal array index may be out of bounds")]
         [CommandOption("-Wbounds|--warn-bounds")]
         public bool WarnBounds { get; set; }
+
+        [Description("Warn on possible use before definite assignment (HLAX0060)")]
+        [CommandOption("-Wdefinite|--warn-definite")]
+        public bool WarnDefinite { get; set; }
+
+        [Description("Warn on unreachable code / missing return path (HLAX0061/62)")]
+        [CommandOption("-Wunreachable|--warn-unreachable")]
+        public bool WarnUnreachable { get; set; }
+
+        [Description("Warn when caller-saved registers may be live across call (HLAX0063)")]
+        [CommandOption("-Wliveness|--warn-liveness")]
+        public bool WarnLiveness { get; set; }
+
+        [Description("Enable all Phase 18 verification warnings")]
+        [CommandOption("-Wverify|--warn-verify")]
+        public bool WarnVerify { get; set; }
     }
 
     protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation)
@@ -51,7 +67,9 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
         outputDir = Path.GetFullPath(outputDir);
         Directory.CreateDirectory(outputDir);
 
-        var options = CliCompilationOptions.FromCli(settings.Target, settings.RuntimeMode, settings.WarnBounds);
+        var options = CliCompilationOptions.FromCli(
+            settings.Target, settings.RuntimeMode, settings.WarnBounds,
+            settings.WarnDefinite, settings.WarnUnreachable, settings.WarnLiveness, settings.WarnVerify);
         var targetTriple = options.Target;
 
         bool isWindows = options.Target.Abi.Equals("msabi", StringComparison.OrdinalIgnoreCase);

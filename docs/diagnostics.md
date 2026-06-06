@@ -418,6 +418,64 @@ Stable diagnostic codes help agents, IDE tooling, and contributors reference err
 | **Cause** | `extern variadic procedure` is declared but not implemented |
 | **Fix** | See RFC 0013; use fixed-arity externs until Phase 18 |
 
+### HLAX0060 — Use before definite assignment
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Warning |
+| **Category** | Verification |
+| **Since** | 0.2.0-alpha (Phase 18) |
+| **Cause** | A local variable is read before it is assigned on all control-flow paths |
+| **Example** | `mov(x, rax);` when `x` was never initialized |
+| **Fix** | Assign the local (`mov(0, x);` or `x := 0;`) before reading |
+| **CLI** | `-Wdefinite` / `--warn-definite` or `-Wverify`; enabled in LSP by default |
+
+### HLAX0061 — Unreachable code
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Warning |
+| **Category** | Verification |
+| **Since** | 0.2.0-alpha (Phase 18) |
+| **Cause** | Statement appears after unconditional `jmp`, `ret`, or `hlt` |
+| **Fix** | Remove dead code or restructure control flow |
+| **CLI** | `-Wunreachable` / `--warn-unreachable` or `-Wverify`; enabled in LSP by default |
+
+### HLAX0062 — Missing return register assignment
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Warning |
+| **Category** | Verification |
+| **Since** | 0.2.0-alpha (Phase 18) |
+| **Cause** | Procedure declares `@returns("rax")` but never writes to that register |
+| **Fix** | `mov(result, rax);` (or the declared return register) before returning |
+| **CLI** | `-Wunreachable` or `-Wverify`; enabled in LSP by default |
+
+### HLAX0063 — Register live across call
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Warning |
+| **Category** | Verification |
+| **Since** | 0.2.0-alpha (Phase 18) |
+| **Cause** | A caller-saved register (`rax`, `rcx`, `rdx`, `rsi`, `rdi`, `r8`–`r11`) may hold a value that is clobbered by a `call` |
+| **Example** | `mov(42, rcx); call Foo();` without saving `rcx` |
+| **Fix** | Save to stack/callee-saved register before the call, or reload after |
+| **CLI** | `-Wliveness` / `--warn-liveness` or `-Wverify`; enabled in LSP by default |
+
+### HLAX0064–HLAX0068 — Stack verification
+
+| Code | Meaning |
+|------|---------|
+| HLAX0064 | Missing lowered function or inconsistent slot layout |
+| HLAX0065 | Missing procedure prologue |
+| HLAX0066 | Missing epilogue before fall-through return |
+| HLAX0067 | Stack frame not 16-byte aligned |
+| HLAX0068 | Lowered frame size vs IR layout mismatch |
+
+Reported by `hla64 verify-stack` (not emitted during normal compile).
+
 ## Toolchain messages (no code yet)
 
 CLI and linker errors currently use plain text (e.g. `Error: NASM not found`). Future releases will assign `HLAX4xxx` codes.

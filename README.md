@@ -54,6 +54,8 @@ HlaX64 is an **early multi-platform x64 language toolchain** — not a single-ta
 | Pipeline | ✅ | Lexer → Parser → Semantic → IR → ABI lowerer → NASM |
 | Diagnostics | ✅ | Line/column, codes HLAX00xx, fuzzy suggestions |
 | Bounds warnings | ✅ | `-Wbounds` / HLAX0030 for static array indices |
+| Verification warnings | ✅ | `-Wverify` / HLAX0060–63 (definite assignment, CFG, liveness) |
+| Stack / ABI verify | ✅ | `hla64 verify-stack`, `hla64 verify-abi` |
 | Format | ✅ | `hla64 format` via `AstFormatter` |
 
 ### Targets

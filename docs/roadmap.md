@@ -33,7 +33,7 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 | 15 | AI Assembly Lab / GUI | ⏳ Pending | eksperimen UI (Avalonia/WPF) |
 | **16** | **Language core completion** | ✅ Done | const, expressions, enum, record, static, string model |
 | 17 | ABI and FFI completion | ✅ Done | Sprints 2–5: extern, fn ptr, float ABI, struct param, variadic RFC |
-| 18 | Compiler verification | ⏳ | definite assignment, CFG/stack/ABI verifiers, fuzz expansion |
+| 18 | Compiler verification | ✅ Done | definite assignment, CFG, liveness, verify-stack/abi, fuzz |
 | 19 | Debug and explainability | ⏳ | source map, DWARF MVP, disassembly, trace mode |
 | 20 | Optimization | ⏳ | const fold/prop, DCE, peephole, regalloc |
 | 21 | CPU and SIMD | ⏳ | instruction DB, SSE2/AVX2, intrinsics, atomics |
@@ -57,6 +57,16 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 - **Sprint 3 (done):** function pointer type aliases + indirect `call`; RFC 0011; example `indirect-call.hla64`
 - **Sprint 4 (done):** float32/float64 param/return MVP; RFC 0012; example `float-return.hla64`
 - **Sprint 5 (done):** record param as hidden pointer; variadic extern RFC + HLAX0055; RFC 0013; example `record-param.hla64`
+
+### Phase 18 sprint notes
+
+- **Sprint 1 (done):** definite assignment analysis; HLAX0060; `-Wdefinite`; LSP default warning
+- **Sprint 2 (done):** unreachable code HLAX0061; missing `@returns` path HLAX0062; `-Wunreachable`
+- **Sprint 3 (done):** caller-saved register liveness across `call` HLAX0063; `-Wliveness`
+- **Sprint 4 (done):** `hla64 verify-stack`; `StackVerifier.cs`; HLAX0064–68; RFC 0014
+- **Sprint 5 (done):** `hla64 verify-abi`; per-procedure ABI report (params, return, externs)
+- **Sprint 6 (done):** fuzz tests (UTF-8 lexer, formatter round-trip, manifest JSON); `docs/development.md`
+- **Sprint 7 (deferred):** differential testing MVP → Phase 19 (RFC 0014)
 
 ---
 
@@ -92,7 +102,7 @@ Fase 13 (MCP) →  Fase 14 (LSP) →  Fase 15 (GUI)
 > *Fase 9.5 Workstream A–H done. Docs sync complete. Fase 10 (Bench), 11 (Windows), 12 (C# interop), 13 (MCP) all done.
 > **Level 3 memory curriculum** (RFC 0002/0003) — pointers, indexed `[reg+N]`, stack arrays `type[N]` (incl. packed `byte[N]`), string walk, optional `-Wbounds` (HLAX0030).
 > **Fase 14 LSP MVP** — diagnostics (incl. bounds warnings), hover, completion, go-to-definition, document symbols, format-on-save; VS Code language client.
-> **Phase 16 complete** — language core (const, expressions, enum, record, static, cstring/utf8slice). **Phase 17 complete** — ABI/FFI (extern, fn ptr, float, struct param). Next: Phase 18 (verification) or Fase 15 (GUI / AI Assembly Lab).
+> **Phase 16 complete** — language core (const, expressions, enum, record, static, cstring/utf8slice). **Phase 17 complete** — ABI/FFI (extern, fn ptr, float, struct param). **Phase 18 complete** — verification (definite assignment, CFG, liveness, verify-stack/abi). Next: Phase 19 (debug/explainability) or Fase 15 (GUI / AI Assembly Lab).
 
 ---
 

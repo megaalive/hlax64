@@ -63,8 +63,21 @@ public sealed class ConformanceTests
             return;
         }
 
-        var result = new Compilation("(conformance)", source).Process();
-        Assert.False(result.Success);
+        var warnings = manifest.EnableVerificationWarnings
+            ? new HlaX64.Compiler.Options.CompilerWarnings(
+                DefiniteAssignment: true, Unreachable: true, Liveness: true)
+            : HlaX64.Compiler.Options.CompilationOptions.Default.Warnings;
+        var options = HlaX64.Compiler.Options.CompilationOptions.Default with { Warnings = warnings };
+        var result = new Compilation("(conformance)", source, options).Process();
+
+        if (manifest.ExpectWarningsOnly)
+        {
+            Assert.True(result.Success, string.Join("; ", result.Diagnostics));
+        }
+        else
+        {
+            Assert.False(result.Success);
+        }
 
         if (manifest.ExpectCodes is { Length: > 0 })
         {
@@ -115,5 +128,7 @@ public sealed class ConformanceTests
         public string[]? ExpectCodes { get; set; }
         public string[]? ExpectNasmContains { get; set; }
         public string[]? ExpectIrContains { get; set; }
+        public bool ExpectWarningsOnly { get; set; }
+        public bool EnableVerificationWarnings { get; set; }
     }
 }

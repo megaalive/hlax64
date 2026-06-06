@@ -172,6 +172,9 @@ public sealed class SysVAbiLowerer : IAbiLowerer
             }
         }
 
+        lowered.StackFrameSize = function.IsEntryPoint
+            ? 8
+            : ((_stackOffset + 15) / 16) * 16;
         lowered.RequiredExterns = _externs;
         return lowered;
     }
