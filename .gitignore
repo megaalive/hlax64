@@ -1,0 +1,23 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.sln.docstates
+*.userprefs
+*.csproj.user
+.vs/
+*.DotSettings.user
+
+# Build output
+build/
+artifacts/
+
+# IDE
+.idea/
+*.swp
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

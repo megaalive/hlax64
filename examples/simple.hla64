@@ -1,0 +1,6 @@
+program simple;
+
+begin simple;
+    mov(1, rax);
+    add(2, rax);
+end simple;

@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/HlaX64.Backend.Nasm/HlaX64.Backend.Nasm.csproj" />
+    <Project Path="src/HlaX64.Cli/HlaX64.Cli.csproj" />
+    <Project Path="src/HlaX64.Compiler/HlaX64.Compiler.csproj" />
+    <Project Path="src/HlaX64.Runtime/HlaX64.Runtime.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/HlaX64.Compiler.Tests/HlaX64.Compiler.Tests.csproj" />
+  </Folder>
+</Solution>
