@@ -1,6 +1,7 @@
 # Memory model & bounds (Level 3)
 
-> **Status:** Normative for 0.x pointer/memory syntax · arrays/index types still planned
+> **Status:** Normative for 0.x pointer/memory syntax  
+> **See also:** [memory-model.md](memory-model.md) (formal string/pointer/array overview)
 
 ## Stack locals
 

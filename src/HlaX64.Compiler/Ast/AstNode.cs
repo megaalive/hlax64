@@ -18,12 +18,14 @@ public class ProgramNode : AstNode
     public override string Kind => "Program";
     public string Name { get; }
     public List<AstNode> Includes { get; }
+    public List<AstNode> Constants { get; }
     public List<AstNode> Statements { get; }
 
-    public ProgramNode(string name, List<AstNode> includes, List<AstNode> statements)
+    public ProgramNode(string name, List<AstNode> includes, List<AstNode> constants, List<AstNode> statements)
     {
         Name = name;
         Includes = includes;
+        Constants = constants;
         Statements = statements;
     }
 }
@@ -100,15 +102,20 @@ public class ProcedureNode : AstNode
     public List<ParameterNode> Parameters { get; }
     public string? ReturnsRegister { get; }
     public bool IsExport { get; }
+    public List<AstNode> Constants { get; }
     public List<AstNode> Variables { get; }
     public List<AstNode> Body { get; }
+    /// <summary>Program + procedure compile-time constants after semantic analysis.</summary>
+    public Dictionary<string, long> ResolvedConstants { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
-    public ProcedureNode(string name, List<ParameterNode> parameters, string? returnsRegister, bool isExport, List<AstNode> variables, List<AstNode> body)
+    public ProcedureNode(string name, List<ParameterNode> parameters, string? returnsRegister, bool isExport,
+        List<AstNode> constants, List<AstNode> variables, List<AstNode> body)
     {
         Name = name;
         Parameters = parameters;
         ReturnsRegister = returnsRegister;
         IsExport = isExport;
+        Constants = constants;
         Variables = variables;
         Body = body;
     }
@@ -138,14 +145,82 @@ public class VariableNode : AstNode
     public override string Kind => "Variable";
     public string Name { get; }
     public string Type { get; }
-    /// <summary>1 for scalar; N for array type[count].</summary>
-    public int ElementCount { get; }
+    /// <summary>1 for scalar; N for array type[count]. Set by semantic after evaluating <see cref="ArraySizeExpression"/>.</summary>
+    public int ElementCount { get; set; } = 1;
+    /// <summary>Compile-time size expression when declared as type[N].</summary>
+    public AstNode? ArraySizeExpression { get; }
 
-    public VariableNode(string name, string type, int elementCount = 1)
+    public VariableNode(string name, string type, AstNode? arraySizeExpression = null)
     {
         Name = name;
         Type = type;
-        ElementCount = elementCount;
+        ArraySizeExpression = arraySizeExpression;
+        if (arraySizeExpression is IntegerLiteralNode lit)
+            ElementCount = checked((int)lit.Value);
+    }
+}
+
+/// <summary>
+/// const ... endconst block with one or more name := expr declarations.
+/// </summary>
+public class ConstBlockNode : AstNode
+{
+    public override string Kind => "ConstBlock";
+    public List<ConstDeclarationNode> Declarations { get; }
+
+    public ConstBlockNode(List<ConstDeclarationNode> declarations)
+    {
+        Declarations = declarations;
+    }
+}
+
+/// <summary>
+/// Single compile-time constant: Name := Expression;
+/// </summary>
+public class ConstDeclarationNode : AstNode
+{
+    public override string Kind => "ConstDeclaration";
+    public string Name { get; }
+    public AstNode Expression { get; }
+
+    public ConstDeclarationNode(string name, AstNode expression)
+    {
+        Name = name;
+        Expression = expression;
+    }
+}
+
+/// <summary>
+/// Unary compile-time expression: -x, ~x
+/// </summary>
+public class UnaryExprNode : AstNode
+{
+    public override string Kind => "UnaryExpr";
+    public string Operator { get; }
+    public AstNode Operand { get; }
+
+    public UnaryExprNode(string op, AstNode operand)
+    {
+        Operator = op;
+        Operand = operand;
+    }
+}
+
+/// <summary>
+/// Binary compile-time expression with formal precedence.
+/// </summary>
+public class BinaryExprNode : AstNode
+{
+    public override string Kind => "BinaryExpr";
+    public AstNode Left { get; }
+    public string Operator { get; }
+    public AstNode Right { get; }
+
+    public BinaryExprNode(AstNode left, string op, AstNode right)
+    {
+        Left = left;
+        Operator = op;
+        Right = right;
     }
 }
 

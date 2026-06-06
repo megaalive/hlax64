@@ -28,11 +28,15 @@ public sealed class Parser
             includes.Add(ParseInclude());
         }
 
-        // Optional procedure declarations before begin
+        // Optional program-level constants and procedures before begin (any order)
+        var constants = new List<AstNode>();
         var procedures = new List<AstNode>();
-        while (Peek().Type == TokenType.Procedure || Peek().Type == TokenType.Export)
+        while (Peek().Type is TokenType.Const or TokenType.Procedure or TokenType.Export)
         {
-            procedures.Add(ParseProcedure());
+            if (Peek().Type == TokenType.Const)
+                constants.Add(ParseConstBlock());
+            else
+                procedures.Add(ParseProcedure());
         }
 
         // begin name;
@@ -57,7 +61,7 @@ public sealed class Parser
         allStatements.AddRange(procedures);
         allStatements.AddRange(statements);
 
-        return new ProgramNode(programName, includes, allStatements);
+        return new ProgramNode(programName, includes, constants, allStatements);
     }
 
     private List<AstNode> ParseStatementsUntilEnd()
@@ -189,6 +193,13 @@ public sealed class Parser
             Expect(TokenType.Semicolon);
         }
 
+        // Optional const declarations
+        var constants = new List<AstNode>();
+        while (Peek().Type == TokenType.Const)
+        {
+            constants.Add(ParseConstBlock());
+        }
+
         // Optional var declarations
         var variables = new List<AstNode>();
         if (Peek().Type == TokenType.Var)
@@ -199,17 +210,16 @@ public sealed class Parser
                 var varToken = Expect(TokenType.Identifier);
                 Expect(TokenType.Colon);
                 var typeToken = Expect(TokenType.Identifier);
-                var elementCount = 1;
+                AstNode? arraySize = null;
                 if (Peek().Type == TokenType.LeftBracket)
                 {
                     Advance();
-                    var countToken = Expect(TokenType.IntegerLiteral);
-                    elementCount = int.Parse(countToken.Value);
+                    arraySize = ParseConstExpression();
                     Expect(TokenType.RightBracket);
                 }
 
                 Expect(TokenType.Semicolon);
-                variables.Add(WithLocation(new VariableNode(varToken.Value, typeToken.Value, elementCount), varToken));
+                variables.Add(WithLocation(new VariableNode(varToken.Value, typeToken.Value, arraySize), varToken));
             }
         }
 
@@ -229,7 +239,144 @@ public sealed class Parser
         var endName = Expect(TokenType.Identifier).Value;
         Expect(TokenType.Semicolon);
 
-        return new ProcedureNode(name, parameters, returnsRegister, isExport, variables, body);
+        return new ProcedureNode(name, parameters, returnsRegister, isExport, constants, variables, body);
+    }
+
+    private ConstBlockNode ParseConstBlock()
+    {
+        var open = Expect(TokenType.Const);
+        var declarations = new List<ConstDeclarationNode>();
+
+        while (Peek().Type == TokenType.Identifier)
+        {
+            var nameToken = Expect(TokenType.Identifier);
+            Expect(TokenType.ColonAssign);
+            var expr = ParseConstExpression();
+            Expect(TokenType.Semicolon);
+            declarations.Add(WithLocation(new ConstDeclarationNode(nameToken.Value, expr), nameToken));
+        }
+
+        Expect(TokenType.Endconst);
+        Expect(TokenType.Semicolon);
+        return WithLocation(new ConstBlockNode(declarations), open);
+    }
+
+    private AstNode ParseConstExpression()
+    {
+        return ParseBitwiseOr();
+    }
+
+    private AstNode ParseBitwiseOr()
+    {
+        var left = ParseBitwiseXor();
+        while (Peek().Type == TokenType.Pipe)
+        {
+            var op = Advance();
+            var right = ParseBitwiseXor();
+            left = WithLocation(new BinaryExprNode(left, "|", right), op);
+        }
+        return left;
+    }
+
+    private AstNode ParseBitwiseXor()
+    {
+        var left = ParseBitwiseAnd();
+        while (Peek().Type == TokenType.Caret)
+        {
+            var op = Advance();
+            var right = ParseBitwiseAnd();
+            left = WithLocation(new BinaryExprNode(left, "^", right), op);
+        }
+        return left;
+    }
+
+    private AstNode ParseBitwiseAnd()
+    {
+        var left = ParseShift();
+        while (Peek().Type == TokenType.Ampersand)
+        {
+            var op = Advance();
+            var right = ParseShift();
+            left = WithLocation(new BinaryExprNode(left, "&", right), op);
+        }
+        return left;
+    }
+
+    private AstNode ParseShift()
+    {
+        var left = ParseAdditive();
+        while (Peek().Type is TokenType.ShiftLeft or TokenType.ShiftRight)
+        {
+            var op = Advance();
+            var right = ParseAdditive();
+            left = WithLocation(new BinaryExprNode(left, op.Value, right), op);
+        }
+        return left;
+    }
+
+    private AstNode ParseAdditive()
+    {
+        var left = ParseMultiplicative();
+        while (Peek().Type is TokenType.Plus or TokenType.Minus)
+        {
+            var op = Advance();
+            var right = ParseMultiplicative();
+            left = WithLocation(new BinaryExprNode(left, op.Value, right), op);
+        }
+        return left;
+    }
+
+    private AstNode ParseMultiplicative()
+    {
+        var left = ParseUnary();
+        while (Peek().Type is TokenType.Star or TokenType.Slash or TokenType.Percent)
+        {
+            var op = Advance();
+            var right = ParseUnary();
+            left = WithLocation(new BinaryExprNode(left, op.Value, right), op);
+        }
+        return left;
+    }
+
+    private AstNode ParseUnary()
+    {
+        var token = Peek();
+        if (token.Type is TokenType.Minus or TokenType.Tilde)
+        {
+            Advance();
+            var operand = ParseUnary();
+            return WithLocation(new UnaryExprNode(token.Value, operand), token);
+        }
+
+        return ParseConstPrimary();
+    }
+
+    private AstNode ParseConstPrimary()
+    {
+        var token = Peek();
+
+        if (token.Type == TokenType.LeftParen)
+        {
+            Advance();
+            var expr = ParseConstExpression();
+            Expect(TokenType.RightParen);
+            return expr;
+        }
+
+        if (token.Type == TokenType.IntegerLiteral)
+        {
+            Advance();
+            return new IntegerLiteralNode(long.Parse(token.Value));
+        }
+
+        if (token.Type == TokenType.Identifier)
+        {
+            Advance();
+            return new IdentifierNode(token.Value);
+        }
+
+        throw new ParseException(
+            $"Expected integer literal, constant name, or '(' in compile-time expression but got '{token.Type}' ('{token.Value}') at line {token.Line}, column {token.Column}");
     }
 
     private ParameterNode ParseParameter()

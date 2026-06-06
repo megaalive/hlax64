@@ -1,0 +1,16 @@
+program ok;
+const
+    Base := 10;
+    Offset := Base * 4;
+endconst;
+procedure P; @returns("rax");
+const
+    N := 4;
+endconst;
+var data: byte[N];
+begin P;
+    mov(Offset, rax);
+    mov(7, data[1]);
+end P;
+begin ok;
+end ok;

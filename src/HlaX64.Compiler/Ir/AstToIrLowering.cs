@@ -1,11 +1,21 @@
 using HlaX64.Compiler.Abi;
 using HlaX64.Compiler.Ast;
+using HlaX64.Compiler.Semantic;
 using HlaX64.Compiler.Types;
 
 namespace HlaX64.Compiler.Ir;
 
 public sealed class AstToIrLowering
 {
+    private readonly CompileTimeConstTable _programConstTable;
+    private CompileTimeConstTable _activeConstTable;
+
+    public AstToIrLowering(CompileTimeConstTable? constTable = null)
+    {
+        _programConstTable = constTable ?? new CompileTimeConstTable();
+        _activeConstTable = _programConstTable;
+    }
+
     public IrFunction LowerProgram(ProgramNode program, List<IrFunction> procedures)
     {
         var func = new IrFunction("_start");
@@ -31,6 +41,7 @@ public sealed class AstToIrLowering
 
     public IrFunction LowerProcedure(ProcedureNode proc)
     {
+        _activeConstTable = BuildProcedureConstTable(proc);
         var func = new IrFunction(proc.Name);
         func.IsExport = proc.IsExport;
 
@@ -58,7 +69,16 @@ public sealed class AstToIrLowering
             currentBlock = LowerStatement(stmt, currentBlock, func);
 
         func.EnsureBlocksRegistered();
+        _activeConstTable = _programConstTable;
         return func;
+    }
+
+    private CompileTimeConstTable BuildProcedureConstTable(ProcedureNode proc)
+    {
+        var table = _programConstTable.Clone();
+        foreach (var (name, value) in proc.ResolvedConstants)
+            table.Define(name, value);
+        return table;
     }
 
     private IrBasicBlock LowerStatement(AstNode node, IrBasicBlock block, IrFunction func)
@@ -285,6 +305,8 @@ public sealed class AstToIrLowering
             RegisterNode reg => GetOrCreateValue(reg.Name),
             IntegerLiteralNode lit => new IrValue { Name = $"imm:{lit.Value}" },
             StringLiteralNode str => new IrValue { Name = $"str:{str.Value}" },
+            IdentifierNode ident when _activeConstTable.TryGetValue(ident.Name, out var constVal)
+                => new IrValue { Name = $"imm:{constVal}" },
             IdentifierNode ident => GetOrCreateValue(ident.Name),
             AddressOfNode addr => new IrValue { Name = $"addr:{addr.VariableName}" },
             AddressOfStringNode addrStr => new IrValue { Name = AddressRefEncoding.EncodeString(addrStr.Value) },
@@ -292,9 +314,16 @@ public sealed class AstToIrLowering
             {
                 Name = MemoryRefEncoding.Encode(mem.Register, mem.Offset, mem.SizeBits)
             },
-            ArrayIndexNode arr => new IrValue { Name = ArrayIndexEncoding.Encode(arr.ArrayName, arr.Index) },
+            ArrayIndexNode arr => new IrValue { Name = EncodeArrayIndex(arr) },
             _ => new IrValue()
         };
+    }
+
+    private string EncodeArrayIndex(ArrayIndexNode arr)
+    {
+        if (arr.Index is IdentifierNode id && _activeConstTable.TryGetValue(id.Name, out var value))
+            return ArrayIndexEncoding.Encode(arr.ArrayName, new IntegerLiteralNode(value));
+        return ArrayIndexEncoding.Encode(arr.ArrayName, arr.Index);
     }
 
     private readonly Dictionary<string, IrValue> _values = new(StringComparer.OrdinalIgnoreCase);

@@ -1,241 +1,142 @@
 # HlaX64 — Compiler Architecture
 
-> **Status**: Draft · bagian dari **Fase 9.5 — Stabilisasi Arsitektur**
-> **Lihat juga**: [`docs/architecture.md`](./architecture.md) ·
-> [`docs/runtime-matrix.md`](./runtime-matrix.md) ·
-> [`docs/runtime-contract.md`](./runtime-contract.md)
-
-Dokumen ini menjelaskan pipeline kompilasi HlaX64 setelah Fase 9.5
-stabil. Sebelum stabilisasi, pipeline langsung `AST → NASM emitter`.
-Setelahnya, AST diturunkan dulu ke **Intermediate Representation (IR)**
-yang netral, lalu IR dilewatkan ke **ABI lowerer**, dan akhirnya ke
-backend.
+> **Architecture as of compiler 0.1.x** · Draft  
+> **See also:** [`architecture.md`](./architecture.md) · [`runtime-matrix.md`](./runtime-matrix.md) · [`runtime-contract.md`](./runtime-contract.md)
 
 ---
 
-## 1. Pipeline tingkat tinggi
+## Status legend
+
+| Section | Meaning |
+|---------|---------|
+| **Implemented** | Ships in HlaX64 0.1.x; covered by tests |
+| **Experimental** | Partial or MVP; API/syntax may change |
+| **Planned** | Specified or roadmapped; not in the compiler yet |
+
+---
+
+## Implemented
+
+### Pipeline (0.1.x)
 
 ```text
 .hla64 source
   ↓ Lexer
 Tokens
   ↓ Parser
-Ast
-  ↓ Binding + Type checking
-Bound Tree
-  ↓ Lowering
-Ir (netral, SSA-like opsional)
-  ↓ IAbiLowerer (SysV / MicrosoftX64)
-Lowered Function
-  ↓ NasmEmitter (atau MASM / LLVM)
-.asm / .ll
-  ↓ nasm / clang
-.o
-  ↓ ld / link
+AST
+  ↓ Semantic analysis (+ compile-time const eval)
+Bound program
+  ↓ AstToIrLowering
+IR (IrFunction / IrBasicBlock / IrInstruction)
+  ↓ IAbiLowerer (SysV or Microsoft x64)
+LoweredFunction
+  ↓ NasmEmitter
+.asm
+  ↓ nasm + gcc/ld (or lld-link)
 executable / shared library / DLL
-  ↓ Native integration test
-asserted output & exit code
 ```
 
----
+### Lexer & parser
 
-## 2. Tahap demi tahap
+- Keywords: `program`, `procedure`, `begin`, `end`, `if`, `while`, `var`, `const`, `export`, …
+- Registers, integer / hex (`$FF`) literals, strings
+- Source locations for diagnostics
+- `//` and `/* */` comments
 
-### 2.1 Lexer
+### Semantic analysis
 
-Mengubah source `.hla64` menjadi stream token.
+- Symbol tables (procedure scope, parameters, locals)
+- Integer type registry (`int64`, `uint64`, `byte`, `ptr`, …)
+- Instruction / register validation, narrowing checks
+- Compile-time `const` blocks (RFC 0004): expression evaluation, HLAX0031–34
+- Optional bounds warnings (HLAX0030)
 
-- Keyword (`program`, `procedure`, `begin`, `end`, `if`, `else`, `endif`,
-  `while`, `endwhile`, `var`, `mov`, `add`, `call`, `ret`, …).
-- Identifier, integer literal, string literal, register.
-- Posisi (line, column) untuk diagnostics.
-- Skip whitespace dan komentar (`//`, `/* … */`).
+### IR (v0.1)
 
-### 2.2 Parser (Recursive descent)
+Opcodes include `Move`, `Add`, `Subtract`, `Multiply`, `Divide`, `Compare`, `Branch`, `ConditionalBranch`, `Call`, `Return`, `LoadConstant`.
 
-Mengubah token menjadi AST.
+### ABI lowering
 
-Node penting: `ProgramNode`, `BlockNode`, `ProcedureNode`, `CallNode`,
-`InstructionNode`, `LiteralNode`, `RegisterNode`, `IdentifierNode`,
-`IfNode`, `WhileNode`, `VarNode`.
+- **SysV** (Linux): `rdi, rsi, rdx, rcx, r8, r9` for integer args; `rax` return
+- **Microsoft x64**: `rcx, rdx, r8, r9`; 32-byte shadow space; `rax` return
+- Stack frame layout for locals and `type[N]` arrays
 
-### 2.3 Binding + Type Checking
+### Backend
 
-Membangun **bound tree** dengan:
+- `NasmEmitter` formats `LoweredFunction` only — no AST access
+- Operand order: HLA `mov(src, dest)` → NASM `mov dest, src`
 
-- Symbol table (scope chain).
-- Type resolution (identifier → `IntegerTypeSymbol` dengan `BitWidth` & `IsSigned`).
-- Validasi: jumlah operand, jenis operand, register valid, instruksi valid,
-  identifier terdeklarasi, duplikat procedure, narrowing conversion.
+### Tooling integration
 
-### 2.4 Lowering AST → IR
-
-AST/bound tree diturunkan ke **IR** (lihat §3). IR adalah representasi
-tunggal yang netral terhadap syntax dan ABI.
-
-### 2.5 ABI Lowering (`IAbiLowerer`)
-
-IR dilewatkan ke implementasi `IAbiLowerer` yang sesuai target:
-
-- `SysVAbiLowerer` (Linux x64 SysV, MVP).
-- `MicrosoftX64AbiLowerer` (Windows MS-ABI, Fase 11).
-
-Tanggung jawab: argument register assignment, return register,
-callee-saved preservation, stack frame, stack alignment, call lowering,
-scratch registers.
-
-### 2.6 Backend (NASM / MASM / LLVM)
-
-`NasmEmitter` hanya bertugas **memformat** `LoweredFunction` menjadi
-teks NASM. Tidak membaca AST, tidak memutuskan signedness, tidak
-menghitung ABI placement.
-
-### 2.7 Toolchain
-
-`nasm -f elf64` (Linux) atau `nasm -f win64` (Windows), lalu
-`gcc`/`ld`/`lld-link` untuk menghasilkan executable / shared library /
-DLL.
-
-### 2.8 Native integration test
-
-Fixture menjalankan: tulis source → compile → nasm → link → run binary
-→ cek stdout / stderr / exit code. Lihat
-[`HlaX64_Project_Plan.md` §13.5](../HlaX64_Project_Plan.md).
+- `CompilationOptions` centralizes target, output kind, runtime mode
+- CLI, MCP, and LSP share the same `Compilation` entry point
+- Native integration tests: compile → assemble → link → run
 
 ---
 
-## 3. Intermediate Representation (IR v0.1)
+## Experimental
 
-### 3.1 Struktur
+| Area | Notes |
+|------|-------|
+| LSP | Diagnostics, hover, completion, go-to-definition, symbols, format-on-save — not full semantic IDE |
+| Bounds warnings | Literal / const indices only; no range analysis for register indices |
+| Windows backend | CI smoke tests; fewer native run manifests than Linux |
+| Fuzz coverage | Early parser/lexer fuzz; not exhaustive |
+
+---
+
+## Planned
+
+| Area | Target phase | Notes |
+|------|--------------|-------|
+| Runtime expressions `:=` | 16 | RFC 0004 Sprint 2 |
+| Struct, `sizeof`, `alignof` | 16 | Audit §5.4 |
+| Stack arguments >6 (SysV) / >4 (Windows) | 17 | ABI completion |
+| DWARF / source map | 19 | Debug visibility |
+| Optimizer (DCE, const fold at IR) | 20 | After verification pass |
+| SIMD / intrinsics | 21 | After instruction DB |
+| Modules / packages | 22 | Project manifest |
+
+> Features listed as “future” in older docs (IR pipeline, Windows ABI, shared libraries, MCP) are **implemented** in 0.1.x unless they appear in the Planned table above.
+
+---
+
+## IR sketch (implemented)
 
 ```text
 IrFunction
-  ├─ Name
-  ├─ Parameters : list<IrValue>
-  ├─ ReturnType : IntegerTypeSymbol
-  └─ BasicBlocks : list<IrBasicBlock>
-
-IrBasicBlock
-  ├─ Label
-  └─ Instructions : list<IrInstruction>
-  └─ Terminator : Branch | ConditionalBranch | Return
-
-IrValue
-  ├─ Kind : Local | Constant | Parameter
-  ├─ Type : IntegerTypeSymbol
-  └─ Name / Value
-
-IrInstruction
-  ├─ Op
-  └─ Operands : list<IrValue>
+  ├─ Name, Parameters, ReturnType
+  └─ BasicBlocks[]
+       └─ IrInstruction { Op, Operands, CmpKind?, Immediate? }
 ```
 
-### 3.2 Opcode v0.1
-
-| Op | Operand | Deskripsi |
-|----|---------|-----------|
-| `LoadConstant` | dst, value | muat konstanta |
-| `LoadLocal` | dst, local | muat nilai variabel lokal |
-| `StoreLocal` | local, src | simpan ke variabel lokal |
-| `Move` | dst, src | salin register/nilai |
-| `Add` | dst, a, b | a + b |
-| `Subtract` | dst, a, b | a − b |
-| `Multiply` | dst, a, b | a × b |
-| `Divide` | dst, a, b | a ÷ b (signed/unsigned ikut tipe) |
-| `Compare` | dst, a, b, kind | hasil compare, kind signed/unsigned |
-| `Branch` | label | jump unconditional |
-| `ConditionalBranch` | cond, t, f | jump bersyarat |
-| `Call` | dst?, target, args | panggil fungsi |
-| `Return` | value? | kembali dari prosedur |
-
-### 3.3 `CompareKind`
+Example:
 
 ```text
-Equal
-NotEqual
-LessThanSigned       LessThanUnsigned
-LessOrEqualSigned    LessOrEqualUnsigned
-GreaterThanSigned    GreaterThanUnsigned
-GreaterOrEqualSigned GreaterOrEqualUnsigned
-```
-
-CompareKind **wajib** dibawa sampai ke emitter agar jump instruction
-benar (`jl` vs `jb`).
-
-### 3.4 Contoh IR (AddTwo)
-
-```text
-function AddTwo(a: i64, b: i64) -> i64 {
-  block entry:
-    v0 = LoadParameter a
-    v1 = LoadParameter b
-    v2 = Add v0, v1
+function AddTwo(a, b) {
+  entry:
+    v2 = Add a, b
     Return v2
 }
 ```
 
 ---
 
-## 4. ABI Lowering — kontrak SysV v0.1
-
-```text
-Argument registers (urutan kiri-ke-kanan):
-  arg1=rdi, arg2=rsi, arg3=rdx, arg4=rcx, arg5=r8, arg6=r9
-  lebih dari 6 → spill ke stack (callee harus align ke 16 byte)
-
-Return: rax (untuk tipe 64-bit), rax+rdx (untuk struct kecil)
-
-Caller-saved: rax rcx rdx rsi rdi r8 r9 r10 r11
-Callee-saved: rbx rbp r12 r13 r14 r15
-
-Stack alignment pada saat call: RSP ≡ 0 (mod 16)
-```
-
-Lowerer **tidak** menerima AST; hanya IR + `CompilationOptions`. Output
-adalah `LoweredFunction` yang siap di-emit.
-
----
-
-## 5. `CompilationOptions` (pusat)
+## CompilationOptions (implemented)
 
 ```csharp
-public sealed record CompilationOptions(
-    TargetTriple Target,             // linux-x64-sysv, windows-x64-msabi
-    OutputKind OutputKind,           // Executable | ObjectFile | StaticLibrary
-                                      // | SharedLibrary | AssemblyOnly
-    RuntimeMode RuntimeMode,         // Library (default) | Inline
-    OptimizationLevel Optimization,  // None | Debug | Release
-    bool EmitDebugInfo);
+CompilationOptions(
+    TargetTriple Target,       // linux-x64-sysv | windows-x64-msabi
+    OutputKind OutputKind,     // Executable | SharedLibrary | …
+    RuntimeMode RuntimeMode,   // Library | Inline
+    OptimizationLevel Optimization,
+    bool EmitDebugInfo,
+    CompilerWarnings Warnings);
 ```
 
-- CLI memetakan argumen → `CompilationOptions`.
-- Kombinasi tidak didukung ⇒ diagnostic jelas.
-- Tidak ada string "target" tersebar di kode.
-
 ---
 
-## 6. Batasan arsitektur saat ini
+## Historical note
 
-> **Sebelum Fase 9.5**: alur langsung `AST → NASM emitter`. Emitter
-> memutuskan signedness, ukuran operand, ABI placement, dan entry
-> point. Risiko: emitter dipenuhi `if (target == ...) …`.
-
-> **Setelah Fase 9.5**: semua keputusan semantic dan ABI pindah ke IR
-> + `IAbiLowerer`. Backend hanya memformat.
-
----
-
-## 7. 7 Workstream stabilisasi
-
-| WS | Nama | Output | DoD utama |
-|----|------|--------|-----------|
-| A | Compilation model | `CompilationOptions`, `TargetTriple`, `OutputKind`, `RuntimeMode` | CLI memetakan argumen → options |
-| B | Semantic type system | `IntegerTypeSymbol` (`BitWidth`, `IsSigned`) | implicit narrowing ditolak |
-| C | IR | `IrFunction`, `IrBasicBlock`, `IrInstruction` | snapshot test IR ada |
-| D | ABI lowering | `IAbiLowerer` + `SysVAbiLowerer` | call 0–6 args lulus, stack align lulus |
-| E | Backend NASM refactor | `NasmEmitter` dari `LoweredFunction` | emitter tidak baca AST |
-| F | Native integration tests | fixture build+run | 16 sample native test di Linux CI |
-| G | Dokumentasi | `compiler-architecture.md`, `runtime-contract.md`, sync README | semua doc saling rujuk |
-
-Detail per workstream lihat
-[`HlaX64_Project_Plan.md` §9.5](../HlaX64_Project_Plan.md).
+Before **Fase 9.5**, the backend emitted NASM directly from the AST. As of **0.1.x**, all ABI and semantic lowering goes through IR + `IAbiLowerer`; the NASM emitter is a formatter only.

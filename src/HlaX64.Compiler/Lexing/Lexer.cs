@@ -77,6 +77,12 @@ public sealed class Lexer
             return ScanStringLiteral();
         }
 
+        // Hex literals: $FF
+        if (ch == '$')
+        {
+            return ScanHexLiteral();
+        }
+
         // Numbers
         if (char.IsDigit(ch))
         {
@@ -99,9 +105,22 @@ public sealed class Lexer
             case '.': Advance(); return CreateToken(TokenType.Dot, ".", line, col);
             case '@': Advance(); return CreateToken(TokenType.At, "@", line, col);
             case '#': Advance(); return CreateToken(TokenType.Hash, "#", line, col);
-            case ':': Advance(); return CreateToken(TokenType.Colon, ":", line, col);
+            case ':':
+                Advance();
+                if (_pos < _source.Length && _source[_pos] == '=')
+                {
+                    Advance();
+                    return CreateToken(TokenType.ColonAssign, ":=", line, col);
+                }
+                return CreateToken(TokenType.Colon, ":", line, col);
             case '+': Advance(); return CreateToken(TokenType.Plus, "+", line, col);
             case '-': Advance(); return CreateToken(TokenType.Minus, "-", line, col);
+            case '*': Advance(); return CreateToken(TokenType.Star, "*", line, col);
+            case '/': Advance(); return CreateToken(TokenType.Slash, "/", line, col);
+            case '%': Advance(); return CreateToken(TokenType.Percent, "%", line, col);
+            case '|': Advance(); return CreateToken(TokenType.Pipe, "|", line, col);
+            case '^': Advance(); return CreateToken(TokenType.Caret, "^", line, col);
+            case '~': Advance(); return CreateToken(TokenType.Tilde, "~", line, col);
             case '&': Advance(); return CreateToken(TokenType.Ampersand, "&", line, col);
             case '[': Advance(); return CreateToken(TokenType.LeftBracket, "[", line, col);
             case ']': Advance(); return CreateToken(TokenType.RightBracket, "]", line, col);
@@ -112,6 +131,11 @@ public sealed class Lexer
 
             case '<':
                 Advance();
+                if (_pos < _source.Length && _source[_pos] == '<')
+                {
+                    Advance();
+                    return CreateToken(TokenType.ShiftLeft, "<<", line, col);
+                }
                 if (_pos < _source.Length && _source[_pos] == '?')
                 {
                     Advance();
@@ -121,6 +145,11 @@ public sealed class Lexer
 
             case '>':
                 Advance();
+                if (_pos < _source.Length && _source[_pos] == '>')
+                {
+                    Advance();
+                    return CreateToken(TokenType.ShiftRight, ">>", line, col);
+                }
                 if (_pos < _source.Length && _source[_pos] == '?')
                 {
                     Advance();
@@ -176,6 +205,29 @@ public sealed class Lexer
         return CreateToken(TokenType.IntegerLiteral, sb.ToString(), line, col);
     }
 
+    private Token ScanHexLiteral()
+    {
+        var line = _line;
+        var col = _column;
+        Advance(); // skip $
+
+        var sb = new StringBuilder();
+        while (_pos < _source.Length && IsHexDigit(Peek()))
+        {
+            sb.Append(Peek());
+            Advance();
+        }
+
+        if (sb.Length == 0)
+            return CreateToken(TokenType.Unknown, "$", line, col);
+
+        var value = long.Parse(sb.ToString(), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+        return CreateToken(TokenType.IntegerLiteral, value.ToString(CultureInfo.InvariantCulture), line, col);
+    }
+
+    private static bool IsHexDigit(char ch)
+        => char.IsDigit(ch) || ch is >= 'a' and <= 'f' or >= 'A' and <= 'F';
+
     private Token ScanIdentifierOrKeyword()
     {
         var line = _line;
@@ -199,6 +251,8 @@ public sealed class Lexer
             "include" => TokenType.Include,
             "procedure" => TokenType.Procedure,
             "var" => TokenType.Var,
+            "const" => TokenType.Const,
+            "endconst" => TokenType.Endconst,
             "export" => TokenType.Export,
             "returns" => TokenType.Returns,
             "if" => TokenType.If,

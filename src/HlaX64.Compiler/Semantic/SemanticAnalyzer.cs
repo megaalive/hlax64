@@ -13,8 +13,13 @@ public sealed class SemanticAnalyzer
 {
     private readonly CompilerWarnings _warnings;
     private readonly DiagnosticCollection _diagnostics = new();
+    private readonly ConstExpressionEvaluator _constEvaluator = new();
     private readonly Dictionary<string, IntegerTypeSymbol> _variableTypes = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, int> _arrayElementCounts = new(StringComparer.OrdinalIgnoreCase);
+    private CompileTimeConstTable _constTable = new();
+    private CompileTimeConstTable _programConstTable = new();
+
+    public CompileTimeConstTable ConstTable => _programConstTable;
     private static readonly HashSet<string> KnownRegisters = new(StringComparer.OrdinalIgnoreCase)
     {
         // 64-bit
@@ -76,10 +81,16 @@ public sealed class SemanticAnalyzer
     public DiagnosticCollection Analyze(ProgramNode program)
     {
         _diagnostics.Clear();
+        _programConstTable = new CompileTimeConstTable();
 
         CheckProgramNameMatch(program);
         CheckDuplicateProcedures(program);
+        EvaluateConstBlocks(program.Constants, _programConstTable);
 
+        if (_diagnostics.HasErrors)
+            return _diagnostics;
+
+        _constTable = _programConstTable;
         foreach (var stmt in program.Statements)
         {
             AnalyzeStatement(stmt);
@@ -230,16 +241,81 @@ public sealed class SemanticAnalyzer
         }
     }
 
+    private void EvaluateConstBlocks(IEnumerable<AstNode> blocks, CompileTimeConstTable table)
+    {
+        foreach (var node in blocks)
+        {
+            if (node is not ConstBlockNode block)
+                continue;
+
+            foreach (var decl in block.Declarations)
+            {
+                if (table.TryGetValue(decl.Name, out _))
+                {
+                    _diagnostics.Error("HLAX0034",
+                        $"Duplicate constant '{decl.Name}'",
+                        decl.Line, decl.Column);
+                    continue;
+                }
+
+                if (!_constEvaluator.TryEvaluate(decl.Expression, table, out var value, out var error))
+                {
+                    if (error != null)
+                        _diagnostics.Report(error.Code, error.Severity, error.Message, error.Line, error.Column, error.Suggestion);
+                    continue;
+                }
+
+                table.Define(decl.Name, value);
+            }
+        }
+    }
+
+    private bool TryEvaluateArraySize(AstNode? sizeExpr, int line, int column, out int count)
+    {
+        count = 1;
+        if (sizeExpr == null)
+            return true;
+
+        if (!_constEvaluator.TryEvaluate(sizeExpr, _constTable, out var value, out var error))
+        {
+            if (error != null)
+                _diagnostics.Report(error.Code, error.Severity, error.Message, error.Line, error.Column, error.Suggestion);
+            return false;
+        }
+
+        if (value < 1 || value > int.MaxValue)
+        {
+            _diagnostics.Error("HLAX0025",
+                $"Array length must be between 1 and {int.MaxValue}, got {value}",
+                line, column);
+            return false;
+        }
+
+        count = (int)value;
+        return true;
+    }
+
     private void AnalyzeProcedure(ProcedureNode proc)
     {
         _variableTypes.Clear();
         _arrayElementCounts.Clear();
+        _constTable = _programConstTable.Clone();
+        EvaluateConstBlocks(proc.Constants, _constTable);
+        proc.ResolvedConstants = new Dictionary<string, long>(_constTable.Values, StringComparer.OrdinalIgnoreCase);
+
+        if (_diagnostics.HasErrors)
+            return;
 
         // Resolve variable and parameter types
         foreach (var variable in proc.Variables)
         {
             if (variable is VariableNode varNode)
             {
+                if (!TryEvaluateArraySize(varNode.ArraySizeExpression, varNode.Line, varNode.Column, out var elementCount))
+                    continue;
+
+                varNode.ElementCount = elementCount;
+
                 if (varNode.ElementCount < 1)
                 {
                     _diagnostics.Error("HLAX0025",
@@ -358,6 +434,8 @@ public sealed class SemanticAnalyzer
                 return;
             if (_variableTypes.ContainsKey(ident.Name))
                 return;
+            if (_constTable.TryGetValue(ident.Name, out _))
+                return;
 
             // Check if this identifier looks like a misspelled register (e.g., "raxz")
             // Only flag if it closely matches a known register
@@ -377,15 +455,19 @@ public sealed class SemanticAnalyzer
     {
         if (!_warnings.Bounds)
             return;
-        if (arr.Index is not IntegerLiteralNode lit)
-            return;
         if (!_arrayElementCounts.TryGetValue(arr.ArrayName, out var length))
             return;
 
-        if (lit.Value < 0 || lit.Value >= length)
+        long indexValue;
+        if (arr.Index is IntegerLiteralNode lit)
+            indexValue = lit.Value;
+        else if (!_constEvaluator.TryEvaluate(arr.Index, _constTable, out indexValue, out _))
+            return;
+
+        if (indexValue < 0 || indexValue >= length)
         {
             _diagnostics.Warning("HLAX0030",
-                $"Array index {lit.Value} may be out of bounds for '{arr.ArrayName}' (length {length})",
+                $"Array index {indexValue} may be out of bounds for '{arr.ArrayName}' (length {length})",
                 arr.Line, arr.Column);
         }
     }

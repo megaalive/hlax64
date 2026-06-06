@@ -1,0 +1,6 @@
+program bad;
+const
+    X := 1 / 0;
+endconst;
+begin bad;
+end bad;
