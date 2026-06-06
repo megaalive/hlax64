@@ -1,0 +1,8 @@
+program bad;
+procedure P; @returns("rax");
+var slot: byte;
+begin P;
+    slot := 1;
+end P;
+begin bad;
+end bad;

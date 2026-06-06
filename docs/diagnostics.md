@@ -216,6 +216,48 @@ Stable diagnostic codes help agents, IDE tooling, and contributors reference err
 | **Cause** | Same constant name declared twice in one scope |
 | **Fix** | Remove or rename the duplicate |
 
+### HLAX0035 — Invalid runtime assignment target
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | `:=` target is not an int64 scalar local or 64-bit register |
+| **Example** | `slot := 1;` where `slot` is `byte` or an array |
+| **Fix** | Assign only to `int64` (or other 64-bit scalar) locals or registers like `rax` |
+
+### HLAX0036 — Unknown name in runtime expression
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | Operand in a `:=` expression references an undefined name |
+| **Fix** | Declare the local/const or fix spelling |
+
+### HLAX0037 — Array in runtime expression
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | An array variable is used where a scalar operand is required |
+| **Example** | `x := data + 1;` when `data` is `int64[8]` |
+| **Fix** | Use `data[index]` or a scalar local |
+
+### HLAX0038 — Runtime expression divide by zero
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | `/` or `%` with a literal or const-folded zero divisor in a runtime expression |
+| **Fix** | Use a non-zero divisor |
+
 ## Toolchain messages (no code yet)
 
 CLI and linker errors currently use plain text (e.g. `Error: NASM not found`). Future releases will assign `HLAX4xxx` codes.

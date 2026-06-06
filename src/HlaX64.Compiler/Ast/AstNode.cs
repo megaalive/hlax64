@@ -61,6 +61,22 @@ public class BlockNode : AstNode
 }
 
 /// <summary>
+/// Runtime assignment: target := expression; (int64 scalar local or register).
+/// </summary>
+public class AssignExprNode : AstNode
+{
+    public override string Kind => "AssignExpr";
+    public AstNode Target { get; }
+    public AstNode Expression { get; }
+
+    public AssignExprNode(AstNode target, AstNode expression)
+    {
+        Target = target;
+        Expression = expression;
+    }
+}
+
+/// <summary>
 /// Represents an instruction like mov(src, dst), add(val, reg), etc.
 /// </summary>
 public class InstructionNode : AstNode

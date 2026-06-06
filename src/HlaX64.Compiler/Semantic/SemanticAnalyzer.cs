@@ -146,8 +146,156 @@ public sealed class SemanticAnalyzer
             case ProcedureNode proc:
                 AnalyzeProcedure(proc);
                 break;
+            case AssignExprNode assign:
+                AnalyzeAssignExpr(assign);
+                break;
         }
     }
+
+    private void AnalyzeAssignExpr(AssignExprNode assign)
+    {
+        if (!TryValidateAssignTarget(assign.Target, assign.Line, assign.Column))
+            return;
+
+        if (!AnalyzeRuntimeExpression(assign.Expression))
+            return;
+
+        CheckRuntimeDivideByZero(assign.Expression);
+    }
+
+    private bool TryValidateAssignTarget(AstNode target, int line, int column)
+    {
+        if (target is RegisterNode reg)
+        {
+            if (!KnownRegisters.Contains(reg.Name) || !Is64BitRegister(reg.Name))
+            {
+                _diagnostics.Error("HLAX0035",
+                    $"':=' assignment target must be an int64 scalar local or 64-bit register, not '{reg.Name}'",
+                    line, column);
+                return false;
+            }
+            return true;
+        }
+
+        if (target is IdentifierNode ident)
+        {
+            if (!_variableTypes.TryGetValue(ident.Name, out var type))
+            {
+                _diagnostics.Error("HLAX0035",
+                    $"':=' assignment target must be an int64 scalar local or 64-bit register, not '{ident.Name}'",
+                    line, column);
+                return false;
+            }
+
+            if (_arrayElementCounts.ContainsKey(ident.Name) || type.BitWidth != 64)
+            {
+                _diagnostics.Error("HLAX0035",
+                    $"':=' assignment target must be an int64 scalar local or 64-bit register, not '{ident.Name}'",
+                    line, column);
+                return false;
+            }
+
+            return true;
+        }
+
+        _diagnostics.Error("HLAX0035",
+            "':=' assignment target must be an int64 scalar local or 64-bit register",
+            line, column);
+        return false;
+    }
+
+    private bool AnalyzeRuntimeExpression(AstNode node)
+    {
+        switch (node)
+        {
+            case IntegerLiteralNode:
+                return true;
+            case RegisterNode reg:
+                if (!KnownRegisters.Contains(reg.Name))
+                {
+                    _diagnostics.Error("HLAX0012", $"Unknown register '{reg.Name}'", reg.Line, reg.Column);
+                    return false;
+                }
+                return true;
+            case IdentifierNode ident:
+                return AnalyzeRuntimeIdentifier(ident);
+            case UnaryExprNode unary:
+                return AnalyzeRuntimeExpression(unary.Operand);
+            case BinaryExprNode binary:
+                return AnalyzeRuntimeExpression(binary.Left)
+                    && AnalyzeRuntimeExpression(binary.Right);
+            default:
+                return true;
+        }
+    }
+
+    private bool AnalyzeRuntimeIdentifier(IdentifierNode ident)
+    {
+        if (KnownIdentifiers.Contains(ident.Name))
+        {
+            _diagnostics.Error("HLAX0036",
+                $"'{ident.Name}' is not a valid runtime expression operand",
+                ident.Line, ident.Column);
+            return false;
+        }
+
+        if (_arrayElementCounts.ContainsKey(ident.Name))
+        {
+            _diagnostics.Error("HLAX0037",
+                $"Array '{ident.Name}' cannot be used in a runtime expression",
+                ident.Line, ident.Column);
+            return false;
+        }
+
+        if (_variableTypes.ContainsKey(ident.Name) || _constTable.TryGetValue(ident.Name, out _))
+            return true;
+
+        _diagnostics.Error("HLAX0036",
+            $"Unknown name '{ident.Name}' in runtime expression",
+            ident.Line, ident.Column);
+        return false;
+    }
+
+    private void CheckRuntimeDivideByZero(AstNode node)
+    {
+        if (node is BinaryExprNode bin && bin.Operator is "/" or "%")
+        {
+            if (TryEvaluateRuntimeDivisor(bin.Right, out var divisor) && divisor == 0)
+            {
+                _diagnostics.Error("HLAX0038",
+                    "Division or modulo by zero in runtime expression",
+                    bin.Line, bin.Column);
+                return;
+            }
+        }
+
+        switch (node)
+        {
+            case UnaryExprNode unary:
+                CheckRuntimeDivideByZero(unary.Operand);
+                break;
+            case BinaryExprNode binary:
+                CheckRuntimeDivideByZero(binary.Left);
+                CheckRuntimeDivideByZero(binary.Right);
+                break;
+        }
+    }
+
+    private bool TryEvaluateRuntimeDivisor(AstNode node, out long value)
+    {
+        value = 0;
+        if (node is IntegerLiteralNode lit)
+        {
+            value = lit.Value;
+            return true;
+        }
+
+        return _constEvaluator.TryEvaluate(node, _constTable, out value, out _);
+    }
+
+    private static bool Is64BitRegister(string name)
+        => name.ToLowerInvariant() is "rax" or "rbx" or "rcx" or "rdx" or "rsi" or "rdi" or "rbp" or "rsp"
+            or "r8" or "r9" or "r10" or "r11" or "r12" or "r13" or "r14" or "r15";
 
     private void AnalyzeInstruction(InstructionNode instr)
     {
