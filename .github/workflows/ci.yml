@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install NASM (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y nasm gcc
+
+      - name: Build
+        run: dotnet build
+
+      - name: Test
+        run: dotnet test
+
+      - name: Doctor
+        run: dotnet run --project src/HlaX64.Cli -- doctor
+
+      - name: Native integration test (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          dotnet run --project src/HlaX64.Cli -- test tests/samples/
+          dotnet run --project src/HlaX64.Cli -- run examples/hello.hla64

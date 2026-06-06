@@ -32,6 +32,9 @@ app.Configure(config =>
 
     config.AddCommand<GeneratePInvokeCommand>("generate-pinvoke")
         .WithDescription("Generate C# P/Invoke declarations for exported procedures");
+
+    config.AddCommand<DoctorCommand>("doctor")
+        .WithDescription("Check development toolchain and environment");
 });
 
 return app.Run(args);
