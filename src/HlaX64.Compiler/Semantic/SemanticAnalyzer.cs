@@ -14,12 +14,16 @@ public sealed class SemanticAnalyzer
     private readonly CompilerWarnings _warnings;
     private readonly DiagnosticCollection _diagnostics = new();
     private readonly ConstExpressionEvaluator _constEvaluator = new();
+    private readonly EnumTypeRegistry _enumRegistry = new();
+    private readonly RecordTypeRegistry _recordRegistry = new();
     private readonly Dictionary<string, IntegerTypeSymbol> _variableTypes = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, RecordTypeSymbol> _recordVariables = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, int> _arrayElementCounts = new(StringComparer.OrdinalIgnoreCase);
     private CompileTimeConstTable _constTable = new();
     private CompileTimeConstTable _programConstTable = new();
 
     public CompileTimeConstTable ConstTable => _programConstTable;
+    public RecordTypeRegistry RecordTypes => _recordRegistry;
     private static readonly HashSet<string> KnownRegisters = new(StringComparer.OrdinalIgnoreCase)
     {
         // 64-bit
@@ -82,10 +86,16 @@ public sealed class SemanticAnalyzer
     {
         _diagnostics.Clear();
         _programConstTable = new CompileTimeConstTable();
+        _enumRegistry.Clear();
+        _recordRegistry.Clear();
 
         CheckProgramNameMatch(program);
         CheckDuplicateProcedures(program);
-        EvaluateConstBlocks(program.Constants, _programConstTable);
+        EvaluateRecordBlocks(program.Records);
+        _constEvaluator.SetRecordTypes(_recordRegistry);
+        EvaluateConstBlocks(program.Constants, _programConstTable, retryPass: false);
+        EvaluateEnumBlocks(program.Enums, _programConstTable);
+        EvaluateConstBlocks(program.Constants, _programConstTable, retryPass: true);
 
         if (_diagnostics.HasErrors)
             return _diagnostics;
@@ -247,7 +257,8 @@ public sealed class SemanticAnalyzer
             return false;
         }
 
-        if (_variableTypes.ContainsKey(ident.Name) || _constTable.TryGetValue(ident.Name, out _))
+        if (_variableTypes.ContainsKey(ident.Name) || _recordVariables.ContainsKey(ident.Name)
+            || _constTable.TryGetValue(ident.Name, out _))
             return true;
 
         _diagnostics.Error("HLAX0036",
@@ -389,17 +400,57 @@ public sealed class SemanticAnalyzer
         }
     }
 
-    private void EvaluateConstBlocks(IEnumerable<AstNode> blocks, CompileTimeConstTable table)
+    private void EvaluateRecordBlocks(IEnumerable<AstNode> blocks)
+    {
+        foreach (var node in blocks)
+        {
+            if (node is not RecordBlockNode block)
+                continue;
+
+            if (!_recordRegistry.Register(block, out _, out var error))
+            {
+                _diagnostics.Error("HLAX0042", error ?? $"Invalid record '{block.Name}'", block.Line, block.Column);
+            }
+        }
+    }
+
+    private void EvaluateEnumBlocks(IEnumerable<AstNode> blocks, CompileTimeConstTable table)
+    {
+        foreach (var node in blocks)
+        {
+            if (node is not EnumBlockNode block)
+                continue;
+
+            if (!_enumRegistry.Register(block, table, _constEvaluator, out _, out var error))
+            {
+                if (error != null)
+                    _diagnostics.Report(error.Code, error.Severity, error.Message, error.Line, error.Column, error.Suggestion);
+            }
+        }
+    }
+
+    private void EvaluateConstBlocks(IEnumerable<AstNode> blocks, CompileTimeConstTable table, bool retryPass = false)
     {
         foreach (var node in blocks)
         {
             if (node is not ConstBlockNode block)
                 continue;
 
+            var seenInBlock = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var decl in block.Declarations)
             {
+                if (!seenInBlock.Add(decl.Name))
+                {
+                    _diagnostics.Error("HLAX0034",
+                        $"Duplicate constant '{decl.Name}'",
+                        decl.Line, decl.Column);
+                    continue;
+                }
+
                 if (table.TryGetValue(decl.Name, out _))
                 {
+                    if (retryPass)
+                        continue;
                     _diagnostics.Error("HLAX0034",
                         $"Duplicate constant '{decl.Name}'",
                         decl.Line, decl.Column);
@@ -446,6 +497,7 @@ public sealed class SemanticAnalyzer
     private void AnalyzeProcedure(ProcedureNode proc)
     {
         _variableTypes.Clear();
+        _recordVariables.Clear();
         _arrayElementCounts.Clear();
         _constTable = _programConstTable.Clone();
         EvaluateConstBlocks(proc.Constants, _constTable);
@@ -471,25 +523,41 @@ public sealed class SemanticAnalyzer
                         varNode.Line, varNode.Column);
                 }
 
-                var type = TypeRegistry.Lookup(varNode.Type);
-                if (type == null)
+                if (_recordRegistry.TryGet(varNode.Type, out var recordType))
                 {
-                    _diagnostics.Error("HLAX0020",
-                        $"Unknown type '{varNode.Type}' for variable '{varNode.Name}'",
-                        varNode.Line, varNode.Column);
+                    if (varNode.ElementCount > 1)
+                    {
+                        _diagnostics.Error("HLAX0024",
+                            $"Record type '{varNode.Type}' cannot be used as an array element",
+                            varNode.Line, varNode.Column);
+                    }
+                    else
+                    {
+                        _recordVariables[varNode.Name] = recordType;
+                    }
                 }
                 else
                 {
-                    if (varNode.ElementCount > 1 && !IsSupportedArrayElementType(type))
+                    var type = TypeRegistry.Lookup(varNode.Type);
+                    if (type == null)
                     {
-                        _diagnostics.Error("HLAX0024",
-                            $"Array element type '{varNode.Type}' is not supported; use byte, word, dword, int64, uint64, qword, or ptr",
+                        _diagnostics.Error("HLAX0020",
+                            $"Unknown type '{varNode.Type}' for variable '{varNode.Name}'",
                             varNode.Line, varNode.Column);
                     }
+                    else
+                    {
+                        if (varNode.ElementCount > 1 && !IsSupportedArrayElementType(type))
+                        {
+                            _diagnostics.Error("HLAX0024",
+                                $"Array element type '{varNode.Type}' is not supported; use byte, word, dword, int64, uint64, qword, or ptr",
+                                varNode.Line, varNode.Column);
+                        }
 
-                    _variableTypes[varNode.Name] = type;
-                    if (varNode.ElementCount > 1)
-                        _arrayElementCounts[varNode.Name] = varNode.ElementCount;
+                        _variableTypes[varNode.Name] = type;
+                        if (varNode.ElementCount > 1)
+                            _arrayElementCounts[varNode.Name] = varNode.ElementCount;
+                    }
                 }
             }
         }
@@ -536,7 +604,7 @@ public sealed class SemanticAnalyzer
         }
         else if (node is AddressOfNode addr)
         {
-            if (!_variableTypes.ContainsKey(addr.VariableName))
+            if (!_variableTypes.ContainsKey(addr.VariableName) && !_recordVariables.ContainsKey(addr.VariableName))
             {
                 _diagnostics.Error("HLAX0023",
                     $"Address-of requires a local variable or parameter, not '{addr.VariableName}'",
@@ -575,12 +643,18 @@ public sealed class SemanticAnalyzer
 
             AnalyzeOperand(arr.Index);
         }
+        else if (node is DotAccessNode dot)
+        {
+            AnalyzeDotAccess(dot);
+        }
         else if (node is IdentifierNode ident)
         {
             // Skip known identifiers like "nl" and known variables
             if (KnownIdentifiers.Contains(ident.Name))
                 return;
             if (_variableTypes.ContainsKey(ident.Name))
+                return;
+            if (_recordVariables.ContainsKey(ident.Name))
                 return;
             if (_constTable.TryGetValue(ident.Name, out _))
                 return;
@@ -606,10 +680,7 @@ public sealed class SemanticAnalyzer
         if (!_arrayElementCounts.TryGetValue(arr.ArrayName, out var length))
             return;
 
-        long indexValue;
-        if (arr.Index is IntegerLiteralNode lit)
-            indexValue = lit.Value;
-        else if (!_constEvaluator.TryEvaluate(arr.Index, _constTable, out indexValue, out _))
+        if (!_constEvaluator.TryEvaluate(arr.Index, _constTable, out var indexValue, out _))
             return;
 
         if (indexValue < 0 || indexValue >= length)
@@ -618,6 +689,40 @@ public sealed class SemanticAnalyzer
                 $"Array index {indexValue} may be out of bounds for '{arr.ArrayName}' (length {length})",
                 arr.Line, arr.Column);
         }
+    }
+
+    private void AnalyzeDotAccess(DotAccessNode dot)
+    {
+        var qualified = EnumTypeRegistry.QualifiedName(dot.BaseName, dot.MemberName);
+
+        if (_enumRegistry.Contains(dot.BaseName))
+        {
+            if (!_constTable.TryGetValue(qualified, out _))
+            {
+                _diagnostics.Error("HLAX0041",
+                    $"Undefined enum member '{qualified}'",
+                    dot.Line, dot.Column);
+            }
+            return;
+        }
+
+        if (_recordVariables.TryGetValue(dot.BaseName, out var record))
+        {
+            if (!record.TryGetField(dot.MemberName, out _))
+            {
+                _diagnostics.Error("HLAX0043",
+                    $"Unknown field '{dot.MemberName}' in record variable '{dot.BaseName}'",
+                    dot.Line, dot.Column);
+            }
+            return;
+        }
+
+        if (_enumRegistry.TryGetMemberValue(dot.BaseName, dot.MemberName, out _))
+            return;
+
+        _diagnostics.Error("HLAX0041",
+            $"Undefined qualified name '{qualified}'",
+            dot.Line, dot.Column);
     }
 
     private static bool IsSupportedArrayElementType(IntegerTypeSymbol type)

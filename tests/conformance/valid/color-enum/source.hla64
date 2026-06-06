@@ -1,0 +1,8 @@
+program p;
+enum Color: uint32
+    Red := 1;
+    Green := 2;
+endenum;
+begin p;
+    mov(Color.Green, rax);
+end p;

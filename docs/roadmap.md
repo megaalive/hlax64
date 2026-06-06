@@ -31,7 +31,7 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 | 13 | MCP server | ✅ Done | 9 tools via stdio JSON-RPC (compile, build, run, test, explain-abi, dll) |
 | 14 | LSP & editor tooling | ✅ MVP | diagnostics, hover, completion, go-to-definition, document symbols, format-on-save; VS Code client |
 | 15 | AI Assembly Lab / GUI | ⏳ Pending | eksperimen UI (Avalonia/WPF) |
-| **16** | **Language core completion** | 🚧 Sprint 1 | const blocks, expressions (planned), enum, struct, `sizeof`, string model |
+| **16** | **Language core completion** | 🚧 Sprint 4 done | const, expressions, enum, record, `sizeof`/`offsetof`; string model next |
 | 17 | ABI and FFI completion | ⏳ | stack args, float ABI, function pointers, external libs |
 | 18 | Compiler verification | ⏳ | definite assignment, CFG/stack/ABI verifiers, fuzz expansion |
 | 19 | Debug and explainability | ⏳ | source map, DWARF MVP, disassembly, trace mode |
@@ -44,7 +44,10 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 ### Phase 16 sprint notes
 
 - **Sprint 1 (done):** docs sync, RFC 0004, `const`/`endconst`, compile-time expressions, hex `$FF`
-- **Sprint 2+:** runtime `:=` expressions, enum, struct, global data
+- **Sprint 2 (done):** runtime `:=` expressions for int64 scalars
+- **Sprint 3 (done):** `enum`/`endenum`, typed backing, `Color.Red` immediates (RFC 0005)
+- **Sprint 4 (done):** `record`/`endrecord`, natural layout, field access, `sizeof`/`offsetof` (RFC 0006)
+- **Sprint 5+:** global data, string model, `packed` records
 
 ---
 
@@ -80,8 +83,8 @@ Fase 13 (MCP) →  Fase 14 (LSP) →  Fase 15 (GUI)
 > *Fase 9.5 Workstream A–H done. Docs sync complete. Fase 10 (Bench), 11 (Windows), 12 (C# interop), 13 (MCP) all done.
 > **Level 3 memory curriculum** (RFC 0002/0003) — pointers, indexed `[reg+N]`, stack arrays `type[N]` (incl. packed `byte[N]`), string walk, optional `-Wbounds` (HLAX0030).
 > **Fase 14 LSP MVP** — diagnostics (incl. bounds warnings), hover, completion, go-to-definition, document symbols, format-on-save; VS Code language client.
-> **Phase 16 Sprint 2 done** — runtime `:=` expressions for int64 scalars (`+ - * / % & | ^ ~ << >>`, comparisons); HLAX0035–38; example `expr-assign.hla64`.
-> Next: Fase 15 (GUI / AI Assembly Lab).
+> **Phase 16 Sprint 3–4 done** — enums (`enum`/`endenum`, HLAX0039–41), records (`record`/`endrecord`, `sizeof`/`offsetof`, HLAX0042–44); examples `color-enum.hla64`, `patient-header.hla64`.
+> Next: Phase 16 Sprint 5 (global data / string model) or Fase 15 (GUI / AI Assembly Lab).
 
 ---
 

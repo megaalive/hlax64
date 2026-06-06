@@ -1,6 +1,8 @@
-# Types & Comparisons
+# Examples — Types (Phase 16 Sprint 3–4)
 
-| Example | Description |
-|---------|-------------|
-| [signed-compare.hla64](signed-compare.hla64) | Signed `<` in `if` |
-| [unsigned-compare.hla64](unsigned-compare.hla64) | Unsigned `>?` operator |
+| File | Topic |
+|------|-------|
+| `color-enum.hla64` | Typed enum with `Color.Red` immediates |
+| `patient-header.hla64` | Record layout and field access |
+
+Run: `hla64 build examples/02-types/color-enum.hla64` from repo root.

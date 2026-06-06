@@ -13,6 +13,10 @@ public enum TokenType
     Var,
     Const,
     Endconst,
+    Enum,
+    Endenum,
+    Record,
+    Endrecord,
     Export,
     Returns,
     

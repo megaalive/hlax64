@@ -1,0 +1,12 @@
+program ColorEnumDemo;
+
+enum Color: uint32
+    Red   := 1;
+    Green := 2;
+    Blue  := 3;
+endenum;
+
+begin ColorEnumDemo;
+    mov(Color.Red, rax);
+    mov(Color.Blue, rbx);
+end ColorEnumDemo;

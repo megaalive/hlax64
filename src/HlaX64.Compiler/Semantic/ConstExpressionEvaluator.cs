@@ -1,5 +1,6 @@
 using HlaX64.Compiler.Ast;
 using HlaX64.Compiler.Diagnostics;
+using HlaX64.Compiler.Types;
 
 namespace HlaX64.Compiler.Semantic;
 
@@ -8,6 +9,10 @@ namespace HlaX64.Compiler.Semantic;
 /// </summary>
 public sealed class ConstExpressionEvaluator
 {
+    private RecordTypeRegistry? _records;
+
+    public void SetRecordTypes(RecordTypeRegistry records) => _records = records;
+
     public bool TryEvaluate(AstNode node, CompileTimeConstTable table, out long value, out Diagnostic? error)
     {
         error = null;
@@ -25,6 +30,44 @@ public sealed class ConstExpressionEvaluator
                 error = new Diagnostic("HLAX0031", DiagnosticSeverity.Error,
                     $"Undefined constant '{ident.Name}' in compile-time expression",
                     ident.Line, ident.Column);
+                return false;
+
+            case DotAccessNode dot:
+                var qualified = EnumTypeRegistry.QualifiedName(dot.BaseName, dot.MemberName);
+                if (table.TryGetValue(qualified, out value))
+                    return true;
+                error = new Diagnostic("HLAX0041", DiagnosticSeverity.Error,
+                    $"Undefined enum member '{qualified}'",
+                    dot.Line, dot.Column);
+                return false;
+
+            case SizeofNode sizeofNode:
+                if (_records?.TryGet(sizeofNode.TypeName, out var record) == true)
+                {
+                    value = record.SizeInBytes;
+                    return true;
+                }
+                error = new Diagnostic("HLAX0042", DiagnosticSeverity.Error,
+                    $"Unknown record type '{sizeofNode.TypeName}' in sizeof",
+                    sizeofNode.Line, sizeofNode.Column);
+                return false;
+
+            case OffsetofNode offsetofNode:
+                if (_records?.TryGet(offsetofNode.TypeName, out var rec) == true)
+                {
+                    if (rec.TryGetField(offsetofNode.FieldName, out var field))
+                    {
+                        value = field.Offset;
+                        return true;
+                    }
+                    error = new Diagnostic("HLAX0043", DiagnosticSeverity.Error,
+                        $"Unknown field '{offsetofNode.FieldName}' in record '{offsetofNode.TypeName}'",
+                        offsetofNode.Line, offsetofNode.Column);
+                    return false;
+                }
+                error = new Diagnostic("HLAX0044", DiagnosticSeverity.Error,
+                    $"Invalid offsetof: unknown record type '{offsetofNode.TypeName}'",
+                    offsetofNode.Line, offsetofNode.Column);
                 return false;
 
             case UnaryExprNode unary:

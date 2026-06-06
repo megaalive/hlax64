@@ -66,7 +66,7 @@ public class Compilation
             }
 
             // 4. Lower AST to IR
-            var lowering = new AstToIrLowering(semantic.ConstTable);
+            var lowering = new AstToIrLowering(semantic.ConstTable, semantic.RecordTypes);
             var procedures = new List<IrFunction>();
             var entryIr = lowering.LowerProgram(program, procedures);
 

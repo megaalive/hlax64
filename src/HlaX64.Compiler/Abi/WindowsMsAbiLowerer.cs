@@ -171,6 +171,9 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
         if (ArrayIndexEncoding.IsArrayIndex(srcVal))
             return ArrayLoweringHelper.LowerArrayLoad(dst, srcVal!, _stackMap, ResolveOperand);
 
+        if (FieldAccessEncoding.IsFieldAccess(srcVal))
+            return FieldLoweringHelper.LowerFieldLoad(dst, srcVal!, _stackMap);
+
         if (IsMemRef(dstVal))
         {
             var mem = MemoryRefEncoding.Parse(dstVal!);
@@ -179,6 +182,9 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
 
         if (ArrayIndexEncoding.IsArrayIndex(dstVal))
             return ArrayLoweringHelper.LowerArrayStore(dstVal!, src, _stackMap, ResolveOperand);
+
+        if (FieldAccessEncoding.IsFieldAccess(dstVal))
+            return FieldLoweringHelper.LowerFieldStore(dstVal!, src, _stackMap);
 
         if (AddressRefEncoding.IsStringRef(srcVal))
         {
