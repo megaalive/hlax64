@@ -15,6 +15,19 @@ Or symlink into `.vscode/extensions` for testing.
 - Snippets: `hello`, `proc`
 - Comment toggling via `//`
 
+## Language Server (diagnostics)
+
+Add to `.vscode/settings.json` in the repo root:
+
+```json
+{
+  "hla64.languageServerPath": "dotnet",
+  "hla64.languageServerArgs": ["run", "--project", "src/HlaX64.LanguageServer/HlaX64.LanguageServer.csproj"]
+}
+```
+
+Or run manually: `dotnet run --project src/HlaX64.LanguageServer`
+
 ## Build / run from VS Code
 
 Add to `.vscode/tasks.json` in your project:

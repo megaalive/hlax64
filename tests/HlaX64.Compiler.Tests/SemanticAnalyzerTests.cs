@@ -138,4 +138,24 @@ public class SemanticAnalyzerTests
         var diagnostics = analyzer.Analyze(program);
         Assert.False(diagnostics.HasErrors);
     }
+
+    [Fact]
+    public void Analyze_UnknownParameterType_ReportsError()
+    {
+        var program = ParseProgram("""
+            program bad;
+            procedure Bad(x:foobar); @returns("rax");
+            begin Bad;
+                mov(1, rax);
+            end Bad;
+            begin bad;
+            end bad;
+            """);
+        var analyzer = new SemanticAnalyzer();
+        var diagnostics = analyzer.Analyze(program);
+
+        Assert.True(diagnostics.HasErrors);
+        var error = Assert.Single(diagnostics.Diagnostics, d => d.Code == "HLAX0020");
+        Assert.Contains("foobar", error.Message);
+    }
 }

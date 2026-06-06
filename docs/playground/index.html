@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HlaX64 Playground (Static)</title>
+  <style>
+    :root { color-scheme: dark; font-family: ui-monospace, Consolas, monospace; }
+    body { margin: 0; background: #0f1419; color: #e6edf3; }
+    header { padding: 1rem 1.5rem; border-bottom: 1px solid #30363d; }
+    main { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1rem; }
+    textarea, pre { width: 100%; min-height: 320px; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem; box-sizing: border-box; }
+    select, button { margin-top: 0.5rem; padding: 0.4rem 0.8rem; background: #238636; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+    .note { padding: 1rem 1.5rem; color: #8b949e; font-size: 0.9rem; }
+    @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>HlaX64 Playground</h1>
+    <p>Static demo — edit sample source and view reference lowering notes. Full IR/NASM requires local CLI.</p>
+    <label>
+      Example
+      <select id="example"></select>
+    </label>
+    <button id="load">Load example</button>
+  </header>
+  <main>
+    <section>
+      <h2>Source (.hla64)</h2>
+      <textarea id="source"></textarea>
+    </section>
+    <section>
+      <h2>Reference output</h2>
+      <pre id="output"></pre>
+    </section>
+  </main>
+  <p class="note">
+    Run locally for real diagnostics and NASM:
+    <code>hla64 explain examples/00-getting-started/hello.hla64 --json</code>
+    · See <a href="../playground-design.md">playground-design.md</a>
+  </p>
+  <script>
+    const samples = {
+      hello: {
+        source: `program hello;\n\n#include("stdlib64.hhf")\n\nbegin hello;\n    stdout.put("Hello from HlaX64", nl);\nend hello;`,
+        note: "Lowers to Linux _start + runtime stdout helpers.\nUse: hla64 explain examples/00-getting-started/hello.hla64"
+      },
+      exitcode: {
+        source: `program exitcode;\nbegin exitcode;\n    mov(42, rax);\nend exitcode;`,
+        note: "Exit code comes from rax at process exit.\nExpected exit code: 42"
+      },
+      add_two: {
+        source: `program main;\n\nprocedure AddTwo(a:int64; b:int64); @returns("rax");\nbegin AddTwo;\n    mov(a, rax);\n    add(b, rax);\nend AddTwo;\n\nbegin main;\n    call AddTwo(10, 20);\nend main;`,
+        note: "SysV ABI: args in rdi, rsi; return in rax.\nResult exit code: 30"
+      }
+    };
+
+    const sel = document.getElementById('example');
+    Object.keys(samples).forEach(k => {
+      const o = document.createElement('option');
+      o.value = k; o.textContent = k; sel.appendChild(o);
+    });
+
+    function load(key) {
+      document.getElementById('source').value = samples[key].source;
+      document.getElementById('output').textContent = samples[key].note;
+    }
+
+    document.getElementById('load').onclick = () => load(sel.value);
+    load('hello');
+  </script>
+</body>
+</html>

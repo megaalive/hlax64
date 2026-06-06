@@ -71,6 +71,16 @@ Stable diagnostic codes help agents, IDE tooling, and contributors reference err
 | **Example** | `mov(1, raxz);` |
 | **Fix** | Use a valid x64 register (`rax`, `rbx`, …) |
 
+### HLAX1000 — Parse error
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Parser |
+| **Since** | 0.1.0-alpha |
+| **Cause** | Source does not match HlaX64 grammar |
+| **Fix** | Correct syntax per [language-spec.md](language-spec.md) |
+
 ### HLAX0020 — Unknown type
 
 | Field | Value |
@@ -80,7 +90,7 @@ Stable diagnostic codes help agents, IDE tooling, and contributors reference err
 | **Since** | 0.1.0-alpha |
 | **Cause** | Variable or parameter uses an unrecognized type name |
 | **Example** | `var x:foobar;` |
-| **Fix** | Use a type from [language-spec.md](language-spec.md) (`int64`, `uint64`, …) |
+| **Fix** | Use a type from [language-spec.md](language-spec.md) (`int64`, `uint64`, …). Applies to variables and parameters. |
 
 ### HLAX0021 — Implicit narrowing conversion
 

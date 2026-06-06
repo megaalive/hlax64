@@ -39,6 +39,13 @@ public sealed class ConformanceTests
             foreach (var fragment in manifest.ExpectNasmContains)
                 Assert.Contains(fragment, nasm, StringComparison.Ordinal);
         }
+
+        if (manifest.ExpectIrContains is { Length: > 0 })
+        {
+            var irText = string.Join('\n', result.IrFunctions.Select(f => f.ToString()));
+            foreach (var fragment in manifest.ExpectIrContains)
+                Assert.Contains(fragment, irText, StringComparison.Ordinal);
+        }
     }
 
     [Theory]
@@ -107,5 +114,6 @@ public sealed class ConformanceTests
         public bool ExpectParseError { get; set; }
         public string[]? ExpectCodes { get; set; }
         public string[]? ExpectNasmContains { get; set; }
+        public string[]? ExpectIrContains { get; set; }
     }
 }

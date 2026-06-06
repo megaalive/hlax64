@@ -10,13 +10,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 - MCP tools: `explain`, `format-source`, `doctor`
 - Shared `ExplainReport` / `DoctorReport` services used by CLI and MCP
-- 4 curriculum examples (20 total): subtract, factorial-iter, windows-exitcode, smoke-test
-- Conformance: NASM substring checks, unknown-type invalid case
-- `docs/mcp-tools.md`, `docs/playground-design.md`, `schemas/explain-result.schema.json`
+- 4 curriculum examples (20 total `.hla64` files)
+- Conformance: NASM/IR substring checks, unknown-type cases
+- `docs/mcp-tools.md`, `docs/playground-design.md`, static `docs/playground/index.html`
+- `ExamplesCompileTests` — CI guard that all 20 examples compile end-to-end
+- `AstFormatter` (parse → re-emit) used by `hla64 format`
+- `HlaX64.LanguageServer` diagnostics MVP (stdio LSP)
+- `DiagnosticService` for frontend-only analysis
+- Parameter type validation (`HLAX0020`) and parse diagnostic `HLAX1000`
 
 ### Changed
 
 - `DoctorCommand` delegates to `DoctorReport.Run()`
+- `add-two` example includes `stdlib64.hhf` for `stdout.put`
 
 ## [0.1.0-alpha] - 2026-06-06
 
