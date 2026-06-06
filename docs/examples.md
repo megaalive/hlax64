@@ -22,7 +22,7 @@ Each folder has a README with build/run commands.
 
 ## 2. Integration samples (`tests/samples/`)
 
-16 samples with `manifest.json`, run via `hla64 test tests/samples`.
+17 samples with `manifest.json`, run via `hla64 test tests/samples`.
 
 ## 2b. Curriculum manifests (`tests/examples-curriculum/`)
 
@@ -40,6 +40,7 @@ See [tutorials/01-getting-started.md](tutorials/01-getting-started.md).
 | `local_var/`, `if_else/` | Variables, control flow |
 | `procedure_*` | 0, 1, 6 arguments |
 | `comparison_*` | Signed / unsigned compares |
+| `comparison_uint64_boundary/` | High-bit uint64 (`0x8000…0000`) vs 1 |
 | `stdout_int64/`, `callee_saved/`, `stack_alignment/` | ABI edge cases |
 | `export_lib/` | Shared library + interop |
 

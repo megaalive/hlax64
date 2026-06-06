@@ -10,6 +10,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 - README demo GIF (`docs/assets/demo.gif`) and `scripts/generate-demo-gif.py`
 - GitHub issue backlog script (`scripts/create-issue-backlog.ps1`); 20 curated issues (#1–#20)
+- Native sample `comparison_uint64_boundary` (uint64 high-bit vs 1); fixes #2
+- `scripts/setup-toolchain-path.ps1` for Windows NASM/MinGW PATH setup
+
+### Fixed
+
+- Parser accepts `int64` minimum literal (`-9223372036854775808`)
+
+### Changed
+
+- Regenerated README demo GIF (1280×720, scene-based, real CLI output)
 
 ## [0.1.0-alpha] - 2026-06-06
 

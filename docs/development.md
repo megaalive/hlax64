@@ -13,6 +13,14 @@ Setup, build, test, and debug HlaX64 locally.
 
 Run `hla64 doctor` (or `dotnet run --project src/HlaX64.Cli -- doctor`) to verify your environment.
 
+On Windows, add NASM to PATH after install:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/setup-toolchain-path.ps1
+```
+
+Linux ELF `hla64 run` on Windows needs WSL Ubuntu with `gcc` (MinGW cannot link elf64 objects).
+
 ### Install as global tool
 
 See [install.md](install.md) for release archives and uninstall steps.
