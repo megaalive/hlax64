@@ -9,7 +9,7 @@ namespace HlaX64.Cli.Commands;
 
 public sealed class ExplainCommand : Command<ExplainCommand.Settings>
 {
-    public sealed class Settings : CommandSettings
+    public sealed class Settings : CommandSettings, IVerificationCliOptions
     {
         [Description("Path to the .hla64 source file")]
         [CommandArgument(0, "<source>")]
@@ -27,6 +27,18 @@ public sealed class ExplainCommand : Command<ExplainCommand.Settings>
         [Description("Warn when a literal array index may be out of bounds")]
         [CommandOption("-Wbounds|--warn-bounds")]
         public bool WarnBounds { get; set; }
+
+        [CommandOption("-Wdefinite|--warn-definite")]
+        public bool WarnDefinite { get; set; }
+
+        [CommandOption("-Wunreachable|--warn-unreachable")]
+        public bool WarnUnreachable { get; set; }
+
+        [CommandOption("-Wliveness|--warn-liveness")]
+        public bool WarnLiveness { get; set; }
+
+        [CommandOption("-Wverify|--warn-verify")]
+        public bool WarnVerify { get; set; }
     }
 
     protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation)
@@ -38,7 +50,9 @@ public sealed class ExplainCommand : Command<ExplainCommand.Settings>
         }
 
         var sourceText = File.ReadAllText(settings.Source);
-        var options = CliCompilationOptions.FromCli(settings.Target, null, settings.WarnBounds);
+        var options = CliCompilationOptions.FromCli(
+            settings.Target, null, settings.WarnBounds,
+            settings.WarnDefinite, settings.WarnUnreachable, settings.WarnLiveness, settings.WarnVerify);
         var report = ExplainReport.Create(settings.Source, sourceText, options);
 
         if (settings.Json)

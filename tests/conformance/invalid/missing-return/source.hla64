@@ -1,0 +1,7 @@
+program t;
+procedure P; @returns("rax");
+begin P;
+    mov(0, rbx);
+end P;
+begin t;
+end t;

@@ -39,7 +39,7 @@ Or run from source without installing (below).
 git clone https://github.com/megaalive/hlax64.git
 cd hlax64
 dotnet build
-dotnet test   # 163 unit tests; native samples require Linux toolchain in CI
+dotnet test   # 258 unit tests; native samples require Linux toolchain in CI
 ```
 
 ### Language Server (Phase 14 MVP)
@@ -48,11 +48,32 @@ dotnet test   # 163 unit tests; native samples require Linux toolchain in CI
 dotnet run --project src/HlaX64.LanguageServer
 ```
 
-Capabilities: **publishDiagnostics** (incl. bounds warnings), **hover**, **completion**, **definition**, **documentSymbol**, **documentFormatting**.
+Capabilities: **publishDiagnostics** (incl. bounds + verification warnings HLAX0060–63), **hover**, **completion**, **definition**, **documentSymbol**, **documentFormatting**.
 
 **VS Code / Cursor:** install the extension from `editors/vscode/` (run `npm install` once), then **Developer: Install Extension from Location**. The extension starts the language server via `dotnet run` automatically. Format-on-save is enabled for `.hla64` by default.
 
-Optional CLI bounds warnings: `-Wbounds` / `--warn-bounds` on `build`, `emit-nasm`, `run`, `explain` (see [diagnostics.md](diagnostics.md#hlax0030--possible-out-of-bounds-array-index)).
+Optional CLI warnings on `build`, `emit-nasm`, `run`, `explain`:
+
+| Flag | Diagnostics |
+|------|-------------|
+| `-Wbounds` | HLAX0030 array index bounds |
+| `-Wdefinite` | HLAX0060 use before assignment |
+| `-Wunreachable` | HLAX0061/62 unreachable / missing return |
+| `-Wliveness` | HLAX0063 live register across call |
+| `-Wverify` | all Phase 18 verification warnings |
+
+Verification CLI (Phase 18):
+
+```bash
+dotnet run --project src/HlaX64.Cli -- verify-stack examples/01-arithmetic/add-two.hla64
+dotnet run --project src/HlaX64.Cli -- verify-abi examples/06-abi/stack-args-sysv.hla64 --json
+```
+
+### Fuzz / robustness tests (Phase 18)
+
+`ParserRobustnessTests` and `FuzzTests` exercise random ASCII/UTF-8 input, formatter round-trip on valid fixtures, and manifest JSON parsing. See [RFC 0014](../rfcs/0014-verification-tooling.md).
+
+See [diagnostics.md](diagnostics.md) for HLAX0030 and HLAX0060–68.
 
 See [editors/vscode/README.md](../editors/vscode/README.md).
 

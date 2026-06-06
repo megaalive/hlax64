@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ### Added
 
+- **Phase 18 (Sprints 1–6):** definite assignment HLAX0060, unreachable/missing-return HLAX0061/62, register liveness HLAX0063, `hla64 verify-stack` / `hla64 verify-abi`, `-Wdefinite`/`-Wunreachable`/`-Wliveness`/`-Wverify`, RFC 0014; 258 tests
 - **Phase 17 Sprints 2–5:** `extern procedure` with optional `from "lib"` link hints; function pointer type aliases (`type Fn := procedure(...): T`) and indirect `call`; float32/float64 parameter/return MVP (xmm ABI); record parameters as hidden pointers; variadic extern diagnostic HLAX0055; RFCs 0010–0013; examples `extern-puts.hla64`, `indirect-call.hla64`, `float-return.hla64`, `record-param.hla64`; HLAX0050–HLAX0055; 242 tests
 - **Phase 17 Sprint 1:** stack arguments beyond register limit (SysV 7+, Windows 5+); callee prologue loads from caller stack; call sites push/allocate per ABI; RFC 0009; example `examples/06-abi/stack-args-sysv.hla64`; sample `procedure_8args`; conformance `stack-args`
 - **Phase 16 Sprint 5:** program-scope `static`/`endstatic` (`.data`/`.bss` globals); `cstring` type alias; built-in `utf8slice` record; HLAX0045–49; RFC 0007/0008; examples `global-counter.hla64`, `cstring-walk.hla64`
