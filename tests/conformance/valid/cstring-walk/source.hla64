@@ -1,0 +1,20 @@
+program cstring_walk;
+procedure WalkLen(data: ptr; len: uint64); @returns("rax");
+var
+    i: int64;
+    ch: int64;
+begin WalkLen;
+    mov(data, rcx);
+    mov(0, rax);
+    mov(0, i);
+    mov([rcx].byte, ch);
+    while(i < len) do
+        add(1, rax);
+        add(1, i);
+        add(1, rcx);
+        mov([rcx].byte, ch);
+    endwhile;
+end WalkLen;
+begin cstring_walk;
+    call WalkLen(&"abc", 3);
+end cstring_walk;

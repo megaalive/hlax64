@@ -54,6 +54,13 @@ public static class AstFormatter
                 EmitRecordBlock(sb, block, 0);
         }
 
+        if (program.Statics.Count > 0)
+        {
+            sb.AppendLine();
+            foreach (StaticBlockNode block in program.Statics)
+                EmitStaticBlock(sb, block, 0);
+        }
+
         if (procedures.Count > 0)
         {
             sb.AppendLine();
@@ -85,6 +92,18 @@ public static class AstFormatter
         {
             foreach (ConstBlockNode block in proc.Constants)
                 EmitConstBlock(sb, block, indent);
+        }
+
+        if (proc.Enums.Count > 0)
+        {
+            foreach (EnumBlockNode block in proc.Enums)
+                EmitEnumBlock(sb, block, indent);
+        }
+
+        if (proc.Records.Count > 0)
+        {
+            foreach (RecordBlockNode block in proc.Records)
+                EmitRecordBlock(sb, block, indent);
         }
 
         if (proc.Variables.Count > 0)
@@ -206,14 +225,37 @@ public static class AstFormatter
         var pad = Indent(indent);
         sb.AppendLine($"{pad}enum {block.Name}: {block.BackingType}");
         foreach (var member in block.Members)
-            sb.AppendLine($"{pad}    {member.Name} := {EmitConstExpr(member.Value)};");
+        {
+            if (member.Value != null)
+                sb.AppendLine($"{pad}    {member.Name} := {EmitConstExpr(member.Value)};");
+            else
+                sb.AppendLine($"{pad}    {member.Name};");
+        }
         sb.AppendLine($"{pad}endenum;");
+    }
+
+    private static void EmitStaticBlock(StringBuilder sb, StaticBlockNode block, int indent)
+    {
+        var pad = Indent(indent);
+        sb.AppendLine($"{pad}static");
+        foreach (var decl in block.Declarations)
+        {
+            var typeDecl = decl.ArraySizeExpression != null
+                ? $"{decl.Type}[{EmitConstExpr(decl.ArraySizeExpression)}]"
+                : decl.Type;
+            if (decl.Initializer != null)
+                sb.AppendLine($"{pad}    {decl.Name}: {typeDecl} := {EmitConstExpr(decl.Initializer)};");
+            else
+                sb.AppendLine($"{pad}    {decl.Name}: {typeDecl};");
+        }
+        sb.AppendLine($"{pad}endstatic;");
     }
 
     private static void EmitRecordBlock(StringBuilder sb, RecordBlockNode block, int indent)
     {
         var pad = Indent(indent);
-        sb.AppendLine($"{pad}record {block.Name}");
+        var packed = block.IsPacked ? " packed" : "";
+        sb.AppendLine($"{pad}record {block.Name}{packed}");
         foreach (var field in block.Fields)
             sb.AppendLine($"{pad}    {field.Name}: {field.Type};");
         sb.AppendLine($"{pad}endrecord;");

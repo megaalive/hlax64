@@ -318,6 +318,46 @@ Stable diagnostic codes help agents, IDE tooling, and contributors reference err
 | **Cause** | `offsetof` references an unknown record type |
 | **Fix** | Use a declared record name |
 
+### HLAX0045 — Invalid static symbol
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | Duplicate static name or conflict with const |
+| **Fix** | Rename the static symbol |
+
+### HLAX0046 — Unknown static type
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | Static declaration uses an unsupported or unknown type |
+| **Fix** | Use a supported scalar or array element type |
+
+### HLAX0048 — Invalid static initializer
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | Static initializer is not a valid compile-time expression, or array has scalar init |
+| **Fix** | Use a const expression or omit initializer for `.bss` |
+
+### HLAX0049 — Static name conflict
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | Static name matches a procedure or type name |
+| **Fix** | Choose a unique name |
+
 ## Toolchain messages (no code yet)
 
 CLI and linker errors currently use plain text (e.g. `Error: NASM not found`). Future releases will assign `HLAX4xxx` codes.

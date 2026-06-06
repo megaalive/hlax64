@@ -41,15 +41,23 @@ public sealed class EnumTypeRegistry
         => ValidBackingTypes.Contains(typeName);
 
     public bool Register(EnumBlockNode block, CompileTimeConstTable constTable, ConstExpressionEvaluator evaluator,
-        out EnumTypeSymbol enumType, out Diagnostic? error)
+        out EnumTypeSymbol enumType, out Diagnostic? error, Dictionary<string, EnumTypeSymbol>? scopeTarget = null)
     {
         error = null;
         enumType = null!;
 
-        if (_enums.ContainsKey(block.Name))
+        var target = scopeTarget ?? _enums;
+        if (target.ContainsKey(block.Name) || (scopeTarget == null && _enums.ContainsKey(block.Name)))
         {
             error = new Diagnostic("HLAX0039", DiagnosticSeverity.Error,
                 $"Duplicate enum type '{block.Name}'", block.Line, block.Column);
+            return false;
+        }
+
+        if (scopeTarget != null && _enums.ContainsKey(block.Name))
+        {
+            error = new Diagnostic("HLAX0039", DiagnosticSeverity.Error,
+                $"Enum type '{block.Name}' conflicts with a program-level enum", block.Line, block.Column);
             return false;
         }
 
@@ -65,6 +73,7 @@ public sealed class EnumTypeRegistry
         var members = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+        long nextValue = 0;
         foreach (var member in block.Members)
         {
             if (!seen.Add(member.Name))
@@ -75,8 +84,18 @@ public sealed class EnumTypeRegistry
                 return false;
             }
 
-            if (!evaluator.TryEvaluate(member.Value, constTable, out var value, out error))
-                return false;
+            long value;
+            if (member.Value != null)
+            {
+                if (!evaluator.TryEvaluate(member.Value, constTable, out value, out error))
+                    return false;
+                nextValue = value + 1;
+            }
+            else
+            {
+                value = nextValue;
+                nextValue++;
+            }
 
             members[member.Name] = value;
             constTable.Define(QualifiedName(block.Name, member.Name), value);
@@ -88,8 +107,17 @@ public sealed class EnumTypeRegistry
             BackingType = backing,
             Members = members
         };
-        _enums[block.Name] = enumType;
+        target[block.Name] = enumType;
+        if (scopeTarget == null)
+            _enums[block.Name] = enumType;
         return true;
+    }
+
+    public bool TryGetScoped(string name, IReadOnlyDictionary<string, EnumTypeSymbol>? scope, out EnumTypeSymbol enumType)
+    {
+        if (scope != null && scope.TryGetValue(name, out enumType!))
+            return true;
+        return _enums.TryGetValue(name, out enumType!);
     }
 
     public static string QualifiedName(string enumName, string memberName)

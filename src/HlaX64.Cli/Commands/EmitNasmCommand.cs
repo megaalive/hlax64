@@ -18,7 +18,7 @@ public static class CompilePipeline
                 string.Join("\n", result.Diagnostics));
 
         var emitter = new NasmEmitter();
-        return emitter.Emit(result.LoweredFunctions, result.StringLiterals);
+        return emitter.Emit(result.LoweredFunctions, result.StringLiterals, result.GlobalData);
     }
 
     public static CompilationResult Process(string sourcePath, string sourceText, CompilationOptions? options = null)

@@ -1,5 +1,6 @@
 using HlaX64.Compiler.Ir;
 using HlaX64.Compiler.Options;
+using HlaX64.Compiler.Types;
 
 namespace HlaX64.Compiler.Abi;
 
@@ -12,5 +13,6 @@ public interface IAbiLowerer
     IReadOnlyList<string> CalleeSaved { get; }
     int StackAlignment { get; }
     IReadOnlyList<StringLiteralInfo> StringLiterals { get; }
-    LoweredFunction Lower(IrFunction function, CompilationOptions options);
+    LoweredFunction Lower(IrFunction function, CompilationOptions options,
+        IReadOnlyDictionary<string, GlobalDataSymbol>? globalData = null);
 }

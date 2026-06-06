@@ -41,7 +41,11 @@ HlaX64 is an **early multi-platform x64 language toolchain** — not a single-ta
 | Locals & stack arrays | ✅ | `var` block; `type[N]` including packed `byte[N]` |
 | Pointers & indexing | ✅ | `&var`, `&"str"`, `[reg+N]`, `arr[i]` — [RFC 0002](rfcs/0002-pointer-model.md) |
 | Compile-time constants | ✅ | `const` / `endconst`, `:=`, expr eval — [RFC 0004](rfcs/0004-expressions-and-constants.md) |
-| Runtime expressions `:=` | ⏳ | Planned Phase 16 Sprint 2 |
+| Runtime expressions `:=` | ✅ | Int64 locals/registers — [RFC 0004](rfcs/0004-expressions-and-constants.md) |
+| Enums | ✅ | `enum`/`endenum`, auto-increment members — [RFC 0005](rfcs/0005-enum-model.md) |
+| Records | ✅ | `record`/`endrecord`, `packed`, field access, `sizeof`/`offsetof` — [RFC 0006](rfcs/0006-struct-layout.md) |
+| Static / global data | ✅ | `static`/`endstatic`, `.data`/`.bss` — [RFC 0007](rfcs/0007-global-data.md) |
+| String model | ✅ | `cstring` alias, built-in `utf8slice` — [RFC 0008](rfcs/0008-string-model.md) |
 
 ### Compiler
 

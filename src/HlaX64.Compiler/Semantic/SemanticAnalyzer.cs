@@ -16,14 +16,19 @@ public sealed class SemanticAnalyzer
     private readonly ConstExpressionEvaluator _constEvaluator = new();
     private readonly EnumTypeRegistry _enumRegistry = new();
     private readonly RecordTypeRegistry _recordRegistry = new();
+    private readonly GlobalDataRegistry _globalDataRegistry = new();
     private readonly Dictionary<string, IntegerTypeSymbol> _variableTypes = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, RecordTypeSymbol> _recordVariables = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, int> _arrayElementCounts = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, int> _globalArrayElementCounts = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, RecordTypeSymbol> _scopeRecords = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, EnumTypeSymbol> _scopeEnums = new(StringComparer.OrdinalIgnoreCase);
     private CompileTimeConstTable _constTable = new();
     private CompileTimeConstTable _programConstTable = new();
 
     public CompileTimeConstTable ConstTable => _programConstTable;
     public RecordTypeRegistry RecordTypes => _recordRegistry;
+    public GlobalDataRegistry GlobalData => _globalDataRegistry;
     private static readonly HashSet<string> KnownRegisters = new(StringComparer.OrdinalIgnoreCase)
     {
         // 64-bit
@@ -88,6 +93,8 @@ public sealed class SemanticAnalyzer
         _programConstTable = new CompileTimeConstTable();
         _enumRegistry.Clear();
         _recordRegistry.Clear();
+        _globalDataRegistry.Clear();
+        _recordRegistry.RegisterBuiltins();
 
         CheckProgramNameMatch(program);
         CheckDuplicateProcedures(program);
@@ -96,6 +103,7 @@ public sealed class SemanticAnalyzer
         EvaluateConstBlocks(program.Constants, _programConstTable, retryPass: false);
         EvaluateEnumBlocks(program.Enums, _programConstTable);
         EvaluateConstBlocks(program.Constants, _programConstTable, retryPass: true);
+        EvaluateStaticBlocks(program.Statics, program);
 
         if (_diagnostics.HasErrors)
             return _diagnostics;
@@ -400,28 +408,163 @@ public sealed class SemanticAnalyzer
         }
     }
 
-    private void EvaluateRecordBlocks(IEnumerable<AstNode> blocks)
+    private void EvaluateStaticBlocks(IEnumerable<AstNode> blocks, ProgramNode program)
+    {
+        var procedureNames = program.Statements
+            .OfType<ProcedureNode>()
+            .Select(p => p.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var node in blocks)
+        {
+            if (node is not StaticBlockNode block)
+                continue;
+
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var decl in block.Declarations)
+            {
+                if (!seen.Add(decl.Name))
+                {
+                    _diagnostics.Error("HLAX0045",
+                        $"Duplicate static symbol '{decl.Name}'",
+                        decl.Line, decl.Column);
+                    continue;
+                }
+
+                if (_programConstTable.TryGetValue(decl.Name, out _))
+                {
+                    _diagnostics.Error("HLAX0045",
+                        $"Static symbol '{decl.Name}' conflicts with an existing constant",
+                        decl.Line, decl.Column);
+                    continue;
+                }
+
+                if (_globalDataRegistry.Contains(decl.Name))
+                {
+                    _diagnostics.Error("HLAX0045",
+                        $"Duplicate static symbol '{decl.Name}'",
+                        decl.Line, decl.Column);
+                    continue;
+                }
+
+                if (procedureNames.Contains(decl.Name))
+                {
+                    _diagnostics.Error("HLAX0049",
+                        $"Static symbol '{decl.Name}' conflicts with procedure '{decl.Name}'",
+                        decl.Line, decl.Column);
+                    continue;
+                }
+
+                if (_recordRegistry.Contains(decl.Name) || _enumRegistry.Contains(decl.Name))
+                {
+                    _diagnostics.Error("HLAX0049",
+                        $"Static symbol '{decl.Name}' conflicts with a type name",
+                        decl.Line, decl.Column);
+                    continue;
+                }
+
+                if (!TryEvaluateArraySize(decl.ArraySizeExpression, decl.Line, decl.Column, out var elementCount))
+                    continue;
+
+                var type = TypeRegistry.Lookup(decl.Type);
+                if (type == null)
+                {
+                    _diagnostics.Error("HLAX0046",
+                        $"Unknown type '{decl.Type}' for static '{decl.Name}'",
+                        decl.Line, decl.Column);
+                    continue;
+                }
+
+                if (elementCount > 1 && !IsSupportedArrayElementType(type))
+                {
+                    _diagnostics.Error("HLAX0046",
+                        $"Static array element type '{decl.Type}' is not supported",
+                        decl.Line, decl.Column);
+                    continue;
+                }
+
+                long? initialValue = null;
+                var inBss = decl.Initializer == null;
+                if (decl.Initializer != null)
+                {
+                    if (elementCount > 1)
+                    {
+                        _diagnostics.Error("HLAX0048",
+                            $"Static array '{decl.Name}' cannot have a scalar initializer",
+                            decl.Line, decl.Column);
+                        continue;
+                    }
+
+                    if (!_constEvaluator.TryEvaluate(decl.Initializer, _programConstTable, out var value, out var error))
+                    {
+                        if (error != null)
+                            _diagnostics.Report(error.Code, error.Severity, error.Message, error.Line, error.Column, error.Suggestion);
+                        else
+                            _diagnostics.Error("HLAX0048",
+                                $"Invalid initializer for static '{decl.Name}'",
+                                decl.Line, decl.Column);
+                        continue;
+                    }
+
+                    initialValue = value;
+                    inBss = false;
+                }
+
+                RegisterGlobal(new GlobalDataSymbol
+                {
+                    Name = decl.Name,
+                    Type = type,
+                    ElementCount = elementCount,
+                    InitialValue = initialValue,
+                    InBss = inBss
+                });
+                if (elementCount > 1)
+                    _globalArrayElementCounts[decl.Name] = elementCount;
+            }
+        }
+    }
+
+    private void RegisterGlobal(GlobalDataSymbol symbol)
+    {
+        _globalDataRegistry.Register(symbol);
+    }
+
+    private void EvaluateRecordBlocks(IEnumerable<AstNode> blocks, bool localScope = false)
     {
         foreach (var node in blocks)
         {
             if (node is not RecordBlockNode block)
                 continue;
 
-            if (!_recordRegistry.Register(block, out _, out var error))
+            if (string.Equals(block.Name, "utf8slice", StringComparison.OrdinalIgnoreCase))
+            {
+                _diagnostics.Error("HLAX0042",
+                    "Record name 'utf8slice' is reserved for the built-in string slice type",
+                    block.Line, block.Column);
+                continue;
+            }
+
+            if (localScope)
+            {
+                if (!_recordRegistry.Register(block, out var record, out var error, _scopeRecords))
+                    _diagnostics.Error("HLAX0042", error ?? $"Invalid record '{block.Name}'", block.Line, block.Column);
+            }
+            else if (!_recordRegistry.Register(block, out _, out var error))
             {
                 _diagnostics.Error("HLAX0042", error ?? $"Invalid record '{block.Name}'", block.Line, block.Column);
             }
         }
     }
 
-    private void EvaluateEnumBlocks(IEnumerable<AstNode> blocks, CompileTimeConstTable table)
+    private void EvaluateEnumBlocks(IEnumerable<AstNode> blocks, CompileTimeConstTable table, bool localScope = false)
     {
         foreach (var node in blocks)
         {
             if (node is not EnumBlockNode block)
                 continue;
 
-            if (!_enumRegistry.Register(block, table, _constEvaluator, out _, out var error))
+            var scope = localScope ? _scopeEnums : null;
+            if (!_enumRegistry.Register(block, table, _constEvaluator, out _, out var error, scope))
             {
                 if (error != null)
                     _diagnostics.Report(error.Code, error.Severity, error.Message, error.Line, error.Column, error.Suggestion);
@@ -499,8 +642,12 @@ public sealed class SemanticAnalyzer
         _variableTypes.Clear();
         _recordVariables.Clear();
         _arrayElementCounts.Clear();
+        _scopeRecords.Clear();
+        _scopeEnums.Clear();
         _constTable = _programConstTable.Clone();
         EvaluateConstBlocks(proc.Constants, _constTable);
+        EvaluateEnumBlocks(proc.Enums, _constTable, localScope: true);
+        EvaluateRecordBlocks(proc.Records, localScope: true);
         proc.ResolvedConstants = new Dictionary<string, long>(_constTable.Values, StringComparer.OrdinalIgnoreCase);
 
         if (_diagnostics.HasErrors)
@@ -523,7 +670,7 @@ public sealed class SemanticAnalyzer
                         varNode.Line, varNode.Column);
                 }
 
-                if (_recordRegistry.TryGet(varNode.Type, out var recordType))
+                if (TryResolveRecordType(varNode.Type, out var recordType))
                 {
                     if (varNode.ElementCount > 1)
                     {
@@ -564,6 +711,14 @@ public sealed class SemanticAnalyzer
 
         foreach (var param in proc.Parameters)
         {
+            if (TryResolveRecordType(param.Type, out _))
+            {
+                _diagnostics.Error("HLAX0020",
+                    $"Parameter type '{param.Type}' must be a scalar type, not a record",
+                    param.Line, param.Column);
+                continue;
+            }
+
             var type = TypeRegistry.Lookup(param.Type);
             if (type == null)
             {
@@ -604,10 +759,11 @@ public sealed class SemanticAnalyzer
         }
         else if (node is AddressOfNode addr)
         {
-            if (!_variableTypes.ContainsKey(addr.VariableName) && !_recordVariables.ContainsKey(addr.VariableName))
+            if (!_variableTypes.ContainsKey(addr.VariableName) && !_recordVariables.ContainsKey(addr.VariableName)
+                && !_globalDataRegistry.Contains(addr.VariableName))
             {
                 _diagnostics.Error("HLAX0023",
-                    $"Address-of requires a local variable or parameter, not '{addr.VariableName}'",
+                    $"Address-of requires a local variable, parameter, or static symbol, not '{addr.VariableName}'",
                     addr.Line, addr.Column);
             }
         }
@@ -624,16 +780,17 @@ public sealed class SemanticAnalyzer
         }
         else if (node is ArrayIndexNode arr)
         {
-            if (!_variableTypes.ContainsKey(arr.ArrayName))
+            if (!_variableTypes.ContainsKey(arr.ArrayName) && !_globalArrayElementCounts.ContainsKey(arr.ArrayName))
             {
                 _diagnostics.Error("HLAX0027",
                     $"Unknown array variable '{arr.ArrayName}'",
                     arr.Line, arr.Column);
             }
-            else if (!_arrayElementCounts.ContainsKey(arr.ArrayName))
+            else if (!_arrayElementCounts.ContainsKey(arr.ArrayName)
+                     && !_globalArrayElementCounts.ContainsKey(arr.ArrayName))
             {
                 _diagnostics.Error("HLAX0026",
-                    $"'{arr.ArrayName}' is not an array; use type[count] in the var block",
+                    $"'{arr.ArrayName}' is not an array; use type[count] in the var or static block",
                     arr.Line, arr.Column);
             }
             else
@@ -658,6 +815,8 @@ public sealed class SemanticAnalyzer
                 return;
             if (_constTable.TryGetValue(ident.Name, out _))
                 return;
+            if (_globalDataRegistry.Contains(ident.Name))
+                return;
 
             // Check if this identifier looks like a misspelled register (e.g., "raxz")
             // Only flag if it closely matches a known register
@@ -677,7 +836,12 @@ public sealed class SemanticAnalyzer
     {
         if (!_warnings.Bounds)
             return;
-        if (!_arrayElementCounts.TryGetValue(arr.ArrayName, out var length))
+        int length;
+        if (_arrayElementCounts.TryGetValue(arr.ArrayName, out length))
+        {
+            // local array
+        }
+        else if (!_globalArrayElementCounts.TryGetValue(arr.ArrayName, out length))
             return;
 
         if (!_constEvaluator.TryEvaluate(arr.Index, _constTable, out var indexValue, out _))
@@ -695,7 +859,7 @@ public sealed class SemanticAnalyzer
     {
         var qualified = EnumTypeRegistry.QualifiedName(dot.BaseName, dot.MemberName);
 
-        if (_enumRegistry.Contains(dot.BaseName))
+        if (_enumRegistry.TryGetScoped(dot.BaseName, _scopeEnums, out _))
         {
             if (!_constTable.TryGetValue(qualified, out _))
             {
@@ -723,6 +887,13 @@ public sealed class SemanticAnalyzer
         _diagnostics.Error("HLAX0041",
             $"Undefined qualified name '{qualified}'",
             dot.Line, dot.Column);
+    }
+
+    private bool TryResolveRecordType(string name, out RecordTypeSymbol record)
+    {
+        if (_scopeRecords.TryGetValue(name, out record!))
+            return true;
+        return _recordRegistry.TryGet(name, out record!);
     }
 
     private static bool IsSupportedArrayElementType(IntegerTypeSymbol type)

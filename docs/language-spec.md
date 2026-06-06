@@ -272,9 +272,39 @@ mov(42, header.length);
 - Compile-time builtins: `sizeof(RecordName)`, `offsetof(RecordName, field)`.
 - Stack allocation: one blob per `var` (sized via `IrLocalLayout`).
 - Errors: unknown record (`HLAX0042`), unknown field (`HLAX0043`), invalid `offsetof` (`HLAX0044`).
-- `packed` records deferred to a future sprint.
+- **Packed:** `record Name packed` — no inter-field padding (minimum field sizes only).
+
+Procedure-scoped `enum` and `record` blocks may appear before `var` (same placement as `const`).
 
 See [RFC 0006](../rfcs/0006-struct-layout.md).
+
+## Static / global data (Implemented — RFC 0007)
+
+Program-scope globals via `static` / `endstatic`:
+
+```hla
+static
+    counter: uint64 := 0;
+    buffer: byte[256];
+endstatic;
+
+mov(1, counter);
+mov(counter, rax);
+mov(&counter, rax);
+```
+
+Initialized scalars → `.data`; uninitialized → `.bss`. Diagnostics HLAX0045–HLAX0049.
+
+See [RFC 0007](../rfcs/0007-global-data.md).
+
+## String model (Implemented — RFC 0008)
+
+- **`cstring`** — alias of `ptr`; null-terminated UTF-8 (`var p: cstring;`, `procedure F(msg: cstring);`).
+- **`utf8slice`** — built-in record `{ ptr, len }`; use field access and pass `(ptr, len)` to procedures.
+
+Enum members may omit `:= value` for auto-increment (`Red := 1; Green; Blue;` → 1, 2, 3).
+
+See [RFC 0008](../rfcs/0008-string-model.md).
 
 ## Memory & pointers (Implemented — Level 3 baseline)
 

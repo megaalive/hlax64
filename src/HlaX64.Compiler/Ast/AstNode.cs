@@ -21,16 +21,18 @@ public class ProgramNode : AstNode
     public List<AstNode> Constants { get; }
     public List<AstNode> Enums { get; }
     public List<AstNode> Records { get; }
+    public List<AstNode> Statics { get; }
     public List<AstNode> Statements { get; }
 
     public ProgramNode(string name, List<AstNode> includes, List<AstNode> constants,
-        List<AstNode> enums, List<AstNode> records, List<AstNode> statements)
+        List<AstNode> enums, List<AstNode> records, List<AstNode> statics, List<AstNode> statements)
     {
         Name = name;
         Includes = includes;
         Constants = constants;
         Enums = enums;
         Records = records;
+        Statics = statics;
         Statements = statements;
     }
 }
@@ -124,19 +126,24 @@ public class ProcedureNode : AstNode
     public string? ReturnsRegister { get; }
     public bool IsExport { get; }
     public List<AstNode> Constants { get; }
+    public List<AstNode> Enums { get; }
+    public List<AstNode> Records { get; }
     public List<AstNode> Variables { get; }
     public List<AstNode> Body { get; }
     /// <summary>Program + procedure compile-time constants after semantic analysis.</summary>
     public Dictionary<string, long> ResolvedConstants { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     public ProcedureNode(string name, List<ParameterNode> parameters, string? returnsRegister, bool isExport,
-        List<AstNode> constants, List<AstNode> variables, List<AstNode> body)
+        List<AstNode> constants, List<AstNode> enums, List<AstNode> records,
+        List<AstNode> variables, List<AstNode> body)
     {
         Name = name;
         Parameters = parameters;
         ReturnsRegister = returnsRegister;
         IsExport = isExport;
         Constants = constants;
+        Enums = enums;
+        Records = records;
         Variables = variables;
         Body = body;
     }
@@ -206,9 +213,10 @@ public class EnumMemberNode : AstNode
 {
     public override string Kind => "EnumMember";
     public string Name { get; }
-    public AstNode Value { get; }
+    /// <summary>Explicit value, or null for auto-increment from previous member.</summary>
+    public AstNode? Value { get; }
 
-    public EnumMemberNode(string name, AstNode value)
+    public EnumMemberNode(string name, AstNode? value)
     {
         Name = name;
         Value = value;
@@ -222,12 +230,48 @@ public class RecordBlockNode : AstNode
 {
     public override string Kind => "RecordBlock";
     public string Name { get; }
+    public bool IsPacked { get; }
     public List<RecordFieldNode> Fields { get; }
 
-    public RecordBlockNode(string name, List<RecordFieldNode> fields)
+    public RecordBlockNode(string name, List<RecordFieldNode> fields, bool isPacked = false)
     {
         Name = name;
+        IsPacked = isPacked;
         Fields = fields;
+    }
+}
+
+/// <summary>
+/// static ... endstatic block with program-scope global data declarations.
+/// </summary>
+public class StaticBlockNode : AstNode
+{
+    public override string Kind => "StaticBlock";
+    public List<StaticDeclarationNode> Declarations { get; }
+
+    public StaticBlockNode(List<StaticDeclarationNode> declarations)
+    {
+        Declarations = declarations;
+    }
+}
+
+/// <summary>
+/// Global static declaration: name: type [:= init];
+/// </summary>
+public class StaticDeclarationNode : AstNode
+{
+    public override string Kind => "StaticDeclaration";
+    public string Name { get; }
+    public string Type { get; }
+    public AstNode? ArraySizeExpression { get; }
+    public AstNode? Initializer { get; }
+
+    public StaticDeclarationNode(string name, string type, AstNode? arraySizeExpression = null, AstNode? initializer = null)
+    {
+        Name = name;
+        Type = type;
+        ArraySizeExpression = arraySizeExpression;
+        Initializer = initializer;
     }
 }
 

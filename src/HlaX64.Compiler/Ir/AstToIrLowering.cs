@@ -9,13 +9,17 @@ public sealed class AstToIrLowering
 {
     private readonly CompileTimeConstTable _programConstTable;
     private readonly RecordTypeRegistry _recordRegistry;
+    private readonly GlobalDataRegistry _globalDataRegistry;
     private CompileTimeConstTable _activeConstTable;
     private Dictionary<string, RecordTypeSymbol> _recordLocals = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, RecordTypeSymbol> _procedureRecordTypes = new(StringComparer.OrdinalIgnoreCase);
 
-    public AstToIrLowering(CompileTimeConstTable? constTable = null, RecordTypeRegistry? recordRegistry = null)
+    public AstToIrLowering(CompileTimeConstTable? constTable = null, RecordTypeRegistry? recordRegistry = null,
+        GlobalDataRegistry? globalDataRegistry = null)
     {
         _programConstTable = constTable ?? new CompileTimeConstTable();
         _recordRegistry = recordRegistry ?? new RecordTypeRegistry();
+        _globalDataRegistry = globalDataRegistry ?? new GlobalDataRegistry();
         _activeConstTable = _programConstTable;
     }
 
@@ -46,6 +50,12 @@ public sealed class AstToIrLowering
     {
         _activeConstTable = BuildProcedureConstTable(proc);
         _recordLocals = new Dictionary<string, RecordTypeSymbol>(StringComparer.OrdinalIgnoreCase);
+        _procedureRecordTypes = new Dictionary<string, RecordTypeSymbol>(StringComparer.OrdinalIgnoreCase);
+        foreach (var node in proc.Records)
+        {
+            if (node is RecordBlockNode block)
+                _recordRegistry.Register(block, out var record, out _, _procedureRecordTypes);
+        }
         var func = new IrFunction(proc.Name);
         func.IsExport = proc.IsExport;
 
@@ -59,7 +69,7 @@ public sealed class AstToIrLowering
             if (variable is VariableNode varNode)
             {
                 func.LocalValues.Add(new IrValue { Name = varNode.Name });
-                if (_recordRegistry.TryGet(varNode.Type, out var recordType))
+                if (TryResolveRecordType(varNode.Type, out var recordType))
                 {
                     _recordLocals[varNode.Name] = recordType;
                     func.LocalLayouts[varNode.Name] = new IrLocalLayout
@@ -443,6 +453,8 @@ public sealed class AstToIrLowering
             StringLiteralNode str => new IrValue { Name = $"str:{str.Value}" },
             IdentifierNode ident when _activeConstTable.TryGetValue(ident.Name, out var constVal)
                 => new IrValue { Name = $"imm:{constVal}" },
+            IdentifierNode ident when _globalDataRegistry.Contains(ident.Name)
+                => new IrValue { Name = GlobalDataEncoding.Encode(ident.Name) },
             IdentifierNode ident => GetOrCreateValue(ident.Name),
             DotAccessNode dot => ResolveDotAccess(dot),
             AddressOfNode addr => new IrValue { Name = $"addr:{addr.VariableName}" },
@@ -500,6 +512,13 @@ public sealed class AstToIrLowering
         }
 
         return false;
+    }
+
+    private bool TryResolveRecordType(string name, out RecordTypeSymbol record)
+    {
+        if (_procedureRecordTypes.TryGetValue(name, out record!))
+            return true;
+        return _recordRegistry.TryGet(name, out record!);
     }
 
     private readonly Dictionary<string, IrValue> _values = new(StringComparer.OrdinalIgnoreCase);

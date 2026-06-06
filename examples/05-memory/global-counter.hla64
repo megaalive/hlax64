@@ -1,0 +1,14 @@
+// Phase 16: program-scope static data (.data / .bss)
+program global_counter;
+
+static
+    counter: uint64 := 0;
+    initialized: int64 := 42;
+    buffer: byte[256];
+endstatic;
+
+begin global_counter;
+    mov(1, counter);
+    add(initialized, counter);
+    mov(counter, rax);
+end global_counter;

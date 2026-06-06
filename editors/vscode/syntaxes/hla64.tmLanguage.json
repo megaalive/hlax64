@@ -35,7 +35,7 @@
     "keywords": {
       "patterns": [{
         "name": "keyword.control.hla64",
-        "match": "\\b(program|begin|end|procedure|call|export|var|const|endconst|enum|endenum|record|endrecord|if|else|endif|while|endwhile|do|then|returns)\\b"
+        "match": "\\b(program|begin|end|procedure|call|export|var|const|endconst|enum|endenum|record|endrecord|static|endstatic|packed|cstring|utf8slice|if|else|endif|while|endwhile|do|then|returns)\\b"
       }, {
         "name": "keyword.operator.assignment.hla64",
         "match": ":="
@@ -47,7 +47,7 @@
     "types": {
       "patterns": [{
         "name": "storage.type.hla64",
-        "match": "\\b(int8|int16|int32|int64|uint8|uint16|uint32|uint64|byte|word|dword|qword|ptr)\\b"
+        "match": "\\b(int8|int16|int32|int64|uint8|uint16|uint32|uint64|byte|word|dword|qword|ptr|cstring|utf8slice)\\b"
       }]
     },
     "registers": {

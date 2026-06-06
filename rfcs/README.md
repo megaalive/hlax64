@@ -26,3 +26,5 @@ HlaX64 uses lightweight RFCs for language design, ABI changes, and major tooling
 | [0004](0004-expressions-and-constants.md) | Const blocks & expressions | Implemented (Sprint 1–2) |
 | [0005](0005-enum-model.md) | Enum model | Implemented (Sprint 3) |
 | [0006](0006-struct-layout.md) | Record layout, sizeof, offsetof | Implemented (Sprint 4) |
+| [0007](0007-global-data.md) | Static / global data | Implemented (Sprint 5) |
+| [0008](0008-string-model.md) | cstring, utf8slice | Implemented (Sprint 5) |
