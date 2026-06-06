@@ -73,7 +73,7 @@ public sealed class SysVAbiLowerer : IAbiLowerer
             // Emit entry point prologue (_start)
             if (isEntry)
             {
-                loweredBlock.Instructions.Add(new LoweredInstruction("    xor ebx, ebx    ; default exit code = 0"));
+                loweredBlock.Instructions.Add(new LoweredInstruction("    xor rax, rax    ; default exit code = 0"));
                 loweredBlock.Instructions.Add(new LoweredInstruction("    push rbp"));
                 loweredBlock.Instructions.Add(new LoweredInstruction("    mov rbp, rsp"));
                 loweredBlock.Instructions.Add(new LoweredInstruction("    sub rsp, 8      ; align stack to 16 bytes"));
@@ -105,7 +105,7 @@ public sealed class SysVAbiLowerer : IAbiLowerer
             {
                 if (function.IsEntryPoint)
                 {
-                    lastBlock.Instructions.Add(new LoweredInstruction("    mov rdi, rbx    ; exit code"));
+                    lastBlock.Instructions.Add(new LoweredInstruction("    mov rdi, rax    ; exit code"));
                     lastBlock.Instructions.Add(new LoweredInstruction("    mov rax, 60     ; sys_exit"));
                     lastBlock.Instructions.Add(new LoweredInstruction("    syscall"));
                 }
