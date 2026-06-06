@@ -1,0 +1,7 @@
+program hello;
+
+#include("stdlib64.hhf")
+
+begin hello;
+    stdout.put("Hello from HlaX64", nl);
+end hello;
