@@ -14,6 +14,9 @@ app.Configure(config =>
 
     config.AddCommand<EmitNasmCommand>("emit-nasm")
         .WithDescription("Emit NASM assembly output from a .hla64 source file");
+
+    config.AddCommand<RunCommand>("run")
+        .WithDescription("Build and run a .hla64 source file");
 });
 
 return app.Run(args);

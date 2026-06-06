@@ -31,20 +31,14 @@ public sealed class EmitNasmCommand : Command<EmitNasmCommand.Settings>
 
         try
         {
-            // Lex
             var lexer = new Lexer(sourceText);
             var tokens = lexer.Tokenize();
 
-            // Parse
             var parser = new Parser(tokens);
             var program = parser.Parse();
 
-            // Emit NASM
             var emitter = new NasmEmitter();
-            var nasmCode = emitter.Emit(program);
-            var dataSection = emitter.GenerateDataSection();
-
-            var output = nasmCode + dataSection;
+            var output = emitter.Emit(program);
 
             if (settings.OutputPath != null)
             {

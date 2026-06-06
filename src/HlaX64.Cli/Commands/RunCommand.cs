@@ -4,20 +4,17 @@ using HlaX64.Cli.Toolchain;
 using HlaX64.Compiler.Lexing;
 using HlaX64.Compiler.Parsing;
 using Spectre.Console.Cli;
+using System.Diagnostics;
 
 namespace HlaX64.Cli.Commands;
 
-public sealed class BuildCommand : Command<BuildCommand.Settings>
+public sealed class RunCommand : Command<RunCommand.Settings>
 {
     public sealed class Settings : CommandSettings
     {
         [Description("Path to the .hla64 source file")]
         [CommandArgument(0, "<source>")]
         public string Source { get; set; } = string.Empty;
-
-        [Description("Output directory (default: build/)")]
-        [CommandOption("-o|--output")]
-        public string? OutputDir { get; set; }
     }
 
     protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation)
@@ -30,8 +27,8 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
 
         var sourceFile = Path.GetFullPath(settings.Source);
         var sourceName = Path.GetFileNameWithoutExtension(sourceFile);
-        var outputDir = settings.OutputDir ?? Path.Combine(Path.GetDirectoryName(sourceFile)!, "..", "build", sourceName);
-        outputDir = Path.GetFullPath(outputDir);
+        var sourceDir = Path.GetDirectoryName(sourceFile)!;
+        var outputDir = Path.GetFullPath(Path.Combine(sourceDir, "..", "build", sourceName));
         Directory.CreateDirectory(outputDir);
 
         var nasmFile = Path.Combine(outputDir, $"{sourceName}.nasm");
@@ -50,17 +47,14 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
             var emitter = new NasmEmitter();
             var nasmCode = emitter.Emit(program);
             File.WriteAllText(nasmFile, nasmCode);
-            Console.WriteLine($"  -> {nasmFile}");
 
             // 2. Assemble NASM -> .o
             Console.WriteLine("Assembling with NASM...");
             if (!NasmTool.TryFindNasm(out var nasmPath))
             {
                 Console.Error.WriteLine("Error: NASM not found. Install NASM (https://nasm.us)");
-                Console.Error.WriteLine($"  NASM output saved at: {nasmFile}");
                 return 1;
             }
-            Console.WriteLine($"  NASM: {nasmPath}");
 
             var nasmTool = new NasmTool(nasmPath);
             if (!nasmTool.TryAssemble(nasmFile, objFile, out var nasmError))
@@ -68,7 +62,6 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
                 Console.Error.WriteLine($"Assembly error:\n{nasmError}");
                 return 1;
             }
-            Console.WriteLine($"  -> {objFile}");
 
             // 3. Link .o -> executable
             Console.WriteLine("Linking...");
@@ -77,26 +70,49 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
                 Console.Error.WriteLine($"Link error:\n{linkError}");
                 return 1;
             }
-            Console.WriteLine($"  -> {exeFile}");
 
-            // 4. Make executable (if on Unix)
+            // 4. Make executable
             try
             {
-                var chmod = new System.Diagnostics.ProcessStartInfo
+                var chmod = new ProcessStartInfo
                 {
                     FileName = "chmod",
                     Arguments = $"+x \"{exeFile}\"",
                     UseShellExecute = false
                 };
-                System.Diagnostics.Process.Start(chmod)?.WaitForExit(2000);
+                Process.Start(chmod)?.WaitForExit(2000);
             }
-            catch
+            catch { }
+
+            // 5. Run
+            Console.WriteLine($"\nRunning: {exeFile}\n");
+            Console.WriteLine("--- Program output ---");
+
+            var psi = new ProcessStartInfo
             {
-                // chmod may not exist on Windows, that's fine
+                FileName = exeFile,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            };
+
+            using var process = Process.Start(psi);
+            if (process == null)
+            {
+                Console.Error.WriteLine("Failed to start process.");
+                return 1;
             }
 
-            Console.WriteLine($"\nBuild successful: {exeFile}");
-            return 0;
+            var stdout = process.StandardOutput.ReadToEnd();
+            var stderr = process.StandardError.ReadToEnd();
+            process.WaitForExit();
+
+            Console.Write(stdout);
+            if (!string.IsNullOrEmpty(stderr))
+                Console.Error.Write(stderr);
+
+            Console.WriteLine($"\n--- Program exited with code {process.ExitCode} ---");
+            return process.ExitCode;
         }
         catch (ParseException ex)
         {
