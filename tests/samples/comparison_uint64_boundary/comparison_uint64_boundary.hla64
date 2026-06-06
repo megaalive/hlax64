@@ -1,0 +1,24 @@
+// uint64 boundary: high-bit pattern 0x8000000000000000 vs 1
+// Signed: int64 min is negative, so rax < rcx
+// Unsigned: 0x8000...0000 > 1
+program comparison_uint64_boundary;
+
+#include("stdlib64.hhf")
+
+begin comparison_uint64_boundary;
+    mov(1, rax);
+    shl(63, rax);
+    mov(1, rcx);
+
+    if(rax >? rcx) then
+        stdout.put("unsigned: high bit greater", nl);
+    else
+        stdout.put("WRONG: unsigned compare failed", nl);
+    endif;
+
+    if(rax > rcx) then
+        stdout.put("signed: greater", nl);
+    else
+        stdout.put("signed: not greater", nl);
+    endif;
+end comparison_uint64_boundary;

@@ -192,4 +192,15 @@ public class ParserTests
         Assert.Equal(10, ((IntegerLiteralNode)call.Arguments[0]).Value);
         Assert.Equal(20, ((IntegerLiteralNode)call.Arguments[1]).Value);
     }
+
+    [Fact]
+    public void Parse_Int64MinLiteral_ParsesCorrectly()
+    {
+        var source = "program t;\nbegin t;\n    mov(-9223372036854775808, rax);\nend t;";
+        var parser = new Parser(new Lexer(source).Tokenize());
+        var program = parser.Parse();
+        var instr = Assert.IsType<InstructionNode>(program.Statements[0]);
+        var lit = Assert.IsType<IntegerLiteralNode>(instr.Operands[0]);
+        Assert.Equal(long.MinValue, lit.Value);
+    }
 }

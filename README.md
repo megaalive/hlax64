@@ -5,7 +5,7 @@
 > assemble, link, and run — all from a single `hla64` CLI.
 
 [![Status](https://img.shields.io/badge/Fase%200%E2%80%9313-Done-green)](./docs/roadmap.md)
-[![Tests](https://img.shields.io/badge/tests-118%2F118%20+%2016%2F16%20native%20+%2018%20curriculum-2ea44f)](#test-status)
+[![Tests](https://img.shields.io/badge/tests-119%2F119%20+%2017%2F17%20native%20+%2018%20curriculum-2ea44f)](#test-status)
 [![Target](https://img.shields.io/badge/target-linux--x64--sysv%20|%20windows--x64--msabi-1f6feb)](#targets)
 [![Language](https://img.shields.io/badge/language-v0.1%20Draft-blueviolet)](#language-reference)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](#license)
@@ -74,7 +74,7 @@ Tutorials: [Getting started](docs/tutorials/01-getting-started.md) · [Native ro
 | Area                | Status | Details |
 |---------------------|--------|---------|
 | **CLI**             | ✅     | `build`, `emit-nasm`, `run`, `test`, `bench`, `explain`, `explain-abi`, `format`, `generate-header`, `generate-pinvoke`, `doctor` |
-| **Test runner**     | ✅     | 118 unit tests (+ 20 example compile guards) + 16 native samples + 18 curriculum manifests |
+| **Test runner**     | ✅     | 119 unit tests (+ 20 example compile guards) + 17 native samples + 18 curriculum manifests |
 | **Benchmark runner**| ✅     | `hla64 bench` with warmup, median, binary size, JSON manifest |
 | **MCP server**      | ✅     | 12 tools via stdio JSON-RPC: compile, build, run, test, explain, explain-abi, format-source, doctor, generate-header, generate-pinvoke, get-version, list-instructions |
 | **ABI explainer**   | ✅     | `hla64 explain-abi --target linux-x64-sysv` (or `windows-x64-msabi`) |

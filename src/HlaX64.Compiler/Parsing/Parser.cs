@@ -399,7 +399,7 @@ public sealed class Parser
                 {
                     Advance(); // skip -
                     var lit = Advance();
-                    return new IntegerLiteralNode(-long.Parse(lit.Value));
+                    return new IntegerLiteralNode(long.Parse("-" + lit.Value));
                 }
                 Advance();
                 return new IdentifierNode("-");
