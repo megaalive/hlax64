@@ -12,6 +12,7 @@ obj/
 # Build output
 build/
 artifacts/
+*.nasm
 
 # IDE
 .idea/
