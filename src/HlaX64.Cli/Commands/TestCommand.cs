@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using HlaX64.Backend.Nasm.Emitters;
 using HlaX64.Cli.Toolchain;
 using HlaX64.Compiler;
 using HlaX64.Compiler.Lexing;
@@ -10,17 +9,6 @@ using Spectre.Console.Cli;
 
 namespace HlaX64.Cli.Commands;
 
-/// <summary>
-/// Runs all test manifests in a directory. Each manifest is a JSON file
-/// describing a .hla64 program and the expected stdout / exit code.
-/// </summary>
-/// <remarks>
-/// Fase 9 deliverable. With --compile-only, the runner produces NASM and
-/// asserts the manifest's source compiled without invoking the
-/// assembler / linker / native runner. Without the flag, the runner
-/// builds and executes the program and compares actual output to
-/// expected values.
-/// </remarks>
 public sealed class TestCommand : Command<TestCommand.Settings>
 {
     public sealed class Settings : CommandSettings
@@ -51,13 +39,11 @@ public sealed class TestCommand : Command<TestCommand.Settings>
             return 1;
         }
 
-        // Build base dir
         var buildBase = settings.OutputDir != null
             ? Path.GetFullPath(settings.OutputDir)
             : Path.Combine(Path.GetTempPath(), "hlax64_tests_" + Guid.NewGuid().ToString("N")[..8]);
         Directory.CreateDirectory(buildBase);
 
-        // Toolchain for full execution
         string? nasmPath = null;
         TestRunner.LinkerRunner? linkerRunner = null;
         TestRunner.BinaryExecutor? binaryExecutor = null;
@@ -69,7 +55,6 @@ public sealed class TestCommand : Command<TestCommand.Settings>
             else
                 Console.Error.WriteLine("Warning: NASM not found. Use --compile-only or install NASM.");
 
-            // Refresh PATH from registry so recently-installed toolchains are visible
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 var machine = Environment.GetEnvironmentVariable("Path", EnvironmentVariableTarget.Machine) ?? "";
@@ -77,7 +62,6 @@ public sealed class TestCommand : Command<TestCommand.Settings>
                 Environment.SetEnvironmentVariable("Path", machine + ";" + user + ";" + Environment.GetEnvironmentVariable("Path"));
             }
 
-            // Detect linker and build delegates
             if (LinkerTool.TryFindLinker(out var linkerPath, out var linkerDisplay, out var subCommand))
             {
                 bool requiresWsl = linkerPath == "wsl";
@@ -139,7 +123,6 @@ public sealed class TestCommand : Command<TestCommand.Settings>
             }
         }
 
-        // Manifests
         var manifests = TestManifest.LoadAll(directory);
         if (manifests.Count == 0)
         {
@@ -151,16 +134,9 @@ public sealed class TestCommand : Command<TestCommand.Settings>
         if (settings.CompileOnly) Console.WriteLine("  (compile-only mode)");
         Console.WriteLine();
 
-        // Per-test compile function
+        // Per-test compile function using the new pipeline
         Func<string, string> compileFunc = source =>
-        {
-            var lexer = new Lexer(source);
-            var tokens = lexer.Tokenize();
-            var parser = new Parser(tokens);
-            var program = parser.Parse();
-            var emitter = new NasmEmitter();
-            return emitter.Emit(program);
-        };
+            CompilePipeline.EmitNasm("(test)", source);
 
         var runner = new TestRunner(
             compileFunc: compileFunc,
@@ -180,7 +156,6 @@ public sealed class TestCommand : Command<TestCommand.Settings>
             var buildDir = Path.Combine(buildBase, manifest.Name);
             var result = runner.RunTest(manifest, buildDir);
 
-            // Pretty output
             var status = result.Passed ? "[green]PASS[/]" : "[red]FAIL[/]";
             var line = $"{status}  {result.Name,-20} {result.Duration.TotalMilliseconds,6:F0}ms";
             if (!result.Passed && !string.IsNullOrEmpty(result.ErrorMessage))

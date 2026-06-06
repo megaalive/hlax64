@@ -1,10 +1,32 @@
 using System.ComponentModel;
 using HlaX64.Backend.Nasm.Emitters;
-using HlaX64.Compiler.Lexing;
-using HlaX64.Compiler.Parsing;
+using HlaX64.Compiler;
+using HlaX64.Compiler.Options;
 using Spectre.Console.Cli;
 
 namespace HlaX64.Cli.Commands;
+
+public static class CompilePipeline
+{
+    public static string EmitNasm(string sourcePath, string sourceText, CompilationOptions? options = null)
+    {
+        var compilation = new Compilation(sourcePath, sourceText, options);
+        var result = compilation.Process();
+
+        if (!result.Success)
+            throw new InvalidOperationException(
+                string.Join("\n", result.Diagnostics));
+
+        var emitter = new NasmEmitter();
+        return emitter.Emit(result.LoweredFunctions, result.StringLiterals);
+    }
+
+    public static CompilationResult Process(string sourcePath, string sourceText, CompilationOptions? options = null)
+    {
+        var compilation = new Compilation(sourcePath, sourceText, options);
+        return compilation.Process();
+    }
+}
 
 public sealed class EmitNasmCommand : Command<EmitNasmCommand.Settings>
 {
@@ -17,6 +39,10 @@ public sealed class EmitNasmCommand : Command<EmitNasmCommand.Settings>
         [Description("Output NASM file path (default: stdout)")]
         [CommandOption("-o|--output")]
         public string? OutputPath { get; set; }
+
+        [Description("Runtime mode: inline (default) or library")]
+        [CommandOption("--runtime")]
+        public string? RuntimeMode { get; set; }
     }
 
     protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation)
@@ -28,33 +54,29 @@ public sealed class EmitNasmCommand : Command<EmitNasmCommand.Settings>
         }
 
         var sourceText = File.ReadAllText(settings.Source);
+        var options = CompilationOptions.Default;
+        if (settings.RuntimeMode?.ToLowerInvariant() == "library")
+            options = options with { RuntimeMode = HlaX64.Compiler.Options.RuntimeMode.Library };
 
         try
         {
-            var lexer = new Lexer(sourceText);
-            var tokens = lexer.Tokenize();
-
-            var parser = new Parser(tokens);
-            var program = parser.Parse();
-
-            var emitter = new NasmEmitter();
-            var output = emitter.Emit(program);
+            var nasmOutput = CompilePipeline.EmitNasm(settings.Source, sourceText, options);
 
             if (settings.OutputPath != null)
             {
-                File.WriteAllText(settings.OutputPath, output);
+                File.WriteAllText(settings.OutputPath, nasmOutput);
                 Console.WriteLine($"NASM output written to: {settings.OutputPath}");
             }
             else
             {
-                Console.WriteLine(output);
+                Console.WriteLine(nasmOutput);
             }
 
             return 0;
         }
-        catch (ParseException ex)
+        catch (InvalidOperationException ex)
         {
-            Console.Error.WriteLine($"Parse error: {ex.Message}");
+            Console.Error.WriteLine(ex.Message);
             return 1;
         }
         catch (Exception ex)

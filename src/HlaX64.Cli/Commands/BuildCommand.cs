@@ -1,8 +1,6 @@
 using System.ComponentModel;
-using HlaX64.Backend.Nasm.Emitters;
 using HlaX64.Cli.Toolchain;
-using HlaX64.Compiler.Lexing;
-using HlaX64.Compiler.Parsing;
+using HlaX64.Compiler.Options;
 using Spectre.Console.Cli;
 
 namespace HlaX64.Cli.Commands;
@@ -18,6 +16,10 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
         [Description("Output directory (default: build/)")]
         [CommandOption("-o|--output")]
         public string? OutputDir { get; set; }
+
+        [Description("Runtime mode: inline (default) or library")]
+        [CommandOption("--runtime")]
+        public string? RuntimeMode { get; set; }
     }
 
     protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation)
@@ -34,21 +36,20 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
         outputDir = Path.GetFullPath(outputDir);
         Directory.CreateDirectory(outputDir);
 
+        var options = CompilationOptions.Default;
+        if (settings.RuntimeMode?.ToLowerInvariant() == "library")
+            options = options with { RuntimeMode = HlaX64.Compiler.Options.RuntimeMode.Library };
+
         var nasmFile = Path.Combine(outputDir, $"{sourceName}.nasm");
         var objFile = Path.Combine(outputDir, $"{sourceName}.o");
         var exeFile = Path.Combine(outputDir, sourceName);
 
         try
         {
-            // 1. Compile .hla64 -> NASM
+            // 1. Compile .hla64 -> NASM via pipeline
             Console.WriteLine($"Compiling {sourceFile}...");
             var sourceText = File.ReadAllText(sourceFile);
-            var lexer = new Lexer(sourceText);
-            var tokens = lexer.Tokenize();
-            var parser = new Parser(tokens);
-            var program = parser.Parse();
-            var emitter = new NasmEmitter();
-            var nasmCode = emitter.Emit(program);
+            var nasmCode = CompilePipeline.EmitNasm(sourceFile, sourceText, options);
             File.WriteAllText(nasmFile, nasmCode);
             Console.WriteLine($"  -> {nasmFile}");
 
@@ -79,7 +80,7 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
             }
             Console.WriteLine($"  -> {exeFile}");
 
-            // 4. Make executable (if on Unix, not needed for WSL)
+            // 4. Make executable (if on Unix)
             if (!requiresWslRun)
             {
                 try
@@ -94,16 +95,15 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
                 }
                 catch
                 {
-                    // chmod may not exist on Windows, that's fine
                 }
             }
 
             Console.WriteLine($"\nBuild successful: {exeFile}");
             return 0;
         }
-        catch (ParseException ex)
+        catch (InvalidOperationException ex)
         {
-            Console.Error.WriteLine($"Parse error: {ex.Message}");
+            Console.Error.WriteLine(ex.Message);
             return 1;
         }
         catch (Exception ex)

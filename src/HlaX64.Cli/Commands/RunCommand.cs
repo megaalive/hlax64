@@ -1,8 +1,5 @@
 using System.ComponentModel;
-using HlaX64.Backend.Nasm.Emitters;
 using HlaX64.Cli.Toolchain;
-using HlaX64.Compiler.Lexing;
-using HlaX64.Compiler.Parsing;
 using Spectre.Console.Cli;
 using System.Diagnostics;
 
@@ -37,15 +34,10 @@ public sealed class RunCommand : Command<RunCommand.Settings>
 
         try
         {
-            // 1. Compile .hla64 -> NASM
+            // 1. Compile .hla64 -> NASM via pipeline
             Console.WriteLine($"Compiling {sourceFile}...");
             var sourceText = File.ReadAllText(sourceFile);
-            var lexer = new Lexer(sourceText);
-            var tokens = lexer.Tokenize();
-            var parser = new Parser(tokens);
-            var program = parser.Parse();
-            var emitter = new NasmEmitter();
-            var nasmCode = emitter.Emit(program);
+            var nasmCode = CompilePipeline.EmitNasm(sourceFile, sourceText);
             File.WriteAllText(nasmFile, nasmCode);
 
             // 2. Assemble NASM -> .o
@@ -71,7 +63,7 @@ public sealed class RunCommand : Command<RunCommand.Settings>
                 return 1;
             }
 
-            // 4. Make executable (needed for native Linux, WSL handles this differently)
+            // 4. Make executable
             if (!requiresWslRun)
             {
                 try
@@ -91,7 +83,6 @@ public sealed class RunCommand : Command<RunCommand.Settings>
             ProcessStartInfo psi;
             if (requiresWslRun)
             {
-                // Run via WSL
                 string wslExeFile = LinkerTool.ToWslPath(exeFile);
                 Console.WriteLine($"\nRunning via WSL: {wslExeFile}\n");
                 Console.WriteLine("--- Program output ---");
@@ -137,9 +128,9 @@ public sealed class RunCommand : Command<RunCommand.Settings>
             Console.WriteLine($"\n--- Program exited with code {process.ExitCode} ---");
             return process.ExitCode;
         }
-        catch (ParseException ex)
+        catch (InvalidOperationException ex)
         {
-            Console.Error.WriteLine($"Parse error: {ex.Message}");
+            Console.Error.WriteLine(ex.Message);
             return 1;
         }
         catch (Exception ex)
