@@ -6,33 +6,62 @@
 
 [![Status](https://img.shields.io/badge/Fase%200%E2%80%9313-Done-green)](./docs/roadmap.md)
 [![Tests](https://img.shields.io/badge/tests-77%2F77%20+%2016%2F16%20native-2ea44f)](#test-status)
-[![Target](https://img.shields.io/badge/target-linux--x64--sysv%20|%20windows--x64--msabi-1f6feb)](#target-abis)
+[![Target](https://img.shields.io/badge/target-linux--x64--sysv%20|%20windows--x64--msabi-1f6feb)](#targets)
 [![Language](https://img.shields.io/badge/language-v0.1%20Draft-blueviolet)](#language-reference)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](#license)
 
 ---
 
-## ✨ What's Working (MVP Linux x64)
+## ✨ Feature Status
+
+### Compiler Pipeline
 
 | Area                | Status | Details |
 |---------------------|--------|---------|
 | **Lexer / Parser**  | ✅     | Full token set, recursive-descent parser, AST, source locations |
 | **IR Pipeline**     | ✅     | AST → IR → ABI lowerer → NASM emitter (Fase 9.5 A–E) |
 | **NASM Backend**    | ✅     | Emits from lowered IR; operand-order flip in ABI lowerer |
-| **Linux SysV ABI**  | ✅     | `SysVAbiLowerer`: register mapping, prologue/epilogue, string/int/nl runtime |
-| **Stdlib**          | ✅     | `stdout.put("str", nl, rax, 42)` — inline syscall mode |
-| **Procedures**      | ✅     | 0–6 integer args via `rdi`..`r9`, `@returns("rax")`, no-paren syntax |
+| **Semantic Analysis**| ✅    | Register & instruction validation, scope checking, diagnostics |
 | **Control flow**    | ✅     | `if/else/endif`, `while/endwhile` with `=`, `<`, `>` |
+| **Procedures**      | ✅     | 0–6 integer args, `@returns("rax")`, no-paren syntax |
 | **Local variables** | ✅     | `var` block, stack frame with `[rbp-N]` addressing |
+| **Stdlib**          | ✅     | `stdout.put("str", nl, rax, 42)` — inline syscall mode |
+
+### Targets
+
+| Target              | Status | Compiler flag        |
+|---------------------|--------|----------------------|
+| `linux-x64-sysv`    | ✅     | (default)            |
+| `windows-x64-msabi` | ✅     | `--target windows-x64-msabi` |
+
+### Runtime
+
+| Area                | Status | Details |
+|---------------------|--------|---------|
+| **Linux executable**| ✅     | Freestanding `_start` entry, inline syscalls |
+| **Linux shared lib**| ✅     | `--output-kind shared-library`, NASM + GCC link |
+| **Windows exe**     | ✅     | `ExitProcess`, `WriteConsoleA`, LLD link |
+| **Windows DLL**     | ✅     | Export procedures with `export` keyword |
+| **Runtime contract**| ✅     | `HLAX64-RUNTIME-FUNCTION` markers in `src/HlaX64.Runtime/` |
+| **Runtime library** | ✅     | `src/HlaX64.Runtime/` with headers + NASM sources |
+
+### Interop
+
+| Area                | Status | Details |
+|---------------------|--------|---------|
+| **C ABI export**    | ✅     | `export procedure`, `--output-kind shared-library` |
+| **C header generator**| ✅   | `hla64 generate-header` emits C declarations |
+| **C# P/Invoke gen** | ✅     | `hla64 generate-pinvoke` emits `[DllImport]` wrappers |
+
+### Agent & Developer Tooling
+
+| Area                | Status | Details |
+|---------------------|--------|---------|
 | **CLI**             | ✅     | `build`, `emit-nasm`, `run`, `bench`, `test`, `explain-abi`, `generate-header`, `generate-pinvoke` |
 | **Test runner**     | ✅     | 77 unit tests + 16 sample integration tests |
-| **Runtime contract**| ✅     | `HLAX64-RUNTIME-FUNCTION` headers in `src/HlaX64.Runtime/` |
-| **Windows x64**     | ✅     | Implemented (Fase 11): `--target windows-x64-msabi`, RCX/RDX/R8/R9, 32-byte shadow space, `ExitProcess`, `WriteConsoleA` |
-| **C ABI export**    | ✅     | `export procedure`, `--output-kind shared-library`, C header + C# P/Invoke generators |
-
-> The MVP compiler inlines `sys_write` syscalls. A hand-written runtime
-> library (`src/HlaX64.Runtime/`) is provided for Fase 6+ (procedure-aware
-> compilation), Fase 12 (C# interop shared library), and Fase 13 (MCP Server).
+| **Benchmark runner**| ✅     | `hla64 bench` with warmup, median, binary size, JSON manifest |
+| **MCP server**      | ✅     | 9 tools via stdio JSON-RPC for AI agents: compile, build, run, test, explain-abi, generate-header, generate-pinvoke, get-version, list-instructions |
+| **ABI explainer**   | ✅     | `hla64 explain-abi --target linux-x64-sysv` (or `windows-x64-msabi`) |
 
 ---
 
@@ -122,34 +151,20 @@ More examples live under [`examples/`](./examples).
 ```text
 HlaX64/
 ├─ src/
-│  ├─ HlaX64.Compiler/        # Lexer, Parser, AST, Semantic, TestRunner lib
+│  ├─ HlaX64.Compiler/        # Lexer, Parser, AST, Semantic, IR, TestRunner
 │  ├─ HlaX64.Backend.Nasm/    # NASM x64 code emitter
-│  ├─ HlaX64.Cli/             # Command-line interface (hla64)
-│  └─ HlaX64.Runtime/         # Linux x64 runtime library
-│     ├─ include/             #   *.hhf header
-│     └─ linux-x64/           #   *.nasm runtime sources
+│  ├─ HlaX64.Cli/             # CLI (hla64) — build, run, test, bench, etc.
+│  ├─ HlaX64.Runtime/         # Runtime library (Linux + Windows)
+│  └─ HlaX64.McpServer/       # MCP server for AI agent integration
 ├─ tests/
 │  ├─ HlaX64.Compiler.Tests/  # xUnit suite (77 tests)
-│  └─ samples/                # Integration test samples with manifests
-├─ docs/
-│  ├─ language-spec.md        # Full language reference
-│  └─ abi-linux-x64.md        # System V ABI call convention
+│  └─ samples/                # Integration test manifests + expected output
+├─ benchmarks/                # Benchmark manifests
 ├─ examples/                  # *.hla64 sample programs
-└─ scripts/                   # build.ps1, test.ps1
+└─ docs/                      # Language spec, ABI docs, roadmap
 ```
 
----
-
-## 🎯 Target ABIs
-
-| Target              | Status         | Compiler flag        |
-|---------------------|----------------|----------------------|
-| `linux-x64-sysv`    | ✅ Implemented | (default)            |
-| `windows-x64-msabi` | ✅ Implemented | `--target windows-x64-msabi` |
-
-See [`docs/abi-linux-x64.md`](./docs/abi-linux-x64.md) for the Linux
-System V call convention details (argument registers, return register,
-stack alignment, shadow space).
+> See [`docs/compiler-architecture.md`](./docs/compiler-architecture.md) for the full pipeline diagram.
 
 ---
 

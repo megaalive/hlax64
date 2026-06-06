@@ -1,7 +1,10 @@
-# HlaX64 Language Specification (Draft)
+# HlaX64 Language Specification
 
-> **Status:** Fase 0–12 selesai.  
-> **Target aktif:** `linux-x64-sysv` (default), `windows-x64-msabi` (via `--target`).
+> **Language version:** 0.1  
+> **Specification status:** Draft  
+> **Compiler compatibility:** HlaX64 0.x  
+> **Last updated:** 2026-06-06  
+> **Targets:** `linux-x64-sysv` (default), `windows-x64-msabi` (via `--target`)
 
 ## Overview
 

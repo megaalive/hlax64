@@ -9,15 +9,12 @@ public sealed class Lexer
     private int _pos;
     private int _line;
     private int _column;
-    private bool _atLineStart;
-
     public Lexer(string source)
     {
         _source = source;
         _pos = 0;
         _line = 1;
         _column = 1;
-        _atLineStart = true;
     }
 
     public List<Token> Tokenize()
@@ -40,7 +37,6 @@ public sealed class Lexer
                 Advance();
                 _line++;
                 _column = 1;
-                _atLineStart = true;
                 continue;
             }
 
