@@ -43,6 +43,12 @@ jobs:
           dotnet run --project src/HlaX64.Cli -- verify-stack examples/06-abi/stack-args-sysv.hla64
           dotnet run --project src/HlaX64.Cli -- verify-abi examples/06-abi/stack-args-sysv.hla64 --json
 
+      - name: CLI smoke (plan, diff, list-instructions)
+        run: |
+          dotnet run --project src/HlaX64.Cli -- plan examples/00-getting-started/hello.hla64 --json
+          dotnet run --project src/HlaX64.Cli -- diff examples/00-getting-started/hello.hla64 examples/00-getting-started/exitcode.hla64 --json
+          dotnet run --project src/HlaX64.Cli -- list-instructions
+
       - name: Native integration test (Linux)
         if: runner.os == 'Linux'
         run: |
