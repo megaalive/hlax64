@@ -15,6 +15,9 @@ public sealed class NasmEmitter
     // Collects string literals for the data section
     private readonly List<(string Label, string Value)> _stringLiterals;
 
+    // Current procedure's parameter/variable name -> stack offset (e.g., "[rbp-8]")
+    private readonly Dictionary<string, string> _localOffsets = new(StringComparer.OrdinalIgnoreCase);
+
     private static readonly HashSet<string> ReverseOrderInstructions = new()
     {
         "mov", "add", "sub", "imul", "xor", "and", "or", "cmp"
@@ -88,21 +91,44 @@ public sealed class NasmEmitter
 
     private void EmitProcedure(ProcedureNode proc)
     {
+        _localOffsets.Clear();
+
         _sb.AppendLine($"{proc.Name}:");
         _sb.AppendLine("    push rbp");
         _sb.AppendLine("    mov rbp, rsp");
 
-        if (proc.Variables.Count > 0)
-        {
-            var totalSize = proc.Variables.Count * 8;
-            _sb.AppendLine($"    sub rsp, {totalSize}");
-        }
-
-        // Map params to stack variables (Linux SysV ABI)
+        // Build parameter/variable name -> stack offset mapping
         var paramRegisters = new[] { "rdi", "rsi", "rdx", "rcx", "r8", "r9" };
+        int slotIndex = 0;
+
+        // Parameters (after return address and saved rbp)
         for (int i = 0; i < proc.Parameters.Count && i < paramRegisters.Length; i++)
         {
-            var offset = -(i + 1) * 8 - 8; // rbp-8, rbp-16, etc.
+            var offset = -(slotIndex + 1) * 8;
+            _localOffsets[proc.Parameters[i].Name] = $"[rbp{offset}]";
+            slotIndex++;
+        }
+
+        // Variables (below parameters on stack)
+        for (int i = 0; i < proc.Variables.Count; i++)
+        {
+            var offset = -(slotIndex + 1) * 8;
+            if (proc.Variables[i] is VariableNode varNode)
+                _localOffsets[varNode.Name] = $"[rbp{offset}]";
+            slotIndex++;
+        }
+
+        // Allocate stack space for variables
+        var varCount = proc.Variables.Count;
+        if (varCount > 0)
+        {
+            _sb.AppendLine($"    sub rsp, {varCount * 8}");
+        }
+
+        // Store parameter registers into stack slots
+        for (int i = 0; i < proc.Parameters.Count && i < paramRegisters.Length; i++)
+        {
+            var offset = -(i + 1) * 8;
             _sb.AppendLine($"    mov [rbp{offset}], {paramRegisters[i]}");
         }
 
@@ -184,7 +210,14 @@ public sealed class NasmEmitter
             _sb.AppendLine($"    mov {argRegisters[i]}, {argValue}");
         }
 
+        // Stack alignment: ensure 16-byte alignment before call
+        // After push rbp at entry, RSP is 16-byte aligned.
+        // Each push/alloc modifies RSP. Use a runtime alignment check:
+        // After saving args, sub rsp,8 then call, then add rsp,8 after ret
+        // For simplicity with small programs, align to 16 bytes:
+        _sb.AppendLine("    sub rsp, 8      ; align stack to 16 bytes");
         _sb.AppendLine($"    call {call.Name}");
+        _sb.AppendLine("    add rsp, 8      ; restore stack alignment");
     }
 
     private void EmitStdoutPut(List<AstNode> args)
@@ -334,14 +367,14 @@ public sealed class NasmEmitter
         }
     }
 
-    private static string FormatOperand(AstNode node)
+    private string FormatOperand(AstNode node)
     {
         return node switch
         {
             RegisterNode reg => reg.Name,
             IntegerLiteralNode intLit => intLit.Value.ToString(),
             StringLiteralNode strLit => $"\"{EscapeString(strLit.Value)}\"",
-            IdentifierNode ident => ident.Name,
+            IdentifierNode ident => _localOffsets.TryGetValue(ident.Name, out var offset) ? offset : ident.Name,
             _ => "0"
         };
     }
