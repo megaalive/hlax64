@@ -36,7 +36,7 @@ public sealed class TestRunner
         {
             Directory.CreateDirectory(buildDir);
 
-            var sourcePath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(test.Source) ?? ".", test.Source));
+            var sourcePath = ResolveSourcePath(test.Source);
             if (!File.Exists(sourcePath))
             {
                 result.Passed = false;
@@ -188,5 +188,48 @@ public sealed class TestRunner
         }
 
         return results;
+    }
+
+    /// <summary>
+    /// Resolves a source path for the test. If the path is absolute it is
+    /// used as-is. If relative, the runner searches in this order:
+    ///   1. Relative to the current working directory.
+    ///   2. Relative to the runner's base directory
+    ///      (<c>AppContext.BaseDirectory</c>, where csproj-copied test
+    ///      inputs land under <c>examples/</c> and <c>tests/samples/</c>).
+    ///   3. Walking up parent directories until a match is found or the
+    ///      filesystem root is reached (covers repo-root layouts).
+    /// The first match wins.
+    /// </summary>
+    private static string ResolveSourcePath(string source)
+    {
+        if (string.IsNullOrEmpty(source))
+            return source;
+
+        if (Path.IsPathRooted(source) && File.Exists(source))
+            return source;
+
+        // 1. CWD
+        var cwdCandidate = Path.GetFullPath(source);
+        if (File.Exists(cwdCandidate))
+            return cwdCandidate;
+
+        // 2. Base directory (where test runtime copies examples/, etc.)
+        var baseCandidate = Path.Combine(AppContext.BaseDirectory, source);
+        if (File.Exists(baseCandidate))
+            return Path.GetFullPath(baseCandidate);
+
+        // 3. Walk up looking for the file
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            var candidate = Path.Combine(dir.FullName, source);
+            if (File.Exists(candidate))
+                return candidate;
+            dir = dir.Parent;
+        }
+
+        // Fall back to the CWD candidate so the error message is helpful.
+        return cwdCandidate;
     }
 }

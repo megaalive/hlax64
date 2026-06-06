@@ -71,6 +71,7 @@ public sealed class NasmEmitter
         // Data section
         _sb.AppendLine();
         _sb.AppendLine("section .data");
+        _sb.AppendLine("; RUNTIME: newline constant lives in src/HlaX64.Runtime/linux-x64/stdout.nasm");
         _sb.AppendLine("newline db 0x0A");
         foreach (var (label, value) in _stringLiterals)
         {
@@ -158,6 +159,11 @@ public sealed class NasmEmitter
             case WhileNode whileNode:
                 EmitWhile(whileNode);
                 break;
+            case IncludeNode:
+                // #include directives are documentation-only for MVP.
+                // Runtime prototypes live in src/HlaX64.Runtime/include/stdlib64.hhf
+                // and become real calls when the HlaX64.Runtime project is linked in.
+                break;
         }
     }
 
@@ -228,7 +234,11 @@ public sealed class NasmEmitter
             {
                 var label = $"str_{_labelCounter++}";
                 _stringLiterals.Add((label, strLit.Value));
+                // RUNTIME: when HlaX64.Runtime is linked, replace with
+                //     lea rdi, [label]
+                //     call stdout_put_str
                 // sys_write(1, string, length)
+                _sb.AppendLine("    ; RUNTIME: stdout_put_str");
                 _sb.AppendLine("    mov rax, 1     ; sys_write");
                 _sb.AppendLine("    mov rdi, 1     ; stdout");
                 _sb.AppendLine($"    lea rsi, [{label}]");
@@ -237,7 +247,9 @@ public sealed class NasmEmitter
             }
             else if (arg is IdentifierNode ident && ident.Name == "nl")
             {
+                // RUNTIME: when linked, replace with `call stdout_put_nl`.
                 // sys_write(1, newline, 1)
+                _sb.AppendLine("    ; RUNTIME: stdout_put_nl");
                 _sb.AppendLine("    mov rax, 1     ; sys_write");
                 _sb.AppendLine("    mov rdi, 1     ; stdout");
                 _sb.AppendLine("    lea rsi, [newline]");
@@ -246,8 +258,12 @@ public sealed class NasmEmitter
             }
             else if (arg is RegisterNode reg)
             {
+                // RUNTIME: when linked, replace with
+                //     mov rdi, {reg.Name}
+                //     call stdout_put_int
                 // Print register as 64-bit decimal using division method
                 var uid = _labelCounter++;
+                _sb.AppendLine($"    ; RUNTIME: stdout_put_int({reg.Name})");
                 _sb.AppendLine($"    ; print register {reg.Name} as decimal");
                 _sb.AppendLine("    push rcx");
                 _sb.AppendLine($"    mov rax, {reg.Name}");
@@ -287,10 +303,13 @@ public sealed class NasmEmitter
             }
             else if (arg is IntegerLiteralNode intLit)
             {
+                // RUNTIME: literal is constant-folded; equivalent to a
+                // constant call to stdout_put_str with the literal text.
                 // Print integer literal by storing as string in data section
                 var label = $"str_{_labelCounter++}";
                 var intStr = intLit.Value.ToString();
                 _stringLiterals.Add((label, intStr));
+                _sb.AppendLine("    ; RUNTIME: stdout_put_str (constant int literal)");
                 _sb.AppendLine("    mov rax, 1     ; sys_write");
                 _sb.AppendLine("    mov rdi, 1     ; stdout");
                 _sb.AppendLine($"    lea rsi, [{label}]");

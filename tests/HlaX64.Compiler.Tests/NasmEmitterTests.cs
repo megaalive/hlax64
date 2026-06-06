@@ -160,4 +160,111 @@ end hello;";
         Assert.Contains("lea rsi, [newline]", nasm);
         Assert.Contains("global _start", nasm);
     }
+
+    // -----------------------------------------------------------------
+    // Fase 4 — Runtime Minimal: stdout.put
+    // -----------------------------------------------------------------
+
+    [Fact]
+    public void Emit_StdoutPutString_ContainsRuntimeComment()
+    {
+        var nasm = Emit("program t;\nbegin t;\n    stdout.put(\"hi\", nl);\nend t;");
+        Assert.Contains("; RUNTIME: stdout_put_str", nasm);
+    }
+
+    [Fact]
+    public void Emit_StdoutPutNl_ContainsRuntimeComment()
+    {
+        var nasm = Emit("program t;\nbegin t;\n    stdout.put(nl);\nend t;");
+        Assert.Contains("; RUNTIME: stdout_put_nl", nasm);
+    }
+
+    [Fact]
+    public void Emit_StdoutPutRegister_ContainsRuntimeComment()
+    {
+        var nasm = Emit("program t;\nbegin t;\n    stdout.put(rax, nl);\nend t;");
+        Assert.Contains("; RUNTIME: stdout_put_int(rax)", nasm);
+    }
+
+    [Fact]
+    public void Emit_StdoutPutIntegerLiteral_ContainsRuntimeComment()
+    {
+        var nasm = Emit("program t;\nbegin t;\n    stdout.put(42, nl);\nend t;");
+        Assert.Contains("; RUNTIME: stdout_put_str (constant int literal)", nasm);
+    }
+
+    [Fact]
+    public void Emit_IncludeDirective_DoesNotEmitAndDoesNotCrash()
+    {
+        // #include is documentation-only for MVP. The AST contains an
+        // IncludeNode but the emitter must silently drop it.
+        var nasm = Emit("program t;\n#include(\"stdlib64.hhf\")\nbegin t;\n    mov(1, rax);\nend t;");
+        // No "include" or "stdlib64" should leak into the output.
+        Assert.DoesNotContain("include", nasm, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("stdlib64", nasm, StringComparison.OrdinalIgnoreCase);
+        // The actual instruction still makes it through.
+        Assert.Contains("mov rax, 1", nasm);
+    }
+
+    [Fact]
+    public void Emit_HelloWorldSample_GeneratesRunnableNasm()
+    {
+        // Use the same source as the actual sample under tests/samples/hello/
+        var source = File.ReadAllText(GetSamplePath("hello", "hello.hla64"));
+        var nasm = Emit(source);
+
+        // Required structural pieces for a runnable Linux x64 ELF program.
+        Assert.Contains("bits 64", nasm);
+        Assert.Contains("section .text", nasm);
+        Assert.Contains("section .data", nasm);
+        Assert.Contains("global _start", nasm);
+        Assert.Contains("_start:", nasm);
+        Assert.Contains("sys_exit", nasm);
+
+        // String literal and newline must be present in .data.
+        Assert.Contains("str_0 db \"Hello from HlaX64\", 0", nasm);
+        Assert.Contains("newline db 0x0A", nasm);
+
+        // The sys_write sequence for the literal must be present.
+        Assert.Contains("lea rsi, [str_0]", nasm);
+        Assert.Contains("mov rdx, 17", nasm); // length of "Hello from HlaX64"
+
+        // RUNTIME markers for both string and newline.
+        Assert.Contains("; RUNTIME: stdout_put_str", nasm);
+        Assert.Contains("; RUNTIME: stdout_put_nl", nasm);
+    }
+
+    [Fact]
+    public void Emit_ExitCodeSample_GeneratesExpectedExitSyscall()
+    {
+        // The exitcode sample should produce a sys_exit whose rdi comes from rax.
+        var source = File.ReadAllText(GetSamplePath("exitcode", "exitcode.hla64"));
+        var nasm = Emit(source);
+        Assert.Contains("mov rax, 42", nasm);
+        Assert.Contains("mov rdi, rax", nasm);
+        Assert.Contains("mov rax, 60", nasm);
+        Assert.Contains("syscall", nasm);
+    }
+
+    private static string GetSamplePath(string sampleDir, string fileName)
+    {
+        // Walk up from the test bin folder until we find the repo's
+        // tests/samples/<dir>/<file>.
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            var candidate = Path.Combine(dir.FullName, "tests", "samples", sampleDir, fileName);
+            if (File.Exists(candidate))
+                return candidate;
+
+            // Also try from src/<proj>/bin/Debug/netX.Y to repo root.
+            candidate = Path.Combine(dir.FullName, "..", "..", "..", "..", "tests", "samples", sampleDir, fileName);
+            if (File.Exists(candidate))
+                return Path.GetFullPath(candidate);
+
+            dir = dir.Parent;
+        }
+        throw new FileNotFoundException(
+            $"Could not locate sample {sampleDir}/{fileName} starting from {AppContext.BaseDirectory}");
+    }
 }

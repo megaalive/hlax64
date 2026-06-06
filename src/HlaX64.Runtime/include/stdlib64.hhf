@@ -1,0 +1,65 @@
+// HlaX64 Standard Library - 64-bit Header
+// File: stdlib64.hhf
+// Target: linux-x64-sysv
+//
+// This header is documentation/prototype for the runtime functions
+// provided by the HlaX64 Runtime. The MVP compiler currently inlines
+// equivalent syscalls; this file documents the stable runtime API that
+// will be linked in for procedure-aware compilation and C# interop.
+
+#ifndef HLA_STDLIB64
+#define HLA_STDLIB64
+
+// =====================================================================
+// Constants
+// =====================================================================
+
+// nl - newline character (0x0A)
+// Use: stdout.put("Hello", nl);
+#define nl              0x0A
+
+// Standard file descriptors (Linux System V ABI)
+#define stdin_fd        0
+#define stdout_fd       1
+#define stderr_fd       2
+
+// Linux x64 syscall numbers (subset)
+#define SYS_READ        0
+#define SYS_WRITE       1
+#define SYS_EXIT        60
+
+// =====================================================================
+// Runtime Functions (defined in linux-x64/stdout.nasm)
+// =====================================================================
+
+// Prints a NUL-terminated string to stdout.
+//   rdi = pointer to string buffer
+//   rax, rcx, rdx, rsi are clobbered
+procedure stdout_put_str(buf:ptr); @returns("void");
+
+// Prints a single newline character to stdout.
+procedure stdout_put_nl; @returns("void");
+
+// Prints a signed 64-bit integer in decimal to stdout.
+//   rdi = integer value to print
+procedure stdout_put_int(value:int64); @returns("void");
+
+// =====================================================================
+// Conversion (defined in linux-x64/conversion.nasm)
+// =====================================================================
+
+// Converts a signed 64-bit integer to a NUL-terminated decimal string.
+//   rdi = integer value
+//   rsi = pointer to output buffer (at least 21 bytes)
+//   rax = pointer to output buffer (same as rsi on return)
+procedure int_to_str(value:int64; buf:ptr); @returns("rax");
+
+// =====================================================================
+// Startup (defined in linux-x64/startup.nasm)
+// =====================================================================
+
+// Program entry point. Invoked by the Linux kernel.
+// _start should be the only global symbol in the final executable.
+procedure _start; @noreturn;
+
+#endif // HLA_STDLIB64

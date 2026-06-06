@@ -13,6 +13,12 @@ obj/
 build/
 artifacts/
 *.nasm
+# Runtime library .nasm sources are checked in (not generated).
+!src/HlaX64.Runtime/**/*.nasm
+!src/HlaX64.Runtime/**/*.hhf
+!include/**/*.hla
+!include/**/*.hhf
+!include/**/*.hla64
 
 # IDE
 .idea/

@@ -1,5 +1,8 @@
 # HlaX64 Language Specification (Draft)
 
+> **Status:** Fase 0–4 selesai untuk MVP Linux x64.  
+> **Target aktif:** `linux-x64-sysv`.
+
 ## Overview
 
 HlaX64 is an HLA-inspired x64 assembly language designed for AI coding agents and humans. It provides a higher-level syntax over raw NASM/MASM while remaining close to the metal.
@@ -71,30 +74,92 @@ ax bx cx dx
 al bl cl dl
 ```
 
-## Instructions (Planned)
+## Instructions
 
-| Instruction | Description          |
-|-------------|----------------------|
-| `mov`       | Move source to dest  |
-| `add`       | Add source to dest   |
-| `sub`       | Subtract source from dest |
-| `imul`      | Signed multiply      |
-| `idiv`      | Signed divide        |
-| `xor`       | Bitwise XOR          |
-| `and`       | Bitwise AND          |
-| `or`        | Bitwise OR           |
-| `cmp`       | Compare              |
-| `jmp`       | Unconditional jump   |
-| `je`        | Jump if equal        |
-| `jne`       | Jump if not equal    |
-| `jg`        | Jump if greater      |
-| `jl`        | Jump if less         |
-| `call`      | Call procedure       |
-| `ret`       | Return from procedure|
+| Instruction | Description          | Status   |
+|-------------|----------------------|----------|
+| `mov`       | Move source to dest  | ✅ MVP   |
+| `add`       | Add source to dest   | ✅ MVP   |
+| `sub`       | Subtract source from dest | ✅ MVP |
+| `imul`      | Signed multiply      | ✅ MVP   |
+| `xor`       | Bitwise XOR          | ✅ MVP   |
+| `and`       | Bitwise AND          | ✅ MVP   |
+| `or`        | Bitwise OR           | ✅ MVP   |
+| `cmp`       | Compare              | ✅ MVP   |
+| `idiv`      | Signed divide        | ⏳ planned |
+| `jmp`       | Unconditional jump   | ⏳ planned |
+| `je` / `jne`| Jump if equal / not equal | ✅ MVP (via `if`/`while`) |
+| `jg` / `jl` | Jump if greater / less | ✅ MVP (via `if`/`while`) |
+| `call`      | Call procedure       | ✅ MVP (basic) |
+| `ret`       | Return from procedure| ✅ MVP (auto-emitted) |
 
-## Control Flow (Planned)
+> Operand order follows HLA convention: `mov(source, dest)`. The NASM
+> backend reverses this to NASM's `mov dest, source`.
+
+## Standard Library: `stdout.put`
+
+`stdout.put` is the only standard library call available in MVP. It accepts
+a comma-separated list of arguments and prints each in order.
+
+### Signature
+
+```hla
+stdout.put(arg1, arg2, ...);
+```
+
+### Supported argument types
+
+| Argument form         | Behaviour                                   |
+|-----------------------|---------------------------------------------|
+| `"literal"`           | Print the literal string verbatim           |
+| `nl`                  | Print a newline (`0x0A`)                    |
+| `register`            | Print the register as a signed decimal int  |
+| `integer literal`     | Print the literal as decimal text           |
+
+### Examples
+
+```hla
+program hello;
+
+#include("stdlib64.hhf")
+
+begin hello;
+    stdout.put("Hello from HlaX64", nl);
+end hello;
+```
+
+```hla
+program greet;
+
+begin greet;
+    mov(42, rax);
+    stdout.put("answer=", rax, nl);
+end greet;
+```
+
+### Escape sequences in string literals
+
+| Escape | Meaning   |
+|--------|-----------|
+| `\\`   | backslash |
+| `\"`   | quote     |
+| `\n`   | newline   |
+| `\r`   | CR        |
+| `\t`   | tab       |
+
+### Implementation notes
+
+- The MVP compiler inlines `sys_write` calls; the stable runtime functions
+  `stdout_put_str`, `stdout_put_nl`, `stdout_put_int`, and `int_to_str`
+  live in `src/HlaX64.Runtime/linux-x64/` and are documented in
+  `src/HlaX64.Runtime/include/stdlib64.hhf`.
+- Generated NASM contains `; RUNTIME: <function-name>` comments at each
+  inlined call site to mark the future integration point.
+
+## Control Flow (Implemented)
 
 ### If/Else
+
 ```hla
 if(condition) then
     // statements
@@ -103,14 +168,17 @@ else
 endif;
 ```
 
+Supported comparison operators: `=`, `<`, `>`.
+
 ### While
+
 ```hla
 while(condition) do
     // statements
 endwhile;
 ```
 
-## Procedures (Planned)
+## Procedures (Implemented)
 
 ```hla
 procedure AddTwo(a:int64; b:int64); @returns("rax");
@@ -119,6 +187,9 @@ begin AddTwo;
     add(b, rax);
 end AddTwo;
 ```
+
+Up to 6 integer parameters are passed in `rdi`, `rsi`, `rdx`, `rcx`,
+`r8`, `r9`. Return value goes in `rax` (specified via `@returns`).
 
 ## Calling Convention
 

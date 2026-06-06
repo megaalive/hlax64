@@ -23,4 +23,15 @@
     <ProjectReference Include="..\..\src\HlaX64.Backend.Nasm\HlaX64.Backend.Nasm.csproj" />
   </ItemGroup>
 
+  <!-- Copy example programs and sample manifests to the test output so
+       TestRunnerTests can find them via relative paths. -->
+  <ItemGroup>
+    <None Include="..\..\examples\**\*.hla64" Link="examples\%(RecursiveDir)%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\tests\samples\**\manifest.json" Link="tests\samples\%(RecursiveDir)%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
