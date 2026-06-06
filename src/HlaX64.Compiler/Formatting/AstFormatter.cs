@@ -33,6 +33,13 @@ public static class AstFormatter
         var procedures = program.Statements.OfType<ProcedureNode>().ToList();
         var mainBody = program.Statements.Where(s => s is not ProcedureNode).ToList();
 
+        if (program.Constants.Count > 0)
+        {
+            sb.AppendLine();
+            foreach (ConstBlockNode block in program.Constants)
+                EmitConstBlock(sb, block, 0);
+        }
+
         if (procedures.Count > 0)
         {
             sb.AppendLine();
@@ -60,12 +67,20 @@ public static class AstFormatter
             sb.Append($"; @returns(\"{proc.ReturnsRegister}\")");
         sb.AppendLine(";");
 
+        if (proc.Constants.Count > 0)
+        {
+            foreach (ConstBlockNode block in proc.Constants)
+                EmitConstBlock(sb, block, indent);
+        }
+
         if (proc.Variables.Count > 0)
         {
             sb.AppendLine($"{pad}var");
             foreach (VariableNode v in proc.Variables)
             {
-                var typeDecl = v.ElementCount > 1 ? $"{v.Type}[{v.ElementCount}]" : v.Type;
+                var typeDecl = v.ArraySizeExpression != null
+                    ? $"{v.Type}[{EmitConstExpr(v.ArraySizeExpression)}]"
+                    : v.Type;
                 sb.AppendLine($"{pad}    {v.Name}:{typeDecl};");
             }
         }
@@ -129,6 +144,24 @@ public static class AstFormatter
 
     private static string EscapeString(string value) =>
         "\"" + value.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\t", "\\t").Replace("\r", "\\r") + "\"";
+
+    private static void EmitConstBlock(StringBuilder sb, ConstBlockNode block, int indent)
+    {
+        var pad = Indent(indent);
+        sb.AppendLine($"{pad}const");
+        foreach (var decl in block.Declarations)
+            sb.AppendLine($"{pad}    {decl.Name} := {EmitConstExpr(decl.Expression)};");
+        sb.AppendLine($"{pad}endconst;");
+    }
+
+    private static string EmitConstExpr(AstNode node) => node switch
+    {
+        IntegerLiteralNode i => i.Value.ToString(),
+        IdentifierNode id => id.Name,
+        UnaryExprNode u => $"{u.Operator}{EmitConstExpr(u.Operand)}",
+        BinaryExprNode b => $"({EmitConstExpr(b.Left)} {b.Operator} {EmitConstExpr(b.Right)})",
+        _ => "?"
+    };
 
     private static string Indent(int level) => new(' ', level * 4);
 }

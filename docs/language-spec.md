@@ -3,7 +3,7 @@
 > **Language version:** 0.1  
 > **Specification status:** Draft  
 > **Compiler compatibility:** HlaX64 0.x  
-> **Last updated:** 2026-06-06  
+> **Last updated:** 2026-06-07  
 > **Targets:** `linux-x64-sysv` (default), `windows-x64-msabi` (via `--target`)
 
 ## Overview
@@ -194,6 +194,27 @@ end AddTwo;
 Up to 6 integer parameters are passed in `rdi`, `rsi`, `rdx`, `rcx`,
 `r8`, `r9`. Return value goes in `rax` (specified via `@returns`).
 
+## Compile-time constants (Implemented — RFC 0004)
+
+Declare named integer constants evaluated at compile time:
+
+```hla
+const
+    BufferSize := 4096;
+    PageSize   := 4096;
+    PageMask   := PageSize - 1;
+endconst;
+```
+
+- Placement: program scope (before `begin`) or procedure scope (before `var`).
+- Assignment operator is `:=` (distinct from comparison `=`).
+- Expressions: `+`, `-`, `*`, `/`, `%`, `&`, `|`, `^`, `~`, `<<`, `>>`, parentheses, unary `-`.
+- Literals: decimal integers and hex `$FF`.
+- Uses: immediate operands (`mov(BufferSize, rax)`), array sizes (`var buf: byte[BufferSize];`).
+- Errors: undefined name (`HLAX0031`), divide by zero (`HLAX0032`), overflow (`HLAX0033`), duplicate (`HLAX0034`).
+
+Runtime assignment expressions (`result := a + b;`) are **planned** — see [RFC 0004](../rfcs/0004-expressions-and-constants.md).
+
 ## Memory & pointers (Implemented — Level 3 baseline)
 
 See [tutorials/05-memory.md](tutorials/05-memory.md) and [memory-and-bounds.md](memory-and-bounds.md).
@@ -258,7 +279,7 @@ Sections describing **implemented** syntax are normative. Planned features are i
 ## Reserved keywords
 
 ```text
-program begin end procedure call export var
+program begin end procedure call export var const endconst
 if else endif while endwhile do then
 mov add sub imul xor and or cmp lea push pop inc dec neg not
 shl shr sar rol ror jmp ret syscall nop int3 hlt

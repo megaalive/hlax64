@@ -171,10 +171,50 @@ Stable diagnostic codes help agents, IDE tooling, and contributors reference err
 | **Severity** | Warning |
 | **Category** | Type system |
 | **Since** | 0.2.0-alpha |
-| **Cause** | Literal index in `arr[i]` is negative or `>=` declared array length (static check only) |
+| **Cause** | Literal or const-folded index in `arr[i]` is negative or `>=` declared array length |
 | **Example** | `var buf: int64[4];` … `mov(buf[4], rax);` with `-Wbounds` |
 | **Fix** | Use a valid index (`0` … `length-1`), or guard dynamic indices at runtime |
 | **CLI** | Enable with `-Wbounds` / `--warn-bounds` on `build`, `emit-nasm`, `run`, `explain`. The language server enables bounds warnings in diagnostics by default. |
+
+### HLAX0031 — Undefined constant in compile-time expression
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | `const` initializer or array size references an undefined name, or forward reference within the same block |
+| **Fix** | Declare the constant above its use; check spelling |
+
+### HLAX0032 — Division by zero in compile-time expression
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | `/` or `%` with zero divisor in a `const` expression |
+| **Fix** | Use a non-zero divisor |
+
+### HLAX0033 — Compile-time expression overflow
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | `+`, `-`, or `*` in a `const` expression exceeds signed int64 range |
+| **Fix** | Simplify or split the expression |
+
+### HLAX0034 — Duplicate constant
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | Same constant name declared twice in one scope |
+| **Fix** | Remove or rename the duplicate |
 
 ## Toolchain messages (no code yet)
 

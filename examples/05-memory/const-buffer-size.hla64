@@ -1,0 +1,17 @@
+program const_demo;
+
+const
+    BufferSize := 4096;
+    PageSize   := 4096;
+    PageMask   := PageSize - 1;
+endconst;
+
+procedure ShowMask; @returns("rax");
+begin ShowMask;
+    mov(PageMask, rax);
+end ShowMask;
+
+begin const_demo;
+    call ShowMask;
+    stdout.put("page mask = ", rax, nl);
+end const_demo;

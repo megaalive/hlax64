@@ -8,6 +8,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ### Added
 
+- **Phase 16 Sprint 1:** compile-time `const` / `endconst` blocks with `:=` assignments and int64 expression evaluation (`+ - * / % & | ^ ~ << >>`, hex `$FF`); use in immediates and `type[ConstName]` array sizes (RFC 0004)
+- Diagnostics HLAX0031–HLAX0034 for const errors; example `examples/05-memory/const-buffer-size.hla64`; conformance cases `const-expressions`, `const-divide-by-zero`
+- `docs/memory-model.md` (cstring / utf8slice concepts, implemented vs planned); Phases 16–24 in `docs/roadmap.md`
+- RFC [0004](rfcs/0004-expressions-and-constants.md) (const implemented; runtime `:=` expressions planned)
+
+### Changed
+
+- README: **Current Capabilities — HlaX64 0.1 Alpha** (replaces MVP Linux-only framing); CI-focused test badge; simplified project layout
+- `docs/compiler-architecture.md`: Implemented / Experimental / Planned sections for compiler 0.1.x
+
+### Added (prior unreleased)
+
 - `-Wbounds` / `--warn-bounds` static array index warnings (HLAX0030); enabled in LSP diagnostics by default
 - LSP go-to-definition, document symbols, and document formatting (`AstFormatter`); VS Code format-on-save for `.hla64`
 - Packed stack arrays: `byte[N]`, `word[N]`, `dword[N]` with correct element stride and sized NASM loads/stores

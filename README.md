@@ -4,8 +4,8 @@
 > Write low-level x64 with a cleaner HLA-inspired syntax. Compile to NASM,
 > assemble, link, and run — all from a single `hla64` CLI.
 
-[![Status](https://img.shields.io/badge/Fase%200%E2%80%9313-Done-green)](./docs/roadmap.md)
-[![Tests](https://img.shields.io/badge/tests-163%20unit%20+%2022%20native%20+%2029%20curriculum-2ea44f)](#test-status)
+[![Status](https://img.shields.io/badge/HlaX64%200.1%20Alpha-green)](./docs/roadmap.md)
+[![Tests](https://img.shields.io/badge/tests-CI%20verified-2ea44f)](https://github.com/megaalive/hlax64/actions)
 [![Target](https://img.shields.io/badge/target-linux--x64--sysv%20|%20windows--x64--msabi-1f6feb)](#targets)
 [![Language](https://img.shields.io/badge/language-v0.1%20Draft-blueviolet)](#language-reference)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](#license)
@@ -26,58 +26,76 @@ Tutorials: [Getting started](docs/tutorials/01-getting-started.md) · [Native ro
 
 ---
 
-## ✨ Feature Status
+## Current Capabilities — HlaX64 0.1 Alpha
 
-### Compiler Pipeline
+HlaX64 is an **early multi-platform x64 language toolchain** — not a single-target MVP. Release [`v0.1.0-alpha`](https://github.com/megaalive/hlax64/releases) ships pre-built CLI binaries; CI verifies every push.
 
-| Area                | Status | Details |
-|---------------------|--------|---------|
-| **Lexer / Parser**  | ✅     | Full token set, recursive-descent parser, AST, source locations |
-| **IR Pipeline**     | ✅     | AST → IR → ABI lowerer → NASM emitter (Fase 9.5 A–E) |
-| **NASM Backend**    | ✅     | Emits from lowered IR; operand-order flip in ABI lowerer |
-| **Semantic Analysis**| ✅    | Register & instruction validation, scope checking, diagnostics |
-| **Control flow**    | ✅     | `if/else/endif`, `while/endwhile` with `=`, `<`, `>` |
-| **Procedures**      | ✅     | 0–6 integer args, `@returns("rax")`, no-paren syntax |
-| **Local variables** | ✅     | `var` block, stack frame with `[rbp-N]` addressing |
-| **Pointers & memory** | ✅ (Level 3) | `&var`, `&"str"`, `[reg+N]`, `.byte`, `type[N]`, `arr[i]` |
-| **LSP (editor)**      | ✅ MVP     | Diagnostics, hover, completion, go-to-definition, document symbols, format-on-save |
-| **Stdlib**          | ✅     | `stdout.put("str", nl, rax, 42)` — inline syscall mode |
+### Language
+
+| Area | Status | Notes |
+|------|--------|-------|
+| Program / procedure structure | ✅ | `program`, `procedure`, `begin`/`end`, `#include` |
+| Types & registers | ✅ | `int64`, `uint64`, `byte`, `ptr`, …; full x64 register set |
+| Instructions | ✅ | `mov`, `add`, `sub`, `imul`, bitwise, `cmp`, … (HLA operand order) |
+| Control flow | ✅ | `if`/`else`/`endif`, `while`/`endwhile` |
+| Locals & stack arrays | ✅ | `var` block; `type[N]` including packed `byte[N]` |
+| Pointers & indexing | ✅ | `&var`, `&"str"`, `[reg+N]`, `arr[i]` — [RFC 0002](rfcs/0002-pointer-model.md) |
+| Compile-time constants | ✅ | `const` / `endconst`, `:=`, expr eval — [RFC 0004](rfcs/0004-expressions-and-constants.md) |
+| Runtime expressions `:=` | ⏳ | Planned Phase 16 Sprint 2 |
+
+### Compiler
+
+| Area | Status | Notes |
+|------|--------|-------|
+| Pipeline | ✅ | Lexer → Parser → Semantic → IR → ABI lowerer → NASM |
+| Diagnostics | ✅ | Line/column, codes HLAX00xx, fuzzy suggestions |
+| Bounds warnings | ✅ | `-Wbounds` / HLAX0030 for static array indices |
+| Format | ✅ | `hla64 format` via `AstFormatter` |
 
 ### Targets
 
-| Target              | Status | Compiler flag        |
-|---------------------|--------|----------------------|
-| `linux-x64-sysv`    | ✅     | (default)            |
-| `windows-x64-msabi` | ✅     | `--target windows-x64-msabi` |
-
-### Runtime
-
-| Area                | Status | Details |
-|---------------------|--------|---------|
-| **Linux executable**| ✅     | Freestanding `_start` entry, inline syscalls |
-| **Linux shared lib**| ✅     | `--output-kind shared-library`, NASM + GCC link |
-| **Windows exe**     | ✅     | `ExitProcess`, `WriteConsoleA`, LLD link |
-| **Windows DLL**     | ✅     | Export procedures with `export` keyword |
-| **Runtime contract**| ✅     | `HLAX64-RUNTIME-FUNCTION` markers in `src/HlaX64.Runtime/` |
-| **Runtime library** | ✅     | `src/HlaX64.Runtime/` with headers + NASM sources |
+| Target | Flag | Output |
+|--------|------|--------|
+| Linux x64 SysV | (default) | ELF exe, `.so` shared library |
+| Windows x64 MS ABI | `--target windows-x64-msabi` | `.exe`, `.dll` |
 
 ### Interop
 
-| Area                | Status | Details |
-|---------------------|--------|---------|
-| **C ABI export**    | ✅     | `export procedure`, `--output-kind shared-library` |
-| **C header generator**| ✅   | `hla64 generate-header` emits C declarations |
-| **C# P/Invoke gen** | ✅     | `hla64 generate-pinvoke` emits `[DllImport]` wrappers |
+| Area | Status |
+|------|--------|
+| C ABI `export procedure` | ✅ |
+| `hla64 generate-header` | ✅ |
+| `hla64 generate-pinvoke` | ✅ |
 
-### Agent & Developer Tooling
+### Tooling
 
-| Area                | Status | Details |
-|---------------------|--------|---------|
-| **CLI**             | ✅     | `build`, `emit-nasm`, `run`, `test`, `bench`, `explain`, `explain-abi`, `format`, `generate-header`, `generate-pinvoke`, `doctor` |
-| **Test runner**     | ✅     | 163 unit tests + 31 example compile guards + 22 native samples + 29 curriculum manifests |
-| **Benchmark runner**| ✅     | `hla64 bench` with warmup, median, binary size, JSON manifest |
-| **MCP server**      | ✅     | 12 tools via stdio JSON-RPC: compile, build, run, test, explain, explain-abi, format-source, doctor, generate-header, generate-pinvoke, get-version, list-instructions |
-| **ABI explainer**   | ✅     | `hla64 explain-abi --target linux-x64-sysv` (or `windows-x64-msabi`) |
+| Area | Status |
+|------|--------|
+| CLI (`build`, `run`, `test`, `bench`, `explain`, `doctor`, …) | ✅ |
+| MCP server (12 tools, stdio JSON-RPC) | ✅ |
+| Benchmark runner + JSON manifests | ✅ |
+
+### Agent integration
+
+Designed for verified vibe coding: explicit syntax, structured diagnostics, annotated NASM (`; RUNTIME:`), JSON CLI schemas, MCP compile/build/run/test tools. See [tutorials/04-mcp-agent.md](docs/tutorials/04-mcp-agent.md).
+
+### Editor support
+
+| Feature | Status |
+|---------|--------|
+| LSP (diagnostics, hover, completion, go-to-definition, symbols, format) | ✅ MVP |
+| VS Code extension (`editors/vscode`) | ✅ syntax + LSP client |
+
+### Testing
+
+| Suite | Role |
+|-------|------|
+| `dotnet test` | Unit, parser, semantic, IR, conformance, LSP |
+| `hla64 test` | Native Linux integration (compile → link → run) |
+| Example compile guards | Every `examples/**/*.hla64` must emit NASM |
+| Curriculum manifests | Structured learning path under `examples/` |
+
+All suites run in [GitHub Actions CI](https://github.com/megaalive/hlax64/actions).
 
 ---
 
@@ -168,30 +186,18 @@ HlaX64 is inspired by the educational ideas of Randall Hyde's High Level Assembl
 
 ---
 
-## 🏗 Project Structure
+## Project layout
 
 ```text
-HlaX64/
-├─ src/
-│  ├─ HlaX64.Compiler/        # Lexer, parser, AST, semantic, IR, ABI lowerers
-│  ├─ HlaX64.Backend.Nasm/    # NASM x64 code emitter
-│  ├─ HlaX64.Cli/             # CLI (hla64) — build, run, test, bench, explain, …
-│  ├─ HlaX64.Runtime/         # Runtime library (Linux + Windows NASM)
-│  ├─ HlaX64.McpServer/       # MCP server for AI agent integration
-│  └─ HlaX64.LanguageServer/  # LSP diagnostics MVP
-├─ tests/
-│  ├─ HlaX64.Compiler.Tests/  # xUnit (unit + conformance + example compile guards)
-│  ├─ samples/                # Native integration manifests (17 programs)
-│  ├─ examples-curriculum/    # Curriculum manifests → `examples/` (19 programs)
-│  └─ conformance/            # Valid/invalid source conformance cases
-├─ examples/                  # Structured curriculum (*.hla64 by topic)
-├─ benchmarks/                # Benchmark JSON manifests
-├─ schemas/                   # CLI JSON output schemas
-├─ editors/vscode/            # VS Code syntax highlighting + snippets
-└─ docs/                      # Spec, ABI, tutorials, playground
+src/          Compiler, NASM backend, CLI, runtime, MCP, LSP
+tests/        Unit tests, native samples, conformance, curriculum manifests
+examples/     Topic-organized .hla64 programs
+docs/         Language spec, ABI, tutorials, architecture
+rfcs/         Language design proposals
+editors/      VS Code extension
 ```
 
-> See [`docs/compiler-architecture.md`](./docs/compiler-architecture.md) for the full pipeline diagram.
+Pipeline details: [`docs/compiler-architecture.md`](./docs/compiler-architecture.md).
 
 ---
 
@@ -208,21 +214,14 @@ HlaX64/
 
 ---
 
-## 🧪 Test Status
+## Test status
 
 ```bash
-dotnet test
-# Passed! 163 unit/conformance tests (+ example compile guards)
+dotnet test          # unit + conformance (+ example compile guards in CI)
+dotnet run --project src/HlaX64.Cli -- test   # native integration on Linux
 ```
 
-| Suite | Count | Coverage |
-|-------|-------|----------|
-| Unit tests (`HlaX64.Compiler.Tests`) | **150** | Lexer, parser, semantic, IR, NASM emit, ABI, LSP, conformance, fuzz |
-| Example compile guards | **22** | Every `examples/**/*.hla64` emits NASM without errors |
-| Native samples (`tests/samples/`) | **17** | Linux CI: compile → link → run → assert stdout/exit |
-| Curriculum (`tests/examples-curriculum/`) | **19** | Structured `examples/` programs via manifests |
-
-Native integration runs on **Linux CI** (`hla64 test`); Windows CI runs MS ABI build smoke tests.
+CI runs the full matrix on every push; see the [Actions tab](https://github.com/megaalive/hlax64/actions) for current pass/fail status. Windows CI includes MS ABI build smoke tests; native run assertions execute on Linux.
 
 ---
 
@@ -249,8 +248,9 @@ Phases are summarized in [`docs/roadmap.md`](./docs/roadmap.md).
 | 13   | MCP server (for AI agents)           | ✅      |
 | 14   | LSP & editor tooling                 | ✅ MVP (diagnostics, hover, completion) |
 | 15   | AI Assembly Lab / IDE plugin         | ⏳      |
+| 16+  | Language core completion (const, expr, struct, …) | 🚧 Sprint 1 |
 
-> **Aturan**: jangan sentuh Fase 14–15 sebelum Definition of Done Fase 9.5 terpenuhi. Lihat [`docs/roadmap.md`](./docs/roadmap.md).
+Phases 16–24 are summarized in [`docs/roadmap.md`](./docs/roadmap.md).
 
 ### 📚 Dokumentasi tambahan
 

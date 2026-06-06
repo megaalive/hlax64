@@ -11,6 +11,8 @@ public enum TokenType
     // Procedure keywords
     Procedure,
     Var,
+    Const,
+    Endconst,
     Export,
     Returns,
     
@@ -56,8 +58,17 @@ public enum TokenType
     At,
     Hash,
     Colon,
+    ColonAssign,
     
     // Operators
+    Star,
+    Slash,
+    Percent,
+    Pipe,
+    Caret,
+    Tilde,
+    ShiftLeft,
+    ShiftRight,
     Equals,
     LessThan,
     GreaterThan,
