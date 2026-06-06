@@ -24,10 +24,10 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 | 7 | Control flow | ✅ Done | `if/else/endif`, `while/endwhile` |
 | 8 | Local variables & stack frame | ✅ Done | `var` block, `[rbp-N]` |
 | 9 | Test runner | ✅ Done | `hla64 test`, manifest JSON |
-| **9.5** | **Compiler Architecture Stabilization** | 🟡 **Docs sync** | A CompilationModel ✅, B TypeSystem ✅, C IR ✅, D ABI lowerer ✅, E Backend refactor ✅, F Native tests ✅, G Docs 🔜, H Runtime contract ✅ |
-| 10 | Benchmark runner | ✅ Done | `hla64 bench` |
-| 11 | Windows x64 backend | ⏳ Pending | `windows-x64-msabi` target |
-| 12 | C ABI & C# interop | ⏳ Pending | export, P/Invoke generator |
+| **9.5** | **Compiler Architecture Stabilization** | ✅ Done | A ✅ B ✅ C ✅ D ✅ E ✅ F ✅ G ✅ H ✅ — 15/15 checklist |
+| 10 | Benchmark runner | ⏳ Pending | |
+| 11 | Windows x64 backend | ✅ Done | RCX/RDX/R8/R9, 32-byte shadow space, `ExitProcess`, `WriteConsoleA`, `--target windows-x64-msabi` |
+| 12 | C ABI & C# interop | ✅ Done | `export procedure`, `--output-kind shared-library`, C header generator, C# P/Invoke generator |
 | 13 | MCP server | ⏳ Pending | tools untuk AI agent |
 | 14 | LSP & editor tooling | ⏳ Pending | diagnostics, hover, completion |
 | 15 | AI Assembly Lab / GUI | ⏳ Pending | eksperimen UI (Avalonia/WPF) |
@@ -39,16 +39,16 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 ### Tier 1 — Dokumentasi (zero risk)
 
 - [x] `docs/roadmap.md` (file ini)
-- [ ] `docs/compiler-architecture.md` — diagram pipeline IR + 7 workstream
-- [ ] `docs/runtime-contract.md` — format clobber metadata per fungsi runtime
-- [ ] `docs/examples.md` — katalog & cara menjalankan
-- [x] `README.md` — sync badge "Fase 0–9 Done · 9.5 Active"
+- [x] `docs/compiler-architecture.md` — diagram pipeline IR + 7 workstream
+- [x] `docs/runtime-contract.md` — format clobber metadata per fungsi runtime
+- [x] `docs/examples.md` — katalog & cara menjalankan
+- [x] `README.md` — sync badge "Fase 0–12 Done"
 
 ### Tier 2 — Sample tests (memenuhi target MVP "min 10 samples")
 
-✅ **Sudah 12 sample** — semua PASS:
+✅ **Sudah 16 sample** — semua PASS:
 
-- `hello`, `exitcode`, `add_two`, `count`, `simple`, `local_var`, `if_else`, `procedure_0arg`, `procedure_1arg`, `procedure_6args`, `comparison_signed`, `stdout_int64`
+- `hello`, `exitcode`, `add_two`, `count`, `simple`, `local_var`, `if_else`, `procedure_0arg`, `procedure_1arg`, `procedure_6args`, `comparison_signed`, `comparison_unsigned`, `stdout_int64`, `callee_saved`, `stack_alignment`, `export_lib`
 
 ### Tier 3 — Mini CLI command (mitigasi Risiko 2)
 
@@ -61,12 +61,12 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 Urutan roadmap yang direkomendasikan (lihat Plan Section 9):
 
 ```
-Fase 9.5* →  Fase 10 (Bench) →  Fase 11 (Windows) →  Fase 12 (C# interop)
+Fase 9.5 →  Fase 11 (Windows) →  Fase 12 (C# interop) →  Fase 10 (Bench)
 Fase 13 (MCP) →  Fase 14 (LSP) →  Fase 15 (GUI)
 ```
 
-> *Fase 9.5 Workstream A–F, H done. Workstream G (Docs) in progress.
-> Next: finish docs sync, then proceed to Fase 11.
+> *Fase 9.5 Workstream A–H done. Docs sync complete. Fase 11 (Windows) and Fase 12 (C# interop) also done.
+> Next: Fase 10 (Benchmark runner).
 
 ---
 
@@ -85,5 +85,5 @@ Lihat Plan Section 10 untuk detail.
 
 Lihat Plan Section 11.
 
-- **Risiko 6 (utama saat ini)**: pertumbuhan fitur sebelum fondasi stabil.
-  → Mitigasi: **Fase 9.5 active; tidak menambah syntax baru** sampai DoD terpenuhi.
+- **Risiko 6 (termitigasi)**: pertumbuhan fitur sebelum fondasi stabil.
+  → Mitigasi: **Fase 9.5 completed** — IR, ABI lowerer, native tests, runtime contract, docs all stable.

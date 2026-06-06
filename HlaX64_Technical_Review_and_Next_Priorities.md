@@ -1,6 +1,6 @@
 # HlaX64 — Review Teknis, Temuan, dan Prioritas Pengerjaan Berikutnya
 
-**Repository:** `megaalive/hla`  
+**Repository:** `megaalive/hlax64`  
 **Dokumen:** Review teknis dan rencana stabilisasi arsitektur  
 **Status:** Draft kerja untuk eksekusi dengan GPT-5.5/Codex atau model yang lebih baru
 

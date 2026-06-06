@@ -1,7 +1,7 @@
 # HlaX64 Language Specification (Draft)
 
-> **Status:** Fase 0–4 selesai untuk MVP Linux x64.  
-> **Target aktif:** `linux-x64-sysv`.
+> **Status:** Fase 0–12 selesai.  
+> **Target aktif:** `linux-x64-sysv` (default), `windows-x64-msabi` (via `--target`).
 
 ## Overview
 
@@ -205,7 +205,7 @@ Up to 6 integer parameters are passed in `rdi`, `rsi`, `rdx`, `rcx`,
 | 6th      | `r9`     |
 | Return   | `rax`    |
 
-### Windows x64 (Microsoft ABI) — Future
+### Windows x64 (Microsoft ABI) — Implemented
 
 | Argument | Register |
 |----------|----------|
@@ -214,6 +214,9 @@ Up to 6 integer parameters are passed in `rdi`, `rsi`, `rdx`, `rcx`,
 | 3rd      | `r8`     |
 | 4th      | `r9`     |
 | Return   | `rax`    |
+
+32-byte shadow space required; `--target windows-x64-msabi` flag selects
+Windows ABI lowering (NASM `win64` format + `lld-link`/`link.exe`).
 
 ## Target Pragma
 

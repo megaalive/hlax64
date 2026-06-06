@@ -234,7 +234,7 @@ public sealed record CompilationOptions(
 | C | IR | `IrFunction`, `IrBasicBlock`, `IrInstruction` | snapshot test IR ada |
 | D | ABI lowering | `IAbiLowerer` + `SysVAbiLowerer` | call 0–6 args lulus, stack align lulus |
 | E | Backend NASM refactor | `NasmEmitter` dari `LoweredFunction` | emitter tidak baca AST |
-| F | Native integration tests | fixture build+run | 15 sample native test di Linux CI |
+| F | Native integration tests | fixture build+run | 16 sample native test di Linux CI |
 | G | Dokumentasi | `compiler-architecture.md`, `runtime-contract.md`, sync README | semua doc saling rujuk |
 
 Detail per workstream lihat

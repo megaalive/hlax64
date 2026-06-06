@@ -141,7 +141,12 @@ long as the body doesn't independently perturb `rsp`.
 
 ## 6. System calls
 
-The MVP uses raw `syscall` instructions for I/O. Linux x64 system
+The MVP uses raw `syscall` instructions for I/O.
+
+> ⚠️ **`syscall` clobbers `rcx` and `r11`.** The compiler automatically
+> wraps `stdout.put` sequences with `push rcx` / `pop rcx` to preserve
+> the register across syscalls. User code that uses `rcx` as a loop
+> counter (or any other purpose) across a `stdout.put` call is safe. Linux x64 system
 calls follow the same calling convention as user code, except:
 
 - The syscall number goes in `rax` (not in `rdi`).

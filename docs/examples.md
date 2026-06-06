@@ -25,26 +25,26 @@ menjalankannya. Untuk detail bahasa, lihat
 ## 2. Daftar sample tests (`tests/samples/`)
 
 Sample di folder ini punya `manifest.json` dan dijalankan lewat
-`hla64 test tests/samples`. Saat ini tersedia **2**, target MVP
-**≥ 10**.
+`hla64 test tests/samples`. Saat ini tersedia **16 sample**, semuanya PASS.
 
 | Sample | Topik | Status |
 |--------|-------|--------|
-| `hello/` | hello + `stdout.put` | ✅ ada |
-| `exitcode/` | exit code via `rax` | ✅ ada |
-| `add_two/` | procedure call | ⏳ Tier 2 |
-| `count/` | while loop | ⏳ Tier 2 |
-| `simple/` | mov + add | ⏳ Tier 2 |
-| `local_var/` | `var` block | ⏳ Tier 2 |
-| `if_else/` | `if/else/endif` | ⏳ Tier 2 |
-| `procedure_1arg/` | procedure 1 argumen | ⏳ Tier 2 |
-| `procedure_6args/` | procedure 6 argumen (max SysV) | ⏳ Tier 2 |
-| `comparison_signed/` | signed `jg` / `jl` | ⏳ Tier 2 |
-| `comparison_unsigned/` | unsigned `ja` / `jb` | ⏳ planned (Fase 9.5) |
-| `runtime_linking/` | link ke `HlaX64.Runtime` | ⏳ planned (Fase 9.5) |
-| `callee_saved_preservation/` | cek callee-saved | ⏳ planned (Fase 9.5) |
-| `stack_alignment/` | cek RSP mod 16 | ⏳ planned (Fase 9.5) |
-| `invalid_source_diagnostics/` | diagnostics untuk source invalid | ⏳ planned (Fase 9.5) |
+| `hello/` | hello + `stdout.put` | ✅ |
+| `exitcode/` | exit code via `rax` | ✅ |
+| `add_two/` | procedure call | ✅ |
+| `count/` | while loop | ✅ |
+| `simple/` | mov + add | ✅ |
+| `local_var/` | `var` block | ✅ |
+| `if_else/` | `if/else/endif` | ✅ |
+| `procedure_0arg/` | procedure tanpa argumen | ✅ |
+| `procedure_1arg/` | procedure 1 argumen | ✅ |
+| `procedure_6args/` | procedure 6 argumen (max SysV) | ✅ |
+| `comparison_signed/` | signed `jg` / `jl` | ✅ |
+| `comparison_unsigned/` | unsigned `ja` / `jb` | ✅ |
+| `stdout_int64/` | stdout.put dengan register int64 | ✅ |
+| `callee_saved/` | callee-saved register preservation | ✅ |
+| `stack_alignment/` | cek RSP mod 16 | ✅ |
+| `export_lib/` | shared library export + C# P/Invoke | ✅ |
 
 ---
 

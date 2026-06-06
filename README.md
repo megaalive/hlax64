@@ -4,9 +4,9 @@
 > Write low-level x64 with a cleaner HLA-inspired syntax. Compile to NASM,
 > assemble, link, and run — all from a single `hla64` CLI.
 
-[![Status](https://img.shields.io/badge/Fase%200%E2%80%9310-Done%20%C2%B7%209.5%20E%2FF%2FH%20Done%20%C2%B7%20G%20Active-yellow)](./docs/roadmap.md)
-[![Tests](https://img.shields.io/badge/tests-66%2F66%20+%2012%2F12%20native-2ea44f)](#test-status)
-[![Target](https://img.shields.io/badge/target-linux--x64--sysv-1f6feb)](#target-abis)
+[![Status](https://img.shields.io/badge/Fase%200%E2%80%9312-Done-green)](./docs/roadmap.md)
+[![Tests](https://img.shields.io/badge/tests-77%2F77%20+%2016%2F16%20native-2ea44f)](#test-status)
+[![Target](https://img.shields.io/badge/target-linux--x64--sysv%20|%20windows--x64--msabi-1f6feb)](#target-abis)
 [![Language](https://img.shields.io/badge/language-v0.1%20Draft-blueviolet)](#language-reference)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](#license)
 
@@ -24,10 +24,11 @@
 | **Procedures**      | ✅     | 0–6 integer args via `rdi`..`r9`, `@returns("rax")`, no-paren syntax |
 | **Control flow**    | ✅     | `if/else/endif`, `while/endwhile` with `=`, `<`, `>` |
 | **Local variables** | ✅     | `var` block, stack frame with `[rbp-N]` addressing |
-| **CLI**             | ✅     | `build`, `emit-nasm`, `run`, `bench`, `test` + `--compile-only` |
-| **Test runner**     | ✅     | 66 unit tests + 12 sample integration tests |
+| **CLI**             | ✅     | `build`, `emit-nasm`, `run`, `bench`, `test`, `explain-abi`, `generate-header`, `generate-pinvoke` |
+| **Test runner**     | ✅     | 77 unit tests + 16 sample integration tests |
 | **Runtime contract**| ✅     | `HLAX64-RUNTIME-FUNCTION` headers in `src/HlaX64.Runtime/` |
-| **Windows x64**     | 🔜     | Planned (Fase 11) |
+| **Windows x64**     | ✅     | Implemented (Fase 11): `--target windows-x64-msabi`, RCX/RDX/R8/R9, 32-byte shadow space, `ExitProcess`, `WriteConsoleA` |
+| **C ABI export**    | ✅     | `export procedure`, `--output-kind shared-library`, C header + C# P/Invoke generators |
 
 > The MVP compiler inlines `sys_write` syscalls. A hand-written runtime
 > library (`src/HlaX64.Runtime/`) is provided for Fase 6+ (procedure-aware
@@ -144,7 +145,7 @@ HlaX64/
 | Target              | Status         | Compiler flag        |
 |---------------------|----------------|----------------------|
 | `linux-x64-sysv`    | ✅ Implemented | (default)            |
-| `windows-x64-msabi` | 🔜 Future      | (Fase 11)            |
+| `windows-x64-msabi` | ✅ Implemented | `--target windows-x64-msabi` |
 
 See [`docs/abi-linux-x64.md`](./docs/abi-linux-x64.md) for the Linux
 System V call convention details (argument registers, return register,
@@ -169,17 +170,18 @@ stack alignment, shadow space).
 
 ```
 $ dotnet test
-Passed!  - Failed: 0, Passed: 65, Skipped: 0, Total: 65
+Passed!  - Failed: 0, Passed: 77, Skipped: 0, Total: 77
 ```
 
 | Suite               | Count | Coverage |
 |---------------------|-------|----------|
 | `LexerTests`        | ~14   | Keywords, registers, literals, comments, positions |
 | `ParserTests`       | ~7    | Programs, calls, includes, control flow, procedures |
-| `NasmEmitterTests`  | ~20   | Instruction lowering, ABI, runtime markers, hello world |
+| `NasmEmitterTests`  | ~25   | Instruction lowering, ABI (SysV + Windows), runtime markers, hello world |
 | `SemanticAnalyzerTests` | ~7 | Register & instruction validation, diagnostics |
 | `TestRunnerTests`   | ~8    | Manifest loading, runner flow, source resolution |
-| **Total**           | **65** | All passing ✅ |
+| `WindowsAbiLowererTests` | ~11 | MS x64 arg regs, shadow space, stack alignment, calls, epilogue |
+| **Total**           | **77** | All passing ✅ |
 
 ---
 
@@ -201,10 +203,10 @@ Detail per fase ada di plan; ringkasan visual ada di
 | 7    | Control flow                         | ✅      |
 | 8    | Local variables & stack frame        | ✅      |
 | 9    | Test runner CLI                      | ✅      |
-| **9.5** | **Compiler Architecture Stabilization (IR, ABI lowerer, type system, runtime contract, native tests)** | 🛠 **Active** |
+| **9.5** | **Compiler Architecture Stabilization (IR, ABI lowerer, type system, runtime contract, native tests)** | ✅ |
 | 10   | Benchmark runner                     | ⏳      |
-| 11   | Windows x64 backend                  | ⏳      |
-| 12   | C ABI & C# interop generator         | ⏳      |
+| 11   | Windows x64 backend                  | ✅      |
+| 12   | C ABI & C# interop generator         | ✅      |
 | 13   | MCP server (for AI agents)           | ⏳      |
 | 14   | LSP & editor tooling                 | ⏳      |
 | 15   | AI Assembly Lab / IDE plugin         | ⏳      |

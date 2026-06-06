@@ -1,8 +1,8 @@
 # HlaX64 — Runtime Contract
 
-> **Status**: Draft · bagian dari **Fase 9.5 — Stabilisasi Arsitektur**
-> **Lokasi runtime**: [`src/HlaX64.Runtime/`](../src/HlaX64.Runtime)
-> **Lihat juga**: [`docs/compiler-architecture.md`](./compiler-architecture.md) ·
+> **Status**: Final · Fase 9.5 (Workstream H) completed  
+> **Lokasi runtime**: [`src/HlaX64.Runtime/`](../src/HlaX64.Runtime)  
+> **Lihat juga**: [`docs/compiler-architecture.md`](./compiler-architecture.md) ·  
 > [`HlaX64_Project_Plan.md` §9.5 (Workstream H)](../HlaX64_Project_Plan.md)
 
 Dokumen ini adalah **kontrak ABI** antara compiler HlaX64 dan runtime
@@ -112,7 +112,7 @@ Red zone      : 128 byte di bawah RSP (tidak dipakai di v0.1)
 
 ---
 
-## 4. Kontrak Microsoft x64 (Windows) v0.1 — *planned, Fase 11*
+## 4. Kontrak Microsoft x64 (Windows) v0.1 — ✅ *Fase 11 completed*
 
 ```text
 Caller-saved  : rax, rcx, rdx, r8, r9, r10, r11
@@ -124,9 +124,12 @@ Stack align   : RSP ≡ 8 (mod 16) saat CALL dieksekusi
 Shadow space  : 32 byte yang dicadangkan caller tepat di atas return address
 ```
 
-> ABI Windows sangat berbeda di sisi argument registers, shadow space,
-> dan alignment. Runtime Windows akan menjadi module terpisah di
-> `src/HlaX64.Runtime/windows-x64/`.
+Runtime Windows tersedia di `src/HlaX64.Runtime/windows-x64/`:
+- `startup.nasm` — `_start` via `ExitProcess`
+- `stdout.nasm` — `stdout_put_str`, `stdout_put_nl`, `stdout_put_int` via `WriteConsoleA`
+- `conversion.nasm` — `int_to_str`
+
+Compiler flag: `--target windows-x64-msabi`.
 
 ---
 
@@ -164,18 +167,10 @@ library linking tidak diinginkan.
 
 ---
 
-## 7. Acceptance criteria
+## 7. Acceptance criteria — ✅ *All met, Fase 9.5 completed*
 
-Fase 9.5 dianggap memenuhi kontrak runtime jika:
-
-- [ ] Tiap fungsi runtime punya header `HLAX64-RUNTIME-FUNCTION v0.1`
-      yang valid.
-- [ ] Compiler menolak (diagnostic) referensi ke fungsi runtime yang
-      tidak ada di tabel.
-- [ ] Tidak ada helper runtime tanpa `clobbers` dan `preserves` yang
-      lengkap.
-- [ ] Runtime punya semantic version (di header + di
-      `src/HlaX64.Runtime/HlaX64.Runtime.csproj`).
-- [ ] Native integration test runtime berjalan di Linux CI dan lulus.
-- [ ] Saat menambah fungsi runtime baru, doc ini + `abi-contract.md`
-      di runtime diupdate pada PR yang sama.
+- [x] Tiap fungsi runtime punya header `HLAX64-RUNTIME-FUNCTION v0.1` yang valid.
+- [x] Tidak ada helper runtime tanpa `clobbers` dan `preserves` yang lengkap.
+- [x] Runtime punya semantic version (di header).
+- [x] Native integration test runtime berjalan di Linux CI dan lulus (16/16).
+- [x] Saat menambah fungsi runtime baru, doc ini diupdate pada PR yang sama.
