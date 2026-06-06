@@ -1,0 +1,16 @@
+program export_lib;
+
+export procedure Double(x:int64); @returns("rax");
+begin Double;
+    mov(x, rax);
+    add(rax, rax);
+end Double;
+
+export procedure Add(a:int64; b:int64); @returns("rax");
+begin Add;
+    mov(a, rax);
+    add(b, rax);
+end Add;
+
+begin export_lib;
+end export_lib;

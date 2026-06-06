@@ -1,4 +1,5 @@
 using HlaX64.Compiler.Abi;
+using HlaX64.Compiler.Diagnostics;
 using HlaX64.Compiler.Ir;
 using HlaX64.Compiler.Lexing;
 using HlaX64.Compiler.Options;
@@ -14,6 +15,7 @@ public sealed class CompilationResult
     public List<LoweredFunction> LoweredFunctions { get; set; } = new();
     public List<StringLiteralInfo> StringLiterals { get; set; } = new();
     public List<string> Diagnostics { get; set; } = new();
+    public List<Diagnostic> StructuredDiagnostics { get; set; } = new();
 }
 
 public class Compilation
@@ -54,7 +56,10 @@ public class Compilation
             if (semDiags.HasErrors)
             {
                 foreach (var diag in semDiags.Diagnostics)
-                    result.Diagnostics.Add($"Semantic error: {diag.Message}");
+                {
+                    result.StructuredDiagnostics.Add(diag);
+                    result.Diagnostics.Add(diag.ToString());
+                }
                 result.Success = false;
                 return result;
             }

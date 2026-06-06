@@ -5,7 +5,7 @@
 > assemble, link, and run — all from a single `hla64` CLI.
 
 [![Status](https://img.shields.io/badge/Fase%200%E2%80%9313-Done-green)](./docs/roadmap.md)
-[![Tests](https://img.shields.io/badge/tests-83%2F83%20+%2016%2F16%20native-2ea44f)](#test-status)
+[![Tests](https://img.shields.io/badge/tests-91%2F91%20+%2016%2F16%20native-2ea44f)](#test-status)
 [![Target](https://img.shields.io/badge/target-linux--x64--sysv%20|%20windows--x64--msabi-1f6feb)](#targets)
 [![Language](https://img.shields.io/badge/language-v0.1%20Draft-blueviolet)](#language-reference)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](#license)
@@ -57,8 +57,8 @@
 
 | Area                | Status | Details |
 |---------------------|--------|---------|
-| **CLI**             | ✅     | `build`, `emit-nasm`, `run`, `bench`, `test`, `explain-abi`, `generate-header`, `generate-pinvoke` |
-| **Test runner**     | ✅     | 83 unit tests + 16 sample integration tests |
+| **CLI**             | ✅     | `build`, `emit-nasm`, `run`, `test`, `bench`, `explain`, `explain-abi`, `format`, `generate-header`, `generate-pinvoke`, `doctor` |
+| **Test runner**     | ✅     | 91 unit tests + 16 sample integration tests |
 | **Benchmark runner**| ✅     | `hla64 bench` with warmup, median, binary size, JSON manifest |
 | **MCP server**      | ✅     | 9 tools via stdio JSON-RPC for AI agents: compile, build, run, test, explain-abi, generate-header, generate-pinvoke, get-version, list-instructions |
 | **ABI explainer**   | ✅     | `hla64 explain-abi --target linux-x64-sysv` (or `windows-x64-msabi`) |
@@ -163,7 +163,7 @@ HlaX64/
 │  ├─ HlaX64.Runtime/         # Runtime library (Linux + Windows)
 │  └─ HlaX64.McpServer/       # MCP server for AI agent integration
 ├─ tests/
-│  ├─ HlaX64.Compiler.Tests/  # xUnit suite (83 tests)
+│  ├─ HlaX64.Compiler.Tests/  # xUnit suite (91 tests)
 │  └─ samples/                # Integration test manifests + expected output
 ├─ benchmarks/                # Benchmark manifests
 ├─ examples/                  # *.hla64 sample programs
@@ -191,7 +191,7 @@ HlaX64/
 
 ```
 $ dotnet test
-Passed!  - Failed: 0, Passed: 83, Skipped: 0, Total: 83
+Passed!  - Failed: 0, Passed: 91, Skipped: 0, Total: 91
 ```
 
 | Suite               | Count | Coverage |
@@ -202,7 +202,7 @@ Passed!  - Failed: 0, Passed: 83, Skipped: 0, Total: 83
 | `SemanticAnalyzerTests` | ~7 | Register & instruction validation, diagnostics |
 | `TestRunnerTests`   | ~8    | Manifest loading, runner flow, source resolution |
 | `WindowsAbiLowererTests` | ~11 | MS x64 arg regs, shadow space, stack alignment, calls, epilogue |
-| **Total**           | **83** | All passing ✅ |
+| **Total**           | **91** | All passing ✅ |
 
 ---
 

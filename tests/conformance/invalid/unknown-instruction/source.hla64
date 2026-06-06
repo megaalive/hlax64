@@ -1,0 +1,4 @@
+program bad;
+begin bad;
+    movz(1, rax);
+end bad;

@@ -1,0 +1,4 @@
+program bad;
+begin bad;
+    mov(1, raxz);
+end bad;

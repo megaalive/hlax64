@@ -13,6 +13,16 @@ Setup, build, test, and debug HlaX64 locally.
 
 Run `hla64 doctor` (or `dotnet run --project src/HlaX64.Cli -- doctor`) to verify your environment.
 
+### Install as global tool
+
+```bash
+dotnet pack src/HlaX64.Cli/HlaX64.Cli.csproj -c Release
+dotnet tool install --global --add-source ./src/HlaX64.Cli/bin/Release HlaX64.Cli
+hla64 --version
+```
+
+Or run from source without installing (below).
+
 ## Clone and build
 
 ```bash
@@ -56,7 +66,10 @@ src/HlaX64.Cli/          hla64 commands
 src/HlaX64.McpServer/    MCP JSON-RPC server
 tests/HlaX64.Compiler.Tests/  xUnit
 tests/samples/           Native integration manifests
-examples/                User-facing sample programs
+examples/                User-facing sample programs (16 curriculum examples)
+editors/vscode/          VS Code grammar + snippets
+rfcs/                    Design RFCs
+tests/conformance/       Valid/invalid language conformance cases
 docs/                    Specifications and guides
 schemas/                 JSON Schema for CLI machine output
 ```
@@ -68,6 +81,8 @@ See [compiler-architecture.md](compiler-architecture.md) for the full pipeline.
 | Task | Command |
 |------|---------|
 | Emit NASM only | `hla64 emit-nasm file.hla64` |
+| Inspect lowering | `hla64 explain file.hla64` |
+| Check formatting | `hla64 format examples --check` |
 | Inspect ABI | `hla64 explain-abi --target linux-x64-sysv` |
 | Machine-readable test results | `hla64 test tests/samples --json` |
 | Benchmark | `hla64 bench benchmarks/count.json` |

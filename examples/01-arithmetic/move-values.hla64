@@ -1,0 +1,6 @@
+program move_values;
+begin move_values;
+    mov(10, rax);
+    mov(rax, rbx);
+    add(5, rbx);
+end move_values;

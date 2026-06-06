@@ -24,6 +24,12 @@ app.Configure(config =>
     config.AddCommand<ExplainAbiCommand>("explain-abi")
         .WithDescription("Print ABI details for a target triple (e.g. linux-x64-sysv, windows-x64-msabi)");
 
+    config.AddCommand<ExplainCommand>("explain")
+        .WithDescription("Show IR, ABI lowering, and NASM for a .hla64 source file");
+
+    config.AddCommand<FormatCommand>("format")
+        .WithDescription("Format .hla64 source files (optional --check)");
+
     config.AddCommand<BenchCommand>("bench")
         .WithDescription("Benchmark .hla64 programs (warmup + measured iterations)");
 
