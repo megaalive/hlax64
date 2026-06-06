@@ -132,4 +132,8 @@ internal sealed class ProcedureStackMap
     public bool TryGetLayout(string name, out IrLocalLayout layout) => _layouts.TryGetValue(name, out layout!);
 
     private static string SlotAt(int slotIndex) => $"[rbp{-slotIndex * 8}]";
+
+    /// <summary>Callee stack slot for a parameter passed on the stack (after prologue).</summary>
+    public static string StackParamSource(int paramIndex, int registerArgCount, int firstStackArgOffset)
+        => $"[rbp+{firstStackArgOffset + (paramIndex - registerArgCount) * 8}]";
 }

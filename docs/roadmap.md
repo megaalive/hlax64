@@ -32,7 +32,7 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 | 14 | LSP & editor tooling | ✅ MVP | diagnostics, hover, completion, go-to-definition, document symbols, format-on-save; VS Code client |
 | 15 | AI Assembly Lab / GUI | ⏳ Pending | eksperimen UI (Avalonia/WPF) |
 | **16** | **Language core completion** | ✅ Done | const, expressions, enum, record, static, string model |
-| 17 | ABI and FFI completion | ⏳ | stack args, float ABI, function pointers, external libs |
+| 17 | ABI and FFI completion | ⏳ | Sprint 1 ✅ stack args; Sprint 2+ extern, float, fn ptr |
 | 18 | Compiler verification | ⏳ | definite assignment, CFG/stack/ABI verifiers, fuzz expansion |
 | 19 | Debug and explainability | ⏳ | source map, DWARF MVP, disassembly, trace mode |
 | 20 | Optimization | ⏳ | const fold/prop, DCE, peephole, regalloc |
@@ -49,6 +49,11 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 - **Sprint 4 (done):** `record`/`endrecord`, natural layout, field access, `sizeof`/`offsetof` (RFC 0006)
 - **Sprint 5 (done):** `static`/`endstatic`, `.data`/`.bss`, `cstring`, `utf8slice` (RFC 0007/0008)
 - **Sprint 5+ (done):** `packed` records, procedure-scoped enum/record, enum auto-increment
+
+### Phase 17 sprint notes
+
+- **Sprint 1 (done):** stack arguments beyond register limit (SysV 7+, Windows 5+); RFC 0009; example `stack-args-sysv.hla64`
+- **Sprint 2+ (planned):** float/xmm ABI, `extern`, function pointers, struct by-value, variadic
 
 ---
 

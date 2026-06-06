@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ### Added
 
+- **Phase 17 Sprint 1:** stack arguments beyond register limit (SysV 7+, Windows 5+); callee prologue loads from caller stack; call sites push/allocate per ABI; RFC 0009; example `examples/06-abi/stack-args-sysv.hla64`; sample `procedure_8args`; conformance `stack-args`
 - **Phase 16 Sprint 5:** program-scope `static`/`endstatic` (`.data`/`.bss` globals); `cstring` type alias; built-in `utf8slice` record; HLAX0045–49; RFC 0007/0008; examples `global-counter.hla64`, `cstring-walk.hla64`
 - **Phase 16 Sprint 5+:** `packed record`; procedure-scoped `enum`/`record`; enum auto-increment members (`Red := 1; Green; Blue;`)
 - LSP grammar: `static`, `endstatic`, `cstring`, `utf8slice`, `packed`; formatter support

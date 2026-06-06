@@ -1,0 +1,23 @@
+// stack-args-sysv.hla64
+// Eight integer arguments: first six in rdi..r9, seventh and eighth on the stack.
+
+program stack_args_sysv;
+
+#include("stdlib64.hhf")
+
+procedure Sum8(a:int64; b:int64; c:int64; d:int64; e:int64; f:int64; g:int64; h:int64); @returns("rax");
+begin Sum8;
+    mov(a, rax);
+    add(b, rax);
+    add(c, rax);
+    add(d, rax);
+    add(e, rax);
+    add(f, rax);
+    add(g, rax);
+    add(h, rax);
+end Sum8;
+
+begin stack_args_sysv;
+    call Sum8(1, 2, 3, 4, 5, 6, 7, 8);
+    stdout.put("1+2+3+4+5+6+7+8 = ", rax, nl);
+end stack_args_sysv;
