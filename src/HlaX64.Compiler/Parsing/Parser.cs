@@ -409,6 +409,13 @@ public sealed class Parser
         return token;
     }
 
+    private static T WithLocation<T>(T node, Token token) where T : AstNode
+    {
+        node.Line = token.Line;
+        node.Column = token.Column;
+        return node;
+    }
+
     private Token Expect(TokenType expected)
     {
         var token = Peek();

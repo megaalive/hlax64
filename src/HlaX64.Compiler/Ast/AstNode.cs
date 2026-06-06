@@ -6,6 +6,8 @@ namespace HlaX64.Compiler.Ast;
 public abstract class AstNode
 {
     public abstract string Kind { get; }
+    public int Line { get; set; }
+    public int Column { get; set; }
 }
 
 /// <summary>
