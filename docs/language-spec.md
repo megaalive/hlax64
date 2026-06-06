@@ -213,7 +213,25 @@ endconst;
 - Uses: immediate operands (`mov(BufferSize, rax)`), array sizes (`var buf: byte[BufferSize];`).
 - Errors: undefined name (`HLAX0031`), divide by zero (`HLAX0032`), overflow (`HLAX0033`), duplicate (`HLAX0034`).
 
-Runtime assignment expressions (`result := a + b;`) are **planned** — see [RFC 0004](../rfcs/0004-expressions-and-constants.md).
+## Runtime expressions (Implemented — RFC 0004 Sprint 2)
+
+Assign to int64 scalar locals or 64-bit registers:
+
+```hla
+var a: int64;
+var b: int64;
+a := 10;
+b := (a + 3) * 2;
+rax := a == b;
+mask := value & $FF;
+```
+
+- Operators: `+`, `-`, `*`, `/`, `%`, `&`, `|`, `^`, `~`, `<<`, `>>`, and comparisons `==`, `!=`, `<`, `<=`, `>`, `>=`.
+- R-values: locals, registers, decimal/hex literals, const names, parentheses.
+- **Expression evaluation clobbers `rax` and `rbx`** as scratch registers; do not assume they retain values across `:=` statements.
+- Errors: invalid target (`HLAX0035`), unknown name (`HLAX0036`), array in expression (`HLAX0037`), zero divisor (`HLAX0038`).
+
+See [RFC 0004](../rfcs/0004-expressions-and-constants.md).
 
 ## Memory & pointers (Implemented — Level 3 baseline)
 

@@ -1,0 +1,18 @@
+program ok;
+procedure P; @returns("rax");
+const
+    Two := 2;
+endconst;
+var
+    a: int64;
+    b: int64;
+begin P;
+    a := 5;
+    b := 3;
+    rax := (a + b) * Two;
+    rax := rax % 4;
+end P;
+begin ok;
+    call P();
+    mov(rax, rbx);
+end ok;

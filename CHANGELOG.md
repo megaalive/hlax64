@@ -8,10 +8,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ### Added
 
+- **Phase 16 Sprint 2:** runtime `:=` assignment for int64 scalar locals and 64-bit registers; operators `+ - * / % & | ^ ~ << >>` and comparisons `== != < <= > >=`; IR + SysV/Win64 NASM lowering; HLAX0035–HLAX0038; example `examples/01-arithmetic/expr-assign.hla64`; conformance `expr-assign`, `expr-invalid-target`, `expr-divide-by-zero`
+- Expression evaluation uses **`rax`/`rbx` as scratch** (documented in RFC 0004 and language spec)
+- LSP grammar: `const`, `endconst`, `:=`, hex `$..`; formatter support for `:=` statements
+
+### Added
+
 - **Phase 16 Sprint 1:** compile-time `const` / `endconst` blocks with `:=` assignments and int64 expression evaluation (`+ - * / % & | ^ ~ << >>`, hex `$FF`); use in immediates and `type[ConstName]` array sizes (RFC 0004)
 - Diagnostics HLAX0031–HLAX0034 for const errors; example `examples/05-memory/const-buffer-size.hla64`; conformance cases `const-expressions`, `const-divide-by-zero`
 - `docs/memory-model.md` (cstring / utf8slice concepts, implemented vs planned); Phases 16–24 in `docs/roadmap.md`
-- RFC [0004](rfcs/0004-expressions-and-constants.md) (const implemented; runtime `:=` expressions planned)
+- RFC [0004](rfcs/0004-expressions-and-constants.md) (const + runtime `:=` expressions implemented)
 
 ### Changed
 

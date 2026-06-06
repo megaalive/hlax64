@@ -50,6 +50,7 @@ executable / shared library / DLL
 - Integer type registry (`int64`, `uint64`, `byte`, `ptr`, …)
 - Instruction / register validation, narrowing checks
 - Compile-time `const` blocks (RFC 0004): expression evaluation, HLAX0031–34
+- Runtime `:=` expressions (RFC 0004 Sprint 2): int64 locals/registers, HLAX0035–38; eval clobbers `rax`/`rbx`
 - Optional bounds warnings (HLAX0030)
 
 ### IR (v0.1)

@@ -1,0 +1,4 @@
+{
+  "source": "source.hla64",
+  "expectNasmContains": ["add rax", "imul rax", "idiv", "mov rax, rdx"]
+}

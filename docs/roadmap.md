@@ -80,7 +80,8 @@ Fase 13 (MCP) →  Fase 14 (LSP) →  Fase 15 (GUI)
 > *Fase 9.5 Workstream A–H done. Docs sync complete. Fase 10 (Bench), 11 (Windows), 12 (C# interop), 13 (MCP) all done.
 > **Level 3 memory curriculum** (RFC 0002/0003) — pointers, indexed `[reg+N]`, stack arrays `type[N]` (incl. packed `byte[N]`), string walk, optional `-Wbounds` (HLAX0030).
 > **Fase 14 LSP MVP** — diagnostics (incl. bounds warnings), hover, completion, go-to-definition, document symbols, format-on-save; VS Code language client.
-> Next: Phase 16 Sprint 2 (runtime expressions), then Fase 15 (GUI / AI Assembly Lab).
+> **Phase 16 Sprint 2 done** — runtime `:=` expressions for int64 scalars (`+ - * / % & | ^ ~ << >>`, comparisons); HLAX0035–38; example `expr-assign.hla64`.
+> Next: Fase 15 (GUI / AI Assembly Lab).
 
 ---
 

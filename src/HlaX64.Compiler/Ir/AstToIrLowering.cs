@@ -95,9 +95,129 @@ public sealed class AstToIrLowering
                 return LowerIf(ifNode, block, func);
             case WhileNode whileNode:
                 return LowerWhile(whileNode, block, func);
+            case AssignExprNode assign:
+                LowerAssignExpr(assign, block);
+                return block;
         }
         return block;
     }
+
+    private void LowerAssignExpr(AssignExprNode assign, IrBasicBlock block)
+    {
+        var dest = ResolveAssignTarget(assign.Target);
+        LowerRuntimeExpression(assign.Expression, dest, block);
+    }
+
+    private IrValue ResolveAssignTarget(AstNode target)
+    {
+        return target switch
+        {
+            RegisterNode reg => GetOrCreateValue(reg.Name),
+            IdentifierNode ident => GetOrCreateValue(ident.Name),
+            _ => GetOrCreateValue("rax")
+        };
+    }
+
+    private void LowerRuntimeExpression(AstNode expr, IrValue dest, IrBasicBlock block)
+    {
+        switch (expr)
+        {
+            case IntegerLiteralNode lit:
+                block.Add(new IrInstruction(IrOpcode.LoadConstant, dest, immediate: lit.Value));
+                return;
+            case RegisterNode reg:
+                block.Add(new IrInstruction(IrOpcode.Move, dest, new List<IrValue> { GetOrCreateValue(reg.Name) }));
+                return;
+            case IdentifierNode ident:
+                block.Add(new IrInstruction(IrOpcode.Move, dest, new List<IrValue> { ResolveOperand(ident) }));
+                return;
+            case UnaryExprNode unary:
+                LowerRuntimeUnary(unary, dest, block);
+                return;
+            case BinaryExprNode binary:
+                LowerRuntimeBinary(binary, dest, block);
+                return;
+        }
+    }
+
+    private void LowerRuntimeUnary(UnaryExprNode unary, IrValue dest, IrBasicBlock block)
+    {
+        var scratchRax = GetOrCreateValue("rax");
+        LowerRuntimeExpression(unary.Operand, scratchRax, block);
+
+        if (unary.Operator == "-")
+        {
+            block.Add(new IrInstruction(IrOpcode.LoadConstant, GetOrCreateValue("rbx"), immediate: 0L));
+            block.Add(new IrInstruction(IrOpcode.Subtract, scratchRax,
+                new List<IrValue> { GetOrCreateValue("rbx") }));
+        }
+        else if (unary.Operator == "~")
+        {
+            block.Add(new IrInstruction(IrOpcode.BitwiseNot, scratchRax,
+                new List<IrValue> { scratchRax }));
+        }
+
+        if (!SameValue(dest, scratchRax))
+            block.Add(new IrInstruction(IrOpcode.Move, dest, new List<IrValue> { scratchRax }));
+    }
+
+    private void LowerRuntimeBinary(BinaryExprNode binary, IrValue dest, IrBasicBlock block)
+    {
+        var scratchRax = GetOrCreateValue("rax");
+        var scratchRbx = GetOrCreateValue("rbx");
+
+        if (IsComparisonOperator(binary.Operator))
+        {
+            LowerRuntimeExpression(binary.Left, scratchRax, block);
+            LowerRuntimeExpression(binary.Right, scratchRbx, block);
+            block.Add(new IrInstruction(IrOpcode.CompareToBool, dest,
+                new List<IrValue> { scratchRax, scratchRbx })
+            {
+                CmpKind = MapComparisonOperator(binary.Operator)
+            });
+            return;
+        }
+
+        LowerRuntimeExpression(binary.Left, scratchRax, block);
+        LowerRuntimeExpression(binary.Right, scratchRbx, block);
+
+        var opcode = binary.Operator switch
+        {
+            "+" => IrOpcode.Add,
+            "-" => IrOpcode.Subtract,
+            "*" => IrOpcode.Multiply,
+            "/" => IrOpcode.Divide,
+            "%" => IrOpcode.Modulo,
+            "&" => IrOpcode.BitwiseAnd,
+            "|" => IrOpcode.BitwiseOr,
+            "^" => IrOpcode.BitwiseXor,
+            "<<" => IrOpcode.ShiftLeft,
+            ">>" => IrOpcode.ShiftRight,
+            _ => IrOpcode.Move
+        };
+
+        block.Add(new IrInstruction(opcode, scratchRax, new List<IrValue> { scratchRbx }));
+
+        if (!SameValue(dest, scratchRax))
+            block.Add(new IrInstruction(IrOpcode.Move, dest, new List<IrValue> { scratchRax }));
+    }
+
+    private static bool IsComparisonOperator(string op)
+        => op is "==" or "!=" or "<" or "<=" or ">" or ">=";
+
+    private static CompareKind MapComparisonOperator(string op) => op switch
+    {
+        "==" => CompareKind.Equal,
+        "!=" => CompareKind.NotEqual,
+        "<" => CompareKind.LessThanSigned,
+        "<=" => CompareKind.LessOrEqualSigned,
+        ">" => CompareKind.GreaterThanSigned,
+        ">=" => CompareKind.GreaterOrEqualSigned,
+        _ => CompareKind.Equal
+    };
+
+    private static bool SameValue(IrValue a, IrValue b)
+        => string.Equals(a.Name, b.Name, StringComparison.OrdinalIgnoreCase);
 
     private void LowerInstruction(InstructionNode instr, IrBasicBlock block)
     {

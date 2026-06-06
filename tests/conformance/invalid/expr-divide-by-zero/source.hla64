@@ -1,0 +1,8 @@
+program bad;
+procedure P; @returns("rax");
+var x: int64;
+begin P;
+    x := 1 / 0;
+end P;
+begin bad;
+end bad;

@@ -127,7 +127,21 @@ public sealed class Lexer
 
             case '=':
                 Advance();
+                if (_pos < _source.Length && _source[_pos] == '=')
+                {
+                    Advance();
+                    return CreateToken(TokenType.DoubleEquals, "==", line, col);
+                }
                 return CreateToken(TokenType.Equals, "=", line, col);
+
+            case '!':
+                Advance();
+                if (_pos < _source.Length && _source[_pos] == '=')
+                {
+                    Advance();
+                    return CreateToken(TokenType.NotEquals, "!=", line, col);
+                }
+                return CreateToken(TokenType.Unknown, "!", line, col);
 
             case '<':
                 Advance();
@@ -135,6 +149,11 @@ public sealed class Lexer
                 {
                     Advance();
                     return CreateToken(TokenType.ShiftLeft, "<<", line, col);
+                }
+                if (_pos < _source.Length && _source[_pos] == '=')
+                {
+                    Advance();
+                    return CreateToken(TokenType.LessOrEqual, "<=", line, col);
                 }
                 if (_pos < _source.Length && _source[_pos] == '?')
                 {
@@ -149,6 +168,11 @@ public sealed class Lexer
                 {
                     Advance();
                     return CreateToken(TokenType.ShiftRight, ">>", line, col);
+                }
+                if (_pos < _source.Length && _source[_pos] == '=')
+                {
+                    Advance();
+                    return CreateToken(TokenType.GreaterOrEqual, ">=", line, col);
                 }
                 if (_pos < _source.Length && _source[_pos] == '?')
                 {

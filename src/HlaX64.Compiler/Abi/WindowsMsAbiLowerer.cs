@@ -124,6 +124,15 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
             IrOpcode.Add => LowerBinaryRmw(inst, "add"),
             IrOpcode.Subtract => LowerBinaryRmw(inst, "sub"),
             IrOpcode.Multiply => LowerBinaryRmw(inst, "imul"),
+            IrOpcode.Divide => LowerDivide(inst),
+            IrOpcode.Modulo => LowerModulo(inst),
+            IrOpcode.BitwiseAnd => LowerBinaryRmw(inst, "and"),
+            IrOpcode.BitwiseOr => LowerBinaryRmw(inst, "or"),
+            IrOpcode.BitwiseXor => LowerBinaryRmw(inst, "xor"),
+            IrOpcode.BitwiseNot => LowerUnaryNot(inst),
+            IrOpcode.ShiftLeft => LowerShift(inst, "shl"),
+            IrOpcode.ShiftRight => LowerShift(inst, "sar"),
+            IrOpcode.CompareToBool => LowerCompareToBool(inst),
             IrOpcode.Compare => LowerCompare(inst),
             IrOpcode.Branch => new LoweredInstruction($"    jmp {inst.TargetBlock}"),
             IrOpcode.ConditionalBranch => LowerConditionalBranch(inst),
@@ -196,6 +205,85 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
         var dst = ResolveOperand(inst.Destination);
         var src = inst.Operands.Count > 0 ? ResolveOperand(inst.Operands[0]) : dst;
         return new LoweredInstruction($"    {asmMnemonic} {dst}, {src}");
+    }
+
+    private LoweredInstruction LowerDivide(IrInstruction inst)
+    {
+        var divisor = inst.Operands.Count > 0 ? ResolveOperand(inst.Operands[0]) : "1";
+        var dst = ResolveOperand(inst.Destination);
+        var sb = new System.Text.StringBuilder();
+        if (!string.Equals(dst, "rax", StringComparison.OrdinalIgnoreCase))
+            sb.AppendLine($"    mov rax, {dst}");
+        sb.AppendLine("    cqo");
+        sb.AppendLine($"    idiv {divisor}");
+        if (!string.Equals(dst, "rax", StringComparison.OrdinalIgnoreCase))
+            sb.AppendLine($"    mov {dst}, rax");
+        return new LoweredInstruction(sb.ToString().TrimEnd());
+    }
+
+    private LoweredInstruction LowerModulo(IrInstruction inst)
+    {
+        var divisor = inst.Operands.Count > 0 ? ResolveOperand(inst.Operands[0]) : "1";
+        var dst = ResolveOperand(inst.Destination);
+        var sb = new System.Text.StringBuilder();
+        if (!string.Equals(dst, "rax", StringComparison.OrdinalIgnoreCase))
+            sb.AppendLine($"    mov rax, {dst}");
+        sb.AppendLine("    cqo");
+        sb.AppendLine($"    idiv {divisor}");
+        sb.AppendLine($"    mov {dst}, rdx");
+        return new LoweredInstruction(sb.ToString().TrimEnd());
+    }
+
+    private LoweredInstruction LowerUnaryNot(IrInstruction inst)
+    {
+        var dst = ResolveOperand(inst.Destination);
+        var src = inst.Operands.Count > 0 ? ResolveOperand(inst.Operands[0]) : dst;
+        if (!string.Equals(dst, src, StringComparison.Ordinal))
+            return new LoweredInstruction($"    mov {dst}, {src}\n    not {dst}");
+        return new LoweredInstruction($"    not {dst}");
+    }
+
+    private LoweredInstruction LowerShift(IrInstruction inst, string asmMnemonic)
+    {
+        var dst = ResolveOperand(inst.Destination);
+        var src = inst.Operands.Count > 0 ? inst.Operands[0] : null;
+        if (src?.Name?.StartsWith("imm:", StringComparison.Ordinal) == true)
+        {
+            var count = src.Name.Substring(4);
+            return new LoweredInstruction($"    {asmMnemonic} {dst}, {count}");
+        }
+
+        var countReg = ResolveOperand(src);
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine($"    mov rcx, {countReg}");
+        sb.AppendLine($"    {asmMnemonic} {dst}, cl");
+        return new LoweredInstruction(sb.ToString().TrimEnd());
+    }
+
+    private LoweredInstruction LowerCompareToBool(IrInstruction inst)
+    {
+        var left = inst.Operands.Count > 0 ? ResolveOperand(inst.Operands[0]) : "0";
+        var right = inst.Operands.Count > 1 ? ResolveOperand(inst.Operands[1]) : "0";
+        var dst = ResolveOperand(inst.Destination);
+        var setcc = inst.CmpKind switch
+        {
+            CompareKind.Equal => "sete",
+            CompareKind.NotEqual => "setne",
+            CompareKind.LessThanSigned => "setl",
+            CompareKind.LessOrEqualSigned => "setle",
+            CompareKind.GreaterThanSigned => "setg",
+            CompareKind.GreaterOrEqualSigned => "setge",
+            _ => "sete"
+        };
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine($"    cmp {left}, {right}");
+        sb.AppendLine($"    {setcc} al");
+        if (string.Equals(dst, "rax", StringComparison.OrdinalIgnoreCase))
+            sb.Append("    movzx rax, al");
+        else
+            sb.Append($"    movzx {dst}, al");
+        return new LoweredInstruction(sb.ToString().TrimEnd());
     }
 
     private static bool IsMemRef(IrValue? value)

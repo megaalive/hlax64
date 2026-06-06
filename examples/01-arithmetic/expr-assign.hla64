@@ -1,0 +1,21 @@
+program expr_assign;
+
+procedure Demo; @returns("rax");
+const
+    Scale := 4;
+endconst;
+var
+    a: int64;
+    b: int64;
+    result: int64;
+begin Demo;
+    a := 10;
+    b := 3;
+    result := (a + b) * Scale;
+    rax := result & $FF;
+end Demo;
+
+begin expr_assign;
+    call Demo();
+    mov(rax, rbx);
+end expr_assign;

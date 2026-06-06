@@ -130,6 +130,15 @@ public sealed class Parser
             return ParseCallWithDot();
         }
 
+        // Runtime assignment: ident := expr; or rax := expr;
+        if (TryParseAssignTarget(out var target))
+        {
+            Expect(TokenType.ColonAssign);
+            var expr = ParseRuntimeExpression();
+            Expect(TokenType.Semicolon);
+            return WithLocation(new AssignExprNode(target, expr), token);
+        }
+
         // call AddTwo(...)
         if (token.Type == TokenType.Identifier && _pos + 1 < _tokens.Count && 
             (_tokens[_pos + 1].Type == TokenType.LeftParen || 
@@ -377,6 +386,168 @@ public sealed class Parser
 
         throw new ParseException(
             $"Expected integer literal, constant name, or '(' in compile-time expression but got '{token.Type}' ('{token.Value}') at line {token.Line}, column {token.Column}");
+    }
+
+    private bool TryParseAssignTarget(out AstNode target)
+    {
+        target = null!;
+        var token = Peek();
+        if (token.Type == TokenType.Identifier &&
+            _pos + 1 < _tokens.Count &&
+            _tokens[_pos + 1].Type == TokenType.ColonAssign)
+        {
+            var name = Advance().Value;
+            target = WithLocation(new IdentifierNode(name), token);
+            return true;
+        }
+
+        if (IsRegisterToken(token.Type) &&
+            _pos + 1 < _tokens.Count &&
+            _tokens[_pos + 1].Type == TokenType.ColonAssign)
+        {
+            var reg = Advance().Value.ToLowerInvariant();
+            target = WithLocation(new RegisterNode(reg), token);
+            return true;
+        }
+
+        return false;
+    }
+
+    private AstNode ParseRuntimeExpression()
+    {
+        return ParseRuntimeComparison();
+    }
+
+    private AstNode ParseRuntimeComparison()
+    {
+        var left = ParseRuntimeBitwiseOr();
+        while (Peek().Type is TokenType.DoubleEquals or TokenType.NotEquals or TokenType.LessThan
+            or TokenType.GreaterThan or TokenType.LessOrEqual or TokenType.GreaterOrEqual)
+        {
+            var op = Advance();
+            var right = ParseRuntimeBitwiseOr();
+            left = WithLocation(new BinaryExprNode(left, op.Value, right), op);
+        }
+        return left;
+    }
+
+    private AstNode ParseRuntimeBitwiseOr()
+    {
+        var left = ParseRuntimeBitwiseXor();
+        while (Peek().Type == TokenType.Pipe)
+        {
+            var op = Advance();
+            var right = ParseRuntimeBitwiseXor();
+            left = WithLocation(new BinaryExprNode(left, "|", right), op);
+        }
+        return left;
+    }
+
+    private AstNode ParseRuntimeBitwiseXor()
+    {
+        var left = ParseRuntimeBitwiseAnd();
+        while (Peek().Type == TokenType.Caret)
+        {
+            var op = Advance();
+            var right = ParseRuntimeBitwiseAnd();
+            left = WithLocation(new BinaryExprNode(left, "^", right), op);
+        }
+        return left;
+    }
+
+    private AstNode ParseRuntimeBitwiseAnd()
+    {
+        var left = ParseRuntimeShift();
+        while (Peek().Type == TokenType.Ampersand)
+        {
+            var op = Advance();
+            var right = ParseRuntimeShift();
+            left = WithLocation(new BinaryExprNode(left, "&", right), op);
+        }
+        return left;
+    }
+
+    private AstNode ParseRuntimeShift()
+    {
+        var left = ParseRuntimeAdditive();
+        while (Peek().Type is TokenType.ShiftLeft or TokenType.ShiftRight)
+        {
+            var op = Advance();
+            var right = ParseRuntimeAdditive();
+            left = WithLocation(new BinaryExprNode(left, op.Value, right), op);
+        }
+        return left;
+    }
+
+    private AstNode ParseRuntimeAdditive()
+    {
+        var left = ParseRuntimeMultiplicative();
+        while (Peek().Type is TokenType.Plus or TokenType.Minus)
+        {
+            var op = Advance();
+            var right = ParseRuntimeMultiplicative();
+            left = WithLocation(new BinaryExprNode(left, op.Value, right), op);
+        }
+        return left;
+    }
+
+    private AstNode ParseRuntimeMultiplicative()
+    {
+        var left = ParseRuntimeUnary();
+        while (Peek().Type is TokenType.Star or TokenType.Slash or TokenType.Percent)
+        {
+            var op = Advance();
+            var right = ParseRuntimeUnary();
+            left = WithLocation(new BinaryExprNode(left, op.Value, right), op);
+        }
+        return left;
+    }
+
+    private AstNode ParseRuntimeUnary()
+    {
+        var token = Peek();
+        if (token.Type is TokenType.Minus or TokenType.Tilde)
+        {
+            Advance();
+            var operand = ParseRuntimeUnary();
+            return WithLocation(new UnaryExprNode(token.Value, operand), token);
+        }
+
+        return ParseRuntimePrimary();
+    }
+
+    private AstNode ParseRuntimePrimary()
+    {
+        var token = Peek();
+
+        if (token.Type == TokenType.LeftParen)
+        {
+            Advance();
+            var expr = ParseRuntimeExpression();
+            Expect(TokenType.RightParen);
+            return expr;
+        }
+
+        if (token.Type == TokenType.IntegerLiteral)
+        {
+            Advance();
+            return new IntegerLiteralNode(long.Parse(token.Value));
+        }
+
+        if (token.Type == TokenType.Identifier)
+        {
+            Advance();
+            return new IdentifierNode(token.Value);
+        }
+
+        if (IsRegisterToken(token.Type))
+        {
+            Advance();
+            return new RegisterNode(token.Value.ToLowerInvariant());
+        }
+
+        throw new ParseException(
+            $"Expected integer literal, name, register, or '(' in runtime expression but got '{token.Type}' ('{token.Value}') at line {token.Line}, column {token.Column}");
     }
 
     private ParameterNode ParseParameter()

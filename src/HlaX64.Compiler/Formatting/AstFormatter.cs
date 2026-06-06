@@ -123,8 +123,28 @@ public static class AstFormatter
                 EmitStatements(sb, whileNode.Body, indent + 1);
                 sb.AppendLine($"{pad}endwhile;");
                 break;
+            case AssignExprNode assign:
+                sb.AppendLine($"{pad}{EmitAssignTarget(assign.Target)} := {EmitRuntimeExpr(assign.Expression)};");
+                break;
         }
     }
+
+    private static string EmitAssignTarget(AstNode target) => target switch
+    {
+        RegisterNode r => r.Name,
+        IdentifierNode id => id.Name,
+        _ => "?"
+    };
+
+    private static string EmitRuntimeExpr(AstNode node) => node switch
+    {
+        IntegerLiteralNode i => i.Value.ToString(),
+        IdentifierNode id => id.Name,
+        RegisterNode r => r.Name,
+        UnaryExprNode u => $"{u.Operator}{EmitRuntimeExpr(u.Operand)}",
+        BinaryExprNode b => $"({EmitRuntimeExpr(b.Left)} {b.Operator} {EmitRuntimeExpr(b.Right)})",
+        _ => "?"
+    };
 
     private static string EmitCondition(AstNode condition)
     {
