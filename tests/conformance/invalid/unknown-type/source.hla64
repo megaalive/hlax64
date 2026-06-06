@@ -1,0 +1,11 @@
+program bad;
+
+procedure Bad; @returns("rax");
+var
+    x:foobar;
+begin Bad;
+    mov(0, rax);
+end Bad;
+
+begin bad;
+end bad;

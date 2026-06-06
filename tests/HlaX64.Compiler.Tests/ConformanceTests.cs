@@ -31,6 +31,14 @@ public sealed class ConformanceTests
         var source = File.ReadAllText(Path.Combine(caseDir, manifest.Source));
         var result = new Compilation("(conformance)", source).Process();
         Assert.True(result.Success, string.Join("; ", result.Diagnostics));
+
+        if (manifest.ExpectNasmContains is { Length: > 0 })
+        {
+            var emitter = new HlaX64.Backend.Nasm.Emitters.NasmEmitter();
+            var nasm = emitter.Emit(result.LoweredFunctions, result.StringLiterals);
+            foreach (var fragment in manifest.ExpectNasmContains)
+                Assert.Contains(fragment, nasm, StringComparison.Ordinal);
+        }
     }
 
     [Theory]
@@ -98,5 +106,6 @@ public sealed class ConformanceTests
         public string Source { get; set; } = "source.hla64";
         public bool ExpectParseError { get; set; }
         public string[]? ExpectCodes { get; set; }
+        public string[]? ExpectNasmContains { get; set; }
     }
 }

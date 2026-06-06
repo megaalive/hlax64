@@ -1,0 +1,4 @@
+program win_exit;
+begin win_exit;
+    mov(42, rax);
+end win_exit;

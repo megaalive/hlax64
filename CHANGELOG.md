@@ -8,17 +8,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ### Added
 
-- `hla64 explain` — IR, ABI lowering, and NASM for a source file (`--json`)
-- `hla64 format` / `format --check` — source normalization
-- VS Code extension skeleton under `editors/vscode/`
-- `tests/conformance/` valid/invalid suites with diagnostic codes
-- RFC index (`rfcs/`) with language versioning and pointer model drafts
-- 16 structured examples across curriculum folders
-- .NET global tool packaging (`dotnet tool install --global HlaX64.Cli`)
+- MCP tools: `explain`, `format-source`, `doctor`
+- Shared `ExplainReport` / `DoctorReport` services used by CLI and MCP
+- 4 curriculum examples (20 total): subtract, factorial-iter, windows-exitcode, smoke-test
+- Conformance: NASM substring checks, unknown-type invalid case
+- `docs/mcp-tools.md`, `docs/playground-design.md`, `schemas/explain-result.schema.json`
 
 ### Changed
 
-- `CompilationResult.StructuredDiagnostics` for coded diagnostics in tooling
+- `DoctorCommand` delegates to `DoctorReport.Run()`
 
 ## [0.1.0-alpha] - 2026-06-06
 

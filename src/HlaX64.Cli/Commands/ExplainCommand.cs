@@ -1,17 +1,12 @@
 using System.ComponentModel;
-using System.Text;
-using HlaX64.Backend.Nasm.Emitters;
 using HlaX64.Cli.Json;
+using HlaX64.Cli.Services;
 using HlaX64.Compiler;
-using HlaX64.Compiler.Abi;
 using HlaX64.Compiler.Options;
 using Spectre.Console.Cli;
 
 namespace HlaX64.Cli.Commands;
 
-/// <summary>
-/// Shows how HlaX64 lowers source through IR, ABI assignment, and NASM.
-/// </summary>
 public sealed class ExplainCommand : Command<ExplainCommand.Settings>
 {
     public sealed class Settings : CommandSettings
@@ -39,27 +34,19 @@ public sealed class ExplainCommand : Command<ExplainCommand.Settings>
         }
 
         var sourceText = File.ReadAllText(settings.Source);
-        var targetTriple = TargetTriple.Parse(settings.Target);
-        var options = CompilationOptions.Default with { Target = targetTriple };
-
-        var result = CompilePipeline.Process(settings.Source, sourceText, options);
-        string? nasm = null;
-        if (result.Success)
-        {
-            var emitter = new NasmEmitter();
-            nasm = emitter.Emit(result.LoweredFunctions, result.StringLiterals);
-        }
+        var options = CompilationOptions.Default with { Target = TargetTriple.Parse(settings.Target) };
+        var report = ExplainReport.Create(settings.Source, sourceText, options);
 
         if (settings.Json)
         {
             CliJson.Write(new
             {
                 schemaVersion = CliJson.SchemaVersion,
-                success = result.Success,
+                success = report.Success,
                 version = Compilation.GetVersion(),
-                source = Path.GetFullPath(settings.Source),
+                source = report.SourcePath,
                 target = settings.Target,
-                diagnostics = result.StructuredDiagnostics.Select(d => new
+                diagnostics = report.StructuredDiagnostics.Select(d => new
                 {
                     code = d.Code,
                     severity = d.Severity.ToString().ToLowerInvariant(),
@@ -68,59 +55,38 @@ public sealed class ExplainCommand : Command<ExplainCommand.Settings>
                     column = d.Column,
                     suggestion = d.Suggestion
                 }),
-                ir = result.Success ? result.IrFunctions.Select(f => f.ToString()) : null,
-                lowered = result.Success ? result.LoweredFunctions.Select(DescribeLowered) : null,
-                nasm
+                ir = report.Success ? report.IrFunctions.Select(f => f.ToString()) : null,
+                lowered = report.Success ? report.LoweredFunctions.Select(ExplainReport.DescribeLowered) : null,
+                nasm = report.Nasm
             });
-            return result.Success ? 0 : 1;
+            return report.Success ? 0 : 1;
         }
 
         Console.WriteLine($"HlaX64 Explain — v{Compilation.GetVersion()}");
-        Console.WriteLine($"Source: {Path.GetFullPath(settings.Source)}");
+        Console.WriteLine($"Source: {report.SourcePath}");
         Console.WriteLine($"Target: {settings.Target}");
         Console.WriteLine(new string('=', 60));
 
-        if (!result.Success)
+        if (!report.Success)
         {
             Console.WriteLine("\n--- Diagnostics ---");
-            foreach (var diag in result.Diagnostics)
+            foreach (var diag in report.Diagnostics)
                 Console.WriteLine(diag);
             return 1;
         }
 
         Console.WriteLine("\n--- IR ---");
-        foreach (var ir in result.IrFunctions)
+        foreach (var ir in report.IrFunctions)
             Console.WriteLine(ir);
 
         Console.WriteLine("\n--- ABI / Lowered ---");
-        foreach (var lowered in result.LoweredFunctions)
-            Console.WriteLine(DescribeLowered(lowered));
+        foreach (var lowered in report.LoweredFunctions)
+            Console.WriteLine(ExplainReport.DescribeLowered(lowered));
 
         Console.WriteLine("\n--- NASM ---");
-        Console.WriteLine(nasm);
+        Console.WriteLine(report.Nasm);
 
         return 0;
-    }
-
-    private static string DescribeLowered(LoweredFunction fn)
-    {
-        var sb = new StringBuilder();
-        sb.AppendLine($"function {fn.Name}:");
-        sb.AppendLine($"  entry: {fn.IsEntryPoint}, export: {fn.IsExport}");
-        sb.AppendLine($"  stack frame: {fn.StackFrameSize} bytes");
-        if (fn.Parameters.Count > 0)
-            sb.AppendLine($"  parameters: {string.Join(", ", fn.Parameters.Select(p => p.Name))}");
-        if (fn.PreservedRegisters.Count > 0)
-            sb.AppendLine($"  preserved: {string.Join(", ", fn.PreservedRegisters)}");
-        if (fn.RequiredExterns.Count > 0)
-            sb.AppendLine($"  externs: {string.Join(", ", fn.RequiredExterns)}");
-        foreach (var block in fn.Blocks)
-        {
-            sb.AppendLine($"  {block.Label}:");
-            foreach (var inst in block.Instructions)
-                sb.AppendLine($"    {inst.AsmText}");
-        }
-        return sb.ToString().TrimEnd();
     }
 
     private static void ReportError(Settings settings, string message)
