@@ -242,3 +242,136 @@ end hello;";
             $"Could not locate sample {sampleDir}/{fileName} starting from {AppContext.BaseDirectory}");
     }
 }
+
+public class WindowsMsAbiLowererTests
+{
+    private static string EmitForWindows(string source)
+    {
+        var options = CompilationOptions.Default with { Target = TargetTriple.WindowsX64MsAbi };
+        var compilation = new Compilation("(test)", source, options);
+        var result = compilation.Process();
+        Assert.True(result.Success, string.Join("; ", result.Diagnostics));
+        var emitter = new NasmEmitter();
+        return emitter.Emit(result.LoweredFunctions, result.StringLiterals);
+    }
+
+    [Fact]
+    public void Emit_SimpleProgram_ContainsGlobalStart()
+    {
+        var nasm = EmitForWindows("program test;\nbegin test;\n    mov(1, rax);\nend test;");
+        Assert.Contains("global _start", nasm);
+        Assert.Contains("_start:", nasm);
+        Assert.Contains("section .text", nasm);
+        Assert.Contains("section .data", nasm);
+    }
+
+    [Fact]
+    public void Emit_MovInstruction_UsesCorrectMnemonic()
+    {
+        var nasm = EmitForWindows("program test;\nbegin test;\n    mov(1, rax);\nend test;");
+        Assert.Contains("mov rax, 1", nasm);
+    }
+
+    [Fact]
+    public void Emit_WindowsEntryPoint_UsesExitProcess()
+    {
+        var nasm = EmitForWindows("program test;\nbegin test;\n    mov(1, rax);\nend test;");
+        Assert.Contains("extern ExitProcess", nasm);
+        Assert.Contains("sub rsp, 32     ; shadow space", nasm);
+        Assert.Contains("mov ecx, ebx", nasm);
+        Assert.Contains("call ExitProcess", nasm);
+    }
+
+    [Fact]
+    public void Emit_WindowsEntryPoint_HasNoSyscall()
+    {
+        var nasm = EmitForWindows("program test;\nbegin test;\n    mov(1, rax);\nend test;");
+        Assert.DoesNotContain("syscall", nasm);
+        Assert.DoesNotContain("mov rax, 60", nasm);
+    }
+
+    [Fact]
+    public void Emit_WindowsProcedure_UsesRcxRdxForArgs()
+    {
+        var source = "program test;\nprocedure AddTwo(a:int64; b:int64); @returns(\"rax\");\nbegin AddTwo;\n    mov(a, rax);\n    add(b, rax);\nend AddTwo;\nbegin test;\n    mov(1, rax);\nend test;";
+        var nasm = EmitForWindows(source);
+        Assert.Contains("AddTwo:", nasm);
+        Assert.Contains("push rbp", nasm);
+        Assert.Contains("mov rbp, rsp", nasm);
+        Assert.Contains("mov [rbp-8], rcx", nasm);
+        Assert.Contains("mov [rbp-16], rdx", nasm);
+        Assert.Contains("mov rax, [rbp-8]", nasm);
+        Assert.Contains("add rax, [rbp-16]", nasm);
+        Assert.Contains("ret", nasm);
+    }
+
+    [Fact]
+    public void Emit_WindowsProcedure_UsesCorrectRegisterArgs()
+    {
+        var source = "program test;\nprocedure Foo(x:int64; y:int64); @returns(\"rax\");\nbegin Foo;\n    mov(x, rax);\nend Foo;\nbegin test;\n    mov(1, rax);\nend test;";
+        var nasm = EmitForWindows(source);
+        Assert.Contains("Foo:", nasm);
+        Assert.Contains("mov [rbp-8], rcx", nasm);
+        Assert.Contains("mov [rbp-16], rdx", nasm);
+        Assert.Contains("ret", nasm);
+    }
+
+    [Fact]
+    public void Emit_WindowsStdoutPut_UsesRuntimeFunctions()
+    {
+        var nasm = EmitForWindows("program test;\nbegin test;\n    stdout.put(\"Hello\", nl);\nend test;");
+        Assert.Contains("extern stdout_put_str", nasm);
+        Assert.Contains("lea rcx, [str_0]", nasm);
+        Assert.Contains("call stdout_put_str", nasm);
+        Assert.Contains("call stdout_put_nl", nasm);
+    }
+
+    [Fact]
+    public void Emit_WindowsIfElse_GeneratesLabels()
+    {
+        var nasm = EmitForWindows("program test;\nbegin test;\nif(rax = 0) then\n    mov(1, rbx);\nelse\n    mov(2, rbx);\nendif;\nend test;");
+        Assert.Contains("cmp rax, 0", nasm);
+        Assert.Contains("je then_0", nasm);
+        Assert.Contains("jmp else_0", nasm);
+    }
+
+    [Fact]
+    public void Emit_WindowsProcedureDef_UsesRcxRdxForArgs()
+    {
+        var source = @"program test;
+procedure Sum(a:int64; b:int64); @returns(""rax"");
+begin Sum;
+    mov(a, rax);
+    add(b, rax);
+end Sum;
+begin test;
+    mov(1, rax);
+end test;";
+        var nasm = EmitForWindows(source);
+        Assert.Contains("Sum:", nasm);
+        Assert.Contains("mov [rbp-8], rcx", nasm);
+        Assert.Contains("mov [rbp-16], rdx", nasm);
+        Assert.Contains("mov rax, [rbp-8]", nasm);
+        Assert.Contains("add rax, [rbp-16]", nasm);
+        Assert.Contains("ret", nasm);
+    }
+
+    [Fact]
+    public void Emit_WindowsWhileLoop_GeneratesLabels()
+    {
+        var nasm = EmitForWindows("program test;\nbegin test;\nwhile(rax < 10) do\n    add(1, rax);\nendwhile;\nend test;");
+        Assert.Contains("while_header_0:", nasm);
+        Assert.Contains("cmp rax, 10", nasm);
+        Assert.Contains("while_body_0:", nasm);
+    }
+
+    [Fact]
+    public void Emit_WindowsStdoutPutRegister_UsesLibraryMode()
+    {
+        var nasm = EmitForWindows("program test;\nbegin test;\n    stdout.put(rax, nl);\nend test;");
+        Assert.Contains("extern stdout_put_int", nasm);
+        Assert.Contains("mov rcx, rax", nasm);
+        Assert.Contains("call stdout_put_int", nasm);
+        Assert.Contains("call stdout_put_nl", nasm);
+    }
+}

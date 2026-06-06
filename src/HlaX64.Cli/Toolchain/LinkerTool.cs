@@ -27,6 +27,15 @@ public sealed class LinkerTool
         new("/usr/bin/ld", "", "--version", "Native Linux ld", ""),
     };
 
+    private static readonly LinkerInfo[] WindowsLinkerCandidates =
+    {
+        // lld-link (LLVM COFF linker) - preferred on Windows for COFF targets
+        new("lld-link", "", "--version", "LLD (COFF)", "Install: winget install -e --id LLVM.LLVM or choco install llvm"),
+        // MSVC link.exe
+        new("link", "", "--version", "MSVC link.exe", "Install: Visual Studio Build Tools (https://visualstudio.microsoft.com/downloads/)"),
+        new("link.exe", "", "--version", "MSVC link.exe", ""),
+    };
+
     private sealed record LinkerInfo(
         string Command,
         string SubCommand,
@@ -166,6 +175,140 @@ public sealed class LinkerTool
     /// Converts a Windows absolute path to a WSL path.
     /// e.g., C:\path\to\file -> /mnt/c/path/to/file
     /// </summary>
+    /// <summary>
+    /// Tries to find a working linker that can produce Windows x64 PE/COFF executables.
+    /// </summary>
+    public static bool TryFindWindowsLinker(out string path, out string displayName, out string versionArgs)
+    {
+        foreach (var candidate in WindowsLinkerCandidates)
+        {
+            try
+            {
+                string fileName = candidate.Command;
+                string args = string.IsNullOrEmpty(candidate.SubCommand) 
+                    ? candidate.VersionArg 
+                    : $"{candidate.SubCommand} {candidate.VersionArg}";
+
+                var psi = new ProcessStartInfo
+                {
+                    FileName = fileName,
+                    Arguments = args,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false
+                };
+                using var process = Process.Start(psi);
+                if (process != null)
+                {
+                    process.WaitForExit(3000);
+                    if (process.ExitCode == 0)
+                    {
+                        path = fileName;
+                        displayName = candidate.DisplayName;
+                        versionArgs = candidate.SubCommand;
+                        return true;
+                    }
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        path = string.Empty;
+        displayName = string.Empty;
+        versionArgs = string.Empty;
+        return false;
+    }
+
+    /// <summary>
+    /// Links a COFF object file into a Windows PE executable or DLL.
+    /// Uses lld-link or MSVC link.exe.
+    /// </summary>
+    public static bool TryLinkWindows(string objectFile, string output, out string error, bool shared = false)
+    {
+        if (!TryFindWindowsLinker(out var linker, out var displayName, out var subCommand))
+        {
+            error = BuildWindowsInstallErrorMessage();
+            return false;
+        }
+
+        try
+        {
+            bool isLld = linker.ToLowerInvariant().Contains("lld-link");
+            bool isMsvc = linker.ToLowerInvariant().Contains("link");
+
+            string entryFlag = "/ENTRY:_start";
+            string subsystemFlag = "/SUBSYSTEM:CONSOLE";
+            string kernel32Lib = "kernel32.lib";
+
+            string args;
+            if (shared)
+            {
+                args = isLld
+                    ? $"/NOLOGO /DLL {entryFlag} {subsystemFlag} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib}"
+                    : $"/NOLOGO /DLL {entryFlag} {subsystemFlag} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib}";
+            }
+            else
+            {
+                args = isLld
+                    ? $"/NOLOGO {entryFlag} {subsystemFlag} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib}"
+                    : $"/NOLOGO {entryFlag} {subsystemFlag} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib}";
+            }
+
+            var psi = new ProcessStartInfo
+            {
+                FileName = linker,
+                Arguments = args,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            };
+
+            using var process = Process.Start(psi);
+            if (process == null)
+            {
+                error = "Failed to start linker process.";
+                return false;
+            }
+
+            process.WaitForExit();
+            var stderr = process.StandardError.ReadToEnd();
+
+            if (process.ExitCode != 0)
+            {
+                error = $"Linking failed (using {displayName}):\n{stderr}\n\n{BuildWindowsInstallErrorMessage()}";
+                return false;
+            }
+
+            error = string.Empty;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            error = $"Linker error: {ex.Message}";
+            return false;
+        }
+    }
+
+    private static string BuildWindowsInstallErrorMessage()
+    {
+        return @"No Windows linker found (lld-link or link.exe).
+
+Options to fix:
+1. LLVM/LLD (Recommended):
+   winget install -e --id LLVM.LLVM
+   # Adds lld-link to PATH
+
+2. Visual Studio Build Tools:
+   https://visualstudio.microsoft.com/downloads/
+   # Install 'Desktop development with C++' workload
+
+3. Chocolatey:
+   choco install llvm
+";
+    }
+
     public static string ToWslPath(string windowsPath)
     {
         // If already a Unix-style path, return as-is

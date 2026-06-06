@@ -24,6 +24,10 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
         [Description("Output kind: executable (default) or shared-library")]
         [CommandOption("--output-kind")]
         public string? OutputKind { get; set; }
+
+        [Description("Target triple: linux-x64-sysv (default) or windows-x64-msabi")]
+        [CommandOption("--target")]
+        public string? Target { get; set; }
     }
 
     protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation)
@@ -40,16 +44,21 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
         outputDir = Path.GetFullPath(outputDir);
         Directory.CreateDirectory(outputDir);
 
+        var targetTriple = TargetTriple.Parse(settings.Target ?? "linux-x64-sysv");
         var options = CompilationOptions.Default;
+        options = options with { Target = targetTriple };
         if (settings.RuntimeMode?.ToLowerInvariant() == "library")
             options = options with { RuntimeMode = HlaX64.Compiler.Options.RuntimeMode.Library };
 
+        bool isWindows = targetTriple.Abi.Equals("msabi", StringComparison.OrdinalIgnoreCase);
         bool isShared = settings.OutputKind?.ToLowerInvariant() == "shared-library";
-        string ext = isShared ? ".so" : "";
+        string nasmFormat = isWindows ? "win64" : "elf64";
+        string objExt = isWindows ? ".obj" : ".o";
+        string ext = isShared ? (isWindows ? ".dll" : ".so") : (isWindows ? ".exe" : "");
         string libPrefix = isShared ? "lib" : "";
 
         var nasmFile = Path.Combine(outputDir, $"{sourceName}.nasm");
-        var objFile = Path.Combine(outputDir, $"{sourceName}.o");
+        var objFile = Path.Combine(outputDir, $"{sourceName}{objExt}");
         var outputFile = Path.Combine(outputDir, $"{libPrefix}{sourceName}{ext}");
 
         try
@@ -72,16 +81,27 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
             Console.WriteLine($"  NASM: {nasmPath}");
 
             var nasmTool = new NasmTool(nasmPath);
-            if (!nasmTool.TryAssemble(nasmFile, objFile, out var nasmError))
+            if (!nasmTool.TryAssemble(nasmFile, objFile, out var nasmError, format: nasmFormat))
             {
                 Console.Error.WriteLine($"Assembly error:\n{nasmError}");
                 return 1;
             }
             Console.WriteLine($"  -> {objFile}");
 
-            // 3. Link .o -> output
+            // 3. Link -> output
             Console.WriteLine(isShared ? "Linking shared library..." : "Linking...");
-            if (!LinkerTool.TryLink(objFile, outputFile, out var linkError, out var requiresWslRun, shared: isShared))
+            bool linkSuccess;
+            bool requiresWslRun = false;
+            string linkError = "";
+            if (isWindows)
+            {
+                linkSuccess = LinkerTool.TryLinkWindows(objFile, outputFile, out linkError, shared: isShared);
+            }
+            else
+            {
+                linkSuccess = LinkerTool.TryLink(objFile, outputFile, out linkError, out requiresWslRun, shared: isShared);
+            }
+            if (!linkSuccess)
             {
                 Console.Error.WriteLine($"Link error:\n{linkError}");
                 return 1;
@@ -89,7 +109,7 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
             Console.WriteLine($"  -> {outputFile}");
 
             // 4. Make executable (if on Unix) — skip for shared libraries
-            if (!requiresWslRun && !isShared)
+            if (!isWindows && !requiresWslRun && !isShared)
             {
                 try
                 {

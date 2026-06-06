@@ -43,6 +43,10 @@ public sealed class EmitNasmCommand : Command<EmitNasmCommand.Settings>
         [Description("Runtime mode: inline (default) or library")]
         [CommandOption("--runtime")]
         public string? RuntimeMode { get; set; }
+
+        [Description("Target triple: linux-x64-sysv (default) or windows-x64-msabi")]
+        [CommandOption("--target")]
+        public string? Target { get; set; }
     }
 
     protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation)
@@ -54,7 +58,8 @@ public sealed class EmitNasmCommand : Command<EmitNasmCommand.Settings>
         }
 
         var sourceText = File.ReadAllText(settings.Source);
-        var options = CompilationOptions.Default;
+        var targetTriple = TargetTriple.Parse(settings.Target ?? "linux-x64-sysv");
+        var options = CompilationOptions.Default with { Target = targetTriple };
         if (settings.RuntimeMode?.ToLowerInvariant() == "library")
             options = options with { RuntimeMode = HlaX64.Compiler.Options.RuntimeMode.Library };
 

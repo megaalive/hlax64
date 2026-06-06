@@ -68,11 +68,16 @@ public class Compilation
             result.IrFunctions.AddRange(procedures);
 
             // 5. Lower IR to ABI-specific form
-            var abiLowerer = Options.Target.Abi.ToLowerInvariant() switch
+            IAbiLowerer abiLowerer;
+            switch (Options.Target.Abi.ToLowerInvariant())
             {
-                "sysv" => new SysVAbiLowerer(),
-                _ => new SysVAbiLowerer()
-            };
+                case "msabi":
+                    abiLowerer = new WindowsMsAbiLowerer();
+                    break;
+                default:
+                    abiLowerer = new SysVAbiLowerer();
+                    break;
+            }
 
             foreach (var irFunc in result.IrFunctions)
             {

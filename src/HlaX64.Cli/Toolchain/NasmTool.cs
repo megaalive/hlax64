@@ -90,7 +90,7 @@ public sealed class NasmTool
         return (nasmPath[..idx], nasmPath[(idx + 1)..]);
     }
 
-    public bool TryAssemble(string nasmSource, string objectFile, out string error)
+    public bool TryAssemble(string nasmSource, string objectFile, out string error, string format = "elf64")
     {
         if (!TryFindNasm(out var nasm))
         {
@@ -103,7 +103,7 @@ public sealed class NasmTool
             var psi = new ProcessStartInfo
             {
                 FileName = nasm,
-                Arguments = $"-f elf64 \"{nasmSource}\" -o \"{objectFile}\"",
+                Arguments = $"-f {format} \"{nasmSource}\" -o \"{objectFile}\"",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false

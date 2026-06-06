@@ -74,7 +74,7 @@ public sealed class ExplainAbiCommand : Command<ExplainAbiCommand.Settings>
         Console.WriteLine("ABI: windows-x64-msabi (Microsoft x64, x64 calling convention)");
         Console.WriteLine(new string('-', 60));
         Console.WriteLine();
-        Console.WriteLine("STATUS: planned (Fase 11 — Compiler Architecture Stabilization).");
+        Console.WriteLine("STATUS: implemented (Fase 11).");
         Console.WriteLine();
         Console.WriteLine("Argument registers:");
         Console.WriteLine("  arg1 -> rcx");
@@ -107,7 +107,7 @@ public sealed class ExplainAbiCommand : Command<ExplainAbiCommand.Settings>
         Console.Error.WriteLine($"Unknown target '{target}'.");
         Console.Error.WriteLine("Supported targets:");
         Console.Error.WriteLine("  linux-x64-sysv     (implemented, MVP)");
-        Console.Error.WriteLine("  windows-x64-msabi  (planned, Fase 11)");
+        Console.Error.WriteLine("  windows-x64-msabi  (implemented, Fase 11)");
         return 1;
     }
 }
