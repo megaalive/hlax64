@@ -5,7 +5,7 @@
 > assemble, link, and run — all from a single `hla64` CLI.
 
 [![Status](https://img.shields.io/badge/Fase%200%E2%80%9313-Done-green)](./docs/roadmap.md)
-[![Tests](https://img.shields.io/badge/tests-138%20unit%20+%2020%20native%20+%2024%20curriculum-2ea44f)](#test-status)
+[![Tests](https://img.shields.io/badge/tests-150%20unit%20+%2022%20native%20+%2028%20curriculum-2ea44f)](#test-status)
 [![Target](https://img.shields.io/badge/target-linux--x64--sysv%20|%20windows--x64--msabi-1f6feb)](#targets)
 [![Language](https://img.shields.io/badge/language-v0.1%20Draft-blueviolet)](#language-reference)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](#license)
@@ -39,7 +39,8 @@ Tutorials: [Getting started](docs/tutorials/01-getting-started.md) · [Native ro
 | **Control flow**    | ✅     | `if/else/endif`, `while/endwhile` with `=`, `<`, `>` |
 | **Procedures**      | ✅     | 0–6 integer args, `@returns("rax")`, no-paren syntax |
 | **Local variables** | ✅     | `var` block, stack frame with `[rbp-N]` addressing |
-| **Pointers & memory** | ✅ (Level 3 baseline) | `&var`, `&"str"`, `[reg]`, `[reg+N]`, `.byte`/`.word`/`.dword` |
+| **Pointers & memory** | ✅ (Level 3) | `&var`, `&"str"`, `[reg+N]`, `.byte`, `type[N]`, `arr[i]` |
+| **LSP (editor)**      | ✅ MVP     | Diagnostics, hover, completion via `HlaX64.LanguageServer` |
 | **Stdlib**          | ✅     | `stdout.put("str", nl, rax, 42)` — inline syscall mode |
 
 ### Targets
@@ -73,7 +74,7 @@ Tutorials: [Getting started](docs/tutorials/01-getting-started.md) · [Native ro
 | Area                | Status | Details |
 |---------------------|--------|---------|
 | **CLI**             | ✅     | `build`, `emit-nasm`, `run`, `test`, `bench`, `explain`, `explain-abi`, `format`, `generate-header`, `generate-pinvoke`, `doctor` |
-| **Test runner**     | ✅     | 138 unit tests + 27 example compile guards + 20 native samples + 24 curriculum manifests |
+| **Test runner**     | ✅     | 150 unit tests + 31 example compile guards + 22 native samples + 28 curriculum manifests |
 | **Benchmark runner**| ✅     | `hla64 bench` with warmup, median, binary size, JSON manifest |
 | **MCP server**      | ✅     | 12 tools via stdio JSON-RPC: compile, build, run, test, explain, explain-abi, format-source, doctor, generate-header, generate-pinvoke, get-version, list-instructions |
 | **ABI explainer**   | ✅     | `hla64 explain-abi --target linux-x64-sysv` (or `windows-x64-msabi`) |
@@ -211,12 +212,12 @@ HlaX64/
 
 ```bash
 dotnet test
-# Passed! 138 unit/conformance tests (+ example compile guards)
+# Passed! 150 unit/conformance tests (+ example compile guards)
 ```
 
 | Suite | Count | Coverage |
 |-------|-------|----------|
-| Unit tests (`HlaX64.Compiler.Tests`) | **138** | Lexer, parser, semantic, IR, NASM emit, ABI, test runner, conformance, fuzz |
+| Unit tests (`HlaX64.Compiler.Tests`) | **150** | Lexer, parser, semantic, IR, NASM emit, ABI, LSP, conformance, fuzz |
 | Example compile guards | **22** | Every `examples/**/*.hla64` emits NASM without errors |
 | Native samples (`tests/samples/`) | **17** | Linux CI: compile → link → run → assert stdout/exit |
 | Curriculum (`tests/examples-curriculum/`) | **19** | Structured `examples/` programs via manifests |
@@ -246,7 +247,7 @@ Phases are summarized in [`docs/roadmap.md`](./docs/roadmap.md).
 | 11   | Windows x64 backend                  | ✅      |
 | 12   | C ABI & C# interop generator         | ✅      |
 | 13   | MCP server (for AI agents)           | ✅      |
-| 14   | LSP & editor tooling                 | 🚧 (diagnostics LSP MVP) |
+| 14   | LSP & editor tooling                 | ✅ MVP (diagnostics, hover, completion) |
 | 15   | AI Assembly Lab / IDE plugin         | ⏳      |
 
 > **Aturan**: jangan sentuh Fase 14–15 sebelum Definition of Done Fase 9.5 terpenuhi. Lihat [`docs/roadmap.md`](./docs/roadmap.md).

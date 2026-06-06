@@ -1,0 +1,6 @@
+{
+  "name": "array_sum",
+  "source": "array_sum.hla64",
+  "expectedExitCode": 15,
+  "description": "RFC 0003: sum of int64[5]"
+}

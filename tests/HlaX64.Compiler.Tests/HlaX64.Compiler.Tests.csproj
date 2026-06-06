@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\src\HlaX64.Compiler\HlaX64.Compiler.csproj" />
     <ProjectReference Include="..\..\src\HlaX64.Backend.Nasm\HlaX64.Backend.Nasm.csproj" />
     <ProjectReference Include="..\..\src\HlaX64.Cli\HlaX64.Cli.csproj" />
+    <ProjectReference Include="..\..\src\HlaX64.LanguageServer\HlaX64.LanguageServer.csproj" />
   </ItemGroup>
 
   <!-- Copy example programs and sample manifests to the test output so

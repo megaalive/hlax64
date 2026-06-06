@@ -1,0 +1,6 @@
+{
+  "name": "curriculum-array-fill",
+  "source": "../../../examples/05-memory/array-fill.hla64",
+  "expectedExitCode": 3,
+  "description": "Curriculum: fill array with loop index"
+}

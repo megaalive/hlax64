@@ -7,6 +7,7 @@ public sealed class IrFunction
     public IrBasicBlock EntryBlock { get; }
     public List<IrValue> ParameterValues { get; }
     public List<IrValue> LocalValues { get; }
+    public Dictionary<string, IrLocalLayout> LocalLayouts { get; } = new(StringComparer.OrdinalIgnoreCase);
 
     public bool IsEntryPoint => Name == "_start";
     public bool IsExport { get; set; }

@@ -42,7 +42,9 @@ internal static class Program
                     {
                         capabilities = new
                         {
-                            textDocumentSync = 1
+                            textDocumentSync = 1,
+                            hoverProvider = true,
+                            completionProvider = new { triggerCharacters = new[] { ".", "[", "&" } }
                         },
                         serverInfo = new { name = "HlaX64.LanguageServer", version = HlaX64.Compiler.Compilation.GetVersion() }
                     });
@@ -84,8 +86,53 @@ internal static class Program
                         Documents.Remove(uri);
                     }
                     break;
+
+                case "textDocument/hover" when hasId:
+                    HandleHover(id, root);
+                    break;
+
+                case "textDocument/completion" when hasId:
+                    HandleCompletion(id, root);
+                    break;
             }
         }
+    }
+
+    private static void HandleHover(JsonElement id, JsonElement root)
+    {
+        if (!root.TryGetProperty("params", out var p))
+        {
+            WriteResponse(id, null!);
+            return;
+        }
+
+        var uri = p.GetProperty("textDocument").GetProperty("uri").GetString()!;
+        var pos = p.GetProperty("position");
+        var line = pos.GetProperty("line").GetInt32();
+        var character = pos.GetProperty("character").GetInt32();
+        if (!Documents.TryGetValue(uri, out var text))
+        {
+            WriteResponse(id, null!);
+            return;
+        }
+
+        WriteResponse(id, LanguageServerEditorServices.GetHover(text, line, character)!);
+    }
+
+    private static void HandleCompletion(JsonElement id, JsonElement root)
+    {
+        if (!root.TryGetProperty("params", out var p))
+        {
+            WriteResponse(id, new { items = Array.Empty<object>() });
+            return;
+        }
+
+        var uri = p.GetProperty("textDocument").GetProperty("uri").GetString()!;
+        var pos = p.GetProperty("position");
+        var line = pos.GetProperty("line").GetInt32();
+        var character = pos.GetProperty("character").GetInt32();
+        Documents.TryGetValue(uri, out var text);
+        WriteResponse(id, LanguageServerEditorServices.GetCompletions(text ?? "", line, character));
     }
 
     private static void SendNotification(object payload)

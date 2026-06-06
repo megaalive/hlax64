@@ -32,7 +32,20 @@ See [pointer-store.hla64](../../examples/05-memory/pointer-store.hla64).
 
 ---
 
-## 3. Manual stack arrays (`[base + offset]`)
+## 3. Stack arrays (RFC 0003)
+
+Declare fixed-size stack arrays and index them:
+
+```hla
+var data: int64[5];
+mov(10, data[0]);
+mov(1, idx);
+mov(data[idx], rax);
+```
+
+See [array-sum.hla64](../../examples/05-memory/array-sum.hla64), [array-max.hla64](../../examples/05-memory/array-max.hla64), [rfcs/0003-array-model.md](../../rfcs/0003-array-model.md).
+
+## 4. Manual stack arrays (`[base + offset]`)
 
 Array types (`arr[i]`) are not implemented yet. Model a small array as consecutive `int64` locals and index with a byte offset:
 
@@ -48,7 +61,7 @@ See [stack-array.hla64](../../examples/05-memory/stack-array.hla64) — sums thr
 
 ---
 
-## 4. Sized memory access (`.byte`, `.word`, `.dword`, `.qword`)
+## 5. Sized memory access (`.byte`, `.word`, `.dword`, `.qword`)
 
 Append a size suffix after `]` for partial-width loads/stores:
 
@@ -63,7 +76,7 @@ See [typed-byte.hla64](../../examples/05-memory/typed-byte.hla64).
 
 ---
 
-## 5. String literals and byte traversal
+## 6. String literals and byte traversal
 
 Address of read-only string data:
 
@@ -86,13 +99,13 @@ See [string-length.hla64](../../examples/05-memory/string-length.hla64) — exit
 
 ---
 
-## 6. Bounds and safety
+## 7. Bounds and safety
 
 Read [memory-and-bounds.md](../memory-and-bounds.md). HlaX64 **does not** check pointer or index bounds in 0.x — out-of-range access is documented undefined behavior.
 
 ---
 
-## 7. Next steps
+## 8. Next steps
 
 - Level 4 ABI: [06-abi examples](../../examples/06-abi/)
 - Interop: [03-csharp-interop.md](03-csharp-interop.md)

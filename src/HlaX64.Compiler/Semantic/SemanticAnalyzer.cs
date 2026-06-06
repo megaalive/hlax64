@@ -12,6 +12,7 @@ public sealed class SemanticAnalyzer
 {
     private readonly DiagnosticCollection _diagnostics = new();
     private readonly Dictionary<string, IntegerTypeSymbol> _variableTypes = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, int> _arrayElementCounts = new(StringComparer.OrdinalIgnoreCase);
     private static readonly HashSet<string> KnownRegisters = new(StringComparer.OrdinalIgnoreCase)
     {
         // 64-bit
@@ -225,12 +226,20 @@ public sealed class SemanticAnalyzer
     private void AnalyzeProcedure(ProcedureNode proc)
     {
         _variableTypes.Clear();
+        _arrayElementCounts.Clear();
 
         // Resolve variable and parameter types
         foreach (var variable in proc.Variables)
         {
             if (variable is VariableNode varNode)
             {
+                if (varNode.ElementCount < 1)
+                {
+                    _diagnostics.Error("HLAX0025",
+                        $"Array length must be at least 1, got {varNode.ElementCount} for '{varNode.Name}'",
+                        varNode.Line, varNode.Column);
+                }
+
                 var type = TypeRegistry.Lookup(varNode.Type);
                 if (type == null)
                 {
@@ -240,7 +249,16 @@ public sealed class SemanticAnalyzer
                 }
                 else
                 {
+                    if (varNode.ElementCount > 1 && type.BitWidth != 64)
+                    {
+                        _diagnostics.Error("HLAX0024",
+                            $"Array element type '{varNode.Type}' is not supported; use int64, uint64, qword, or ptr",
+                            varNode.Line, varNode.Column);
+                    }
+
                     _variableTypes[varNode.Name] = type;
+                    if (varNode.ElementCount > 1)
+                        _arrayElementCounts[varNode.Name] = varNode.ElementCount;
                 }
             }
         }
@@ -304,6 +322,23 @@ public sealed class SemanticAnalyzer
         else if (node is AddressOfStringNode)
         {
             // rodata label — always valid
+        }
+        else if (node is ArrayIndexNode arr)
+        {
+            if (!_variableTypes.ContainsKey(arr.ArrayName))
+            {
+                _diagnostics.Error("HLAX0027",
+                    $"Unknown array variable '{arr.ArrayName}'",
+                    arr.Line, arr.Column);
+            }
+            else if (!_arrayElementCounts.ContainsKey(arr.ArrayName))
+            {
+                _diagnostics.Error("HLAX0026",
+                    $"'{arr.ArrayName}' is not an array; use type[count] in the var block",
+                    arr.Line, arr.Column);
+            }
+
+            AnalyzeOperand(arr.Index);
         }
         else if (node is IdentifierNode ident)
         {

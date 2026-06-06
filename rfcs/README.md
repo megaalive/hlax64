@@ -21,4 +21,5 @@ HlaX64 uses lightweight RFCs for language design, ABI changes, and major tooling
 | RFC | Title | Status |
 |-----|-------|--------|
 | [0001](0001-language-versioning.md) | Language versioning | Accepted |
-| [0002](0002-pointer-model.md) | Pointer model (draft) | Draft |
+| [0002](0002-pointer-model.md) | Pointer & memory ops | Partially implemented |
+| [0003](0003-array-model.md) | Stack arrays `type[N]`, `arr[i]` | Implemented (0.x) |

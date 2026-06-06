@@ -16,6 +16,7 @@ public sealed class SysVAbiLowerer : IAbiLowerer
     private int _labelCounter;
     private int _stringLabelCounter;
     private readonly Dictionary<string, string> _valueMap = new(StringComparer.OrdinalIgnoreCase);
+    private ProcedureStackMap _stackMap = ProcedureStackMap.Build(new IrFunction("_empty"));
     private int _stackOffset;
     private RuntimeMode _mode;
     private List<string> _externs = new();
@@ -34,28 +35,19 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         _externs = new List<string>();
         _stdoutUsed = false;
         _rbxExitTouched = false;
+        var stackMap = ProcedureStackMap.Build(function);
+        foreach (var (name, slot) in stackMap.Slots)
+            _valueMap[name] = slot;
+        _stackOffset = stackMap.StackOffsetBytes;
         var lowered = new LoweredFunction(function.Name, isEntryPoint: function.IsEntryPoint)
         {
             IsExport = function.IsExport
         };
 
-        // Map parameters to stack slots
+        // Map parameters and locals to stack slots (arrays consume multiple slots)
+        _stackMap = stackMap;
         for (int i = 0; i < function.ParameterValues.Count; i++)
-        {
-            var param = function.ParameterValues[i];
-            var offset = -(i + 1) * 8;
-            _valueMap[param.Name!] = $"[rbp{offset}]";
-            lowered.Parameters.Add(new ParamInfo(param.Name!, i));
-            _stackOffset = Math.Max(_stackOffset, (i + 1) * 8);
-        }
-
-        for (int i = 0; i < function.LocalValues.Count; i++)
-        {
-            var local = function.LocalValues[i];
-            var offset = -(function.ParameterValues.Count + i + 1) * 8;
-            _valueMap[local.Name!] = $"[rbp{offset}]";
-            _stackOffset = Math.Max(_stackOffset, (function.ParameterValues.Count + i + 1) * 8);
-        }
+            lowered.Parameters.Add(new ParamInfo(function.ParameterValues[i].Name!, i));
 
         // Use the function's full block list
         foreach (var irBlock in function.Blocks)
@@ -184,11 +176,17 @@ public sealed class SysVAbiLowerer : IAbiLowerer
             return new LoweredInstruction($"    {MemoryRefEncoding.EmitLoad(dst, mem)}");
         }
 
+        if (ArrayIndexEncoding.IsArrayIndex(srcVal))
+            return ArrayLoweringHelper.LowerArrayLoad(dst, srcVal!, _stackMap, ResolveOperand);
+
         if (IsMemRef(dstVal))
         {
             var mem = MemoryRefEncoding.Parse(dstVal!);
             return new LoweredInstruction($"    {MemoryRefEncoding.EmitStore(mem, src)}");
         }
+
+        if (ArrayIndexEncoding.IsArrayIndex(dstVal))
+            return ArrayLoweringHelper.LowerArrayStore(dstVal!, src, _stackMap, ResolveOperand);
 
         if (AddressRefEncoding.IsStringRef(srcVal))
         {

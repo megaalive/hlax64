@@ -1,0 +1,16 @@
+// RFC 0003: literal index arr[2]
+program array_literal;
+
+procedure GetMiddle; @returns("rax");
+var
+    vals: int64[3];
+begin GetMiddle;
+    mov(10, vals[0]);
+    mov(20, vals[1]);
+    mov(30, vals[2]);
+    mov(vals[1], rax);
+end GetMiddle;
+
+begin array_literal;
+    call GetMiddle();
+end array_literal;

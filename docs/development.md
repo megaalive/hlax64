@@ -39,16 +39,20 @@ Or run from source without installing (below).
 git clone https://github.com/megaalive/hlax64.git
 cd hlax64
 dotnet build
-dotnet test   # includes ExamplesCompileTests (all 20 examples)
+dotnet test   # 150+ unit tests; native samples require Linux toolchain in CI
 ```
 
-### Language Server (diagnostics MVP)
+### Language Server (Phase 14 MVP)
 
 ```bash
 dotnet run --project src/HlaX64.LanguageServer
 ```
 
-Configure VS Code/Cursor with `"languageServerExample"` pointing to the command above for `.hla64` files. See [editors/vscode/README.md](../editors/vscode/README.md).
+Capabilities: **publishDiagnostics**, **hover** (mnemonics, keywords, types, registers), **completion**.
+
+**VS Code / Cursor:** install the extension from `editors/vscode/` (run `npm install` once), then **Developer: Install Extension from Location**. The extension starts the language server via `dotnet run` automatically.
+
+See [editors/vscode/README.md](../editors/vscode/README.md).
 
 ### Static playground
 

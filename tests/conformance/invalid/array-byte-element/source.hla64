@@ -1,0 +1,8 @@
+program bad;
+procedure P; @returns("rax");
+var a: byte[4];
+begin P;
+    mov(0, rax);
+end P;
+begin bad;
+end bad;

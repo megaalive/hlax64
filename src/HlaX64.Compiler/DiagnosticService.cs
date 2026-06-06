@@ -34,13 +34,15 @@ public static class DiagnosticService
         }
         catch (ParseException ex)
         {
+            var line = ex.Line > 0 ? ex.Line : 1;
+            var column = ex.Column > 0 ? ex.Column : 1;
             return new AnalysisResult
             {
                 Success = false,
                 ParseError = ex.Message,
                 Diagnostics =
                 [
-                    new Diagnostic("HLAX1000", DiagnosticSeverity.Error, ex.Message, 1, 1)
+                    new Diagnostic("HLAX1000", DiagnosticSeverity.Error, ex.Message, line, column)
                 ]
             };
         }

@@ -1,0 +1,10 @@
+program t;
+procedure P; @returns("rax");
+var data: int64[2];
+begin P;
+    mov(7, data[1]);
+    mov(data[1], rax);
+end P;
+begin t;
+    call P();
+end t;

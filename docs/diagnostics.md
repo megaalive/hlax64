@@ -124,6 +124,46 @@ Stable diagnostic codes help agents, IDE tooling, and contributors reference err
 | **Example** | `mov(&rax, rcx);` |
 | **Fix** | Take the address of a `var` or parameter, e.g. `mov(&slot, rcx);` |
 
+### HLAX0024 — Unsupported array element type
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Type system |
+| **Since** | 0.2.0-alpha |
+| **Cause** | Array `type[count]` requires 64-bit element type (`int64`, `uint64`, `qword`, `ptr`) |
+| **Fix** | Use a supported element type per [RFC 0003](../rfcs/0003-array-model.md) |
+
+### HLAX0025 — Invalid array length
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Type system |
+| **Since** | 0.2.0-alpha |
+| **Cause** | Array length in `type[count]` is less than 1 |
+| **Fix** | Use a positive integer literal count |
+
+### HLAX0026 — Index on non-array variable
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Type system |
+| **Since** | 0.2.0-alpha |
+| **Cause** | `x[i]` applied to a scalar `var` (not declared as `type[count]`) |
+| **Fix** | Declare `var arr: int64[N];` or index a manual pointer with `[reg+off]` |
+
+### HLAX0027 — Unknown array in indexed access
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Type system |
+| **Since** | 0.2.0-alpha |
+| **Cause** | `arr[i]` references an unknown name |
+| **Fix** | Declare `arr` in the procedure `var` block |
+
 ## Toolchain messages (no code yet)
 
 CLI and linker errors currently use plain text (e.g. `Error: NASM not found`). Future releases will assign `HLAX4xxx` codes.

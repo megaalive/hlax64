@@ -1,0 +1,6 @@
+{
+  "name": "array_max",
+  "source": "array_max.hla64",
+  "expectedExitCode": 9,
+  "description": "RFC 0003: max element in int64[4]"
+}
