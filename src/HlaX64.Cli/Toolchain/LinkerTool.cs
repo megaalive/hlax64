@@ -94,7 +94,8 @@ public sealed class LinkerTool
     /// Links an object file into an executable or shared library using the detected linker.
     /// Returns true if linking succeeded. Sets requiresWslRun if the executable must be run via WSL.
     /// </summary>
-    public static bool TryLink(string objectFile, string output, out string error, out bool requiresWslRun, bool shared = false)
+    public static bool TryLink(string objectFile, string output, out string error, out bool requiresWslRun,
+        bool shared = false, IEnumerable<string>? extraLibraries = null)
     {
         requiresWslRun = false;
         
@@ -112,28 +113,28 @@ public sealed class LinkerTool
 
             string linkFlag = shared ? "-shared" : "-no-pie";
 
+            string linkExtras = FormatExtraLibraries(extraLibraries, isWindows: false);
+
             if (isWsl)
             {
                 requiresWslRun = !shared;
                 string wslObjectFile = ToWslPath(objectFile);
                 string wslOutput = ToWslPath(output);
 
-                // WSL: wsl gcc -nostdlib -no-pie/-shared -o output objectFile
                 args = shared
-                    ? $"gcc -nostdlib {linkFlag} -o \"{wslOutput}\" \"{wslObjectFile}\""
-                    : $"gcc -nostdlib {linkFlag} -o \"{wslOutput}\" \"{wslObjectFile}\"";
+                    ? $"gcc -nostdlib {linkFlag} -o \"{wslOutput}\" \"{wslObjectFile}\" {linkExtras}"
+                    : $"gcc -nostdlib {linkFlag} -o \"{wslOutput}\" \"{wslObjectFile}\" {linkExtras}";
             }
             else if (isMingw)
             {
-                args = $"-nostdlib {linkFlag} -o \"{output}\" \"{objectFile}\"";
+                args = $"-nostdlib {linkFlag} -o \"{output}\" \"{objectFile}\" {linkExtras}";
             }
             else
             {
-                // Native Linux
                 if (linker.Contains("gcc"))
-                    args = $"-nostdlib {linkFlag} -o \"{output}\" \"{objectFile}\"";
+                    args = $"-nostdlib {linkFlag} -o \"{output}\" \"{objectFile}\" {linkExtras}";
                 else
-                    args = $"-o \"{output}\" \"{objectFile}\"";
+                    args = $"-o \"{output}\" \"{objectFile}\" {linkExtras}";
             }
 
             var psi = new ProcessStartInfo
@@ -225,7 +226,8 @@ public sealed class LinkerTool
     /// Links a COFF object file into a Windows PE executable or DLL.
     /// Uses lld-link or MSVC link.exe.
     /// </summary>
-    public static bool TryLinkWindows(string objectFile, string output, out string error, bool shared = false)
+    public static bool TryLinkWindows(string objectFile, string output, out string error, bool shared = false,
+        IEnumerable<string>? extraLibraries = null)
     {
         if (!TryFindWindowsLinker(out var linker, out var displayName, out var subCommand))
         {
@@ -242,18 +244,20 @@ public sealed class LinkerTool
             string subsystemFlag = "/SUBSYSTEM:CONSOLE";
             string kernel32Lib = "kernel32.lib";
 
+            string linkExtras = FormatExtraLibraries(extraLibraries, isWindows: true);
+
             string args;
             if (shared)
             {
                 args = isLld
-                    ? $"/NOLOGO /DLL {entryFlag} {subsystemFlag} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib}"
-                    : $"/NOLOGO /DLL {entryFlag} {subsystemFlag} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib}";
+                    ? $"/NOLOGO /DLL {entryFlag} {subsystemFlag} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib} {linkExtras}"
+                    : $"/NOLOGO /DLL {entryFlag} {subsystemFlag} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib} {linkExtras}";
             }
             else
             {
                 args = isLld
-                    ? $"/NOLOGO {entryFlag} {subsystemFlag} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib}"
-                    : $"/NOLOGO {entryFlag} {subsystemFlag} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib}";
+                    ? $"/NOLOGO {entryFlag} {subsystemFlag} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib} {linkExtras}"
+                    : $"/NOLOGO {entryFlag} {subsystemFlag} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib} {linkExtras}";
             }
 
             var psi = new ProcessStartInfo
@@ -307,6 +311,24 @@ Options to fix:
 3. Chocolatey:
    choco install llvm
 ";
+    }
+
+    private static string FormatExtraLibraries(IEnumerable<string>? extraLibraries, bool isWindows)
+    {
+        if (extraLibraries == null)
+            return string.Empty;
+
+        var parts = new List<string>();
+        foreach (var lib in extraLibraries)
+        {
+            if (string.IsNullOrWhiteSpace(lib))
+                continue;
+            parts.Add(isWindows && !lib.EndsWith(".lib", StringComparison.OrdinalIgnoreCase)
+                ? lib + ".lib"
+                : lib);
+        }
+
+        return parts.Count == 0 ? string.Empty : string.Join(' ', parts);
     }
 
     public static string ToWslPath(string windowsPath)

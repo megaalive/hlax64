@@ -1,0 +1,6 @@
+program variadic_extern;
+
+extern variadic procedure printf(fmt: cstring): int32 from "libc.so";
+
+begin variadic_extern;
+end variadic_extern;

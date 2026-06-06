@@ -14,5 +14,8 @@ public interface IAbiLowerer
     int StackAlignment { get; }
     IReadOnlyList<StringLiteralInfo> StringLiterals { get; }
     LoweredFunction Lower(IrFunction function, CompilationOptions options,
-        IReadOnlyDictionary<string, GlobalDataSymbol>? globalData = null);
+        IReadOnlyDictionary<string, GlobalDataSymbol>? globalData = null,
+        ProcedureTypeRegistry? procedureTypes = null,
+        RecordTypeRegistry? recordTypes = null,
+        ExternProcedureRegistry? externProcedures = null);
 }

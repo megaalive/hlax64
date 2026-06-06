@@ -22,13 +22,23 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
     private List<string> _externs = new();
     private IReadOnlyDictionary<string, GlobalDataSymbol> _globalData =
         new Dictionary<string, GlobalDataSymbol>(StringComparer.OrdinalIgnoreCase);
+    private ExternProcedureRegistry _externRegistry = new();
+    private ProcedureTypeRegistry _procedureTypes = new();
+    private RecordTypeRegistry _recordTypes = new();
+    private IrFunction? _currentFunction;
 
     public IReadOnlyList<StringLiteralInfo> StringLiterals => _stringLiterals;
 
     public LoweredFunction Lower(IrFunction function, CompilationOptions options,
-        IReadOnlyDictionary<string, GlobalDataSymbol>? globalData = null)
+        IReadOnlyDictionary<string, GlobalDataSymbol>? globalData = null,
+        ProcedureTypeRegistry? procedureTypes = null,
+        RecordTypeRegistry? recordTypes = null,
+        ExternProcedureRegistry? externProcedures = null)
     {
         _globalData = globalData ?? new Dictionary<string, GlobalDataSymbol>(StringComparer.OrdinalIgnoreCase);
+        _externRegistry = externProcedures ?? new ExternProcedureRegistry();
+        _procedureTypes = procedureTypes ?? new ProcedureTypeRegistry();
+        _recordTypes = recordTypes ?? new RecordTypeRegistry();
         _stringLabelCounter = 0;
         _valueMap.Clear();
         _stackOffset = 0;
@@ -62,15 +72,35 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
                 if (alignedOffset > 0)
                     loweredBlock.Instructions.Add(new LoweredInstruction($"    sub rsp, {alignedOffset}"));
 
-                for (int i = 0; i < function.ParameterValues.Count && i < ArgumentRegisters.Count; i++)
+                var paramTypes = function.ParameterTypes.Select(p => (p.Name, p.Type)).ToList();
+                var classified = AbiArgumentClassifier.ClassifyParameters(paramTypes, _recordTypes, _procedureTypes);
+                AbiArgumentClassifier.AssignWindowsRegisters(classified,
+                    out var gprAssign, out var xmmAssign);
+
+                foreach (var (param, gpr) in gprAssign)
                 {
-                    var param = function.ParameterValues[i];
-                    if (_valueMap.TryGetValue(param.Name!, out var slot))
-                        loweredBlock.Instructions.Add(new LoweredInstruction($"    mov {slot}, {ArgumentRegisters[i]}"));
+                    if (_valueMap.TryGetValue(param.Name, out var slot))
+                        loweredBlock.Instructions.Add(new LoweredInstruction($"    mov {slot}, {gpr}"));
                 }
 
-                for (int i = ArgumentRegisters.Count; i < function.ParameterValues.Count; i++)
+                foreach (var (param, xmm) in xmmAssign)
                 {
+                    if (_valueMap.TryGetValue(param.Name, out var slot))
+                    {
+                        var mov = param.Class == AbiArgClass.Float32 ? "movss" : "movsd";
+                        loweredBlock.Instructions.Add(new LoweredInstruction($"    {mov} {slot}, {xmm}"));
+                    }
+                }
+
+                var assignedIndices = new HashSet<int>(gprAssign.Select(x => x.Param.Index));
+                foreach (var x in xmmAssign)
+                    assignedIndices.Add(x.Param.Index);
+
+                for (int i = 0; i < function.ParameterValues.Count; i++)
+                {
+                    if (assignedIndices.Contains(i))
+                        continue;
+
                     var param = function.ParameterValues[i];
                     if (_valueMap.TryGetValue(param.Name!, out var slot))
                     {
@@ -91,6 +121,7 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
             // Lower each IR instruction
             foreach (var inst in irBlock.Instructions)
             {
+                _currentFunction = function;
                 loweredBlock.Instructions.Add(LowerInstruction(inst, function));
             }
 
@@ -177,6 +208,9 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
         var dst = ResolveOperand(dstVal);
         var src = ResolveOperand(srcVal);
 
+        if (inst.Immediate is string sseMov && sseMov is "movsd" or "movss" or "movd" or "movq")
+            return new LoweredInstruction($"    {sseMov} {dst}, {src}");
+
         if (IsMemRef(srcVal))
         {
             var mem = MemoryRefEncoding.Parse(srcVal!);
@@ -187,7 +221,7 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
             return ArrayLoweringHelper.LowerArrayLoad(dst, srcVal!, _stackMap, ResolveOperand, _globalData);
 
         if (FieldAccessEncoding.IsFieldAccess(srcVal))
-            return FieldLoweringHelper.LowerFieldLoad(dst, srcVal!, _stackMap);
+            return FieldLoweringHelper.LowerFieldLoad(dst, srcVal!, _stackMap, _currentFunction?.RecordPointerParams);
 
         if (GlobalDataEncoding.IsGlobalRef(srcVal))
         {
@@ -206,7 +240,7 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
             return ArrayLoweringHelper.LowerArrayStore(dstVal!, src, _stackMap, ResolveOperand, _globalData);
 
         if (FieldAccessEncoding.IsFieldAccess(dstVal))
-            return FieldLoweringHelper.LowerFieldStore(dstVal!, src, _stackMap);
+            return FieldLoweringHelper.LowerFieldStore(dstVal!, src, _stackMap, _currentFunction?.RecordPointerParams);
 
         if (GlobalDataEncoding.IsGlobalRef(dstVal))
         {
@@ -374,40 +408,11 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
     private LoweredInstruction LowerCallInst(IrInstruction inst)
     {
         if (inst.Immediate is string name && name == "stdout.put")
-        {
             return LowerStdoutPut(inst);
-        }
 
         var sb = new System.Text.StringBuilder();
-
-        // Assign arguments to registers
-        var args = inst.Operands;
-        int extraArgs = args.Count > ArgumentRegisters.Count ? args.Count - ArgumentRegisters.Count : 0;
-
-        // Allocate shadow space + space for extra stack args
-        int totalAlloc = 32 + extraArgs * 8;
-        if (totalAlloc > 0)
-            sb.AppendLine($"    sub rsp, {totalAlloc}     ; shadow space" + (extraArgs > 0 ? " + stack args" : ""));
-
-        // Store extra args on stack above shadow space
-        for (int i = ArgumentRegisters.Count; i < args.Count; i++)
-        {
-            var argVal = ResolveOperand(args[i]);
-            int stackSlot = 32 + (i - ArgumentRegisters.Count) * 8;
-            sb.AppendLine($"    mov qword [rsp+{stackSlot}], {argVal}");
-        }
-
-        // Assign register arguments
-        for (int i = 0; i < args.Count && i < ArgumentRegisters.Count; i++)
-        {
-            var argVal = ResolveOperand(args[i]);
-            sb.AppendLine($"    mov {ArgumentRegisters[i]}, {argVal}");
-        }
-
-        sb.Append($"    call {inst.Immediate}\n");
-        if (totalAlloc > 0)
-            sb.Append($"    add rsp, {totalAlloc}");
-
+        AbiCallLoweringHelper.AppendWindowsCall(sb, inst, _currentFunction!, ResolveOperand,
+            _externRegistry, _procedureTypes, _recordTypes, _externs);
         return new LoweredInstruction(sb.ToString());
     }
 

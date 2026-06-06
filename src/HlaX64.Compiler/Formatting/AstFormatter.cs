@@ -61,6 +61,20 @@ public static class AstFormatter
                 EmitStaticBlock(sb, block, 0);
         }
 
+        if (program.Externs.Count > 0)
+        {
+            sb.AppendLine();
+            foreach (ExternProcedureNode ext in program.Externs)
+                EmitExternProcedure(sb, ext, 0);
+        }
+
+        if (program.TypeAliases.Count > 0)
+        {
+            sb.AppendLine();
+            foreach (TypeAliasNode alias in program.TypeAliases)
+                EmitTypeAlias(sb, alias, 0);
+        }
+
         if (procedures.Count > 0)
         {
             sb.AppendLine();
@@ -121,6 +135,30 @@ public static class AstFormatter
         sb.AppendLine($"{pad}begin {proc.Name};");
         EmitStatements(sb, proc.Body, indent + 1);
         sb.AppendLine($"{pad}end {proc.Name};");
+        sb.AppendLine();
+    }
+
+    private static void EmitExternProcedure(StringBuilder sb, ExternProcedureNode ext, int indent)
+    {
+        var pad = Indent(indent);
+        if (ext.IsVariadic)
+            sb.Append($"{pad}extern variadic ");
+        else
+            sb.Append($"{pad}extern ");
+        sb.Append($"procedure {ext.Name}(");
+        sb.Append(string.Join("; ", ext.Parameters.Select(p => $"{p.Name}:{p.Type}")));
+        sb.Append($"): {ext.ReturnType}");
+        if (ext.LinkLibrary != null)
+            sb.Append($" from \"{ext.LinkLibrary}\"");
+        sb.AppendLine(";");
+    }
+
+    private static void EmitTypeAlias(StringBuilder sb, TypeAliasNode alias, int indent)
+    {
+        var pad = Indent(indent);
+        sb.Append($"{pad}type {alias.Name} := procedure(");
+        sb.Append(string.Join("; ", alias.Parameters.Select(p => $"{p.Name}:{p.Type}")));
+        sb.Append($"): {alias.ReturnType};");
         sb.AppendLine();
     }
 

@@ -1,0 +1,12 @@
+// extern-puts.hla64 — call libc puts via extern declaration (Linux SysV)
+
+program extern_puts;
+
+#include("stdlib64.hhf")
+
+extern procedure puts(msg: cstring): int32 from "libc.so";
+
+begin extern_puts;
+    call puts(&"Hello from puts");
+    mov(rax, rbx);
+end extern_puts;

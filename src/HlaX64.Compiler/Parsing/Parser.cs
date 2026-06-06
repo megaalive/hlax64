@@ -33,9 +33,11 @@ public sealed class Parser
         var enums = new List<AstNode>();
         var records = new List<AstNode>();
         var statics = new List<AstNode>();
+        var externs = new List<AstNode>();
+        var typeAliases = new List<AstNode>();
         var procedures = new List<AstNode>();
         while (Peek().Type is TokenType.Const or TokenType.Enum or TokenType.Record or TokenType.Static
-            or TokenType.Procedure or TokenType.Export)
+            or TokenType.Procedure or TokenType.Export or TokenType.Extern or TokenType.Type)
         {
             switch (Peek().Type)
             {
@@ -50,6 +52,12 @@ public sealed class Parser
                     break;
                 case TokenType.Static:
                     statics.Add(ParseStaticBlock());
+                    break;
+                case TokenType.Extern:
+                    externs.Add(ParseExternProcedure());
+                    break;
+                case TokenType.Type:
+                    typeAliases.Add(ParseTypeAlias());
                     break;
                 default:
                     procedures.Add(ParseProcedure());
@@ -79,7 +87,7 @@ public sealed class Parser
         allStatements.AddRange(procedures);
         allStatements.AddRange(statements);
 
-        return new ProgramNode(programName, includes, constants, enums, records, statics, allStatements);
+        return new ProgramNode(programName, includes, constants, enums, records, statics, externs, typeAliases, allStatements);
     }
 
     private List<AstNode> ParseStatementsUntilEnd()
@@ -191,21 +199,7 @@ public sealed class Parser
         Expect(TokenType.Procedure);
         var name = Expect(TokenType.Identifier).Value;
 
-        var parameters = new List<ParameterNode>();
-        if (_pos < _tokens.Count && _tokens[_pos].Type == TokenType.LeftParen)
-        {
-            Advance(); // skip (
-            if (Peek().Type != TokenType.RightParen)
-            {
-                parameters.Add(ParseParameter());
-                while (Peek().Type == TokenType.Semicolon)
-                {
-                    Advance();
-                    parameters.Add(ParseParameter());
-                }
-            }
-            Expect(TokenType.RightParen);
-        }
+        var parameters = ParseParameterList();
         Expect(TokenType.Semicolon);
 
         // @returns("rax")
@@ -279,7 +273,88 @@ public sealed class Parser
         var endName = Expect(TokenType.Identifier).Value;
         Expect(TokenType.Semicolon);
 
-        return new ProcedureNode(name, parameters, returnsRegister, isExport, constants, enums, records, variables, body);
+        return new ProcedureNode(name, parameters, returnsRegister, isExport,
+            isExtern: false, returnType: null, linkLibrary: null, isVariadic: false,
+            constants, enums, records, variables, body);
+    }
+
+    private ExternProcedureNode ParseExternProcedure()
+    {
+        var open = Expect(TokenType.Extern);
+        var isVariadic = false;
+        if (Peek().Type == TokenType.Variadic)
+        {
+            isVariadic = true;
+            Advance();
+        }
+
+        Expect(TokenType.Procedure);
+        var name = Expect(TokenType.Identifier).Value;
+        var parameters = ParseParameterList();
+        var returnType = ParseReturnTypeClause(required: true);
+        var linkLibrary = ParseFromClause();
+        Expect(TokenType.Semicolon);
+        return WithLocation(new ExternProcedureNode(name, parameters, returnType, linkLibrary, isVariadic), open);
+    }
+
+    private TypeAliasNode ParseTypeAlias()
+    {
+        var open = Expect(TokenType.Type);
+        var name = Expect(TokenType.Identifier).Value;
+        Expect(TokenType.ColonAssign);
+        Expect(TokenType.Procedure);
+        var parameters = ParseParameterList();
+        var returnType = ParseReturnTypeClause(required: true);
+        Expect(TokenType.Semicolon);
+        return WithLocation(new TypeAliasNode(name, parameters, returnType), open);
+    }
+
+    private List<ParameterNode> ParseParameterList()
+    {
+        var parameters = new List<ParameterNode>();
+        if (_pos < _tokens.Count && _tokens[_pos].Type == TokenType.LeftParen)
+        {
+            Advance();
+            if (Peek().Type != TokenType.RightParen)
+            {
+                parameters.Add(ParseParameter());
+                while (Peek().Type == TokenType.Semicolon)
+                {
+                    Advance();
+                    parameters.Add(ParseParameter());
+                }
+            }
+            Expect(TokenType.RightParen);
+        }
+
+        return parameters;
+    }
+
+    private string ParseReturnTypeClause(bool required)
+    {
+        if (Peek().Type == TokenType.Colon)
+        {
+            Advance();
+            return Expect(TokenType.Identifier).Value;
+        }
+
+        if (required)
+        {
+            var token = Peek();
+            throw new ParseException(
+                $"Expected return type after ')' but got '{token.Type}' ('{token.Value}') at line {token.Line}, column {token.Column}");
+        }
+
+        return "void";
+    }
+
+    private string? ParseFromClause()
+    {
+        if (Peek().Type != TokenType.From)
+            return null;
+
+        Advance();
+        return Expect(TokenType.StringLiteral).Value;
     }
 
     private ConstBlockNode ParseConstBlock()

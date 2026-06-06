@@ -1,0 +1,10 @@
+program extern_puts;
+
+#include("stdlib64.hhf")
+
+extern procedure puts(msg: cstring): int32 from "libc.so";
+
+begin extern_puts;
+    call puts(&"Hello");
+    mov(rax, rbx);
+end extern_puts;

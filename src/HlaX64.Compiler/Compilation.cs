@@ -16,6 +16,9 @@ public sealed class CompilationResult
     public List<LoweredFunction> LoweredFunctions { get; set; } = new();
     public List<StringLiteralInfo> StringLiterals { get; set; } = new();
     public List<GlobalDataSymbol> GlobalData { get; set; } = new();
+    public List<string> LinkLibraries { get; set; } = new();
+    public ExternProcedureRegistry ExternProcedures { get; set; } = new();
+    public ProcedureTypeRegistry ProcedureTypes { get; set; } = new();
     public List<string> Diagnostics { get; set; } = new();
     public List<Diagnostic> StructuredDiagnostics { get; set; } = new();
 }
@@ -68,13 +71,19 @@ public class Compilation
             }
 
             // 4. Lower AST to IR
-            var lowering = new AstToIrLowering(semantic.ConstTable, semantic.RecordTypes, semantic.GlobalData);
+            var lowering = new AstToIrLowering(semantic.ConstTable, semantic.RecordTypes, semantic.GlobalData,
+                semantic.ExternProcedures, semantic.ProcedureTypes);
             var procedures = new List<IrFunction>();
             var entryIr = lowering.LowerProgram(program, procedures);
 
             result.IrFunctions.Add(entryIr);
             result.IrFunctions.AddRange(procedures);
             result.GlobalData = semantic.GlobalData.Globals.Values.ToList();
+            result.ExternProcedures = semantic.ExternProcedures;
+            result.ProcedureTypes = semantic.ProcedureTypes;
+            result.LinkLibraries = semantic.ExternProcedures
+                .ResolveLinkLibraries(Options.Target.Abi.Equals("msabi", StringComparison.OrdinalIgnoreCase))
+                .ToList();
 
             // 5. Lower IR to ABI-specific form
             IAbiLowerer abiLowerer;
@@ -89,9 +98,11 @@ public class Compilation
             }
 
             var globalMap = semantic.GlobalData.Globals;
+            var procTypes = semantic.ProcedureTypes;
+            var recordTypes = semantic.RecordTypes;
             foreach (var irFunc in result.IrFunctions)
             {
-                var lowered = abiLowerer.Lower(irFunc, Options, globalMap);
+                var lowered = abiLowerer.Lower(irFunc, Options, globalMap, procTypes, recordTypes, semantic.ExternProcedures);
                 result.LoweredFunctions.Add(lowered);
             }
 

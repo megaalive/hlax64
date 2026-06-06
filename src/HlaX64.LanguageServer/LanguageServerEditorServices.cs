@@ -30,7 +30,7 @@ public static class LanguageServerEditorServices
 
     private static readonly string[] Keywords =
     [
-        "program", "begin", "end", "procedure", "var", "call", "export",
+        "program", "begin", "end", "procedure", "var", "call", "export", "extern", "type", "from", "variadic",
         "if", "else", "endif", "while", "endwhile", "do", "then",
         "include", "pragma", "target", "returns"
     ];
@@ -38,7 +38,7 @@ public static class LanguageServerEditorServices
     private static readonly string[] Types =
     [
         "int64", "uint64", "int32", "uint32", "int16", "uint16", "int8", "uint8",
-        "byte", "word", "dword", "qword", "ptr"
+        "byte", "word", "dword", "qword", "ptr", "float32", "float64", "real32", "real64", "cstring"
     ];
 
     private static readonly string[] Registers =

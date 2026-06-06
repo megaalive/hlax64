@@ -1,0 +1,10 @@
+program float_return;
+
+procedure Identity(v: float64); @returns("xmm0");
+begin Identity;
+    movsd(v, xmm0);
+end Identity;
+
+begin float_return;
+    mov(0, rax);
+end float_return;

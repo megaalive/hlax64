@@ -32,7 +32,7 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 | 14 | LSP & editor tooling | ✅ MVP | diagnostics, hover, completion, go-to-definition, document symbols, format-on-save; VS Code client |
 | 15 | AI Assembly Lab / GUI | ⏳ Pending | eksperimen UI (Avalonia/WPF) |
 | **16** | **Language core completion** | ✅ Done | const, expressions, enum, record, static, string model |
-| 17 | ABI and FFI completion | ⏳ | Sprint 1 ✅ stack args; Sprint 2+ extern, float, fn ptr |
+| 17 | ABI and FFI completion | ✅ Done | Sprints 2–5: extern, fn ptr, float ABI, struct param, variadic RFC |
 | 18 | Compiler verification | ⏳ | definite assignment, CFG/stack/ABI verifiers, fuzz expansion |
 | 19 | Debug and explainability | ⏳ | source map, DWARF MVP, disassembly, trace mode |
 | 20 | Optimization | ⏳ | const fold/prop, DCE, peephole, regalloc |
@@ -53,7 +53,10 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 ### Phase 17 sprint notes
 
 - **Sprint 1 (done):** stack arguments beyond register limit (SysV 7+, Windows 5+); RFC 0009; example `stack-args-sysv.hla64`
-- **Sprint 2+ (planned):** float/xmm ABI, `extern`, function pointers, struct by-value, variadic
+- **Sprint 2 (done):** `extern procedure` + `from "lib"` link hints; RFC 0010; example `extern-puts.hla64`; HLAX0050+
+- **Sprint 3 (done):** function pointer type aliases + indirect `call`; RFC 0011; example `indirect-call.hla64`
+- **Sprint 4 (done):** float32/float64 param/return MVP; RFC 0012; example `float-return.hla64`
+- **Sprint 5 (done):** record param as hidden pointer; variadic extern RFC + HLAX0055; RFC 0013; example `record-param.hla64`
 
 ---
 
@@ -89,7 +92,7 @@ Fase 13 (MCP) →  Fase 14 (LSP) →  Fase 15 (GUI)
 > *Fase 9.5 Workstream A–H done. Docs sync complete. Fase 10 (Bench), 11 (Windows), 12 (C# interop), 13 (MCP) all done.
 > **Level 3 memory curriculum** (RFC 0002/0003) — pointers, indexed `[reg+N]`, stack arrays `type[N]` (incl. packed `byte[N]`), string walk, optional `-Wbounds` (HLAX0030).
 > **Fase 14 LSP MVP** — diagnostics (incl. bounds warnings), hover, completion, go-to-definition, document symbols, format-on-save; VS Code language client.
-> **Phase 16 complete** — language core (const, expressions, enum, record, static, cstring/utf8slice). Next: Phase 17 (ABI/FFI) or Fase 15 (GUI / AI Assembly Lab).
+> **Phase 16 complete** — language core (const, expressions, enum, record, static, cstring/utf8slice). **Phase 17 complete** — ABI/FFI (extern, fn ptr, float, struct param). Next: Phase 18 (verification) or Fase 15 (GUI / AI Assembly Lab).
 
 ---
 

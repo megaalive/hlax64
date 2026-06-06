@@ -17,6 +17,11 @@ public sealed class SemanticAnalyzer
     private readonly EnumTypeRegistry _enumRegistry = new();
     private readonly RecordTypeRegistry _recordRegistry = new();
     private readonly GlobalDataRegistry _globalDataRegistry = new();
+    private readonly ExternProcedureRegistry _externRegistry = new();
+    private readonly ProcedureTypeRegistry _procedureTypeRegistry = new();
+    private readonly HashSet<string> _procedureNames = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _functionPointerNames = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _floatVariables = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, IntegerTypeSymbol> _variableTypes = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, RecordTypeSymbol> _recordVariables = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, int> _arrayElementCounts = new(StringComparer.OrdinalIgnoreCase);
@@ -29,6 +34,8 @@ public sealed class SemanticAnalyzer
     public CompileTimeConstTable ConstTable => _programConstTable;
     public RecordTypeRegistry RecordTypes => _recordRegistry;
     public GlobalDataRegistry GlobalData => _globalDataRegistry;
+    public ExternProcedureRegistry ExternProcedures => _externRegistry;
+    public ProcedureTypeRegistry ProcedureTypes => _procedureTypeRegistry;
     private static readonly HashSet<string> KnownRegisters = new(StringComparer.OrdinalIgnoreCase)
     {
         // 64-bit
@@ -48,6 +55,7 @@ public sealed class SemanticAnalyzer
     private static readonly HashSet<string> KnownMnemonics = new(StringComparer.OrdinalIgnoreCase)
     {
         "mov", "add", "sub", "imul", "xor", "and", "or", "cmp",
+        "movsd", "movss", "movd", "movq",
         "lea", "push", "pop", "inc", "dec", "neg", "not",
         "shl", "shr", "sar", "rol", "ror",
         "jmp", "call", "ret", "syscall",
@@ -57,6 +65,10 @@ public sealed class SemanticAnalyzer
     private static readonly Dictionary<string, (int MinOps, int MaxOps)> InstructionOperandCounts = new(StringComparer.OrdinalIgnoreCase)
     {
         ["mov"] = (2, 2),
+        ["movsd"] = (2, 2),
+        ["movss"] = (2, 2),
+        ["movd"] = (2, 2),
+        ["movq"] = (2, 2),
         ["add"] = (2, 2),
         ["sub"] = (2, 2),
         ["imul"] = (1, 3),
@@ -94,11 +106,16 @@ public sealed class SemanticAnalyzer
         _enumRegistry.Clear();
         _recordRegistry.Clear();
         _globalDataRegistry.Clear();
+        _externRegistry.Clear();
+        _procedureTypeRegistry.Clear();
+        _procedureNames.Clear();
         _recordRegistry.RegisterBuiltins();
 
         CheckProgramNameMatch(program);
         CheckDuplicateProcedures(program);
         EvaluateRecordBlocks(program.Records);
+        EvaluateTypeAliases(program.TypeAliases);
+        EvaluateExternProcedures(program.Externs, program);
         _constEvaluator.SetRecordTypes(_recordRegistry);
         EvaluateConstBlocks(program.Constants, _programConstTable, retryPass: false);
         EvaluateEnumBlocks(program.Enums, _programConstTable);
@@ -141,8 +158,147 @@ public sealed class SemanticAnalyzer
                         $"Duplicate procedure declaration '{proc.Name}'",
                         proc.Line, proc.Column);
                 }
+                else
+                {
+                    _procedureNames.Add(proc.Name);
+                }
             }
         }
+
+        foreach (var node in program.Externs)
+        {
+            if (node is ExternProcedureNode ext)
+            {
+                if (seen.Contains(ext.Name) || _procedureNames.Contains(ext.Name))
+                {
+                    _diagnostics.Error("HLAX0050",
+                        $"Extern procedure '{ext.Name}' conflicts with an existing procedure",
+                        ext.Line, ext.Column);
+                }
+            }
+        }
+    }
+
+    private void EvaluateTypeAliases(IEnumerable<AstNode> aliases)
+    {
+        foreach (var node in aliases)
+        {
+            if (node is not TypeAliasNode alias)
+                continue;
+
+            if (_recordRegistry.Contains(alias.Name) || _enumRegistry.Contains(alias.Name)
+                || _procedureTypeRegistry.Contains(alias.Name))
+            {
+                _diagnostics.Error("HLAX0051",
+                    $"Type alias '{alias.Name}' conflicts with an existing type name",
+                    alias.Line, alias.Column);
+                continue;
+            }
+
+            foreach (var param in alias.Parameters)
+            {
+                if (!IsKnownParamType(param.Type, alias.Line, alias.Column))
+                    return;
+            }
+
+            if (!IsKnownReturnType(alias.ReturnType, alias.Line, alias.Column))
+                return;
+
+            if (!_procedureTypeRegistry.Register(alias.Name,
+                    alias.Parameters.Select(p => (p.Name, p.Type)).ToList(),
+                    alias.ReturnType, out _, out var error))
+            {
+                _diagnostics.Error("HLAX0051", error ?? $"Invalid type alias '{alias.Name}'",
+                    alias.Line, alias.Column);
+            }
+        }
+    }
+
+    private void EvaluateExternProcedures(IEnumerable<AstNode> externs, ProgramNode program)
+    {
+        var procedureNames = program.Statements
+            .OfType<ProcedureNode>()
+            .Select(p => p.Name)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var node in externs)
+        {
+            if (node is not ExternProcedureNode ext)
+                continue;
+
+            if (ext.IsVariadic)
+            {
+                _diagnostics.Error("HLAX0055",
+                    "Variadic extern procedures are not yet supported (see RFC 0013)",
+                    ext.Line, ext.Column);
+                continue;
+            }
+
+            if (procedureNames.Contains(ext.Name))
+            {
+                _diagnostics.Error("HLAX0050",
+                    $"Extern procedure '{ext.Name}' conflicts with procedure '{ext.Name}'",
+                    ext.Line, ext.Column);
+                continue;
+            }
+
+            foreach (var param in ext.Parameters)
+            {
+                if (!IsKnownParamType(param.Type, ext.Line, ext.Column))
+                    continue;
+            }
+
+            if (!IsKnownReturnType(ext.ReturnType, ext.Line, ext.Column))
+                continue;
+
+            var symbol = new ExternProcedureSymbol
+            {
+                Name = ext.Name,
+                Parameters = ext.Parameters.Select(p => (p.Name, p.Type)).ToList(),
+                ReturnType = ext.ReturnType,
+                LinkLibrary = ext.LinkLibrary,
+                IsVariadic = ext.IsVariadic
+            };
+
+            if (!_externRegistry.Register(symbol, out var error))
+            {
+                _diagnostics.Error("HLAX0050", error ?? $"Invalid extern '{ext.Name}'",
+                    ext.Line, ext.Column);
+            }
+        }
+    }
+
+    private bool IsKnownParamType(string typeName, int line, int column)
+    {
+        if (TypeRegistry.IsScalarType(typeName) || _procedureTypeRegistry.Contains(typeName))
+            return true;
+
+        if (_recordRegistry.TryGet(typeName, out _))
+        {
+            _diagnostics.Error("HLAX0052",
+                $"Record type '{typeName}' cannot be used as an extern parameter (use ptr for MVP)",
+                line, column);
+            return false;
+        }
+
+        _diagnostics.Error("HLAX0053",
+            $"Unknown type '{typeName}' in procedure signature",
+            line, column);
+        return false;
+    }
+
+    private bool IsKnownReturnType(string typeName, int line, int column)
+    {
+        if (string.Equals(typeName, "void", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (TypeRegistry.IsScalarType(typeName))
+            return true;
+
+        _diagnostics.Error("HLAX0053",
+            $"Unknown return type '{typeName}' in procedure signature",
+            line, column);
+        return false;
     }
 
     private void AnalyzeStatement(AstNode node)
@@ -374,11 +530,30 @@ public sealed class SemanticAnalyzer
 
     private void AnalyzeCall(CallNode call)
     {
-        // Check arguments
-        foreach (var arg in call.Arguments)
+        if (call.Name == "stdout.put")
         {
-            AnalyzeOperand(arg);
+            foreach (var arg in call.Arguments)
+                AnalyzeOperand(arg);
+            return;
         }
+
+        if (_functionPointerNames.Contains(call.Name))
+        {
+            call.IsIndirect = true;
+        }
+        else if (_externRegistry.Contains(call.Name))
+        {
+            // extern call — validated
+        }
+        else if (!_procedureNames.Contains(call.Name))
+        {
+            _diagnostics.Error("HLAX0054",
+                $"Unknown procedure or extern '{call.Name}'",
+                call.Line, call.Column);
+        }
+
+        foreach (var arg in call.Arguments)
+            AnalyzeOperand(arg);
     }
 
     private void AnalyzeIf(IfNode ifNode)
@@ -644,6 +819,8 @@ public sealed class SemanticAnalyzer
         _arrayElementCounts.Clear();
         _scopeRecords.Clear();
         _scopeEnums.Clear();
+        _functionPointerNames.Clear();
+        _floatVariables.Clear();
         _constTable = _programConstTable.Clone();
         EvaluateConstBlocks(proc.Constants, _constTable);
         EvaluateEnumBlocks(proc.Enums, _constTable, localScope: true);
@@ -685,25 +862,37 @@ public sealed class SemanticAnalyzer
                 }
                 else
                 {
-                    var type = TypeRegistry.Lookup(varNode.Type);
-                    if (type == null)
+                    if (_procedureTypeRegistry.TryGet(varNode.Type, out _))
                     {
-                        _diagnostics.Error("HLAX0020",
-                            $"Unknown type '{varNode.Type}' for variable '{varNode.Name}'",
-                            varNode.Line, varNode.Column);
+                        _variableTypes[varNode.Name] = TypeRegistry.Ptr;
+                        _functionPointerNames.Add(varNode.Name);
+                    }
+                    else if (TypeRegistry.IsFloat(varNode.Type))
+                    {
+                        _floatVariables.Add(varNode.Name);
                     }
                     else
                     {
-                        if (varNode.ElementCount > 1 && !IsSupportedArrayElementType(type))
+                        var type = TypeRegistry.Lookup(varNode.Type);
+                        if (type == null)
                         {
-                            _diagnostics.Error("HLAX0024",
-                                $"Array element type '{varNode.Type}' is not supported; use byte, word, dword, int64, uint64, qword, or ptr",
+                            _diagnostics.Error("HLAX0020",
+                                $"Unknown type '{varNode.Type}' for variable '{varNode.Name}'",
                                 varNode.Line, varNode.Column);
                         }
+                        else
+                        {
+                            if (varNode.ElementCount > 1 && !IsSupportedArrayElementType(type))
+                            {
+                                _diagnostics.Error("HLAX0024",
+                                    $"Array element type '{varNode.Type}' is not supported; use byte, word, dword, int64, uint64, qword, or ptr",
+                                    varNode.Line, varNode.Column);
+                            }
 
-                        _variableTypes[varNode.Name] = type;
-                        if (varNode.ElementCount > 1)
-                            _arrayElementCounts[varNode.Name] = varNode.ElementCount;
+                            _variableTypes[varNode.Name] = type;
+                            if (varNode.ElementCount > 1)
+                                _arrayElementCounts[varNode.Name] = varNode.ElementCount;
+                        }
                     }
                 }
             }
@@ -711,11 +900,24 @@ public sealed class SemanticAnalyzer
 
         foreach (var param in proc.Parameters)
         {
-            if (TryResolveRecordType(param.Type, out _))
+            if (TryResolveRecordType(param.Type, out var recordType))
             {
-                _diagnostics.Error("HLAX0020",
-                    $"Parameter type '{param.Type}' must be a scalar type, not a record",
-                    param.Line, param.Column);
+                // MVP: record params passed as hidden pointer (8 bytes)
+                _variableTypes[param.Name] = TypeRegistry.Ptr;
+                _recordVariables[param.Name] = recordType;
+                continue;
+            }
+
+            if (_procedureTypeRegistry.TryGet(param.Type, out _))
+            {
+                _variableTypes[param.Name] = TypeRegistry.Ptr;
+                _functionPointerNames.Add(param.Name);
+                continue;
+            }
+
+            if (TypeRegistry.IsFloat(param.Type))
+            {
+                _floatVariables.Add(param.Name);
                 continue;
             }
 
@@ -817,8 +1019,12 @@ public sealed class SemanticAnalyzer
                 return;
             if (_globalDataRegistry.Contains(ident.Name))
                 return;
+            if (_procedureNames.Contains(ident.Name))
+                return;
+            if (_floatVariables.Contains(ident.Name))
+                return;
 
-            // Check if this identifier looks like a misspelled register (e.g., "raxz")
+            // Check if this identifier looks like a misspelled register
             // Only flag if it closely matches a known register
             if (KnownRegisters.Any(r => LevenshteinDistance(ident.Name, r) <= 1))
             {

@@ -1,0 +1,16 @@
+program record_param;
+
+record Point
+    x: int64;
+    y: int64;
+endrecord;
+
+procedure SumPoint(p: Point); @returns("rax");
+begin SumPoint;
+    mov(p.x, rax);
+    add(p.y, rax);
+end SumPoint;
+
+begin record_param;
+    mov(0, rax);
+end record_param;

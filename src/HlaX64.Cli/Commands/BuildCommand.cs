@@ -73,7 +73,12 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
                 Console.WriteLine($"Compiling {sourceFile}...");
 
             var sourceText = File.ReadAllText(sourceFile);
-            var nasmCode = CompilePipeline.EmitNasm(sourceFile, sourceText, options);
+            var compileResult = CompilePipeline.Process(sourceFile, sourceText, options);
+            if (!compileResult.Success)
+                throw new InvalidOperationException(string.Join("\n", compileResult.Diagnostics));
+
+            var emitter = new HlaX64.Backend.Nasm.Emitters.NasmEmitter();
+            var nasmCode = emitter.Emit(compileResult.LoweredFunctions, compileResult.StringLiterals, compileResult.GlobalData);
             File.WriteAllText(nasmFile, nasmCode);
             if (!settings.Json)
                 Console.WriteLine($"  -> {nasmFile}");
@@ -101,9 +106,11 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
             bool requiresWslRun = false;
             string linkError = "";
             if (isWindows)
-                linkSuccess = LinkerTool.TryLinkWindows(objFile, outputFile, out linkError, shared: isShared);
+                linkSuccess = LinkerTool.TryLinkWindows(objFile, outputFile, out linkError, shared: isShared,
+                    extraLibraries: compileResult.LinkLibraries);
             else
-                linkSuccess = LinkerTool.TryLink(objFile, outputFile, out linkError, out requiresWslRun, shared: isShared);
+                linkSuccess = LinkerTool.TryLink(objFile, outputFile, out linkError, out requiresWslRun,
+                    shared: isShared, extraLibraries: compileResult.LinkLibraries);
 
             if (!linkSuccess)
                 return Fail(settings, sourceFile, targetName, outputKind, nasmFile, objFile, linkError);

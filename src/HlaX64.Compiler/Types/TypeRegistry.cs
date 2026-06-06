@@ -18,6 +18,11 @@ public static class TypeRegistry
     public static readonly IntegerTypeSymbol Ptr = new("ptr", 64, false);
     public static readonly IntegerTypeSymbol CString = new("cstring", 64, false);
 
+    public static readonly FloatTypeSymbol Float32 = new("float32", 32);
+    public static readonly FloatTypeSymbol Float64 = new("float64", 64);
+    public static readonly FloatTypeSymbol Real32 = new("real32", 32);
+    public static readonly FloatTypeSymbol Real64 = new("real64", 64);
+
     private static readonly Dictionary<string, IntegerTypeSymbol> _types = new()
     {
         ["int8"] = Int8,
@@ -36,11 +41,30 @@ public static class TypeRegistry
         ["cstring"] = CString,
     };
 
+    private static readonly Dictionary<string, FloatTypeSymbol> _floatTypes = new()
+    {
+        ["float32"] = Float32,
+        ["float64"] = Float64,
+        ["real32"] = Real32,
+        ["real64"] = Real64,
+    };
+
     public static IntegerTypeSymbol? Lookup(string name)
     {
         _types.TryGetValue(name.ToLowerInvariant(), out var type);
         return type;
     }
+
+    public static FloatTypeSymbol? LookupFloat(string name)
+    {
+        _floatTypes.TryGetValue(name.ToLowerInvariant(), out var type);
+        return type;
+    }
+
+    public static bool IsFloat(string name) => _floatTypes.ContainsKey(name.ToLowerInvariant());
+
+    public static bool IsScalarType(string name)
+        => Lookup(name) != null || IsFloat(name);
 
     public static bool CanImplicitlyConvert(IntegerTypeSymbol from, IntegerTypeSymbol to)
     {

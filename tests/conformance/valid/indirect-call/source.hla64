@@ -1,0 +1,12 @@
+program indirect_call;
+
+type AddFn := procedure(a: int64; b: int64): int64;
+
+procedure Invoke(fn: AddFn; x: int64; y: int64); @returns("rax");
+begin Invoke;
+    call fn(x, y);
+end Invoke;
+
+begin indirect_call;
+    mov(0, rax);
+end indirect_call;
