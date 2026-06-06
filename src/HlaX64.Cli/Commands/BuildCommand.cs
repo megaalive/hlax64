@@ -36,23 +36,23 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
         public bool Json { get; set; }
 
         [Description("Warn when a literal array index may be out of bounds")]
-        [CommandOption("-Wbounds|--warn-bounds")]
+        [CommandOption("--warn-bounds")]
         public bool WarnBounds { get; set; }
 
         [Description("Warn on possible use before definite assignment (HLAX0060)")]
-        [CommandOption("-Wdefinite|--warn-definite")]
+        [CommandOption("--warn-definite")]
         public bool WarnDefinite { get; set; }
 
         [Description("Warn on unreachable code / missing return path (HLAX0061/62)")]
-        [CommandOption("-Wunreachable|--warn-unreachable")]
+        [CommandOption("--warn-unreachable")]
         public bool WarnUnreachable { get; set; }
 
         [Description("Warn when caller-saved registers may be live across call (HLAX0063)")]
-        [CommandOption("-Wliveness|--warn-liveness")]
+        [CommandOption("--warn-liveness")]
         public bool WarnLiveness { get; set; }
 
         [Description("Enable all Phase 18 verification warnings")]
-        [CommandOption("-Wverify|--warn-verify")]
+        [CommandOption("--warn-verify")]
         public bool WarnVerify { get; set; }
     }
 

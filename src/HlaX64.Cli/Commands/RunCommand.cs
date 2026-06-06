@@ -15,19 +15,19 @@ public sealed class RunCommand : Command<RunCommand.Settings>
         public string Source { get; set; } = string.Empty;
 
         [Description("Warn when a literal array index may be out of bounds")]
-        [CommandOption("-Wbounds|--warn-bounds")]
+        [CommandOption("--warn-bounds")]
         public bool WarnBounds { get; set; }
 
-        [CommandOption("-Wdefinite|--warn-definite")]
+        [CommandOption("--warn-definite")]
         public bool WarnDefinite { get; set; }
 
-        [CommandOption("-Wunreachable|--warn-unreachable")]
+        [CommandOption("--warn-unreachable")]
         public bool WarnUnreachable { get; set; }
 
-        [CommandOption("-Wliveness|--warn-liveness")]
+        [CommandOption("--warn-liveness")]
         public bool WarnLiveness { get; set; }
 
-        [CommandOption("-Wverify|--warn-verify")]
+        [CommandOption("--warn-verify")]
         public bool WarnVerify { get; set; }
     }
 

@@ -38,6 +38,11 @@ jobs:
       - name: Doctor
         run: dotnet run --project src/HlaX64.Cli -- doctor
 
+      - name: Verify stack and ABI (smoke)
+        run: |
+          dotnet run --project src/HlaX64.Cli -- verify-stack examples/06-abi/stack-args-sysv.hla64
+          dotnet run --project src/HlaX64.Cli -- verify-abi examples/06-abi/stack-args-sysv.hla64 --json
+
       - name: Native integration test (Linux)
         if: runner.os == 'Linux'
         run: |
