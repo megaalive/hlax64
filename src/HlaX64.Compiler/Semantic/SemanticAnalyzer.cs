@@ -1,5 +1,6 @@
 using HlaX64.Compiler.Ast;
 using HlaX64.Compiler.Diagnostics;
+using HlaX64.Compiler.Options;
 using HlaX64.Compiler.Types;
 
 namespace HlaX64.Compiler.Semantic;
@@ -10,6 +11,7 @@ namespace HlaX64.Compiler.Semantic;
 /// </summary>
 public sealed class SemanticAnalyzer
 {
+    private readonly CompilerWarnings _warnings;
     private readonly DiagnosticCollection _diagnostics = new();
     private readonly Dictionary<string, IntegerTypeSymbol> _variableTypes = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, int> _arrayElementCounts = new(StringComparer.OrdinalIgnoreCase);
@@ -65,6 +67,11 @@ public sealed class SemanticAnalyzer
         ["nop"] = (0, 0),
         ["hlt"] = (0, 0),
     };
+
+    public SemanticAnalyzer(CompilerWarnings? warnings = null)
+    {
+        _warnings = warnings ?? new CompilerWarnings();
+    }
 
     public DiagnosticCollection Analyze(ProgramNode program)
     {
@@ -249,10 +256,10 @@ public sealed class SemanticAnalyzer
                 }
                 else
                 {
-                    if (varNode.ElementCount > 1 && type.BitWidth != 64)
+                    if (varNode.ElementCount > 1 && !IsSupportedArrayElementType(type))
                     {
                         _diagnostics.Error("HLAX0024",
-                            $"Array element type '{varNode.Type}' is not supported; use int64, uint64, qword, or ptr",
+                            $"Array element type '{varNode.Type}' is not supported; use byte, word, dword, int64, uint64, qword, or ptr",
                             varNode.Line, varNode.Column);
                     }
 
@@ -337,6 +344,10 @@ public sealed class SemanticAnalyzer
                     $"'{arr.ArrayName}' is not an array; use type[count] in the var block",
                     arr.Line, arr.Column);
             }
+            else
+            {
+                CheckArrayIndexBounds(arr);
+            }
 
             AnalyzeOperand(arr.Index);
         }
@@ -361,6 +372,26 @@ public sealed class SemanticAnalyzer
             }
         }
     }
+
+    private void CheckArrayIndexBounds(ArrayIndexNode arr)
+    {
+        if (!_warnings.Bounds)
+            return;
+        if (arr.Index is not IntegerLiteralNode lit)
+            return;
+        if (!_arrayElementCounts.TryGetValue(arr.ArrayName, out var length))
+            return;
+
+        if (lit.Value < 0 || lit.Value >= length)
+        {
+            _diagnostics.Warning("HLAX0030",
+                $"Array index {lit.Value} may be out of bounds for '{arr.ArrayName}' (length {length})",
+                arr.Line, arr.Column);
+        }
+    }
+
+    private static bool IsSupportedArrayElementType(IntegerTypeSymbol type)
+        => type.BitWidth is 8 or 16 or 32 or 64;
 
     private void AnalyzeMemoryRef(AstNode inner, int line, int column)
     {

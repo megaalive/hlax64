@@ -51,15 +51,16 @@ public class Compilation
             var program = parser.Parse();
 
             // 3. Semantic analysis
-            var semantic = new SemanticAnalyzer();
+            var semantic = new SemanticAnalyzer(Options.Warnings);
             var semDiags = semantic.Analyze(program);
+            foreach (var diag in semDiags.Diagnostics)
+            {
+                result.StructuredDiagnostics.Add(diag);
+                result.Diagnostics.Add(diag.ToString());
+            }
+
             if (semDiags.HasErrors)
             {
-                foreach (var diag in semDiags.Diagnostics)
-                {
-                    result.StructuredDiagnostics.Add(diag);
-                    result.Diagnostics.Add(diag.ToString());
-                }
                 result.Success = false;
                 return result;
             }

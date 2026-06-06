@@ -39,7 +39,7 @@ Or run from source without installing (below).
 git clone https://github.com/megaalive/hlax64.git
 cd hlax64
 dotnet build
-dotnet test   # 150+ unit tests; native samples require Linux toolchain in CI
+dotnet test   # 163 unit tests; native samples require Linux toolchain in CI
 ```
 
 ### Language Server (Phase 14 MVP)
@@ -48,9 +48,11 @@ dotnet test   # 150+ unit tests; native samples require Linux toolchain in CI
 dotnet run --project src/HlaX64.LanguageServer
 ```
 
-Capabilities: **publishDiagnostics**, **hover** (mnemonics, keywords, types, registers), **completion**.
+Capabilities: **publishDiagnostics** (incl. bounds warnings), **hover**, **completion**, **definition**, **documentSymbol**, **documentFormatting**.
 
-**VS Code / Cursor:** install the extension from `editors/vscode/` (run `npm install` once), then **Developer: Install Extension from Location**. The extension starts the language server via `dotnet run` automatically.
+**VS Code / Cursor:** install the extension from `editors/vscode/` (run `npm install` once), then **Developer: Install Extension from Location**. The extension starts the language server via `dotnet run` automatically. Format-on-save is enabled for `.hla64` by default.
+
+Optional CLI bounds warnings: `-Wbounds` / `--warn-bounds` on `build`, `emit-nasm`, `run`, `explain` (see [diagnostics.md](diagnostics.md#hlax0030--possible-out-of-bounds-array-index)).
 
 See [editors/vscode/README.md](../editors/vscode/README.md).
 
@@ -95,8 +97,8 @@ src/HlaX64.Cli/          hla64 commands
 src/HlaX64.McpServer/    MCP JSON-RPC server
 tests/HlaX64.Compiler.Tests/  xUnit
 tests/samples/           Native integration manifests
-examples/                User-facing sample programs (16 curriculum examples)
-editors/vscode/          VS Code grammar + snippets
+examples/                User-facing sample programs (29 curriculum manifests)
+editors/vscode/          VS Code grammar, snippets, LSP client
 rfcs/                    Design RFCs
 tests/conformance/       Valid/invalid language conformance cases
 docs/                    Specifications and guides

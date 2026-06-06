@@ -22,22 +22,21 @@ end P;
 ```
 
 - **Declaration:** `ident: type[count];` where `count` is a positive integer literal.
-- **Element types (0.x):** `int64`, `uint64`, `qword`, `ptr` (64-bit / 8-byte slots).
+- **Element types (0.x):** `byte`/`int8`/`uint8` (1 byte), `word`/`int16`/`uint16` (2), `dword`/`int32`/`uint32` (4), `int64`/`uint64`/`qword`/`ptr` (8).
 - **Index:** register, local identifier, or non-negative integer literal.
-- **Lowering:** `data[i]` → `[rbp+baseDisp + i×8]` (SIB when index is a register).
+- **Lowering:** `data[i]` → `[rbp+baseDisp + i×elementSize]` with sized `mov`/`movzx` for sub-qword elements (SIB when index is a register).
 
 ## Not in scope (0.x)
 
 - Dynamic length / `new`
 - Multi-dimensional arrays
-- `byte[N]` packed arrays (use `[reg+off].byte` manual pattern)
-- Bounds checking (documented UB — see `docs/memory-and-bounds.md`)
+- Runtime bounds checking (optional `-Wbounds` static warning — see `docs/diagnostics.md` HLAX0030)
 
 ## Diagnostics
 
 | Code | Meaning |
 |------|---------|
-| HLAX0024 | Array element type not supported (must be 64-bit class) |
+| HLAX0024 | Array element type not supported (must be byte/word/dword/qword class) |
 | HLAX0025 | Invalid array length (must be ≥ 1) |
 | HLAX0026 | Indexed access on non-array variable |
 | HLAX0027 | Unknown array variable in `arr[i]` |

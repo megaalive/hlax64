@@ -131,7 +131,7 @@ Stable diagnostic codes help agents, IDE tooling, and contributors reference err
 | **Severity** | Error |
 | **Category** | Type system |
 | **Since** | 0.2.0-alpha |
-| **Cause** | Array `type[count]` requires 64-bit element type (`int64`, `uint64`, `qword`, `ptr`) |
+| **Cause** | Array `type[count]` requires a supported element type (`byte`, `word`, `dword`, `int64`, `uint64`, `qword`, `ptr`, and signed/unsigned aliases) |
 | **Fix** | Use a supported element type per [RFC 0003](../rfcs/0003-array-model.md) |
 
 ### HLAX0025 — Invalid array length
@@ -163,6 +163,18 @@ Stable diagnostic codes help agents, IDE tooling, and contributors reference err
 | **Since** | 0.2.0-alpha |
 | **Cause** | `arr[i]` references an unknown name |
 | **Fix** | Declare `arr` in the procedure `var` block |
+
+### HLAX0030 — Possible out-of-bounds array index
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Warning |
+| **Category** | Type system |
+| **Since** | 0.2.0-alpha |
+| **Cause** | Literal index in `arr[i]` is negative or `>=` declared array length (static check only) |
+| **Example** | `var buf: int64[4];` … `mov(buf[4], rax);` with `-Wbounds` |
+| **Fix** | Use a valid index (`0` … `length-1`), or guard dynamic indices at runtime |
+| **CLI** | Enable with `-Wbounds` / `--warn-bounds` on `build`, `emit-nasm`, `run`, `explain`. The language server enables bounds warnings in diagnostics by default. |
 
 ## Toolchain messages (no code yet)
 

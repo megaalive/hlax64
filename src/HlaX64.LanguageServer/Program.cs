@@ -44,7 +44,10 @@ internal static class Program
                         {
                             textDocumentSync = 1,
                             hoverProvider = true,
-                            completionProvider = new { triggerCharacters = new[] { ".", "[", "&" } }
+                            completionProvider = new { triggerCharacters = new[] { ".", "[", "&" } },
+                            definitionProvider = true,
+                            documentSymbolProvider = true,
+                            documentFormattingProvider = true
                         },
                         serverInfo = new { name = "HlaX64.LanguageServer", version = HlaX64.Compiler.Compilation.GetVersion() }
                     });
@@ -94,8 +97,78 @@ internal static class Program
                 case "textDocument/completion" when hasId:
                     HandleCompletion(id, root);
                     break;
+
+                case "textDocument/definition" when hasId:
+                    HandleDefinition(id, root);
+                    break;
+
+                case "textDocument/documentSymbol" when hasId:
+                    HandleDocumentSymbol(id, root);
+                    break;
+
+                case "textDocument/formatting" when hasId:
+                    HandleFormatting(id, root);
+                    break;
             }
         }
+    }
+
+    private static void HandleDefinition(JsonElement id, JsonElement root)
+    {
+        if (!TryGetDocumentPosition(root, out var uri, out var line, out var character, out var text))
+        {
+            WriteResponse(id, null!);
+            return;
+        }
+
+        WriteResponse(id, LanguageServerEditorServices.GetDefinition(text, line, character, uri)!);
+    }
+
+    private static void HandleDocumentSymbol(JsonElement id, JsonElement root)
+    {
+        if (!root.TryGetProperty("params", out var p))
+        {
+            WriteResponse(id, Array.Empty<object>());
+            return;
+        }
+
+        var uri = p.GetProperty("textDocument").GetProperty("uri").GetString()!;
+        Documents.TryGetValue(uri, out var text);
+        WriteResponse(id, LanguageServerEditorServices.GetDocumentSymbols(text ?? ""));
+    }
+
+    private static void HandleFormatting(JsonElement id, JsonElement root)
+    {
+        if (!root.TryGetProperty("params", out var p))
+        {
+            WriteResponse(id, null!);
+            return;
+        }
+
+        var uri = p.GetProperty("textDocument").GetProperty("uri").GetString()!;
+        if (!Documents.TryGetValue(uri, out var text))
+        {
+            WriteResponse(id, null!);
+            return;
+        }
+
+        WriteResponse(id, LanguageServerEditorServices.FormatDocument(text)!);
+    }
+
+    private static bool TryGetDocumentPosition(JsonElement root, out string uri, out int line, out int character, out string text)
+    {
+        uri = "";
+        line = 0;
+        character = 0;
+        text = "";
+        if (!root.TryGetProperty("params", out var p))
+            return false;
+
+        uri = p.GetProperty("textDocument").GetProperty("uri").GetString()!;
+        var pos = p.GetProperty("position");
+        line = pos.GetProperty("line").GetInt32();
+        character = pos.GetProperty("character").GetInt32();
+        return Documents.TryGetValue(uri, out text!);
     }
 
     private static void HandleHover(JsonElement id, JsonElement root)

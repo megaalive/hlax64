@@ -14,7 +14,7 @@
 | [`02-types/`](../examples/02-types/) | signed/unsigned compare | Typed comparisons |
 | [`03-control-flow/`](../examples/03-control-flow/) | `count`, `if-else` | Loops, branches |
 | [`04-procedures/`](../examples/04-procedures/) | `add-two`, factorial, … | Procedures & ABI |
-| [`05-memory/`](../examples/05-memory/) | pointer, stack-array, string-length, … | Level 3 memory curriculum |
+| [`05-memory/`](../examples/05-memory/) | pointer, stack-array, `int64[N]`, `byte[N]`, string-length, … | Level 3 memory curriculum |
 | [`06-abi/`](../examples/06-abi/) | stack-alignment, callee-saved, … | ABI edge cases |
 | [`07-interop/`](../examples/07-interop/) | `export-lib` | Shared library export |
 | [`08-ai-agent/`](../examples/08-ai-agent/) | `smoke-test` | Agent workflow |
@@ -33,13 +33,13 @@ Each folder has a README with build/run commands.
 hla64 test tests/samples/
 ```
 
-Includes Level 3: `pointer_load_store`, `stack_array`, `string_length`.
+Includes Level 3: `pointer_load_store`, `stack_array`, `string_length`, `array_sum`, `array_max`.
 
 ---
 
 ## 2b. Curriculum manifests (`tests/examples-curriculum/`)
 
-24 manifests reference structured programs under `examples/`:
+29 manifests reference structured programs under `examples/`:
 
 ```bash
 hla64 test tests/examples-curriculum/

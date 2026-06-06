@@ -1,5 +1,6 @@
 using HlaX64.Compiler.Abi;
 using HlaX64.Compiler.Ast;
+using HlaX64.Compiler.Types;
 
 namespace HlaX64.Compiler.Ir;
 
@@ -43,10 +44,11 @@ public sealed class AstToIrLowering
             if (variable is VariableNode varNode)
             {
                 func.LocalValues.Add(new IrValue { Name = varNode.Name });
+                var elemSize = (TypeRegistry.Lookup(varNode.Type)?.BitWidth ?? 64) / 8;
                 func.LocalLayouts[varNode.Name] = new IrLocalLayout
                 {
                     ElementCount = varNode.ElementCount,
-                    ElementSizeBytes = 8
+                    ElementSizeBytes = elemSize
                 };
             }
         }

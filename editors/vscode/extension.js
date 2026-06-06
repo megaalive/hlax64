@@ -25,6 +25,9 @@ function activate(context) {
 
   const clientOptions = {
     documentSelector: [{ scheme: 'file', language: 'hla64' }],
+    synchronize: {
+      configurationSection: 'hla64',
+    },
   };
 
   client = new LanguageClient('hla64', 'HlaX64 Language Server', serverOptions, clientOptions);

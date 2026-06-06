@@ -14,7 +14,8 @@ Stack locals, pointers, manual arrays, and string byte-walk (Level 3 curriculum)
 | [array-fill.hla64](array-fill.hla64) | 3 | Fill array in loop |
 | [array-max.hla64](array-max.hla64) | 9 | Max of `int64[4]` |
 | [array-literal-index.hla64](array-literal-index.hla64) | 20 | Literal index `arr[1]` |
+| [array-byte-last.hla64](array-byte-last.hla64) | 40 | Packed `byte[4]` with 1-byte stride |
 
 Tutorial: [docs/tutorials/05-memory.md](../../docs/tutorials/05-memory.md) · Bounds: [docs/memory-and-bounds.md](../../docs/memory-and-bounds.md)
 
-Array types (`arr[i]`) remain future work — [rfcs/0002-pointer-model.md](../../rfcs/0002-pointer-model.md).
+Stack arrays: [RFC 0003](../../rfcs/0003-array-model.md). Optional bounds warnings: `-Wbounds` (see [diagnostics.md](../../docs/diagnostics.md#hlax0030--possible-out-of-bounds-array-index)).

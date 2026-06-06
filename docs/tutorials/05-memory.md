@@ -45,9 +45,23 @@ mov(data[idx], rax);
 
 See [array-sum.hla64](../../examples/05-memory/array-sum.hla64), [array-max.hla64](../../examples/05-memory/array-max.hla64), [rfcs/0003-array-model.md](../../rfcs/0003-array-model.md).
 
+### Packed element types
+
+Use `byte[N]`, `word[N]`, or `dword[N]` when each slot is smaller than 64 bits (1-, 2-, or 4-byte stride):
+
+```hla
+var buf: byte[4];
+mov(10, buf[0]);
+mov(40, buf[3]);    // last byte — exit code in array-byte-last.hla64
+```
+
+See [array-byte-last.hla64](../../examples/05-memory/array-byte-last.hla64).
+
+---
+
 ## 4. Manual stack arrays (`[base + offset]`)
 
-Array types (`arr[i]`) are not implemented yet. Model a small array as consecutive `int64` locals and index with a byte offset:
+Before `type[N]` syntax, you could model a small array as consecutive `int64` locals and index with a byte offset. This pattern still works when you need raw pointer arithmetic:
 
 ```hla
 var elem0: int64;
@@ -101,7 +115,15 @@ See [string-length.hla64](../../examples/05-memory/string-length.hla64) — exit
 
 ## 7. Bounds and safety
 
-Read [memory-and-bounds.md](../memory-and-bounds.md). HlaX64 **does not** check pointer or index bounds in 0.x — out-of-range access is documented undefined behavior.
+Read [memory-and-bounds.md](../memory-and-bounds.md). HlaX64 **does not** enforce runtime bounds in 0.x — out-of-range access is undefined behavior.
+
+Optional **static** warnings for **literal** indices:
+
+```bash
+hla64 build examples/05-memory/array-sum.hla64 -Wbounds
+```
+
+Emits **HLAX0030** when a literal index is `< 0` or `>=` array length. Register/variable indices are not analyzed. The language server enables bounds warnings in diagnostics by default.
 
 ---
 

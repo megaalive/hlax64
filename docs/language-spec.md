@@ -208,7 +208,8 @@ mov(10, data[1]);
 
 - `&ident` requires a local variable or parameter in the current procedure (`HLAX0023`).
 - `[reg]` requires a register holding an address; optional `+ byteOffset` and size suffix.
-- Array declaration and `arr[i]` are **implemented** — see [RFC 0003](../rfcs/0003-array-model.md).
+- Array declaration and `arr[i]` are **implemented** — see [RFC 0003](../rfcs/0003-array-model.md). Element types: `byte`/`word`/`dword`/`int64`/`uint64`/`qword`/`ptr` (and int/uint aliases).
+- Optional compile-time bounds warnings for literal indices: CLI `-Wbounds` (HLAX0030); see [diagnostics.md](diagnostics.md).
 - Use consecutive locals + `[base + N]` only when avoiding array syntax.
 
 ## Calling Convention

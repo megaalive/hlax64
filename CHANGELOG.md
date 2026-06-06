@@ -8,7 +8,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ### Added
 
-- RFC 0003 stack arrays: `var data: int64[N];`, indexing `data[i]` / `data[2]` with SIB lowering
+- `-Wbounds` / `--warn-bounds` static array index warnings (HLAX0030); enabled in LSP diagnostics by default
+- LSP go-to-definition, document symbols, and document formatting (`AstFormatter`); VS Code format-on-save for `.hla64`
+- Packed stack arrays: `byte[N]`, `word[N]`, `dword[N]` with correct element stride and sized NASM loads/stores
+- Example `array-byte-last.hla64`, conformance `array-byte-packed`, curriculum manifest (29 total)
+
+### Added (prior unreleased)
 - Four array examples (`array-sum`, `array-fill`, `array-max`, `array-literal-index`) plus native samples
 - LSP Phase 14 MVP: hover, completion, parse-error positions; VS Code extension language client
 - GitHub Pages landing page (`docs/index.html`) with links to playground, install, and tutorials
@@ -29,7 +34,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ### Changed
 
-- Remove README demo GIF and `scripts/generate-demo-gif.py`
+- Docs sync: roadmap Fase 14, tutorial 05 (packed arrays, `-Wbounds`), examples catalog, development guide, GitHub Pages LSP section
 
 ## [0.1.0-alpha] - 2026-06-06
 

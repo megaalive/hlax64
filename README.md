@@ -5,7 +5,7 @@
 > assemble, link, and run — all from a single `hla64` CLI.
 
 [![Status](https://img.shields.io/badge/Fase%200%E2%80%9313-Done-green)](./docs/roadmap.md)
-[![Tests](https://img.shields.io/badge/tests-150%20unit%20+%2022%20native%20+%2028%20curriculum-2ea44f)](#test-status)
+[![Tests](https://img.shields.io/badge/tests-163%20unit%20+%2022%20native%20+%2029%20curriculum-2ea44f)](#test-status)
 [![Target](https://img.shields.io/badge/target-linux--x64--sysv%20|%20windows--x64--msabi-1f6feb)](#targets)
 [![Language](https://img.shields.io/badge/language-v0.1%20Draft-blueviolet)](#language-reference)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](#license)
@@ -40,7 +40,7 @@ Tutorials: [Getting started](docs/tutorials/01-getting-started.md) · [Native ro
 | **Procedures**      | ✅     | 0–6 integer args, `@returns("rax")`, no-paren syntax |
 | **Local variables** | ✅     | `var` block, stack frame with `[rbp-N]` addressing |
 | **Pointers & memory** | ✅ (Level 3) | `&var`, `&"str"`, `[reg+N]`, `.byte`, `type[N]`, `arr[i]` |
-| **LSP (editor)**      | ✅ MVP     | Diagnostics, hover, completion via `HlaX64.LanguageServer` |
+| **LSP (editor)**      | ✅ MVP     | Diagnostics, hover, completion, go-to-definition, document symbols, format-on-save |
 | **Stdlib**          | ✅     | `stdout.put("str", nl, rax, 42)` — inline syscall mode |
 
 ### Targets
@@ -74,7 +74,7 @@ Tutorials: [Getting started](docs/tutorials/01-getting-started.md) · [Native ro
 | Area                | Status | Details |
 |---------------------|--------|---------|
 | **CLI**             | ✅     | `build`, `emit-nasm`, `run`, `test`, `bench`, `explain`, `explain-abi`, `format`, `generate-header`, `generate-pinvoke`, `doctor` |
-| **Test runner**     | ✅     | 150 unit tests + 31 example compile guards + 22 native samples + 28 curriculum manifests |
+| **Test runner**     | ✅     | 163 unit tests + 31 example compile guards + 22 native samples + 29 curriculum manifests |
 | **Benchmark runner**| ✅     | `hla64 bench` with warmup, median, binary size, JSON manifest |
 | **MCP server**      | ✅     | 12 tools via stdio JSON-RPC: compile, build, run, test, explain, explain-abi, format-source, doctor, generate-header, generate-pinvoke, get-version, list-instructions |
 | **ABI explainer**   | ✅     | `hla64 explain-abi --target linux-x64-sysv` (or `windows-x64-msabi`) |
@@ -212,7 +212,7 @@ HlaX64/
 
 ```bash
 dotnet test
-# Passed! 150 unit/conformance tests (+ example compile guards)
+# Passed! 163 unit/conformance tests (+ example compile guards)
 ```
 
 | Suite | Count | Coverage |

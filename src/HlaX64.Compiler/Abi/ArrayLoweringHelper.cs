@@ -18,13 +18,13 @@ internal static class ArrayLoweringHelper
         if (parsed.IndexKind == "lit")
         {
             var mem = ArrayIndexEncoding.FormatMem(slot, parsed, elemSize);
-            return new LoweredInstruction($"    mov {destination}, {mem}");
+            return new LoweredInstruction($"    {ArrayIndexEncoding.EmitLoad(destination, mem, elemSize)}");
         }
 
         var sb = new System.Text.StringBuilder();
         var indexReg = PrepareIndexRegister(sb, parsed, resolveOperand);
         var memReg = ArrayIndexEncoding.FormatMem(slot, parsed, elemSize, indexReg);
-        sb.Append($"    mov {destination}, {memReg}");
+        sb.Append($"    {ArrayIndexEncoding.EmitLoad(destination, memReg, elemSize)}");
         return new LoweredInstruction(sb.ToString());
     }
 
@@ -42,13 +42,13 @@ internal static class ArrayLoweringHelper
         if (parsed.IndexKind == "lit")
         {
             var mem = ArrayIndexEncoding.FormatMem(slot, parsed, elemSize);
-            return new LoweredInstruction($"    mov {mem}, {source}");
+            return new LoweredInstruction($"    {ArrayIndexEncoding.EmitStore(mem, source, elemSize)}");
         }
 
         var sb = new System.Text.StringBuilder();
         var indexReg = PrepareIndexRegister(sb, parsed, resolveOperand);
         var memReg = ArrayIndexEncoding.FormatMem(slot, parsed, elemSize, indexReg);
-        sb.Append($"    mov {memReg}, {source}");
+        sb.Append($"    {ArrayIndexEncoding.EmitStore(memReg, source, elemSize)}");
         return new LoweredInstruction(sb.ToString());
     }
 

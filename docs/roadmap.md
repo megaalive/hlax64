@@ -29,7 +29,7 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 | 11 | Windows x64 backend | ✅ Done | RCX/RDX/R8/R9, 32-byte shadow space, `ExitProcess`, `WriteConsoleA`, `--target windows-x64-msabi` |
 | 12 | C ABI & C# interop | ✅ Done | `export procedure`, `--output-kind shared-library`, C header generator, C# P/Invoke generator |
 | 13 | MCP server | ✅ Done | 9 tools via stdio JSON-RPC (compile, build, run, test, explain-abi, dll) |
-| 14 | LSP & editor tooling | ✅ MVP | diagnostics, hover, completion; VS Code client |
+| 14 | LSP & editor tooling | ✅ MVP | diagnostics, hover, completion, go-to-definition, document symbols, format-on-save; VS Code client |
 | 15 | AI Assembly Lab / GUI | ⏳ Pending | eksperimen UI (Avalonia/WPF) |
 
 ---
@@ -64,9 +64,9 @@ Fase 13 (MCP) →  Fase 14 (LSP) →  Fase 15 (GUI)
 ```
 
 > *Fase 9.5 Workstream A–H done. Docs sync complete. Fase 10 (Bench), 11 (Windows), 12 (C# interop), 13 (MCP) all done.
-> **Level 3 memory curriculum** (RFC 0002/0003) — pointers, indexed `[reg+N]`, stack arrays `type[N]`, string walk.
-> **Fase 14 LSP MVP** — diagnostics, hover, completion, VS Code language client.
-> Next: array bounds warnings, LSP go-to-definition, Fase 15 (GUI).
+> **Level 3 memory curriculum** (RFC 0002/0003) — pointers, indexed `[reg+N]`, stack arrays `type[N]` (incl. packed `byte[N]`), string walk, optional `-Wbounds` (HLAX0030).
+> **Fase 14 LSP MVP** — diagnostics (incl. bounds warnings), hover, completion, go-to-definition, document symbols, format-on-save; VS Code language client.
+> Next: Fase 15 (GUI / AI Assembly Lab), runtime bounds, richer LSP (labels, semantic hover).
 
 ---
 

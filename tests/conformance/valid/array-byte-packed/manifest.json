@@ -1,0 +1,4 @@
+{
+  "source": "source.hla64",
+  "expectNasmContains": ["byte [rbp-", "+2]"]
+}
