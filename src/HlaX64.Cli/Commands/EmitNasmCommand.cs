@@ -47,6 +47,10 @@ public sealed class EmitNasmCommand : Command<EmitNasmCommand.Settings>
         [Description("Target triple: linux-x64-sysv (default) or windows-x64-msabi")]
         [CommandOption("--target")]
         public string? Target { get; set; }
+
+        [Description("Warn when a literal array index may be out of bounds")]
+        [CommandOption("-Wbounds|--warn-bounds")]
+        public bool WarnBounds { get; set; }
     }
 
     protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation)
@@ -58,10 +62,7 @@ public sealed class EmitNasmCommand : Command<EmitNasmCommand.Settings>
         }
 
         var sourceText = File.ReadAllText(settings.Source);
-        var targetTriple = TargetTriple.Parse(settings.Target ?? "linux-x64-sysv");
-        var options = CompilationOptions.Default with { Target = targetTriple };
-        if (settings.RuntimeMode?.ToLowerInvariant() == "library")
-            options = options with { RuntimeMode = HlaX64.Compiler.Options.RuntimeMode.Library };
+        var options = CliCompilationOptions.FromCli(settings.Target, settings.RuntimeMode, settings.WarnBounds);
 
         try
         {

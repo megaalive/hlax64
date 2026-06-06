@@ -1,5 +1,6 @@
 using HlaX64.Compiler.Diagnostics;
 using HlaX64.Compiler.Lexing;
+using HlaX64.Compiler.Options;
 using HlaX64.Compiler.Parsing;
 using HlaX64.Compiler.Semantic;
 
@@ -17,14 +18,14 @@ public static class DiagnosticService
         public string? ParseError { get; init; }
     }
 
-    public static AnalysisResult Analyze(string sourceText)
+    public static AnalysisResult Analyze(string sourceText, CompilerWarnings? warnings = null)
     {
         try
         {
             var lexer = new Lexer(sourceText);
             var parser = new Parser(lexer.Tokenize());
             var program = parser.Parse();
-            var sem = new SemanticAnalyzer();
+            var sem = new SemanticAnalyzer(warnings ?? new CompilerWarnings(Bounds: true));
             var diags = sem.Analyze(program);
             return new AnalysisResult
             {

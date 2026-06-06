@@ -1,0 +1,9 @@
+program ok;
+procedure P; @returns("rax");
+var a: byte[4];
+begin P;
+    mov(7, a[2]);
+    mov(a[2], rax);
+end P;
+begin ok;
+end ok;

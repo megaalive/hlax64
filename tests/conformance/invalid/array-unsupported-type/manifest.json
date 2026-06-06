@@ -1,4 +1,4 @@
 {
   "source": "source.hla64",
-  "expectCodes": ["HLAX0024"]
+  "expectCodes": ["HLAX0020"]
 }

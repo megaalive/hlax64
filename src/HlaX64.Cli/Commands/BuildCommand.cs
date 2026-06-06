@@ -34,6 +34,10 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
         [Description("Output build result as JSON")]
         [CommandOption("--json")]
         public bool Json { get; set; }
+
+        [Description("Warn when a literal array index may be out of bounds")]
+        [CommandOption("-Wbounds|--warn-bounds")]
+        public bool WarnBounds { get; set; }
     }
 
     protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation)
@@ -47,13 +51,10 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
         outputDir = Path.GetFullPath(outputDir);
         Directory.CreateDirectory(outputDir);
 
-        var targetTriple = TargetTriple.Parse(settings.Target ?? "linux-x64-sysv");
-        var options = CompilationOptions.Default;
-        options = options with { Target = targetTriple };
-        if (settings.RuntimeMode?.ToLowerInvariant() == "library")
-            options = options with { RuntimeMode = HlaX64.Compiler.Options.RuntimeMode.Library };
+        var options = CliCompilationOptions.FromCli(settings.Target, settings.RuntimeMode, settings.WarnBounds);
+        var targetTriple = options.Target;
 
-        bool isWindows = targetTriple.Abi.Equals("msabi", StringComparison.OrdinalIgnoreCase);
+        bool isWindows = options.Target.Abi.Equals("msabi", StringComparison.OrdinalIgnoreCase);
         bool isShared = settings.OutputKind?.ToLowerInvariant() == "shared-library";
         string nasmFormat = isWindows ? "win64" : "elf64";
         string objExt = isWindows ? ".obj" : ".o";

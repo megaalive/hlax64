@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using HlaX64.Cli.Commands;
 using HlaX64.Cli.Toolchain;
 using Spectre.Console.Cli;
 using System.Diagnostics;
@@ -12,6 +13,10 @@ public sealed class RunCommand : Command<RunCommand.Settings>
         [Description("Path to the .hla64 source file")]
         [CommandArgument(0, "<source>")]
         public string Source { get; set; } = string.Empty;
+
+        [Description("Warn when a literal array index may be out of bounds")]
+        [CommandOption("-Wbounds|--warn-bounds")]
+        public bool WarnBounds { get; set; }
     }
 
     protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation)
@@ -37,7 +42,8 @@ public sealed class RunCommand : Command<RunCommand.Settings>
             // 1. Compile .hla64 -> NASM via pipeline
             Console.WriteLine($"Compiling {sourceFile}...");
             var sourceText = File.ReadAllText(sourceFile);
-            var nasmCode = CompilePipeline.EmitNasm(sourceFile, sourceText);
+            var options = CliCompilationOptions.FromCli(null, null, settings.WarnBounds);
+            var nasmCode = CompilePipeline.EmitNasm(sourceFile, sourceText, options);
             File.WriteAllText(nasmFile, nasmCode);
 
             // 2. Assemble NASM -> .o

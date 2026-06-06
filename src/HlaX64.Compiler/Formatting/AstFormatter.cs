@@ -64,7 +64,10 @@ public static class AstFormatter
         {
             sb.AppendLine($"{pad}var");
             foreach (VariableNode v in proc.Variables)
-                sb.AppendLine($"{pad}    {v.Name}:{v.Type};");
+            {
+                var typeDecl = v.ElementCount > 1 ? $"{v.Type}[{v.ElementCount}]" : v.Type;
+                sb.AppendLine($"{pad}    {v.Name}:{typeDecl};");
+            }
         }
 
         sb.AppendLine($"{pad}begin {proc.Name};");

@@ -23,6 +23,10 @@ public sealed class ExplainCommand : Command<ExplainCommand.Settings>
         [Description("Output as JSON")]
         [CommandOption("--json")]
         public bool Json { get; set; }
+
+        [Description("Warn when a literal array index may be out of bounds")]
+        [CommandOption("-Wbounds|--warn-bounds")]
+        public bool WarnBounds { get; set; }
     }
 
     protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation)
@@ -34,7 +38,7 @@ public sealed class ExplainCommand : Command<ExplainCommand.Settings>
         }
 
         var sourceText = File.ReadAllText(settings.Source);
-        var options = CompilationOptions.Default with { Target = TargetTriple.Parse(settings.Target) };
+        var options = CliCompilationOptions.FromCli(settings.Target, null, settings.WarnBounds);
         var report = ExplainReport.Create(settings.Source, sourceText, options);
 
         if (settings.Json)

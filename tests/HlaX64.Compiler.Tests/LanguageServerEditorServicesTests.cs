@@ -45,6 +45,74 @@ public sealed class LanguageServerEditorServicesTests
     }
 
     [Fact]
+    public void GetDefinition_OnProcedure_ReturnsLocation()
+    {
+        var source = """
+            program t;
+            procedure Fill; @returns("rax");
+            var buf: int64[4];
+            begin Fill;
+                mov(0, rax);
+            end Fill;
+            begin t;
+                call Fill();
+            end t;
+            """;
+        var def = LanguageServerEditorServices.GetDefinition(source, 7, 10, "file:///test.hla64");
+        Assert.NotNull(def);
+        var json = System.Text.Json.JsonSerializer.Serialize(def);
+        Assert.Contains("file:///test.hla64", json);
+        Assert.Contains("range", json, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void GetDocumentSymbols_ListsProcedureAndVars()
+    {
+        var source = """
+            program t;
+            procedure P; @returns("rax");
+            var x: int64;
+            begin P;
+                mov(1, rax);
+            end P;
+            begin t;
+            end t;
+            """;
+        var symbols = LanguageServerEditorServices.GetDocumentSymbols(source);
+        var json = System.Text.Json.JsonSerializer.Serialize(symbols);
+        Assert.Contains("P", json);
+        Assert.Contains("x", json);
+    }
+
+    [Fact]
+    public void FormatDocument_NormalizesLayout()
+    {
+        var source = "program t;\nbegin t;\nmov(1,rax);\nend t;";
+        var edits = LanguageServerEditorServices.FormatDocument(source);
+        Assert.NotNull(edits);
+        var json = System.Text.Json.JsonSerializer.Serialize(edits);
+        Assert.Contains("mov(1, rax)", json);
+    }
+
+    [Fact]
+    public void DocumentDiagnostics_BoundsWarning_WhenLiteralOutOfRange()
+    {
+        var source = """
+            program t;
+            procedure P; @returns("rax");
+            var buf: int64[2];
+            begin P;
+                mov(buf[5], rax);
+            end P;
+            begin t;
+            end t;
+            """;
+        var diags = DocumentDiagnostics.ToLsp("file:///test.hla64", source);
+        var json = System.Text.Json.JsonSerializer.Serialize(diags);
+        Assert.Contains("HLAX0030", json);
+    }
+
+    [Fact]
     public void Emit_ArrayLiteralIndex_UsesScaledOffset()
     {
         var source = @"program t;

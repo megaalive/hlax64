@@ -42,16 +42,34 @@ internal static class ArrayIndexEncoding
         return $"[{inner}+{reg}*{elemSize}]";
     }
 
+    internal static string EmitLoad(string destination, string mem, int elemSizeBytes)
+        => elemSizeBytes switch
+        {
+            1 => $"movzx {destination}, byte {mem}",
+            2 => $"movzx {destination}, word {mem}",
+            4 => $"mov {destination}, dword {mem}",
+            _ => $"mov {destination}, {mem}",
+        };
+
+    internal static string EmitStore(string mem, string source, int elemSizeBytes)
+        => elemSizeBytes switch
+        {
+            1 => $"mov byte {mem}, {source}",
+            2 => $"mov word {mem}, {source}",
+            4 => $"mov dword {mem}, {source}",
+            _ => $"mov {mem}, {source}",
+        };
+
     internal static string EmitLoad(string destination, Parsed idx, string rbpSlot, int elemSize, string indexOperand)
     {
         var mem = FormatMem(rbpSlot, idx, elemSize, indexOperand);
-        return $"mov {destination}, {mem}";
+        return EmitLoad(destination, mem, elemSize);
     }
 
     internal static string EmitStore(Parsed idx, string rbpSlot, int elemSize, string source, string indexOperand)
     {
         var mem = FormatMem(rbpSlot, idx, elemSize, indexOperand);
-        return $"mov {mem}, {source}";
+        return EmitStore(mem, source, elemSize);
     }
 }
 
@@ -85,7 +103,7 @@ internal sealed class ProcedureStackMap
                 : new IrLocalLayout();
             map._layouts[local.Name!] = layout;
             map._slots[local.Name!] = SlotAt(slotIndex + 1);
-            slotIndex += layout.ElementCount;
+            slotIndex += layout.StackSlots;
             map.StackOffsetBytes = Math.Max(map.StackOffsetBytes, slotIndex * 8);
         }
 

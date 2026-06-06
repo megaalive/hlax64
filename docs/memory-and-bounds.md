@@ -23,17 +23,18 @@ Diagnostics: [HLAX0022](diagnostics.md#hlax0022--invalid-memory-dereference) (le
 
 Non-register inside `[..]` is a **parse error** in current releases.
 
-## Arrays (not yet)
+## Arrays (RFC 0003)
 
-- No `array` type or `arr[i]` syntax.
-- Use consecutive locals + `[base + index×8]` until RFC 0003 (planned) lands.
+- Stack arrays: `var data: type[N];` with `data[i]` indexing — see [RFC 0003](../rfcs/0003-array-model.md).
+- Packed element types (`byte[N]`, `word[N]`, `dword[N]`) use the correct byte stride in lowering.
 
 ## Bounds checking
 
-**Policy (0.x):** No compile-time or runtime bounds checks on pointer dereference or manual indexing.
+**Policy (0.x):** No runtime bounds checks. Out-of-range access is **undefined behavior (UB)**.
 
-- Reading/writing outside allocated stack slots or string/rodata limits is **undefined behavior (UB)**.
-- Future options (RFC 0002 open questions): debug trap (`int3`), `-Wbounds` warning mode, or documented UB only.
+- **Static warnings:** `-Wbounds` / `--warn-bounds` on `build`, `emit-nasm`, `run`, and `explain` emits **HLAX0030** when a **literal** index may be out of range. Register/variable indices are not analyzed.
+- The language server enables bounds warnings in diagnostics by default.
+- Future options: debug trap (`int3`), full static analysis, or documented UB only.
 
 **Safe patterns today:**
 

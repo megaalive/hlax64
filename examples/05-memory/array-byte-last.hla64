@@ -1,0 +1,17 @@
+// RFC 0003: packed byte[N] arrays (1-byte stride)
+program array_byte_last;
+
+procedure LastByte; @returns("rax");
+var
+    buf: byte[4];
+begin LastByte;
+    mov(10, buf[0]);
+    mov(20, buf[1]);
+    mov(30, buf[2]);
+    mov(40, buf[3]);
+    mov(buf[3], rax);
+end LastByte;
+
+begin array_byte_last;
+    call LastByte();
+end array_byte_last;

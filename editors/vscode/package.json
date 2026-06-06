@@ -24,6 +24,11 @@
           "type": "array",
           "default": [],
           "description": "Arguments for the language server. Leave empty to use the bundled project path."
+        },
+        "hla64.formatOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Format .hla64 files on save when the HlaX64 extension is active."
         }
       }
     },
@@ -41,6 +46,11 @@
     "snippets": [{
       "language": "hla64",
       "path": "./snippets/hla64.json"
-    }]
+    }],
+    "configurationDefaults": {
+      "[hla64]": {
+        "editor.formatOnSave": true
+      }
+    }
   }
 }

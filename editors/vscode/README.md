@@ -16,7 +16,7 @@ npm install
 
 - TextMate grammar for `.hla64`
 - Snippets: `hello`, `proc`
-- **Language Server** — diagnostics, hover, completion (starts `HlaX64.LanguageServer` via `dotnet run`)
+- **Language Server** — diagnostics (incl. bounds warnings), hover, completion, go-to-definition, document symbols, format-on-save via `AstFormatter`
 
 Optional settings:
 

@@ -1,6 +1,6 @@
 program bad;
 procedure P; @returns("rax");
-var a: byte[4];
+var a: foobar[4];
 begin P;
     mov(0, rax);
 end P;
