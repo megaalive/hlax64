@@ -1,0 +1,17 @@
+// comparison_signed.hla64
+// Demonstrates signed comparison via `if`.
+// Uses registers only (no negative literals in MVP).
+
+program comparison_signed;
+
+begin comparison_signed;
+    mov(0, rax);
+    sub(3, rax);    // rax = -3
+    mov(5, rcx);
+
+    if(rax < rcx) then
+        stdout.put("negative is less (signed correct)", nl);
+    else
+        stdout.put("WRONG: signed compare failed", nl);
+    endif;
+end comparison_signed;

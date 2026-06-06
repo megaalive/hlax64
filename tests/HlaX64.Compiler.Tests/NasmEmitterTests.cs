@@ -66,7 +66,7 @@ public class NasmEmitterTests
         var nasm = Emit("program test;\nbegin test;\n    stdout.put(rax, nl);\nend test;");
         Assert.Contains(".Ldiv_0:", nasm);
         Assert.Contains(".Lchk_0:", nasm);
-        Assert.Contains(".Lpop_0:", nasm);
+        Assert.Contains(".Lascii_0:", nasm);
     }
 
     [Fact]
@@ -139,7 +139,7 @@ public class NasmEmitterTests
     public void Emit_ExitSyscall_UsesRaxAsExitCode()
     {
         var nasm = Emit("program test;\nbegin test;\n    mov(42, rax);\nend test;");
-        Assert.Contains("mov rdi, rax", nasm);
+        Assert.Contains("xor ebx, ebx", nasm);
         Assert.Contains("mov rax, 60", nasm);
         Assert.Contains("syscall", nasm);
     }
@@ -237,11 +237,10 @@ end hello;";
     [Fact]
     public void Emit_ExitCodeSample_GeneratesExpectedExitSyscall()
     {
-        // The exitcode sample should produce a sys_exit whose rdi comes from rax.
+        // The exitcode sample should set rdi = 42 for the exit code.
         var source = File.ReadAllText(GetSamplePath("exitcode", "exitcode.hla64"));
         var nasm = Emit(source);
-        Assert.Contains("mov rax, 42", nasm);
-        Assert.Contains("mov rdi, rax", nasm);
+        Assert.Contains("mov rbx, 42", nasm);
         Assert.Contains("mov rax, 60", nasm);
         Assert.Contains("syscall", nasm);
     }

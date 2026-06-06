@@ -1,0 +1,6 @@
+{
+  "name": "procedure_1arg",
+  "source": "procedure_1arg.hla64",
+  "expectedStdout": "21 doubled = 42\n",
+  "expectedExitCode": 0
+}

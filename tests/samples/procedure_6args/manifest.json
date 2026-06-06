@@ -1,0 +1,6 @@
+{
+  "name": "procedure_6args",
+  "source": "procedure_6args.hla64",
+  "expectedStdout": "1+2+3+4+5+6 = 21\n",
+  "expectedExitCode": 0
+}

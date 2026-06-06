@@ -1,0 +1,6 @@
+{
+  "name": "comparison_signed",
+  "source": "comparison_signed.hla64",
+  "expectedStdout": "negative is less (signed correct)\n",
+  "expectedExitCode": 0
+}

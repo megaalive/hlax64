@@ -1,0 +1,6 @@
+{
+  "name": "local_var",
+  "source": "local_var.hla64",
+  "expectedStdout": "sum 1..5 = 15\n",
+  "expectedExitCode": 0
+}

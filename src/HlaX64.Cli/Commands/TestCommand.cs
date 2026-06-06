@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using HlaX64.Backend.Nasm.Emitters;
 using HlaX64.Cli.Toolchain;
 using HlaX64.Compiler;
@@ -58,12 +59,84 @@ public sealed class TestCommand : Command<TestCommand.Settings>
 
         // Toolchain for full execution
         string? nasmPath = null;
+        TestRunner.LinkerRunner? linkerRunner = null;
+        TestRunner.BinaryExecutor? binaryExecutor = null;
+
         if (!settings.CompileOnly)
         {
             if (NasmTool.TryFindNasm(out var found))
                 nasmPath = found;
             else
                 Console.Error.WriteLine("Warning: NASM not found. Use --compile-only or install NASM.");
+
+            // Refresh PATH from registry so recently-installed toolchains are visible
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                var machine = Environment.GetEnvironmentVariable("Path", EnvironmentVariableTarget.Machine) ?? "";
+                var user    = Environment.GetEnvironmentVariable("Path", EnvironmentVariableTarget.User) ?? "";
+                Environment.SetEnvironmentVariable("Path", machine + ";" + user + ";" + Environment.GetEnvironmentVariable("Path"));
+            }
+
+            // Detect linker and build delegates
+            if (LinkerTool.TryFindLinker(out var linkerPath, out var linkerDisplay, out var subCommand))
+            {
+                bool requiresWsl = linkerPath == "wsl";
+
+                linkerRunner = (objFile, exeFile) =>
+                {
+                    if (LinkerTool.TryLink(objFile, exeFile, out var error, out var wsl))
+                        return (true, "", wsl);
+                    return (false, error, wsl);
+                };
+
+                binaryExecutor = (exeFile, timeoutMs) =>
+                {
+                    try
+                    {
+                        string fileName;
+                        string args;
+                        if (requiresWsl)
+                        {
+                            fileName = "wsl";
+                            args = LinkerTool.ToWslPath(exeFile);
+                        }
+                        else
+                        {
+                            fileName = exeFile;
+                            args = "";
+                        }
+
+                        using var process = Process.Start(new ProcessStartInfo
+                        {
+                            FileName = fileName,
+                            Arguments = args,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true,
+                            UseShellExecute = false,
+                            CreateNoWindow = true
+                        });
+                        if (process == null)
+                            return (-1, "", "Failed to start process");
+
+                        if (!process.WaitForExit(timeoutMs))
+                        {
+                            process.Kill();
+                            return (-1, "", "Process timed out");
+                        }
+
+                        var stdout = process.StandardOutput.ReadToEnd();
+                        return (process.ExitCode, stdout, "");
+                    }
+                    catch (Exception ex)
+                    {
+                        return (-1, "", ex.Message);
+                    }
+                };
+            }
+            else
+            {
+                Console.Error.WriteLine("Warning: No linker found for execution tests. Use --compile-only or install gcc.");
+            }
         }
 
         // Manifests
@@ -92,7 +165,9 @@ public sealed class TestCommand : Command<TestCommand.Settings>
         var runner = new TestRunner(
             compileFunc: compileFunc,
             nasmPath: nasmPath,
-            skipExecution: settings.CompileOnly);
+            skipExecution: settings.CompileOnly,
+            linkerRunner: linkerRunner,
+            binaryExecutor: binaryExecutor);
 
         int passed = 0;
         int failed = 0;

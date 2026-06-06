@@ -1,0 +1,12 @@
+program count;
+
+#include("stdlib64.hhf")
+
+begin count;
+    mov(0, rcx);
+
+    while(rcx < 5) do
+        stdout.put("count = ", rcx, nl);
+        add(1, rcx);
+    endwhile;
+end count;

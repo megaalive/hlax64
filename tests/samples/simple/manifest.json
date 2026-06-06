@@ -1,0 +1,7 @@
+{
+  "name": "simple",
+  "source": "simple.hla64",
+  "expectedStdout": "result = 10\n",
+  "expectedExitCode": 0,
+  "description": "Basic arithmetic with stdout output"
+}

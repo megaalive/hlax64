@@ -4,9 +4,10 @@
 > Write low-level x64 with a cleaner HLA-inspired syntax. Compile to NASM,
 > assemble, link, and run — all from a single `hla64` CLI.
 
-[![Status](https://img.shields.io/badge/Fase%200%E2%80%934-Done-2ea44f)](#roadmap)
+[![Status](https://img.shields.io/badge/Fase%200%E2%80%939-Done%20%C2%B7%209.5-Active-2ea44f)](./docs/roadmap.md)
 [![Tests](https://img.shields.io/badge/tests-65%2F65-2ea44f)](#test-status)
 [![Target](https://img.shields.io/badge/target-linux--x64--sysv-1f6feb)](#target-abis)
+[![Language](https://img.shields.io/badge/language-v0.1%20Draft-blueviolet)](#language-reference)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](#license)
 
 ---
@@ -182,7 +183,9 @@ Passed!  - Failed: 0, Passed: 65, Skipped: 0, Total: 65
 
 ## 🗺 Roadmap
 
-Phases from `HlaX64_Project_Plan.md` (internal reference, not in repo).
+Phases from [`HlaX64_Project_Plan.md`](./HlaX64_Project_Plan.md) (konsolidasi).
+Detail per fase ada di plan; ringkasan visual ada di
+[`docs/roadmap.md`](./docs/roadmap.md).
 
 | Fase | Description                          | Status |
 |------|--------------------------------------|--------|
@@ -192,15 +195,27 @@ Phases from `HlaX64_Project_Plan.md` (internal reference, not in repo).
 | 3    | Toolchain build (Linux x64)          | ✅      |
 | 4    | Runtime: `stdout.put`                | ✅      |
 | 5    | Semantic Analyzer                    | ✅      |
-| 6    | Procedure & SysV ABI                 | ✅ (implementation) · 📝 (docs/examples follow-up) |
+| 6    | Procedure & SysV ABI                 | ✅      |
 | 7    | Control flow                         | ✅      |
 | 8    | Local variables & stack frame        | ✅      |
 | 9    | Test runner CLI                      | ✅      |
+| **9.5** | **Compiler Architecture Stabilization (IR, ABI lowerer, type system, runtime contract, native tests)** | 🛠 **Active** |
 | 10   | Benchmark runner                     | ⏳      |
 | 11   | Windows x64 backend                  | ⏳      |
-| 12   | C# interop generator                 | ⏳      |
+| 12   | C ABI & C# interop generator         | ⏳      |
 | 13   | MCP server (for AI agents)           | ⏳      |
-| 14   | AI Assembly Lab / IDE plugin         | ⏳      |
+| 14   | LSP & editor tooling                 | ⏳      |
+| 15   | AI Assembly Lab / IDE plugin         | ⏳      |
+
+> **Aturan**: jangan sentuh Fase 10–15 sebelum 15-item Definition of Done
+> Fase 9.5 terpenuhi. Lihat [`HlaX64_Project_Plan.md` §9.5](./HlaX64_Project_Plan.md).
+
+### 📚 Dokumentasi tambahan
+
+- [`docs/roadmap.md`](./docs/roadmap.md) — peta fase + Tier eksekusi aktif.
+- [`docs/compiler-architecture.md`](./docs/compiler-architecture.md) — diagram pipeline IR + 7 workstream.
+- [`docs/runtime-contract.md`](./docs/runtime-contract.md) — format clobber metadata + kontrak SysV/Windows.
+- [`docs/examples.md`](./docs/examples.md) — katalog program contoh & cara menjalankan.
 
 ---
 

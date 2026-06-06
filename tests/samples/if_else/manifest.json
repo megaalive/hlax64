@@ -1,0 +1,6 @@
+{
+  "name": "if_else",
+  "source": "if_else.hla64",
+  "expectedStdout": "big\n",
+  "expectedExitCode": 0
+}

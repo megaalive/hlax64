@@ -1,0 +1,11 @@
+program simple;
+
+#include("stdlib64.hhf")
+
+begin simple;
+    mov(1, rax);
+    add(2, rax);
+    add(3, rax);
+    add(4, rax);
+    stdout.put("result = ", rax, nl);
+end simple;

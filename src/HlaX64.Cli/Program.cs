@@ -20,6 +20,9 @@ app.Configure(config =>
 
     config.AddCommand<TestCommand>("test")
         .WithDescription("Run all test manifests in a directory");
+
+    config.AddCommand<ExplainAbiCommand>("explain-abi")
+        .WithDescription("Print ABI details for a target triple (e.g. linux-x64-sysv, windows-x64-msabi)");
 });
 
 return app.Run(args);

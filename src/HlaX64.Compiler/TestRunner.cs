@@ -10,6 +10,29 @@ public sealed class TestRunner
     private readonly string? _nasmPath;
     private readonly bool _skipExecution;
     private readonly Func<string, string>? _compileFunc;
+    private readonly LinkerRunner? _linkerRunner;
+    private readonly BinaryExecutor? _binaryExecutor;
+
+    /// <summary>
+    /// Delegate that takes a NASM file and an object file, returns the
+    /// assembled object file path and an error message. Used to abstract
+    /// away the choice between native nasm and WSL nasm.
+    /// </summary>
+    public delegate (bool Ok, string Error) Assembler(string nasmFile, string objFile);
+
+    /// <summary>
+    /// Delegate that takes an object file and an output executable path,
+    /// returns whether linking succeeded and an error message. The
+    /// implementation is responsible for choosing the right toolchain
+    /// (native gcc, WSL gcc, MinGW, etc.).
+    /// </summary>
+    public delegate (bool Ok, string Error, bool RequiresWsl) LinkerRunner(string objFile, string exeFile);
+
+    /// <summary>
+    /// Delegate that runs an executable and returns its exit code, stdout,
+    /// stderr, and a flag indicating whether WSL is required to invoke it.
+    /// </summary>
+    public delegate (int ExitCode, string Stdout, string Stderr) BinaryExecutor(string exeFile, int timeoutMs);
 
     /// <summary>
     /// Creates a TestRunner that can compile and optionally execute HLA-X64 programs.
@@ -17,11 +40,20 @@ public sealed class TestRunner
     /// <param name="compileFunc">Function that takes HLA source text and returns NASM code.</param>
     /// <param name="nasmPath">Path to NASM binary. If null, assembly steps are skipped.</param>
     /// <param name="skipExecution">If true, only compile (no assemble/link/run).</param>
-    public TestRunner(Func<string, string>? compileFunc = null, string? nasmPath = null, bool skipExecution = false)
+    /// <param name="linkerRunner">Delegate that invokes the linker (e.g. WSL gcc).</param>
+    /// <param name="binaryExecutor">Delegate that runs the linked executable (e.g. WSL exec).</param>
+    public TestRunner(
+        Func<string, string>? compileFunc = null,
+        string? nasmPath = null,
+        bool skipExecution = false,
+        LinkerRunner? linkerRunner = null,
+        BinaryExecutor? binaryExecutor = null)
     {
         _compileFunc = compileFunc;
         _nasmPath = nasmPath;
         _skipExecution = skipExecution;
+        _linkerRunner = linkerRunner;
+        _binaryExecutor = binaryExecutor;
     }
 
     /// <summary>
@@ -83,10 +115,25 @@ public sealed class TestRunner
             }
 
             var objFile = Path.Combine(buildDir, $"{test.Name}.o");
+
+            // Assemble (nasm may be native or `wsl nasm <args>`)
+            // The path may be encoded as "fileName|prefixArgs" by NasmTool
+            // (e.g. "wsl|nasm") to preserve the WSL wrapper invocation.
+            string nasmFileName = _nasmPath!;
+            string nasmPrefixArgs = string.Empty;
+            var pipeIdx = _nasmPath!.IndexOf('|');
+            if (pipeIdx >= 0)
+            {
+                nasmFileName = _nasmPath[..pipeIdx];
+                nasmPrefixArgs = _nasmPath[(pipeIdx + 1)..];
+            }
+            var nasmArgs = string.IsNullOrEmpty(nasmPrefixArgs)
+                ? $"-f elf64 \"{nasmFile}\" -o \"{objFile}\""
+                : $"{nasmPrefixArgs} -f elf64 \"{nasmFile}\" -o \"{objFile}\"";
             var nasmProcess = Process.Start(new ProcessStartInfo
             {
-                FileName = _nasmPath,
-                Arguments = $"-f elf64 \"{nasmFile}\" -o \"{objFile}\"",
+                FileName = nasmFileName,
+                Arguments = nasmArgs,
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
@@ -100,44 +147,32 @@ public sealed class TestRunner
                 return result;
             }
 
-            var exeFile = Path.Combine(buildDir, $"{test.Name}.exe");
-            var linkProcess = Process.Start(new ProcessStartInfo
-            {
-                FileName = "gcc",
-                Arguments = $"\"{objFile}\" -o \"{exeFile}\" -no-pie",
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            });
-            linkProcess?.WaitForExit(10000);
+            var exeFile = Path.Combine(buildDir, test.Name);
 
-            if (linkProcess?.ExitCode != 0)
+            // Link via injected delegate (CLI supplies WSL-aware logic)
+            if (_linkerRunner == null)
             {
                 result.Passed = false;
-                result.ErrorMessage = $"Link failed: {linkProcess?.StandardError.ReadToEnd()}";
+                result.ErrorMessage = "No linker runner provided; cannot link object file";
+                return result;
+            }
+            var (linkOk, linkErr, _) = _linkerRunner(objFile, exeFile);
+            if (!linkOk)
+            {
+                result.Passed = false;
+                result.ErrorMessage = $"Link failed: {linkErr}";
                 return result;
             }
 
-            var runProcess = Process.Start(new ProcessStartInfo
-            {
-                FileName = exeFile,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            });
-
-            runProcess?.WaitForExit(test.TimeoutMs);
-
-            if (runProcess == null)
+            // Run via injected delegate (CLI supplies WSL exec logic)
+            if (_binaryExecutor == null)
             {
                 result.Passed = false;
-                result.ErrorMessage = "Failed to start executable";
+                result.ErrorMessage = "No binary executor provided; cannot run executable";
                 return result;
             }
-
-            result.ActualStdout = runProcess.StandardOutput.ReadToEnd();
-            result.ActualExitCode = runProcess.ExitCode;
+            (result.ActualExitCode, result.ActualStdout, _) =
+                _binaryExecutor(exeFile, test.TimeoutMs);
 
             if (result.ActualExitCode != test.ExpectedExitCode)
             {

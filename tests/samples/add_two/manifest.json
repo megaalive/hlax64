@@ -1,0 +1,6 @@
+{
+  "name": "add_two",
+  "source": "add_two.hla64",
+  "expectedStdout": "10 + 20 = 30\n",
+  "expectedExitCode": 0
+}

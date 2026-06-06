@@ -1,6 +1,6 @@
 {
   "name": "exitcode",
   "source": "exitcode.hla64",
-  "expected_exit_code": 42,
+  "expectedExitCode": 42,
   "description": "Program should exit with code 42"
 }

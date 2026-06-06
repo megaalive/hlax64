@@ -53,6 +53,7 @@ public sealed class NasmEmitter
 
         // Main entry point
         _sb.AppendLine("_start:");
+        _sb.AppendLine("    xor ebx, ebx    ; default exit code = 0 (rbx = callee-saved)");
         _sb.AppendLine("    push rbp");
         _sb.AppendLine("    mov rbp, rsp");
 
@@ -61,10 +62,9 @@ public sealed class NasmEmitter
             EmitStatement(stmt);
         }
 
-        // Exit syscall: mov rax = exit code
-        // Exit code is whatever is in rax at program end
-        // For programs that don't set rax, use 0
-        _sb.AppendLine("    mov rdi, rax    ; exit code from rax");
+        // Exit syscall: rbx holds exit code (callee-saved, preserved
+        // across calls). Users set it with mov(exitCode, rbx).
+        _sb.AppendLine("    mov rdi, rbx    ; exit code");
         _sb.AppendLine("    mov rax, 60     ; sys_exit");
         _sb.AppendLine("    syscall");
 
@@ -228,95 +228,109 @@ public sealed class NasmEmitter
 
     private void EmitStdoutPut(List<AstNode> args)
     {
+        if (args.Count == 0) return;
+
+        // Save rcx before any syscall or stack manipulation
+        _sb.AppendLine("    push rcx          ; save caller's rcx");
+
+        // Pass 1: push all register argument values before any syscalls
+        // (string sys_write clobbers RAX, which is often the register to print)
+        int regCount = 0;
         foreach (var arg in args)
         {
-            if (arg is StringLiteralNode strLit)
+            if (arg is RegisterNode reg)
             {
-                var label = $"str_{_labelCounter++}";
-                _stringLiterals.Add((label, strLit.Value));
-                // RUNTIME: when HlaX64.Runtime is linked, replace with
-                //     lea rdi, [label]
-                //     call stdout_put_str
-                // sys_write(1, string, length)
-                _sb.AppendLine("    ; RUNTIME: stdout_put_str");
-                _sb.AppendLine("    mov rax, 1     ; sys_write");
-                _sb.AppendLine("    mov rdi, 1     ; stdout");
-                _sb.AppendLine($"    lea rsi, [{label}]");
-                _sb.AppendLine($"    mov rdx, {strLit.Value.Length}");
-                _sb.AppendLine("    syscall");
-            }
-            else if (arg is IdentifierNode ident && ident.Name == "nl")
-            {
-                // RUNTIME: when linked, replace with `call stdout_put_nl`.
-                // sys_write(1, newline, 1)
-                _sb.AppendLine("    ; RUNTIME: stdout_put_nl");
-                _sb.AppendLine("    mov rax, 1     ; sys_write");
-                _sb.AppendLine("    mov rdi, 1     ; stdout");
-                _sb.AppendLine("    lea rsi, [newline]");
-                _sb.AppendLine("    mov rdx, 1");
-                _sb.AppendLine("    syscall");
-            }
-            else if (arg is RegisterNode reg)
-            {
-                // RUNTIME: when linked, replace with
-                //     mov rdi, {reg.Name}
-                //     call stdout_put_int
-                // Print register as 64-bit decimal using division method
-                var uid = _labelCounter++;
-                _sb.AppendLine($"    ; RUNTIME: stdout_put_int({reg.Name})");
-                _sb.AppendLine($"    ; print register {reg.Name} as decimal");
-                _sb.AppendLine("    push rcx");
-                _sb.AppendLine($"    mov rax, {reg.Name}");
-                _sb.AppendLine("    mov rcx, 10");
-                _sb.AppendLine("    mov rdi, 0          ; digit count");
-                _sb.AppendLine($"    jmp .Lchk_{uid}");
-                _sb.AppendLine($".Ldiv_{uid}:");
-                _sb.AppendLine("    xor rdx, rdx");
-                _sb.AppendLine("    div rcx");
-                _sb.AppendLine("    push rdx             ; digit");
-                _sb.AppendLine("    inc rdi");
-                _sb.AppendLine($".Lchk_{uid}:");
-                _sb.AppendLine("    test rax, rax");
-                _sb.AppendLine($"    jnz .Ldiv_{uid}");
-                _sb.AppendLine("    ; rdi = digit count, digits on stack (reversed)");
-                _sb.AppendLine("    test rdi, rdi");
-                _sb.AppendLine($"    jnz .Lbuf_{uid}");
-                _sb.AppendLine("    push 0               ; zero digit");
-                _sb.AppendLine("    inc rdi");
-                _sb.AppendLine($".Lbuf_{uid}:");
-                _sb.AppendLine("    mov rdx, rdi         ; byte count");
-                _sb.AppendLine("    sub rsp, rdx         ; stack buffer");
-                _sb.AppendLine("    mov rcx, rdi");
-                _sb.AppendLine("    lea rsi, [rsp]");
-                _sb.AppendLine($".Lpop_{uid}:");
-                _sb.AppendLine("    pop rax");
-                _sb.AppendLine("    add al, '0'");
-                _sb.AppendLine("    mov [rsi], al");
-                _sb.AppendLine("    inc rsi");
-                _sb.AppendLine($"    loop .Lpop_{uid}");
-                _sb.AppendLine("    mov rax, 1           ; sys_write");
-                _sb.AppendLine("    mov rdi, 1           ; stdout");
-                _sb.AppendLine("    lea rsi, [rsp]       ; buffer");
-                _sb.AppendLine("    syscall");
-                _sb.AppendLine($"    add rsp, rdx         ; restore stack");
-                _sb.AppendLine("    pop rcx");
-            }
-            else if (arg is IntegerLiteralNode intLit)
-            {
-                // RUNTIME: literal is constant-folded; equivalent to a
-                // constant call to stdout_put_str with the literal text.
-                // Print integer literal by storing as string in data section
-                var label = $"str_{_labelCounter++}";
-                var intStr = intLit.Value.ToString();
-                _stringLiterals.Add((label, intStr));
-                _sb.AppendLine("    ; RUNTIME: stdout_put_str (constant int literal)");
-                _sb.AppendLine("    mov rax, 1     ; sys_write");
-                _sb.AppendLine("    mov rdi, 1     ; stdout");
-                _sb.AppendLine($"    lea rsi, [{label}]");
-                _sb.AppendLine($"    mov rdx, {intStr.Length}");
-                _sb.AppendLine("    syscall");
+                _sb.AppendLine($"    push {reg.Name}      ; save for stdout.put");
+                regCount++;
             }
         }
+
+        // Pass 2: emit print code for each argument
+        foreach (var arg in args)
+        {
+            switch (arg)
+            {
+                case StringLiteralNode strLit:
+                {
+                    var label = $"str_{_labelCounter++}";
+                    _stringLiterals.Add((label, strLit.Value));
+                    _sb.AppendLine("    ; RUNTIME: stdout_put_str");
+                    _sb.AppendLine("    mov rax, 1     ; sys_write");
+                    _sb.AppendLine("    mov rdi, 1     ; stdout");
+                    _sb.AppendLine($"    lea rsi, [{label}]");
+                    _sb.AppendLine($"    mov rdx, {strLit.Value.Length}");
+                    _sb.AppendLine("    syscall");
+                    break;
+                }
+                case IdentifierNode ident when ident.Name == "nl":
+                {
+                    _sb.AppendLine("    ; RUNTIME: stdout_put_nl");
+                    _sb.AppendLine("    mov rax, 1     ; sys_write");
+                    _sb.AppendLine("    mov rdi, 1     ; stdout");
+                    _sb.AppendLine("    lea rsi, [newline]");
+                    _sb.AppendLine("    mov rdx, 1");
+                    _sb.AppendLine("    syscall");
+                    break;
+                }
+                case RegisterNode reg:
+                {
+                    var uid = _labelCounter++;
+                    _sb.AppendLine($"    ; RUNTIME: stdout_put_int({reg.Name})");
+                    _sb.AppendLine("    pop rax         ; get saved register value");
+                    _sb.AppendLine("    mov rcx, 10");
+                    _sb.AppendLine("    mov rdi, 0          ; digit count");
+                    _sb.AppendLine($"    jmp .Lchk_{uid}");
+                    _sb.AppendLine($".Ldiv_{uid}:");
+                    _sb.AppendLine("    xor rdx, rdx");
+                    _sb.AppendLine("    div rcx");
+                    _sb.AppendLine("    push rdx             ; digit");
+                    _sb.AppendLine("    inc rdi");
+                    _sb.AppendLine($".Lchk_{uid}:");
+                    _sb.AppendLine("    test rax, rax");
+                    _sb.AppendLine($"    jnz .Ldiv_{uid}");
+                    _sb.AppendLine("    ; rdi = digit count, digits on stack");
+                    _sb.AppendLine("    test rdi, rdi");
+                    _sb.AppendLine($"    jnz .Lbuf_{uid}");
+                    _sb.AppendLine("    push 0               ; zero digit");
+                    _sb.AppendLine("    inc rdi");
+                    _sb.AppendLine($".Lbuf_{uid}:");
+                    _sb.AppendLine("    mov rdx, rdi         ; byte count");
+                    _sb.AppendLine("    sub rsp, rdx         ; stack buffer");
+                    _sb.AppendLine("    mov rcx, rdi         ; loop count");
+                    _sb.AppendLine("    lea rsi, [rsp]       ; buffer ptr");
+                    _sb.AppendLine("    lea r9, [rsp+rdx]    ; ptr to most significant digit");
+                    _sb.AppendLine($".Lascii_{uid}:");
+                    _sb.AppendLine("    mov rax, [r9]        ; read digit");
+                    _sb.AppendLine("    add al, '0'");
+                    _sb.AppendLine("    mov [rsi], al");
+                    _sb.AppendLine("    inc rsi");
+                    _sb.AppendLine("    add r9, 8            ; next digit");
+                    _sb.AppendLine($"    loop .Lascii_{uid}");
+                    _sb.AppendLine("    mov r8, rdx          ; save digit count");
+                    _sb.AppendLine("    mov rax, 1           ; sys_write");
+                    _sb.AppendLine("    mov rdi, 1           ; stdout");
+                    _sb.AppendLine("    lea rsi, [rsp]       ; buffer");
+                    _sb.AppendLine("    syscall");
+                    _sb.AppendLine("    lea rsp, [rsp+r8]    ; deallocate buffer");
+                    _sb.AppendLine("    lea rsp, [rsp+r8*8]  ; deallocate digit pushes");
+                    break;
+                }
+                case IntegerLiteralNode intLit:
+                {
+                    var label = $"str_{_labelCounter++}";
+                    var intStr = intLit.Value.ToString();
+                    _stringLiterals.Add((label, intStr));
+                    _sb.AppendLine("    ; RUNTIME: stdout_put_str (constant int literal)");
+                    _sb.AppendLine("    mov rax, 1     ; sys_write");
+                    _sb.AppendLine("    mov rdi, 1     ; stdout");
+                    _sb.AppendLine($"    lea rsi, [{label}]");
+                    _sb.AppendLine($"    mov rdx, {intStr.Length}");
+                    _sb.AppendLine("    syscall");
+                    break;
+                }
+            }
+        }
+        _sb.AppendLine("    pop rcx           ; restore caller's rcx");
     }
 
     private void EmitIf(IfNode ifNode)

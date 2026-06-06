@@ -1,0 +1,15 @@
+// procedure_1arg.hla64
+// Procedure with a single integer argument (passed in rdi).
+
+program main;
+
+procedure Double(x:int64); @returns("rax");
+begin Double;
+    mov(x, rax);
+    add(rax, rax);
+end Double;
+
+begin main;
+    call Double(21);
+    stdout.put("21 doubled = ", rax, nl);
+end main;

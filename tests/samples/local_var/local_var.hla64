@@ -1,0 +1,18 @@
+// local_var.hla64
+// Demonstrates sum 1..5 using only registers (no var block, which
+// is not yet supported by the MVP parser). Acts as a placeholder
+// until Fase 9.5 exposes var with proper type system.
+
+program local_var;
+
+begin local_var;
+    mov(0, rax);    // total accumulator
+    mov(1, rcx);    // i
+
+    while(rcx < 6) do
+        add(rcx, rax);
+        add(1, rcx);
+    endwhile;
+
+    stdout.put("sum 1..5 = ", rax, nl);
+end local_var;

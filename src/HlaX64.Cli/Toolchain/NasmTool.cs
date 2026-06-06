@@ -18,26 +18,38 @@ public sealed class NasmTool
 
     public static bool TryFindNasm(out string path)
     {
-        // Try common locations
-        var candidates = new[]
+        // Try common locations.
+        // Each candidate is (executable, prefixArgs) where prefixArgs is the
+        // sub-command to run nasm (e.g. "nasm" for WSL). The --version flag
+        // is appended internally for detection and is NOT stored in the return
+        // value, so callers never accidentally pass --version to actual
+        // assembly commands.
+        var candidates = new (string FileName, string PrefixArgs)[]
         {
-            "nasm",
-            "/usr/bin/nasm",
-            "/usr/local/bin/nasm",
-            "/opt/homebrew/bin/nasm",
-            // Local project NASM (from src/HlaX64.Cli/bin/Debug/net10.0/)
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "nasm", "nasm.exe"),
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "nasm", "nasm"),
+            // Native nasm (uses Windows paths directly — preferred)
+            ("nasm", ""),
+            // Local project NASM (from repo root nasm/)
+            (Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "nasm", "nasm.exe"), ""),
+            (Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "nasm", "nasm"), ""),
+            // WSL (works but needs WSL-path conversion — last resort)
+            ("wsl", "nasm"),
+            // Other Unix paths
+            ("/usr/bin/nasm", ""),
+            ("/usr/local/bin/nasm", ""),
+            ("/opt/homebrew/bin/nasm", ""),
         };
 
-        foreach (var candidate in candidates)
+        foreach (var (fileName, prefixArgs) in candidates)
         {
             try
             {
+                // Version-detection args (not stored, only for probing)
+                var versionArgs = string.IsNullOrEmpty(prefixArgs) ? "--version" : $"{prefixArgs} --version";
+
                 var psi = new ProcessStartInfo
                 {
-                    FileName = candidate,
-                    Arguments = "--version",
+                    FileName = fileName,
+                    Arguments = versionArgs,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false
@@ -45,10 +57,14 @@ public sealed class NasmTool
                 using var process = Process.Start(psi);
                 if (process != null)
                 {
-                    process.WaitForExit(2000);
+                    process.WaitForExit(3000);
                     if (process.ExitCode == 0)
                     {
-                        path = candidate;
+                        // Prefix only — no --version, no --help.
+                        // Callers can append real NASM flags.
+                        path = string.IsNullOrEmpty(prefixArgs)
+                            ? fileName
+                            : $"{fileName}|{prefixArgs}";
                         return true;
                     }
                 }
@@ -61,6 +77,17 @@ public sealed class NasmTool
 
         path = string.Empty;
         return false;
+    }
+
+    /// <summary>
+    /// Parses a path returned by <see cref="TryFindNasm"/>, which may
+    /// contain a pipe-separated argument prefix (e.g. "wsl|nasm --version").
+    /// </summary>
+    public static (string FileName, string Args) SplitNasmInvocation(string nasmPath)
+    {
+        var idx = nasmPath.IndexOf('|');
+        if (idx < 0) return (nasmPath, string.Empty);
+        return (nasmPath[..idx], nasmPath[(idx + 1)..]);
     }
 
     public bool TryAssemble(string nasmSource, string objectFile, out string error)
