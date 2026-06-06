@@ -174,17 +174,17 @@ public class SemanticAnalyzerTests
     }
 
     [Fact]
-    public void Analyze_MemoryRefNonRegister_ReportsError()
+    public void Analyze_MemoryRefLiteral_ParseError()
     {
-        var program = ParseProgram("""
+        var source = """
             program bad;
             begin bad;
                 mov([42], rax);
             end bad;
-            """);
-        var diagnostics = new SemanticAnalyzer().Analyze(program);
-        var error = Assert.Single(diagnostics.Diagnostics, d => d.Code == "HLAX0022");
-        Assert.Contains("register", error.Message, StringComparison.OrdinalIgnoreCase);
+            """;
+        var lexer = new Lexer(source);
+        var parser = new Parser(lexer.Tokenize());
+        Assert.Throws<ParseException>(() => parser.Parse());
     }
 
     [Fact]

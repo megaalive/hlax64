@@ -396,6 +396,12 @@ public sealed class Parser
         {
             Advance();
             var nameToken = Peek();
+            if (nameToken.Type == TokenType.StringLiteral)
+            {
+                var lit = Advance();
+                return WithLocation(new AddressOfStringNode(lit.Value), lit);
+            }
+
             string name;
             if (nameToken.Type == TokenType.Identifier)
             {
@@ -408,19 +414,14 @@ public sealed class Parser
             else
             {
                 throw new ParseException(
-                    $"Expected variable name after '&' but got '{nameToken.Type}' ('{nameToken.Value}') at line {nameToken.Line}, column {nameToken.Column}");
+                    $"Expected variable name or string literal after '&' but got '{nameToken.Type}' ('{nameToken.Value}') at line {nameToken.Line}, column {nameToken.Column}");
             }
 
             return WithLocation(new AddressOfNode(name), nameToken);
         }
 
         if (token.Type == TokenType.LeftBracket)
-        {
-            Advance();
-            var inner = ParseOperand();
-            Expect(TokenType.RightBracket);
-            return new MemoryRefNode(inner);
-        }
+            return ParseMemoryRef();
 
         switch (token.Type)
         {
@@ -465,6 +466,67 @@ public sealed class Parser
                 Advance();
                 return new IdentifierNode(token.Value);
         }
+    }
+
+    private MemoryRefNode ParseMemoryRef()
+    {
+        var open = Expect(TokenType.LeftBracket);
+        var regToken = Peek();
+        if (!IsRegisterToken(regToken.Type))
+        {
+            throw new ParseException(
+                $"Memory reference requires a register but got '{regToken.Type}' ('{regToken.Value}') at line {regToken.Line}, column {regToken.Column}");
+        }
+
+        var register = Advance().Value.ToLowerInvariant();
+        long offset = 0;
+        if (Peek().Type == TokenType.Plus)
+        {
+            Advance();
+            offset = ParseOffsetLiteral();
+        }
+        else if (Peek().Type == TokenType.Minus)
+        {
+            Advance();
+            offset = -ParseOffsetLiteral();
+        }
+
+        Expect(TokenType.RightBracket);
+        var sizeBits = 64;
+        if (Peek().Type == TokenType.Dot)
+        {
+            Advance();
+            sizeBits = ParseMemSizeQualifierFromToken();
+        }
+
+        return WithLocation(new MemoryRefNode(register, offset, sizeBits), open);
+    }
+
+    private long ParseOffsetLiteral()
+    {
+        var token = Peek();
+        if (token.Type == TokenType.IntegerLiteral)
+        {
+            Advance();
+            return long.Parse(token.Value);
+        }
+
+        throw new ParseException(
+            $"Expected integer offset but got '{token.Type}' ('{token.Value}') at line {token.Line}, column {token.Column}");
+    }
+
+    private int ParseMemSizeQualifierFromToken()
+    {
+        var token = Expect(TokenType.Identifier);
+        return token.Value.ToLowerInvariant() switch
+        {
+            "byte" => 8,
+            "word" => 16,
+            "dword" => 32,
+            "qword" => 64,
+            _ => throw new ParseException(
+                $"Expected .byte, .word, .dword, or .qword after memory reference but got '.{token.Value}' at line {token.Line}, column {token.Column}")
+        };
     }
 
     private static bool IsRegisterToken(TokenType type)

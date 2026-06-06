@@ -109,8 +109,8 @@ Stable diagnostic codes help agents, IDE tooling, and contributors reference err
 | **Severity** | Error |
 | **Category** | Type system |
 | **Since** | 0.2.0-alpha |
-| **Cause** | Operand inside `[..]` is not a register holding an address |
-| **Example** | `mov([42], rax);` |
+| **Cause** | Operand inside `[..]` is not a register holding an address (legacy semantic path); non-register forms are usually rejected at parse time |
+| **Example** | `mov([42], rax);` — parse error in current releases |
 | **Fix** | Use a register that holds a pointer, e.g. `mov([rcx], rax);` after `mov(&slot, rcx);` |
 
 ### HLAX0023 — Invalid address-of operand

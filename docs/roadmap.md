@@ -46,9 +46,7 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 
 ### Tier 2 — Sample tests (memenuhi target MVP "min 10 samples")
 
-✅ **Sudah 16 sample** — semua PASS:
-
-- `hello`, `exitcode`, `add_two`, `count`, `simple`, `local_var`, `if_else`, `procedure_0arg`, `procedure_1arg`, `procedure_6args`, `comparison_signed`, `comparison_unsigned`, `stdout_int64`, `callee_saved`, `stack_alignment`, `export_lib`
+✅ **Sudah 20 sample** — native integration tests under `tests/samples/` (incl. Level 3 memory).
 
 ### Tier 3 — Mini CLI command (mitigasi Risiko 2)
 
@@ -66,7 +64,8 @@ Fase 13 (MCP) →  Fase 14 (LSP) →  Fase 15 (GUI)
 ```
 
 > *Fase 9.5 Workstream A–H done. Docs sync complete. Fase 10 (Bench), 11 (Windows), 12 (C# interop), 13 (MCP) all done.
-> Next: Fase 14 (LSP & editor tooling).
+> **Level 3 memory curriculum** (RFC 0002 baseline) landed in 0.x — pointers, indexed `[reg+N]`, sized `.byte`, string walk.
+> Next: array syntax (RFC 0003 planned), then Fase 14 (LSP & editor tooling).
 
 ---
 

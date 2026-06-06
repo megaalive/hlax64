@@ -1,0 +1,16 @@
+// Level 3: store then load through a pointer register
+program pointer_store;
+
+procedure Store99; @returns("rax");
+var
+    slot: int64;
+begin Store99;
+    mov(0, slot);
+    mov(&slot, rcx);
+    mov(99, [rcx]);
+    mov([rcx], rax);
+end Store99;
+
+begin pointer_store;
+    call Store99();
+end pointer_store;

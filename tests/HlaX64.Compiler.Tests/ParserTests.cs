@@ -204,7 +204,31 @@ public class ParserTests
         Assert.Equal("v", addr.VariableName);
         var movLoad = Assert.IsType<InstructionNode>(proc.Body[1]);
         var mem = Assert.IsType<MemoryRefNode>(movLoad.Operands[0]);
-        Assert.IsType<RegisterNode>(mem.Inner);
+        Assert.Equal("rcx", mem.Register);
+        Assert.Equal(0, mem.Offset);
+        Assert.Equal(64, mem.SizeBits);
+    }
+
+    [Fact]
+    public void Parse_MemoryRefOffsetAndSize_ParsesCorrectly()
+    {
+        var source = "program t;\nbegin t;\n    mov([rcx + 8].byte, rax);\nend t;";
+        var program = new Parser(new Lexer(source).Tokenize()).Parse();
+        var instr = Assert.IsType<InstructionNode>(program.Statements[0]);
+        var mem = Assert.IsType<MemoryRefNode>(instr.Operands[0]);
+        Assert.Equal("rcx", mem.Register);
+        Assert.Equal(8, mem.Offset);
+        Assert.Equal(8, mem.SizeBits);
+    }
+
+    [Fact]
+    public void Parse_AddressOfString_ParsesCorrectly()
+    {
+        var source = "program t;\nbegin t;\n    mov(&\"hi\", rcx);\nend t;";
+        var program = new Parser(new Lexer(source).Tokenize()).Parse();
+        var instr = Assert.IsType<InstructionNode>(program.Statements[0]);
+        var addr = Assert.IsType<AddressOfStringNode>(instr.Operands[0]);
+        Assert.Equal("hi", addr.Value);
     }
 
     [Fact]

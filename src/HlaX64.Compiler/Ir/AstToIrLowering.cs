@@ -1,3 +1,4 @@
+using HlaX64.Compiler.Abi;
 using HlaX64.Compiler.Ast;
 
 namespace HlaX64.Compiler.Ir;
@@ -277,18 +278,12 @@ public sealed class AstToIrLowering
             StringLiteralNode str => new IrValue { Name = $"str:{str.Value}" },
             IdentifierNode ident => GetOrCreateValue(ident.Name),
             AddressOfNode addr => new IrValue { Name = $"addr:{addr.VariableName}" },
-            MemoryRefNode mem => new IrValue { Name = $"mem:{ResolveMemRef(mem.Inner)}" },
+            AddressOfStringNode addrStr => new IrValue { Name = AddressRefEncoding.EncodeString(addrStr.Value) },
+            MemoryRefNode mem => new IrValue
+            {
+                Name = MemoryRefEncoding.Encode(mem.Register, mem.Offset, mem.SizeBits)
+            },
             _ => new IrValue()
-        };
-    }
-
-    private string ResolveMemRef(AstNode inner)
-    {
-        return inner switch
-        {
-            RegisterNode reg => reg.Name.ToLowerInvariant(),
-            IdentifierNode ident => ident.Name,
-            _ => "rax"
         };
     }
 

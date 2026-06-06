@@ -261,6 +261,25 @@ end t;";
         Assert.Contains("lea rcx, [rbp-", nasm);
         Assert.Contains("mov rax, [rcx]", nasm);
     }
+
+    [Fact]
+    public void Emit_StringLength_EmitsByteLoadAndLeaString()
+    {
+        var source = @"program t;
+procedure S; @returns(""rax"");
+var ch: int64;
+begin S;
+    mov(&""hello"", rcx);
+    mov([rcx].byte, ch);
+end S;
+begin t;
+    mov(0, rax);
+end t;";
+        var nasm = Emit(source);
+        Assert.Contains("lea rcx, [str_", nasm);
+        Assert.Contains("movzx", nasm);
+        Assert.Contains("byte [rcx]", nasm);
+    }
 }
 
 public class WindowsMsAbiLowererTests

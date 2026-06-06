@@ -1,0 +1,22 @@
+program stack_array;
+
+procedure SumThree; @returns("rax");
+var
+    elem0: int64;
+    elem1: int64;
+    elem2: int64;
+begin SumThree;
+    mov(10, elem0);
+    mov(20, elem1);
+    mov(30, elem2);
+    mov(&elem0, rcx);
+    mov([rcx], rax);
+    mov([rcx + 8], rbx);
+    add(rbx, rax);
+    mov([rcx + 16], rbx);
+    add(rbx, rax);
+end SumThree;
+
+begin stack_array;
+    call SumThree();
+end stack_array;

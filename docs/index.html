@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HlaX64 — Docs</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, Segoe UI, sans-serif; }
+    body { margin: 0; background: #0f1419; color: #e6edf3; line-height: 1.5; }
+    header { padding: 2rem 1.5rem; border-bottom: 1px solid #30363d; max-width: 920px; margin: 0 auto; }
+    main { max-width: 920px; margin: 0 auto; padding: 1.5rem; display: grid; gap: 1.5rem; }
+    h1 { margin: 0 0 0.5rem; font-size: 1.75rem; }
+    .tagline { color: #8b949e; margin: 0; }
+    section { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 1.25rem; }
+    h2 { margin-top: 0; font-size: 1.1rem; }
+    ul { margin: 0.5rem 0 0; padding-left: 1.25rem; }
+    a { color: #58a6ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code { font-family: ui-monospace, Consolas, monospace; background: #0d1117; padding: 0.1rem 0.35rem; border-radius: 4px; }
+    .cta { display: inline-block; margin-top: 0.75rem; padding: 0.5rem 1rem; background: #238636; color: #fff; border-radius: 6px; font-weight: 600; }
+    .cta:hover { text-decoration: none; background: #2ea043; }
+    footer { max-width: 920px; margin: 0 auto; padding: 1rem 1.5rem 2rem; color: #8b949e; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>HlaX64</h1>
+    <p class="tagline">HLA-inspired x64 assembly — compile to NASM, run from one CLI.</p>
+    <a class="cta" href="playground/index.html">Open playground</a>
+  </header>
+  <main>
+    <section>
+      <h2>Get started</h2>
+      <ul>
+        <li><a href="install.md">Install</a> — release archive, global tool, or clone</li>
+        <li><a href="https://github.com/megaalive/hlax64">GitHub repository</a></li>
+        <li><a href="https://github.com/megaalive/hlax64/releases">Releases</a> — pre-built Linux &amp; Windows binaries</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Tutorials</h2>
+      <ul>
+        <li><a href="tutorials/01-getting-started.md">01 — Getting started</a></li>
+        <li><a href="tutorials/02-native-routines.md">02 — Native routines</a></li>
+        <li><a href="tutorials/03-csharp-interop.md">03 — C# interop</a></li>
+        <li><a href="tutorials/04-mcp-agent.md">04 — MCP agents</a></li>
+        <li><a href="tutorials/05-memory.md">05 — Memory &amp; pointers (Level 3)</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>Reference</h2>
+      <ul>
+        <li><a href="language-spec.md">Language specification</a></li>
+        <li><a href="memory-and-bounds.md">Memory model &amp; bounds (Level 3)</a></li>
+        <li><a href="diagnostics.md">Diagnostics</a></li>
+        <li><a href="examples.md">Examples catalog</a></li>
+        <li><a href="roadmap.md">Roadmap</a></li>
+        <li><a href="architecture.md">Architecture diagram</a></li>
+      </ul>
+    </section>
+    <section>
+      <h2>Try locally</h2>
+      <p>Markdown files on this site are plain text. For full formatting, browse on GitHub or clone the repo.</p>
+      <pre><code>hla64 doctor
+hla64 run examples/00-getting-started/hello.hla64
+hla64 explain examples/05-memory/string-length.hla64 --json</code></pre>
+    </section>
+  </main>
+  <footer>
+    MIT License · <a href="https://github.com/megaalive/hlax64">megaalive/hlax64</a>
+  </footer>
+</body>
+</html>

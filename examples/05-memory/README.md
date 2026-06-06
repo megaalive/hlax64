@@ -1,10 +1,16 @@
 # Memory
 
-Stack locals, address-of, and load through a pointer register (RFC 0002 minimal).
+Stack locals, pointers, manual arrays, and string byte-walk (Level 3 curriculum).
 
-| Example | Description |
-|---------|-------------|
-| [sum-1-to-5.hla64](sum-1-to-5.hla64) | Accumulator loop 1..5 (register-only) |
-| [pointer-load-store.hla64](pointer-load-store.hla64) | `&slot` + `mov([rcx], rax)` — exit 42 |
+| Example | Exit | Description |
+|---------|------|-------------|
+| [sum-1-to-5.hla64](sum-1-to-5.hla64) | — | Register-only loop (no pointers) |
+| [pointer-load-store.hla64](pointer-load-store.hla64) | 42 | `&slot` + load via `[rcx]` |
+| [pointer-store.hla64](pointer-store.hla64) | 99 | Store immediate through `[rcx]` |
+| [stack-array.hla64](stack-array.hla64) | 60 | Three slots via `[base+offset]` |
+| [typed-byte.hla64](typed-byte.hla64) | 65 | `[reg].byte` sized load |
+| [string-length.hla64](string-length.hla64) | 5 | `&"hello"` + byte traversal |
 
-Full `var` stack slots without pointers: `tests/samples/local_var/`. Arrays and indexed access remain future work — see [rfcs/0002-pointer-model.md](../../rfcs/0002-pointer-model.md).
+Tutorial: [docs/tutorials/05-memory.md](../../docs/tutorials/05-memory.md) · Bounds: [docs/memory-and-bounds.md](../../docs/memory-and-bounds.md)
+
+Array types (`arr[i]`) remain future work — [rfcs/0002-pointer-model.md](../../rfcs/0002-pointer-model.md).
