@@ -1,0 +1,7 @@
+{
+  "name": "export_lib",
+  "source": "export_lib.hla64",
+  "expectedStdout": "",
+  "expectedExitCode": 0,
+  "description": "Shared library with exported procedures (compiles to NASM with global symbols)"
+}
