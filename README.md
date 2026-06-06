@@ -5,7 +5,7 @@
 > assemble, link, and run — all from a single `hla64` CLI.
 
 [![Status](https://img.shields.io/badge/Fase%200%E2%80%939-Done%20%C2%B7%209.5-Active-2ea44f)](./docs/roadmap.md)
-[![Tests](https://img.shields.io/badge/tests-65%2F65-2ea44f)](#test-status)
+[![Tests](https://img.shields.io/badge/tests-66%2F66%20+%2010%2F10%20native-2ea44f)](#test-status)
 [![Target](https://img.shields.io/badge/target-linux--x64--sysv-1f6feb)](#target-abis)
 [![Language](https://img.shields.io/badge/language-v0.1%20Draft-blueviolet)](#language-reference)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](#license)

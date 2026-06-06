@@ -24,8 +24,8 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 | 7 | Control flow | ✅ Done | `if/else/endif`, `while/endwhile` |
 | 8 | Local variables & stack frame | ✅ Done | `var` block, `[rbp-N]` |
 | 9 | Test runner | ✅ Done | `hla64 test`, manifest JSON |
-| **9.5** | **Compiler Architecture Stabilization** | 🛠 **Active** | IR, ABI lowerer, type system, runtime contract, native tests |
-| 10 | Benchmark runner | ⏳ Pending | `hla64 bench` |
+| **9.5** | **Compiler Architecture Stabilization** | 🛠 **Active** | CompilationModel ✅, TypeSystem ✅, IR ✅, ABI lowerer ✅, native tests ✅, docs sync 🔜 |
+| 10 | Benchmark runner | ✅ Done | `hla64 bench` |
 | 11 | Windows x64 backend | ⏳ Pending | `windows-x64-msabi` target |
 | 12 | C ABI & C# interop | ⏳ Pending | export, P/Invoke generator |
 | 13 | MCP server | ⏳ Pending | tools untuk AI agent |
@@ -46,20 +46,13 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 
 ### Tier 2 — Sample tests (memenuhi target MVP "min 10 samples")
 
-Saat ini ada **2** sample (`hello`, `exitcode`). Target: **≥ 10**.
+✅ **Sudah 10 sample** — semua PASS:
 
-- [ ] `add_two` — procedure call
-- [ ] `count` — while loop + stdout
-- [ ] `simple` — mov + add
-- [ ] `local_var` — `var` block
-- [ ] `if_else` — control flow
-- [ ] `procedure_1arg` — 1-arg procedure
-- [ ] `procedure_6args` — 6-arg procedure (max SysV)
-- [ ] `comparison_signed` — signed `jg` / `jl`
+- `hello`, `exitcode`, `add_two`, `count`, `simple`, `local_var`, `if_else`, `procedure_1arg`, `procedure_6args`, `comparison_signed`
 
 ### Tier 3 — Mini CLI command (mitigasi Risiko 2)
 
-- [ ] `hla64 explain-abi --target linux-x64-sysv`
+- [x] `hla64 explain-abi --target linux-x64-sysv` ✅
 
 ---
 

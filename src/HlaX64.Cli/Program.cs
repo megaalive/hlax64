@@ -23,6 +23,9 @@ app.Configure(config =>
 
     config.AddCommand<ExplainAbiCommand>("explain-abi")
         .WithDescription("Print ABI details for a target triple (e.g. linux-x64-sysv, windows-x64-msabi)");
+
+    config.AddCommand<BenchCommand>("bench")
+        .WithDescription("Benchmark .hla64 programs (warmup + measured iterations)");
 });
 
 return app.Run(args);
