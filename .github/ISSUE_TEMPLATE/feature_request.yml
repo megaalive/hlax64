@@ -1,0 +1,41 @@
+name: Feature Request
+description: Suggest an idea for HlaX64
+labels: ["type: feature"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for suggesting a feature!
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: What problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution
+      description: Describe the feature, syntax, or behavior
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+  - type: checkboxes
+    id: areas
+    attributes:
+      label: Affected Areas
+      options:
+        - label: Compiler (lexer/parser/IR/ABI/backend)
+        - label: CLI
+        - label: Runtime
+        - label: MCP Server
+        - label: Documentation
+        - label: Testing
+        - label: Build/Release
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context

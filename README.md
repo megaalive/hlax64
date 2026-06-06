@@ -257,6 +257,13 @@ See [`docs/language-spec.md`](./docs/language-spec.md) for full details.
 
 ---
 
+## 🤝 Community
+
+- [Contributing Guide](CONTRIBUTING.md) — how to build, test, and submit changes
+- [Code of Conduct](CODE_OF_CONDUCT.md) — our community standards
+- [Security Policy](SECURITY.md) — how to report vulnerabilities
+- [Support](SUPPORT.md) — documentation and getting help
+
 ## 📄 License
 
 MIT

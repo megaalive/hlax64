@@ -1,0 +1,11 @@
+# HlaX64 CODEOWNERS
+
+* @megaalive
+/docs/ @megaalive
+/src/HlaX64.Compiler/ @megaalive
+/src/HlaX64.Backend.Nasm/ @megaalive
+/src/HlaX64.Runtime/ @megaalive
+/src/HlaX64.Cli/ @megaalive
+/src/HlaX64.McpServer/ @megaalive
+/tests/ @megaalive
+/examples/ @megaalive
