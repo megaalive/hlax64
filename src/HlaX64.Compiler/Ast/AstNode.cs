@@ -203,16 +203,34 @@ public class AddressOfNode : AstNode
 }
 
 /// <summary>
-/// Memory dereference: [registerOrPtr]
+/// Memory dereference: [reg], [reg + offset], optional .byte/.word/.dword/.qword
 /// </summary>
 public class MemoryRefNode : AstNode
 {
     public override string Kind => "MemoryRef";
-    public AstNode Inner { get; }
+    public string Register { get; }
+    public long Offset { get; }
+    public int SizeBits { get; }
 
-    public MemoryRefNode(AstNode inner)
+    public MemoryRefNode(string register, long offset = 0, int sizeBits = 64)
     {
-        Inner = inner;
+        Register = register;
+        Offset = offset;
+        SizeBits = sizeBits;
+    }
+}
+
+/// <summary>
+/// Address-of a string literal in .rodata: &amp;"text"
+/// </summary>
+public class AddressOfStringNode : AstNode
+{
+    public override string Kind => "AddressOfString";
+    public string Value { get; }
+
+    public AddressOfStringNode(string value)
+    {
+        Value = value;
     }
 }
 

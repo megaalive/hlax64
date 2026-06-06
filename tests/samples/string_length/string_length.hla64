@@ -1,0 +1,19 @@
+program string_length;
+
+procedure StrLen; @returns("rax");
+var
+    ch: int64;
+begin StrLen;
+    mov(&"hello", rcx);
+    mov(0, rax);
+    mov([rcx].byte, ch);
+    while(ch > 0) do
+        add(1, rax);
+        add(1, rcx);
+        mov([rcx].byte, ch);
+    endwhile;
+end StrLen;
+
+begin string_length;
+    call StrLen();
+end string_length;

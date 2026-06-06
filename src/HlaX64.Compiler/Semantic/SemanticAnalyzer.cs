@@ -296,7 +296,14 @@ public sealed class SemanticAnalyzer
         }
         else if (node is MemoryRefNode mem)
         {
-            AnalyzeMemoryRef(mem.Inner, mem.Line, mem.Column);
+            if (!KnownRegisters.Contains(mem.Register))
+            {
+                _diagnostics.Error("HLAX0012", $"Unknown register '{mem.Register}'", mem.Line, mem.Column);
+            }
+        }
+        else if (node is AddressOfStringNode)
+        {
+            // rodata label — always valid
         }
         else if (node is IdentifierNode ident)
         {

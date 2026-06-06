@@ -1,0 +1,6 @@
+{
+  "name": "curriculum-stack-array",
+  "source": "../../../examples/05-memory/stack-array.hla64",
+  "expectedExitCode": 60,
+  "description": "Curriculum: stack slots as manual array"
+}

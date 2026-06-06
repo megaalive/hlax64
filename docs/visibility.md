@@ -6,15 +6,14 @@ Resources for sharing HlaX64 with new contributors and users.
 
 Static docs under `docs/` deploy from the **`main`** branch (**Settings → Pages → Deploy from a branch → `/docs`**).
 
-Public URLs (once enabled):
-
 | Path | Content |
 |------|---------|
+| `/` | Landing page ([index.html](index.html)) |
 | `/playground/index.html` | Static syntax playground |
-| `/install.md` | Installation guide (rendered as markdown on GitHub; link from README) |
-| `/tutorials/` | Tutorial series |
+| `/install.md` | Installation guide (raw markdown) |
+| `/tutorials/` | Tutorial series (incl. Level 3 memory) |
 
-Site base: `https://megaalive.github.io/hlax64/`
+Site base: `https://megaalive.github.io/hlax64/` — root URL serves the landing page; use `/playground/index.html` for the editor demo.
 
 ## Architecture diagram
 

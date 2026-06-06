@@ -1,4 +1,4 @@
-# Structured example programs (20 clean-room `.hla64` files).
+# Structured example programs (24 clean-room `.hla64` files).
 
 | Folder | Programs |
 |--------|----------|
@@ -7,7 +7,7 @@
 | [02-types/](02-types/) | signed-compare, unsigned-compare |
 | [03-control-flow/](03-control-flow/) | count, if-else |
 | [04-procedures/](04-procedures/) | add-two, no-args, six-args, factorial-iter |
-| [05-memory/](05-memory/) | sum-1-to-5 |
+| [05-memory/](05-memory/) | pointer-load-store, pointer-store, stack-array, typed-byte, string-length, sum-1-to-5 |
 | [06-abi/](06-abi/) | stack-alignment, callee-saved, windows-exitcode |
 | [07-interop/](07-interop/) | export-lib |
 | [08-ai-agent/](08-ai-agent/) | smoke-test |

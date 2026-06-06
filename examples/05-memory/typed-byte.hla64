@@ -1,0 +1,15 @@
+// Level 3: byte-sized memory access through [reg].byte
+program typed_byte;
+
+procedure ReadByte; @returns("rax");
+var
+    cell: byte;
+begin ReadByte;
+    mov(65, cell);
+    mov(&cell, rcx);
+    mov([rcx].byte, rax);
+end ReadByte;
+
+begin typed_byte;
+    call ReadByte();
+end typed_byte;

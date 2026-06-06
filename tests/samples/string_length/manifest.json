@@ -1,0 +1,6 @@
+{
+  "name": "string_length",
+  "source": "string_length.hla64",
+  "expectedExitCode": 5,
+  "description": "Level 3: byte walk of rodata string via &\"...\" and [reg].byte"
+}

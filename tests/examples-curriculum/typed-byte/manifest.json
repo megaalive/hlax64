@@ -1,0 +1,6 @@
+{
+  "name": "curriculum-typed-byte",
+  "source": "../../../examples/05-memory/typed-byte.hla64",
+  "expectedExitCode": 65,
+  "description": "Curriculum: byte-sized memory load"
+}

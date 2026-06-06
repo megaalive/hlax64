@@ -3,8 +3,6 @@
 > **Direktori**: [`examples/`](../examples) (structured curriculum) ·
 > [`tests/samples/`](../tests/samples) (integration tests with manifests).
 
-Katalog program contoh HlaX64. Lihat [`language-spec.md`](./language-spec.md) untuk referensi bahasa.
-
 ---
 
 ## 1. Structured examples (`examples/`)
@@ -12,9 +10,16 @@ Katalog program contoh HlaX64. Lihat [`language-spec.md`](./language-spec.md) un
 | Folder | Programs | Topic |
 |--------|----------|-------|
 | [`00-getting-started/`](../examples/00-getting-started/) | `hello`, `exitcode` | Hello world, exit codes |
-| [`01-arithmetic/`](../examples/01-arithmetic/) | `simple` | `mov`, `add` |
+| [`01-arithmetic/`](../examples/01-arithmetic/) | `simple`, `move-values`, … | `mov`, `add`, inc/dec |
+| [`02-types/`](../examples/02-types/) | signed/unsigned compare | Typed comparisons |
 | [`03-control-flow/`](../examples/03-control-flow/) | `count`, `if-else` | Loops, branches |
-| [`04-procedures/`](../examples/04-procedures/) | `add-two` | Procedures & SysV ABI |
+| [`04-procedures/`](../examples/04-procedures/) | `add-two`, factorial, … | Procedures & ABI |
+| [`05-memory/`](../examples/05-memory/) | pointer, stack-array, string-length, … | Level 3 memory curriculum |
+| [`06-abi/`](../examples/06-abi/) | stack-alignment, callee-saved, … | ABI edge cases |
+| [`07-interop/`](../examples/07-interop/) | `export-lib` | Shared library export |
+| [`08-ai-agent/`](../examples/08-ai-agent/) | `smoke-test` | Agent workflow |
+
+Tutorial for memory: [tutorials/05-memory.md](tutorials/05-memory.md).
 
 Each folder has a README with build/run commands.
 
@@ -22,27 +27,25 @@ Each folder has a README with build/run commands.
 
 ## 2. Integration samples (`tests/samples/`)
 
-17 samples with `manifest.json`, run via `hla64 test tests/samples`.
+20 native samples with `manifest.json`:
+
+```bash
+hla64 test tests/samples/
+```
+
+Includes Level 3: `pointer_load_store`, `stack_array`, `string_length`.
+
+---
 
 ## 2b. Curriculum manifests (`tests/examples-curriculum/`)
 
-19 manifests reference structured programs under `examples/`:
+24 manifests reference structured programs under `examples/`:
 
 ```bash
-hla64 test tests/examples-curriculum
+hla64 test tests/examples-curriculum/
 ```
 
 See [tutorials/01-getting-started.md](tutorials/01-getting-started.md).
-
-| Sample | Topic |
-|--------|-------|
-| `hello/`, `exitcode/`, `add_two/`, `count/`, `simple/` | Core language |
-| `local_var/`, `if_else/` | Variables, control flow |
-| `procedure_*` | 0, 1, 6 arguments |
-| `comparison_*` | Signed / unsigned compares |
-| `comparison_uint64_boundary/` | High-bit uint64 (`0x8000…0000`) vs 1 |
-| `stdout_int64/`, `callee_saved/`, `stack_alignment/` | ABI edge cases |
-| `export_lib/` | Shared library + interop |
 
 ---
 
@@ -51,19 +54,12 @@ See [tutorials/01-getting-started.md](tutorials/01-getting-started.md).
 ```bash
 dotnet build
 
-# Emit NASM
-dotnet run --project src/HlaX64.Cli -- emit-nasm examples/00-getting-started/hello.hla64
+hla64 build examples/05-memory/string-length.hla64 -o build/strlen
+hla64 explain examples/05-memory/stack-array.hla64 --json
 
-# Build executable
-dotnet run --project src/HlaX64.Cli -- build examples/00-getting-started/exitcode.hla64 -o build/exitcode
-
-# Run
-dotnet run --project src/HlaX64.Cli -- run examples/00-getting-started/hello.hla64
-
-# Test suite
-dotnet run --project src/HlaX64.Cli -- test tests/samples
-dotnet run --project src/HlaX64.Cli -- test tests/samples --filter hello
-dotnet run --project src/HlaX64.Cli -- test tests/samples --json
+hla64 test tests/samples
+hla64 test tests/examples-curriculum
+hla64 test tests/samples --json
 ```
 
 Machine-readable schemas: [`schemas/`](../schemas/).
@@ -85,6 +81,7 @@ Machine-readable schemas: [`schemas/`](../schemas/).
 
 ## 5. See also
 
+- [`memory-and-bounds.md`](./memory-and-bounds.md) — pointer model & UB
 - [`runtime-matrix.md`](./runtime-matrix.md) — target × output defaults
 - [`classic-hla-comparison.md`](./classic-hla-comparison.md) — HLA vs HlaX64
 - [`development.md`](./development.md) — contributor setup

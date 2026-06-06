@@ -180,14 +180,20 @@ public sealed class SysVAbiLowerer : IAbiLowerer
 
         if (IsMemRef(srcVal))
         {
-            var reg = MemRefTarget(srcVal);
-            return new LoweredInstruction($"    mov {dst}, [{reg}]");
+            var mem = MemoryRefEncoding.Parse(srcVal!);
+            return new LoweredInstruction($"    {MemoryRefEncoding.EmitLoad(dst, mem)}");
         }
 
         if (IsMemRef(dstVal))
         {
-            var reg = MemRefTarget(dstVal);
-            return new LoweredInstruction($"    mov [{reg}], {src}");
+            var mem = MemoryRefEncoding.Parse(dstVal!);
+            return new LoweredInstruction($"    {MemoryRefEncoding.EmitStore(mem, src)}");
+        }
+
+        if (AddressRefEncoding.IsStringRef(srcVal))
+        {
+            var label = EnsureStringLabel(AddressRefEncoding.DecodeString(srcVal!));
+            return new LoweredInstruction($"    lea {dst}, [{label}]");
         }
 
         if (IsAddrRef(srcVal))
@@ -222,11 +228,23 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         => value?.Name?.StartsWith("mem:", StringComparison.Ordinal) == true;
 
     private static bool IsAddrRef(IrValue? value)
-        => value?.Name?.StartsWith("addr:", StringComparison.Ordinal) == true;
-
-    private static string MemRefTarget(IrValue value) => value.Name![4..].ToLowerInvariant();
+        => value?.Name?.StartsWith("addr:", StringComparison.Ordinal) == true
+           && !AddressRefEncoding.IsStringRef(value);
 
     private static string AddrVariable(IrValue value) => value.Name![5..];
+
+    private string EnsureStringLabel(string value)
+    {
+        foreach (var existing in _stringLiterals)
+        {
+            if (existing.Value == value)
+                return existing.Label;
+        }
+
+        var label = NewStringLabel();
+        _stringLiterals.Add(new StringLiteralInfo(label, value));
+        return label;
+    }
 
     private LoweredInstruction LowerCompare(IrInstruction inst)
     {

@@ -194,6 +194,24 @@ end AddTwo;
 Up to 6 integer parameters are passed in `rdi`, `rsi`, `rdx`, `rcx`,
 `r8`, `r9`. Return value goes in `rax` (specified via `@returns`).
 
+## Memory & pointers (Implemented — Level 3 baseline)
+
+See [tutorials/05-memory.md](tutorials/05-memory.md) and [memory-and-bounds.md](memory-and-bounds.md).
+
+```hla
+var slot: int64;
+mov(&slot, rcx);           // address of stack local
+mov(&"hello", rcx);        // address of rodata string
+mov([rcx], rax);           // 64-bit load
+mov(42, [rcx]);            // 64-bit store
+mov([rcx + 8], rbx);       // indexed qword
+mov([rcx].byte, rax);      // 8-bit load (.word / .dword / .qword also supported)
+```
+
+- `&ident` requires a local variable or parameter in the current procedure (`HLAX0023`).
+- `[reg]` requires a register holding an address; optional `+ byteOffset` and size suffix.
+- Array types and `arr[i]` are **not** implemented — use manual `[base + N]` on contiguous locals.
+
 ## Calling Convention
 
 ### Linux x64 (System V ABI)
@@ -257,7 +275,7 @@ true false null nil nl stdout stderr stdin
 
 ## Undefined behavior
 
-Not fully diagnosed in v0.1: uninitialized reads, stack misalignment before foreign calls, out-of-bounds memory access.
+Not fully diagnosed in v0.1: uninitialized reads, stack misalignment before foreign calls, out-of-bounds pointer/index access (see [memory-and-bounds.md](memory-and-bounds.md)).
 
 ## Compatibility
 

@@ -1,0 +1,6 @@
+{
+  "name": "curriculum-pointer-store",
+  "source": "../../../examples/05-memory/pointer-store.hla64",
+  "expectedExitCode": 99,
+  "description": "Curriculum: store through pointer"
+}
