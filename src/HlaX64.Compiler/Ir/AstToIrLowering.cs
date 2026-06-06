@@ -9,6 +9,7 @@ public sealed class AstToIrLowering
         var func = new IrFunction("_start");
         procedures.Clear();
 
+        var currentBlock = func.EntryBlock;
         foreach (var stmt in program.Statements)
         {
             if (stmt is ProcedureNode proc)
@@ -18,7 +19,7 @@ public sealed class AstToIrLowering
             }
             else
             {
-                LowerStatement(stmt, func.EntryBlock, func);
+                currentBlock = LowerStatement(stmt, currentBlock, func);
             }
         }
 
@@ -37,30 +38,30 @@ public sealed class AstToIrLowering
             func.ParameterValues.Add(v);
         }
 
+        var currentBlock = func.EntryBlock;
         foreach (var stmt in proc.Body)
-            LowerStatement(stmt, func.EntryBlock, func);
+            currentBlock = LowerStatement(stmt, currentBlock, func);
 
         func.EnsureBlocksRegistered();
         return func;
     }
 
-    private void LowerStatement(AstNode node, IrBasicBlock block, IrFunction func)
+    private IrBasicBlock LowerStatement(AstNode node, IrBasicBlock block, IrFunction func)
     {
         switch (node)
         {
             case InstructionNode instr:
                 LowerInstruction(instr, block);
-                break;
+                return block;
             case CallNode call:
                 LowerCall(call, block);
-                break;
+                return block;
             case IfNode ifNode:
-                LowerIf(ifNode, block, func);
-                break;
+                return LowerIf(ifNode, block, func);
             case WhileNode whileNode:
-                LowerWhile(whileNode, block, func);
-                break;
+                return LowerWhile(whileNode, block, func);
         }
+        return block;
     }
 
     private void LowerInstruction(InstructionNode instr, IrBasicBlock block)
@@ -117,11 +118,10 @@ public sealed class AstToIrLowering
     {
         if (call.Name == "stdout.put")
         {
+            var allArgs = new List<IrValue>();
             foreach (var arg in call.Arguments)
-            {
-                var val = ResolveOperand(arg);
-                block.Add(new IrInstruction(IrOpcode.Call, operands: new List<IrValue> { val }, immediate: "stdout.put"));
-            }
+                allArgs.Add(ResolveOperand(arg));
+            block.Add(new IrInstruction(IrOpcode.Call, operands: allArgs, immediate: "stdout.put"));
             return;
         }
 
@@ -134,10 +134,10 @@ public sealed class AstToIrLowering
 
     private int _labelCounter;
 
-    private void LowerIf(IfNode ifNode, IrBasicBlock block, IrFunction func)
+    private IrBasicBlock LowerIf(IfNode ifNode, IrBasicBlock block, IrFunction func)
     {
         if (ifNode.Condition is not ComparisonNode comp)
-            return;
+            return block;
 
         var left = ResolveOperand(comp.Left);
         var right = ResolveOperand(comp.Right);
@@ -161,10 +161,12 @@ public sealed class AstToIrLowering
         var thenBlock = new IrBasicBlock($"then_{id}");
         var elseBlock = ifNode.ElseBody.Count > 0 ? new IrBasicBlock($"else_{id}") : null;
         var endBlock = new IrBasicBlock($"endif_{id}");
+        var contBlock = new IrBasicBlock($"cont_{id}");
 
         func.AddBlock(thenBlock);
         if (elseBlock != null) func.AddBlock(elseBlock);
         func.AddBlock(endBlock);
+        func.AddBlock(contBlock);
 
         block.Add(new IrInstruction(IrOpcode.ConditionalBranch)
         {
@@ -172,7 +174,7 @@ public sealed class AstToIrLowering
             CmpKind = cmpKind
         });
 
-        block.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = (elseBlock ?? endBlock).Label });
+        block.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = (elseBlock ?? contBlock).Label });
 
         foreach (var stmt in ifNode.ThenBody)
             LowerStatement(stmt, thenBlock, func);
@@ -184,18 +186,24 @@ public sealed class AstToIrLowering
                 LowerStatement(stmt, elseBlock, func);
             elseBlock.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = endBlock.Label });
         }
+
+        endBlock.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = contBlock.Label });
+
+        return contBlock;
     }
 
-    private void LowerWhile(WhileNode whileNode, IrBasicBlock block, IrFunction func)
+    private IrBasicBlock LowerWhile(WhileNode whileNode, IrBasicBlock block, IrFunction func)
     {
         var id = _labelCounter++;
         var headerBlock = new IrBasicBlock($"while_header_{id}");
         var bodyBlock = new IrBasicBlock($"while_body_{id}");
         var endBlock = new IrBasicBlock($"endwhile_{id}");
+        var contBlock = new IrBasicBlock($"cont_{id}");
 
         func.AddBlock(headerBlock);
         func.AddBlock(bodyBlock);
         func.AddBlock(endBlock);
+        func.AddBlock(contBlock);
 
         block.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = headerBlock.Label });
 
@@ -241,6 +249,10 @@ public sealed class AstToIrLowering
         foreach (var stmt in whileNode.Body)
             LowerStatement(stmt, bodyBlock, func);
         bodyBlock.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = headerBlock.Label });
+
+        endBlock.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = contBlock.Label });
+
+        return contBlock;
     }
 
     private IrValue ResolveOperand(AstNode node)

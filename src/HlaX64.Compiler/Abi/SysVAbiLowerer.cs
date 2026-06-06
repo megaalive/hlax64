@@ -218,7 +218,8 @@ public sealed class SysVAbiLowerer : IAbiLowerer
 
         var sb = new System.Text.StringBuilder();
         var args = inst.Operands;
-        int regCount = 0;
+
+        sb.AppendLine("    push rcx        ; preserve rcx (syscall clobbers it)");
 
         // Pass 1: push register values before any syscalls
         foreach (var arg in args)
@@ -227,7 +228,6 @@ public sealed class SysVAbiLowerer : IAbiLowerer
             if (IsRegisterRef(val))
             {
                 sb.AppendLine($"    push {val}      ; save for stdout.put");
-                regCount++;
             }
         }
 
@@ -278,12 +278,12 @@ public sealed class SysVAbiLowerer : IAbiLowerer
                 var uid = _labelCounter++;
                 sb.AppendLine($"    ; RUNTIME: stdout_put_int({val})");
                 sb.AppendLine("    pop rax         ; get saved register value");
-                sb.AppendLine("    mov rcx, 10");
+                sb.AppendLine("    mov r8, 10");
                 sb.AppendLine("    mov rdi, 0          ; digit count");
                 sb.AppendLine($"    jmp .Lchk_{uid}");
                 sb.AppendLine($".Ldiv_{uid}:");
                 sb.AppendLine("    xor rdx, rdx");
-                sb.AppendLine("    div rcx");
+                sb.AppendLine("    div r8");
                 sb.AppendLine("    push rdx             ; digit");
                 sb.AppendLine("    inc rdi");
                 sb.AppendLine($".Lchk_{uid}:");
@@ -297,16 +297,17 @@ public sealed class SysVAbiLowerer : IAbiLowerer
                 sb.AppendLine($".Lbuf_{uid}:");
                 sb.AppendLine("    mov rdx, rdi         ; byte count");
                 sb.AppendLine("    sub rsp, rdx         ; stack buffer");
-                sb.AppendLine("    mov rcx, rdi         ; loop count");
+                sb.AppendLine("    mov r9, rdi          ; loop count");
                 sb.AppendLine("    lea rsi, [rsp]       ; buffer ptr");
-                sb.AppendLine("    lea r9, [rsp+rdx]    ; ptr to most significant digit");
+                sb.AppendLine("    lea rdi, [rsp+rdx]   ; ptr to most significant digit");
                 sb.AppendLine($".Lascii_{uid}:");
-                sb.AppendLine("    mov rax, [r9]        ; read digit");
+                sb.AppendLine("    mov rax, [rdi]       ; read digit");
                 sb.AppendLine("    add al, '0'");
                 sb.AppendLine("    mov [rsi], al");
                 sb.AppendLine("    inc rsi");
-                sb.AppendLine("    add r9, 8            ; next digit");
-                sb.AppendLine($"    loop .Lascii_{uid}");
+                sb.AppendLine("    add rdi, 8           ; next digit");
+                sb.AppendLine("    dec r9");
+                sb.AppendLine($"    jnz .Lascii_{uid}");
                 sb.AppendLine("    mov r8, rdx          ; save digit count");
                 sb.AppendLine("    mov rax, 1           ; sys_write");
                 sb.AppendLine("    mov rdi, 1           ; stdout");
@@ -329,8 +330,7 @@ public sealed class SysVAbiLowerer : IAbiLowerer
             }
         }
 
-        if (regCount > 0)
-            sb.Append("    pop rcx           ; restore caller's rcx");
+        sb.AppendLine("    pop rcx         ; restore rcx");
 
         return new LoweredInstruction(sb.ToString().TrimEnd());
     }
