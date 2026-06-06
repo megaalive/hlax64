@@ -73,7 +73,7 @@ public sealed class SysVAbiLowerer : IAbiLowerer
             // Emit entry point prologue (_start)
             if (isEntry)
             {
-                loweredBlock.Instructions.Add(new LoweredInstruction("    xor rax, rax    ; default exit code = 0"));
+                loweredBlock.Instructions.Add(new LoweredInstruction("    xor ebx, ebx    ; default exit code = 0 (callee-saved)"));
                 loweredBlock.Instructions.Add(new LoweredInstruction("    push rbp"));
                 loweredBlock.Instructions.Add(new LoweredInstruction("    mov rbp, rsp"));
                 loweredBlock.Instructions.Add(new LoweredInstruction("    sub rsp, 8      ; align stack to 16 bytes"));
@@ -105,7 +105,7 @@ public sealed class SysVAbiLowerer : IAbiLowerer
             {
                 if (function.IsEntryPoint)
                 {
-                    lastBlock.Instructions.Add(new LoweredInstruction("    mov rdi, rax    ; exit code"));
+                    lastBlock.Instructions.Add(new LoweredInstruction("    mov rdi, rbx    ; exit code"));
                     lastBlock.Instructions.Add(new LoweredInstruction("    mov rax, 60     ; sys_exit"));
                     lastBlock.Instructions.Add(new LoweredInstruction("    syscall"));
                 }
@@ -127,11 +127,11 @@ public sealed class SysVAbiLowerer : IAbiLowerer
     {
         return inst.Opcode switch
         {
-            IrOpcode.LoadConstant => LowerLoadConstant(inst),
-            IrOpcode.Move => LowerBinaryRmw(inst, "mov"),
-            IrOpcode.Add => LowerBinaryRmw(inst, "add"),
-            IrOpcode.Subtract => LowerBinaryRmw(inst, "sub"),
-            IrOpcode.Multiply => LowerBinaryRmw(inst, "imul"),
+            IrOpcode.LoadConstant => LowerLoadConstant(inst, context),
+            IrOpcode.Move => LowerBinaryRmw(inst, "mov", context),
+            IrOpcode.Add => LowerBinaryRmw(inst, "add", context),
+            IrOpcode.Subtract => LowerBinaryRmw(inst, "sub", context),
+            IrOpcode.Multiply => LowerBinaryRmw(inst, "imul", context),
             IrOpcode.Compare => LowerCompare(inst),
             IrOpcode.Branch => new LoweredInstruction($"    jmp {inst.TargetBlock}"),
             IrOpcode.ConditionalBranch => LowerConditionalBranch(inst),
@@ -141,7 +141,7 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         };
     }
 
-    private LoweredInstruction LowerLoadConstant(IrInstruction inst)
+    private LoweredInstruction LowerLoadConstant(IrInstruction inst, IrFunction context)
     {
         var dst = ResolveOperand(inst.Destination);
         var imm = inst.Immediate is long l ? l : 0L;
@@ -149,16 +149,23 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         if (imm == 0)
         {
             var reg = dst;
-            return new LoweredInstruction($"    xor {reg}, {reg}    ; zero");
+            return WrapExitCodeSync(context, dst, $"    xor {reg}, {reg}    ; zero");
         }
-        return new LoweredInstruction($"    mov {dst}, {imm}");
+        return WrapExitCodeSync(context, dst, $"    mov {dst}, {imm}");
     }
 
-    private LoweredInstruction LowerBinaryRmw(IrInstruction inst, string asmMnemonic)
+    private LoweredInstruction LowerBinaryRmw(IrInstruction inst, string asmMnemonic, IrFunction context)
     {
         var dst = ResolveOperand(inst.Destination);
         var src = inst.Operands.Count > 0 ? ResolveOperand(inst.Operands[0]) : dst;
-        return new LoweredInstruction($"    {asmMnemonic} {dst}, {src}");
+        return WrapExitCodeSync(context, dst, $"    {asmMnemonic} {dst}, {src}");
+    }
+
+    private static LoweredInstruction WrapExitCodeSync(IrFunction context, string dest, string asmLine)
+    {
+        if (context.IsEntryPoint && dest == "rax")
+            return new LoweredInstruction($"{asmLine}\n    mov rbx, rax    ; sync exit code");
+        return new LoweredInstruction(asmLine);
     }
 
     private LoweredInstruction LowerCompare(IrInstruction inst)

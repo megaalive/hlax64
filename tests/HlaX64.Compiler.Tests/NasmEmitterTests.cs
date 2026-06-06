@@ -133,8 +133,9 @@ public class NasmEmitterTests
     public void Emit_ExitSyscall_UsesRaxAsExitCode()
     {
         var nasm = Emit("program test;\nbegin test;\n    mov(42, rax);\nend test;");
-        Assert.Contains("xor rax, rax", nasm);
-        Assert.Contains("mov rdi, rax", nasm);
+        Assert.Contains("xor ebx, ebx", nasm);
+        Assert.Contains("mov rbx, rax", nasm);
+        Assert.Contains("mov rdi, rbx", nasm);
         Assert.Contains("mov rax, 60", nasm);
         Assert.Contains("syscall", nasm);
     }

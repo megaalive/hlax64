@@ -104,7 +104,15 @@ public sealed class AstToIrLowering
         else if (instr.Operands.Count == 1)
         {
             var op = ResolveOperand(instr.Operands[0]);
-            block.Add(new IrInstruction(IrOpcode.Move, op, new List<IrValue> { op }));
+            if (mnemonic is "inc" or "dec")
+            {
+                var opcode = mnemonic == "inc" ? IrOpcode.Add : IrOpcode.Subtract;
+                block.Add(new IrInstruction(opcode, op, new List<IrValue> { new() { Name = "imm:1" } }));
+            }
+            else
+            {
+                block.Add(new IrInstruction(IrOpcode.Move, op, new List<IrValue> { op }));
+            }
         }
     }
 
