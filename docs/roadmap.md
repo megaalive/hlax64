@@ -25,10 +25,10 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 | 8 | Local variables & stack frame | ✅ Done | `var` block, `[rbp-N]` |
 | 9 | Test runner | ✅ Done | `hla64 test`, manifest JSON |
 | **9.5** | **Compiler Architecture Stabilization** | ✅ Done | A ✅ B ✅ C ✅ D ✅ E ✅ F ✅ G ✅ H ✅ — 15/15 checklist |
-| 10 | Benchmark runner | ⏳ Pending | |
+| 10 | Benchmark runner | ✅ Done | `hla64 bench` dengan warmup, median, compile duration, binary size, JSON manifest |
 | 11 | Windows x64 backend | ✅ Done | RCX/RDX/R8/R9, 32-byte shadow space, `ExitProcess`, `WriteConsoleA`, `--target windows-x64-msabi` |
 | 12 | C ABI & C# interop | ✅ Done | `export procedure`, `--output-kind shared-library`, C header generator, C# P/Invoke generator |
-| 13 | MCP server | ⏳ Pending | tools untuk AI agent |
+| 13 | MCP server | ✅ Done | 9 tools via stdio JSON-RPC (compile, build, run, test, explain-abi, dll) |
 | 14 | LSP & editor tooling | ⏳ Pending | diagnostics, hover, completion |
 | 15 | AI Assembly Lab / GUI | ⏳ Pending | eksperimen UI (Avalonia/WPF) |
 
@@ -42,7 +42,7 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 - [x] `docs/compiler-architecture.md` — diagram pipeline IR + 7 workstream
 - [x] `docs/runtime-contract.md` — format clobber metadata per fungsi runtime
 - [x] `docs/examples.md` — katalog & cara menjalankan
-- [x] `README.md` — sync badge "Fase 0–12 Done"
+- [x] `README.md` — sync badge "Fase 0–13 Done"
 
 ### Tier 2 — Sample tests (memenuhi target MVP "min 10 samples")
 
@@ -65,8 +65,8 @@ Fase 9.5 →  Fase 11 (Windows) →  Fase 12 (C# interop) →  Fase 10 (Bench)
 Fase 13 (MCP) →  Fase 14 (LSP) →  Fase 15 (GUI)
 ```
 
-> *Fase 9.5 Workstream A–H done. Docs sync complete. Fase 11 (Windows) and Fase 12 (C# interop) also done.
-> Next: Fase 10 (Benchmark runner).
+> *Fase 9.5 Workstream A–H done. Docs sync complete. Fase 10 (Bench), 11 (Windows), 12 (C# interop), 13 (MCP) all done.
+> Next: Fase 14 (LSP & editor tooling).
 
 ---
 

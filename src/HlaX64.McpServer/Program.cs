@@ -49,6 +49,7 @@ while (true)
         var tools = new List<object>();
         foreach (var mi in toolMethods)
         {
+            var toolName = PascalToKebab(mi.Name);
             var desc = mi.GetCustomAttribute<DescriptionAttribute>()?.Description ?? mi.Name;
             var properties = new Dictionary<string, object>();
             var required = new List<string>();
@@ -92,7 +93,7 @@ while (true)
 
             tools.Add(new
             {
-                name = mi.Name,
+                name = toolName,
                 description = desc,
                 inputSchema
             });
@@ -102,12 +103,13 @@ while (true)
     }
     else if (method == "tools/call")
     {
-        var name = root.GetProperty("params").GetProperty("name").GetString();
+        var name = root.GetProperty("params").GetProperty("name").GetString() ?? "";
         var arguments = root.GetProperty("params").TryGetProperty("arguments", out var argsEl)
             ? argsEl : default;
 
+        var normalizedName = NormalizeToolName(name);
         var mi = toolMethods.FirstOrDefault(m =>
-            m.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            NormalizeToolName(m.Name) == normalizedName);
         if (mi == null)
         {
             WriteError(id, -32602, $"Unknown tool: {name}");
@@ -199,6 +201,29 @@ while (true)
         WriteError(id, -32601, $"Method not found: {method}");
     }
 }
+
+static string PascalToKebab(string name)
+{
+    var sb = new StringBuilder();
+    for (int i = 0; i < name.Length; i++)
+    {
+        var c = name[i];
+        if (i > 0 && char.IsUpper(c))
+        {
+            // Insert hyphen before uppercase that follows lowercase (e.g. "GetVersion" -> "get-version")
+            // or before uppercase preceded by uppercase but followed by lowercase (e.g. "PInvoke" -> "p-invoke")
+            bool prevLower = char.IsLower(name[i - 1]);
+            bool nextLower = i + 1 < name.Length && char.IsLower(name[i + 1]);
+            if (prevLower || nextLower)
+                sb.Append('-');
+        }
+        sb.Append(char.ToLowerInvariant(c));
+    }
+    return sb.ToString();
+}
+
+static string NormalizeToolName(string name) =>
+    name.Replace("-", "").Replace("_", "").ToLowerInvariant();
 
 static string? ReadRequest()
 {

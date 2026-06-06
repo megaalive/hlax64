@@ -1,0 +1,32 @@
+{
+  "benchmarks": [
+    {
+      "name": "count",
+      "source": "examples/count.hla64",
+      "warmup": 2,
+      "iterations": 5,
+      "expectedExitCode": 0
+    },
+    {
+      "name": "hello",
+      "source": "examples/hello.hla64",
+      "warmup": 3,
+      "iterations": 10,
+      "expectedExitCode": 0
+    },
+    {
+      "name": "simple",
+      "source": "examples/simple.hla64",
+      "warmup": 3,
+      "iterations": 10,
+      "expectedExitCode": 0
+    },
+    {
+      "name": "add-two",
+      "source": "examples/add_two.hla64",
+      "warmup": 3,
+      "iterations": 10,
+      "expectedExitCode": 0
+    }
+  ]
+}

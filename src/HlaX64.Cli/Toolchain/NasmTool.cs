@@ -92,7 +92,8 @@ public sealed class NasmTool
 
     public bool TryAssemble(string nasmSource, string objectFile, out string error, string format = "elf64")
     {
-        if (!TryFindNasm(out var nasm))
+        var nasmPath = _nasmPath;
+        if (string.IsNullOrEmpty(nasmPath) && !TryFindNasm(out nasmPath))
         {
             error = "NASM not found. Please install NASM (https://nasm.us).";
             return false;
@@ -100,10 +101,21 @@ public sealed class NasmTool
 
         try
         {
+            var (fileName, prefixArgs) = SplitNasmInvocation(nasmPath!);
+            bool isWsl = fileName == "wsl";
+
+            // Convert Windows paths to WSL paths when running via WSL
+            var srcArg = isWsl ? LinkerTool.ToWslPath(nasmSource) : nasmSource;
+            var objArg = isWsl ? LinkerTool.ToWslPath(objectFile) : objectFile;
+
+            var nasmArgs = string.IsNullOrEmpty(prefixArgs)
+                ? $"-f {format} \"{srcArg}\" -o \"{objArg}\""
+                : $"{prefixArgs} -f {format} \"{srcArg}\" -o \"{objArg}\"";
+
             var psi = new ProcessStartInfo
             {
-                FileName = nasm,
-                Arguments = $"-f {format} \"{nasmSource}\" -o \"{objectFile}\"",
+                FileName = fileName,
+                Arguments = nasmArgs,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false

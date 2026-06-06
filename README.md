@@ -4,7 +4,7 @@
 > Write low-level x64 with a cleaner HLA-inspired syntax. Compile to NASM,
 > assemble, link, and run — all from a single `hla64` CLI.
 
-[![Status](https://img.shields.io/badge/Fase%200%E2%80%9312-Done-green)](./docs/roadmap.md)
+[![Status](https://img.shields.io/badge/Fase%200%E2%80%9313-Done-green)](./docs/roadmap.md)
 [![Tests](https://img.shields.io/badge/tests-77%2F77%20+%2016%2F16%20native-2ea44f)](#test-status)
 [![Target](https://img.shields.io/badge/target-linux--x64--sysv%20|%20windows--x64--msabi-1f6feb)](#target-abis)
 [![Language](https://img.shields.io/badge/language-v0.1%20Draft-blueviolet)](#language-reference)
@@ -32,7 +32,7 @@
 
 > The MVP compiler inlines `sys_write` syscalls. A hand-written runtime
 > library (`src/HlaX64.Runtime/`) is provided for Fase 6+ (procedure-aware
-> compilation) and Fase 12 (C# interop shared library).
+> compilation), Fase 12 (C# interop shared library), and Fase 13 (MCP Server).
 
 ---
 
@@ -129,7 +129,7 @@ HlaX64/
 │     ├─ include/             #   *.hhf header
 │     └─ linux-x64/           #   *.nasm runtime sources
 ├─ tests/
-│  ├─ HlaX64.Compiler.Tests/  # xUnit suite (65 tests)
+│  ├─ HlaX64.Compiler.Tests/  # xUnit suite (77 tests)
 │  └─ samples/                # Integration test samples with manifests
 ├─ docs/
 │  ├─ language-spec.md        # Full language reference
@@ -204,14 +204,14 @@ Detail per fase ada di plan; ringkasan visual ada di
 | 8    | Local variables & stack frame        | ✅      |
 | 9    | Test runner CLI                      | ✅      |
 | **9.5** | **Compiler Architecture Stabilization (IR, ABI lowerer, type system, runtime contract, native tests)** | ✅ |
-| 10   | Benchmark runner                     | ⏳      |
+| 10   | Benchmark runner                     | ✅      |
 | 11   | Windows x64 backend                  | ✅      |
 | 12   | C ABI & C# interop generator         | ✅      |
-| 13   | MCP server (for AI agents)           | ⏳      |
+| 13   | MCP server (for AI agents)           | ✅      |
 | 14   | LSP & editor tooling                 | ⏳      |
 | 15   | AI Assembly Lab / IDE plugin         | ⏳      |
 
-> **Aturan**: jangan sentuh Fase 10–15 sebelum 15-item Definition of Done
+> **Aturan**: jangan sentuh Fase 14–15 sebelum 15-item Definition of Done
 > Fase 9.5 terpenuhi. Lihat [`HlaX64_Project_Plan.md` §9.5](./HlaX64_Project_Plan.md).
 
 ### 📚 Dokumentasi tambahan
