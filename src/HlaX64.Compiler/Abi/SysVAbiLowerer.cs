@@ -20,6 +20,7 @@ public sealed class SysVAbiLowerer : IAbiLowerer
     private RuntimeMode _mode;
     private List<string> _externs = new();
     private bool _stdoutUsed;
+    private bool _rbxExitTouched;
 
     public IReadOnlyList<StringLiteralInfo> StringLiterals => _stringLiterals;
 
@@ -32,6 +33,7 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         _mode = options.RuntimeMode;
         _externs = new List<string>();
         _stdoutUsed = false;
+        _rbxExitTouched = false;
         var lowered = new LoweredFunction(function.Name, isEntryPoint: function.IsEntryPoint)
         {
             IsExport = function.IsExport
@@ -107,7 +109,10 @@ public sealed class SysVAbiLowerer : IAbiLowerer
             {
                 if (function.IsEntryPoint)
                 {
-                    lastBlock.Instructions.Add(new LoweredInstruction("    mov rdi, rbx    ; exit code"));
+                    if (_stdoutUsed || _rbxExitTouched)
+                        lastBlock.Instructions.Add(new LoweredInstruction("    mov rdi, rbx    ; exit code"));
+                    else
+                        lastBlock.Instructions.Add(new LoweredInstruction("    mov rdi, rax    ; exit code"));
                     lastBlock.Instructions.Add(new LoweredInstruction("    mov rax, 60     ; sys_exit"));
                     lastBlock.Instructions.Add(new LoweredInstruction("    syscall"));
                 }
@@ -129,11 +134,11 @@ public sealed class SysVAbiLowerer : IAbiLowerer
     {
         return inst.Opcode switch
         {
-            IrOpcode.LoadConstant => LowerLoadConstant(inst, context),
-            IrOpcode.Move => LowerBinaryRmw(inst, "mov", context),
-            IrOpcode.Add => LowerBinaryRmw(inst, "add", context),
-            IrOpcode.Subtract => LowerBinaryRmw(inst, "sub", context),
-            IrOpcode.Multiply => LowerBinaryRmw(inst, "imul", context),
+            IrOpcode.LoadConstant => LowerLoadConstant(inst),
+            IrOpcode.Move => LowerBinaryRmw(inst, "mov"),
+            IrOpcode.Add => LowerBinaryRmw(inst, "add"),
+            IrOpcode.Subtract => LowerBinaryRmw(inst, "sub"),
+            IrOpcode.Multiply => LowerBinaryRmw(inst, "imul"),
             IrOpcode.Compare => LowerCompare(inst),
             IrOpcode.Branch => new LoweredInstruction($"    jmp {inst.TargetBlock}"),
             IrOpcode.ConditionalBranch => LowerConditionalBranch(inst),
@@ -143,31 +148,32 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         };
     }
 
-    private LoweredInstruction LowerLoadConstant(IrInstruction inst, IrFunction context)
+    private LoweredInstruction LowerLoadConstant(IrInstruction inst)
     {
         var dst = ResolveOperand(inst.Destination);
+        TrackRbxExitTouch(inst.Destination);
         var imm = inst.Immediate is long l ? l : 0L;
 
         if (imm == 0)
         {
             var reg = dst;
-            return WrapExitCodeSync(context, dst, $"    xor {reg}, {reg}    ; zero");
+            return new LoweredInstruction($"    xor {reg}, {reg}    ; zero");
         }
-        return WrapExitCodeSync(context, dst, $"    mov {dst}, {imm}");
+        return new LoweredInstruction($"    mov {dst}, {imm}");
     }
 
-    private LoweredInstruction LowerBinaryRmw(IrInstruction inst, string asmMnemonic, IrFunction context)
+    private LoweredInstruction LowerBinaryRmw(IrInstruction inst, string asmMnemonic)
     {
         var dst = ResolveOperand(inst.Destination);
+        TrackRbxExitTouch(inst.Destination);
         var src = inst.Operands.Count > 0 ? ResolveOperand(inst.Operands[0]) : dst;
-        return WrapExitCodeSync(context, dst, $"    {asmMnemonic} {dst}, {src}");
+        return new LoweredInstruction($"    {asmMnemonic} {dst}, {src}");
     }
 
-    private LoweredInstruction WrapExitCodeSync(IrFunction context, string dest, string asmLine)
+    private void TrackRbxExitTouch(IrValue? destination)
     {
-        if (context.IsEntryPoint && !_stdoutUsed && dest == "rax")
-            return new LoweredInstruction($"{asmLine}\n    mov rbx, rax    ; sync exit code");
-        return new LoweredInstruction(asmLine);
+        if (destination?.Name?.Equals("rbx", StringComparison.OrdinalIgnoreCase) == true)
+            _rbxExitTouched = true;
     }
 
     private LoweredInstruction LowerCompare(IrInstruction inst)
