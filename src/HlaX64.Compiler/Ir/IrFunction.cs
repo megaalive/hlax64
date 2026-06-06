@@ -8,6 +8,7 @@ public sealed class IrFunction
     public List<IrValue> ParameterValues { get; }
 
     public bool IsEntryPoint => Name == "_start";
+    public bool IsExport { get; set; }
 
     public IrFunction(string name)
     {

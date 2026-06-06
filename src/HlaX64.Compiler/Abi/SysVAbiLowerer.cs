@@ -30,7 +30,10 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         _stackOffset = 0;
         _mode = options.RuntimeMode;
         _externs = new List<string>();
-        var lowered = new LoweredFunction(function.Name, isEntryPoint: function.IsEntryPoint);
+        var lowered = new LoweredFunction(function.Name, isEntryPoint: function.IsEntryPoint)
+        {
+            IsExport = function.IsExport
+        };
 
         // Map parameters to stack slots
         for (int i = 0; i < function.ParameterValues.Count; i++)

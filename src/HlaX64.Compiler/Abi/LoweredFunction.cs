@@ -7,6 +7,7 @@ public sealed class LoweredFunction
     public int StackFrameSize { get; set; }
     public List<string> PreservedRegisters { get; }
     public bool IsEntryPoint { get; set; }
+    public bool IsExport { get; set; }
     public List<ParamInfo> Parameters { get; }
 
     public List<string> RequiredExterns { get; set; } = new();

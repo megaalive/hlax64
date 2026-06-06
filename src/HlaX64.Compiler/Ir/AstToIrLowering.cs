@@ -29,6 +29,7 @@ public sealed class AstToIrLowering
     public IrFunction LowerProcedure(ProcedureNode proc)
     {
         var func = new IrFunction(proc.Name);
+        func.IsExport = proc.IsExport;
 
         foreach (var param in proc.Parameters)
         {

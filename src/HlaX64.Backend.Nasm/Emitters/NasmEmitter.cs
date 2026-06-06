@@ -20,6 +20,9 @@ public sealed class NasmEmitter
 
         _sb.AppendLine("section .text");
         _sb.AppendLine("global _start");
+        foreach (var func in functions)
+            if (func.IsExport)
+                _sb.AppendLine($"global {func.Name}");
 
         bool hasEntry = false;
         foreach (var func in functions)
