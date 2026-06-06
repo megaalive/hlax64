@@ -4,6 +4,7 @@
     <Project Path="src/HlaX64.Cli/HlaX64.Cli.csproj" />
     <Project Path="src/HlaX64.Compiler/HlaX64.Compiler.csproj" />
     <Project Path="src/HlaX64.Runtime/HlaX64.Runtime.csproj" />
+    <Project Path="src/HlaX64.McpServer/HlaX64.McpServer.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/HlaX64.Compiler.Tests/HlaX64.Compiler.Tests.csproj" />
