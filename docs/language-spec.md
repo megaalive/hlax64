@@ -200,17 +200,16 @@ See [tutorials/05-memory.md](tutorials/05-memory.md) and [memory-and-bounds.md](
 
 ```hla
 var slot: int64;
-mov(&slot, rcx);           // address of stack local
-mov(&"hello", rcx);        // address of rodata string
-mov([rcx], rax);           // 64-bit load
-mov(42, [rcx]);            // 64-bit store
-mov([rcx + 8], rbx);       // indexed qword
-mov([rcx].byte, rax);      // 8-bit load (.word / .dword / .qword also supported)
+var data: int64[8];
+mov(&slot, rcx);
+mov(data[0], rax);
+mov(10, data[1]);
 ```
 
 - `&ident` requires a local variable or parameter in the current procedure (`HLAX0023`).
 - `[reg]` requires a register holding an address; optional `+ byteOffset` and size suffix.
-- Array types and `arr[i]` are **not** implemented — use manual `[base + N]` on contiguous locals.
+- Array declaration and `arr[i]` are **implemented** — see [RFC 0003](../rfcs/0003-array-model.md).
+- Use consecutive locals + `[base + N]` only when avoiding array syntax.
 
 ## Calling Convention
 

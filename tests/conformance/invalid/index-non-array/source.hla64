@@ -1,0 +1,8 @@
+program bad;
+procedure P; @returns("rax");
+var x: int64;
+begin P;
+    mov(1, x[0]);
+end P;
+begin bad;
+end bad;

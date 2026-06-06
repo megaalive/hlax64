@@ -138,11 +138,14 @@ public class VariableNode : AstNode
     public override string Kind => "Variable";
     public string Name { get; }
     public string Type { get; }
+    /// <summary>1 for scalar; N for array type[count].</summary>
+    public int ElementCount { get; }
 
-    public VariableNode(string name, string type)
+    public VariableNode(string name, string type, int elementCount = 1)
     {
         Name = name;
         Type = type;
+        ElementCount = elementCount;
     }
 }
 
@@ -231,6 +234,22 @@ public class AddressOfStringNode : AstNode
     public AddressOfStringNode(string value)
     {
         Value = value;
+    }
+}
+
+/// <summary>
+/// Indexed array element: arr[index]
+/// </summary>
+public class ArrayIndexNode : AstNode
+{
+    public override string Kind => "ArrayIndex";
+    public string ArrayName { get; }
+    public AstNode Index { get; }
+
+    public ArrayIndexNode(string arrayName, AstNode index)
+    {
+        ArrayName = arrayName;
+        Index = index;
     }
 }
 

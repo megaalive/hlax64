@@ -1,0 +1,19 @@
+// RFC 0003: fill array with index values 0..3
+program array_fill;
+
+procedure Fill; @returns("rax");
+var
+    buf: int64[4];
+    i: int64;
+begin Fill;
+    mov(0, i);
+    while(i < 4) do
+        mov(i, buf[i]);
+        add(1, i);
+    endwhile;
+    mov(buf[3], rax);
+end Fill;
+
+begin array_fill;
+    call Fill();
+end array_fill;

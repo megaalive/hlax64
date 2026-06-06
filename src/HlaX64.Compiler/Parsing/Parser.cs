@@ -199,8 +199,17 @@ public sealed class Parser
                 var varToken = Expect(TokenType.Identifier);
                 Expect(TokenType.Colon);
                 var typeToken = Expect(TokenType.Identifier);
+                var elementCount = 1;
+                if (Peek().Type == TokenType.LeftBracket)
+                {
+                    Advance();
+                    var countToken = Expect(TokenType.IntegerLiteral);
+                    elementCount = int.Parse(countToken.Value);
+                    Expect(TokenType.RightBracket);
+                }
+
                 Expect(TokenType.Semicolon);
-                variables.Add(new VariableNode(varToken.Value, typeToken.Value));
+                variables.Add(WithLocation(new VariableNode(varToken.Value, typeToken.Value, elementCount), varToken));
             }
         }
 
@@ -444,8 +453,18 @@ public sealed class Parser
                 return new StringLiteralNode(token.Value);
 
             case TokenType.Identifier:
-                Advance();
-                return new IdentifierNode(token.Value);
+            {
+                var name = Advance().Value;
+                if (Peek().Type == TokenType.LeftBracket)
+                {
+                    Advance();
+                    var index = ParseOperand();
+                    var close = Expect(TokenType.RightBracket);
+                    return WithLocation(new ArrayIndexNode(name, index), token);
+                }
+
+                return new IdentifierNode(name);
+            }
 
             // Register tokens
             case TokenType.RAX: case TokenType.RBX: case TokenType.RCX: case TokenType.RDX:

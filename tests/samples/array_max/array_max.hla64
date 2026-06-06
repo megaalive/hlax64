@@ -1,0 +1,25 @@
+program array_max;
+
+procedure MaxOfFour; @returns("rax");
+var
+    data: int64[4];
+    i: int64;
+begin MaxOfFour;
+    mov(3, data[0]);
+    mov(9, data[1]);
+    mov(1, data[2]);
+    mov(7, data[3]);
+    mov(data[0], rax);
+    mov(1, i);
+    while(i < 4) do
+        mov(data[i], rbx);
+        if(rbx > rax) then
+            mov(rbx, rax);
+        endif;
+        add(1, i);
+    endwhile;
+end MaxOfFour;
+
+begin array_max;
+    call MaxOfFour();
+end array_max;

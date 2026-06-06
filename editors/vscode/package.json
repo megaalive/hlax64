@@ -1,12 +1,32 @@
 {
   "name": "hla64",
   "displayName": "HlaX64",
-  "description": "Syntax highlighting and snippets for HlaX64 (.hla64)",
-  "version": "0.1.0",
+  "description": "Syntax highlighting, LSP diagnostics/hover/completion for HlaX64 (.hla64)",
+  "version": "0.2.0",
   "publisher": "megaalive",
   "engines": { "vscode": "^1.85.0" },
   "categories": ["Programming Languages"],
+  "activationEvents": ["onLanguage:hla64"],
+  "main": "./extension.js",
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
   "contributes": {
+    "configuration": {
+      "title": "HlaX64",
+      "properties": {
+        "hla64.languageServerPath": {
+          "type": "string",
+          "default": "dotnet",
+          "description": "Command used to start the HlaX64 language server."
+        },
+        "hla64.languageServerArgs": {
+          "type": "array",
+          "default": [],
+          "description": "Arguments for the language server. Leave empty to use the bundled project path."
+        }
+      }
+    },
     "languages": [{
       "id": "hla64",
       "aliases": ["HlaX64", "hla64"],

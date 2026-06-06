@@ -3,7 +3,7 @@ using HlaX64.Compiler.Diagnostics;
 
 namespace HlaX64.LanguageServer;
 
-internal static class DocumentDiagnostics
+public static class DocumentDiagnostics
 {
     public static object[] ToLsp(string uri, string source)
     {

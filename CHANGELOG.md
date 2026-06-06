@@ -8,6 +8,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ### Added
 
+- RFC 0003 stack arrays: `var data: int64[N];`, indexing `data[i]` / `data[2]` with SIB lowering
+- Four array examples (`array-sum`, `array-fill`, `array-max`, `array-literal-index`) plus native samples
+- LSP Phase 14 MVP: hover, completion, parse-error positions; VS Code extension language client
 - GitHub Pages landing page (`docs/index.html`) with links to playground, install, and tutorials
 - Level 3 memory curriculum: `[reg+offset]`, sized `.byte`/`.word`/`.dword`, `&"string"`, four new examples
 - Tutorial [docs/tutorials/05-memory.md](docs/tutorials/05-memory.md) and [docs/memory-and-bounds.md](docs/memory-and-bounds.md)

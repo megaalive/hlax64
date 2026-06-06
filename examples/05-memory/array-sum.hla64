@@ -1,0 +1,25 @@
+// RFC 0003: sum int64[5] filled with 1..5 → exit 15
+program array_sum;
+
+procedure SumFive; @returns("rax");
+var
+    data: int64[5];
+    i: int64;
+begin SumFive;
+    mov(1, data[0]);
+    mov(2, data[1]);
+    mov(3, data[2]);
+    mov(4, data[3]);
+    mov(5, data[4]);
+    mov(0, rax);
+    mov(0, i);
+    while(i < 5) do
+        mov(data[i], rbx);
+        add(rbx, rax);
+        add(1, i);
+    endwhile;
+end SumFive;
+
+begin array_sum;
+    call SumFive();
+end array_sum;

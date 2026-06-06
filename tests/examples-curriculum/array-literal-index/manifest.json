@@ -1,0 +1,6 @@
+{
+  "name": "curriculum-array-literal-index",
+  "source": "../../../examples/05-memory/array-literal-index.hla64",
+  "expectedExitCode": 20,
+  "description": "Curriculum: literal array index"
+}

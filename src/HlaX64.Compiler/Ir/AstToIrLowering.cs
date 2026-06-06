@@ -41,7 +41,14 @@ public sealed class AstToIrLowering
         foreach (var variable in proc.Variables)
         {
             if (variable is VariableNode varNode)
+            {
                 func.LocalValues.Add(new IrValue { Name = varNode.Name });
+                func.LocalLayouts[varNode.Name] = new IrLocalLayout
+                {
+                    ElementCount = varNode.ElementCount,
+                    ElementSizeBytes = 8
+                };
+            }
         }
 
         var currentBlock = func.EntryBlock;
@@ -283,6 +290,7 @@ public sealed class AstToIrLowering
             {
                 Name = MemoryRefEncoding.Encode(mem.Register, mem.Offset, mem.SizeBits)
             },
+            ArrayIndexNode arr => new IrValue { Name = ArrayIndexEncoding.Encode(arr.ArrayName, arr.Index) },
             _ => new IrValue()
         };
     }

@@ -1,0 +1,6 @@
+{
+  "name": "curriculum-array-max",
+  "source": "../../../examples/05-memory/array-max.hla64",
+  "expectedExitCode": 9,
+  "description": "Curriculum: max in int64 array"
+}

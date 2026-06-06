@@ -22,7 +22,7 @@ Examples under `examples/05-memory/`. Tutorial: `docs/tutorials/05-memory.md`.
 
 ## Not yet implemented
 
-- Array declaration and `arr[i]` syntax
+- Array types and `arr[i]` — see [RFC 0003](../rfcs/0003-array-model.md)
 - Pointer arithmetic on `ptr` variables (`p + 8` as typed op)
 - Bounds checking (documented UB — see `docs/memory-and-bounds.md`)
 - `hla64_memcpy` / `hla64_str_len` runtime (planned)
