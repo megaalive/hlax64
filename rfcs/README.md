@@ -28,3 +28,8 @@ HlaX64 uses lightweight RFCs for language design, ABI changes, and major tooling
 | [0006](0006-struct-layout.md) | Record layout, sizeof, offsetof | Implemented (Sprint 4) |
 | [0007](0007-global-data.md) | Static / global data | Implemented (Sprint 5) |
 | [0008](0008-string-model.md) | cstring, utf8slice | Implemented (Sprint 5) |
+| [0009](0009-stack-arguments.md) | Stack arguments | Implemented (Phase 17 Sprint 1) |
+| [0010](0010-extern-imports.md) | Extern + import libraries | Implemented (Phase 17 Sprint 2) |
+| [0011](0011-function-pointers.md) | Function pointers | Implemented (Phase 17 Sprint 3) |
+| [0012](0012-float-abi.md) | Float ABI MVP | Partial (Phase 17 Sprint 4) |
+| [0013](0013-variadic-calls.md) | Variadic + struct by-value | RFC / MVP (Phase 17 Sprint 5) |

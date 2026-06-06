@@ -484,7 +484,7 @@ begin test;
 end test;";
         var nasm = EmitForWindows(source);
         Assert.Contains("sub rsp, 40", nasm);
-        Assert.Contains("mov qword [rsp+32], 5", nasm);
+        Assert.Contains("qword [0 + rsp + 32], 5", nasm);
         Assert.Contains("mov rcx, 1", nasm);
         Assert.Contains("call Sum5", nasm);
     }

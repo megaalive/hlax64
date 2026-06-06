@@ -11,6 +11,10 @@ public sealed class IrFunction
 
     public bool IsEntryPoint => Name == "_start";
     public bool IsExport { get; set; }
+    public string? ReturnsRegister { get; set; }
+    public List<(string Name, string Type)> ParameterTypes { get; } = new();
+    public Dictionary<string, string> LocalTypes { get; } = new(StringComparer.OrdinalIgnoreCase);
+    public HashSet<string> RecordPointerParams { get; } = new(StringComparer.OrdinalIgnoreCase);
 
     public IrFunction(string name)
     {

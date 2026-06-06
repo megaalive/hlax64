@@ -1,0 +1,23 @@
+// indirect-call.hla64 — function pointer type alias and indirect call
+
+program indirect_call;
+
+#include("stdlib64.hhf")
+
+type AddFn := procedure(a: int64; b: int64): int64;
+
+procedure Add(a: int64; b: int64); @returns("rax");
+begin Add;
+    mov(a, rax);
+    add(b, rax);
+end Add;
+
+procedure Invoke(fn: AddFn; x: int64; y: int64); @returns("rax");
+begin Invoke;
+    call fn(x, y);
+end Invoke;
+
+begin indirect_call;
+    call Invoke(Add, 10, 20);
+    stdout.put("10+20 = ", rax, nl);
+end indirect_call;

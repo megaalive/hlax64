@@ -358,6 +358,66 @@ Stable diagnostic codes help agents, IDE tooling, and contributors reference err
 | **Cause** | Static name matches a procedure or type name |
 | **Fix** | Choose a unique name |
 
+### HLAX0050 — Extern procedure conflict
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic / FFI |
+| **Since** | 0.2.0-alpha |
+| **Cause** | Duplicate or conflicting `extern procedure` declaration |
+| **Fix** | Use a unique name; do not duplicate a defined procedure |
+
+### HLAX0051 — Type alias conflict
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | `type Name := procedure(...)` conflicts with an existing type |
+| **Fix** | Rename the alias |
+
+### HLAX0052 — Invalid extern parameter type
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic / FFI |
+| **Since** | 0.2.0-alpha |
+| **Cause** | Record type used in extern parameter (not yet supported by-value) |
+| **Fix** | Use `ptr` or a scalar type |
+
+### HLAX0053 — Unknown signature type
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | Unknown type in extern or type alias signature |
+| **Fix** | Use a known scalar, float, or procedure pointer alias |
+
+### HLAX0054 — Unknown call target
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | `call` to undefined procedure or extern |
+| **Fix** | Declare the procedure or add an `extern procedure` |
+
+### HLAX0055 — Variadic not supported
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic / FFI |
+| **Since** | 0.2.0-alpha |
+| **Cause** | `extern variadic procedure` is declared but not implemented |
+| **Fix** | See RFC 0013; use fixed-arity externs until Phase 18 |
+
 ## Toolchain messages (no code yet)
 
 CLI and linker errors currently use plain text (e.g. `Error: NASM not found`). Future releases will assign `HLAX4xxx` codes.

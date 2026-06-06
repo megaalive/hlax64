@@ -21,6 +21,10 @@ public enum TokenType
     Endstatic,
     Packed,
     Export,
+    Extern,
+    Type,
+    From,
+    Variadic,
     Returns,
     
     // Control flow

@@ -10,16 +10,23 @@ public sealed class AstToIrLowering
     private readonly CompileTimeConstTable _programConstTable;
     private readonly RecordTypeRegistry _recordRegistry;
     private readonly GlobalDataRegistry _globalDataRegistry;
+    private readonly ExternProcedureRegistry _externRegistry;
+    private readonly ProcedureTypeRegistry _procedureTypeRegistry;
+    private readonly HashSet<string> _functionPointerNames = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _programProcedureNames = new(StringComparer.OrdinalIgnoreCase);
     private CompileTimeConstTable _activeConstTable;
     private Dictionary<string, RecordTypeSymbol> _recordLocals = new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<string, RecordTypeSymbol> _procedureRecordTypes = new(StringComparer.OrdinalIgnoreCase);
 
     public AstToIrLowering(CompileTimeConstTable? constTable = null, RecordTypeRegistry? recordRegistry = null,
-        GlobalDataRegistry? globalDataRegistry = null)
+        GlobalDataRegistry? globalDataRegistry = null, ExternProcedureRegistry? externRegistry = null,
+        ProcedureTypeRegistry? procedureTypeRegistry = null)
     {
         _programConstTable = constTable ?? new CompileTimeConstTable();
         _recordRegistry = recordRegistry ?? new RecordTypeRegistry();
         _globalDataRegistry = globalDataRegistry ?? new GlobalDataRegistry();
+        _externRegistry = externRegistry ?? new ExternProcedureRegistry();
+        _procedureTypeRegistry = procedureTypeRegistry ?? new ProcedureTypeRegistry();
         _activeConstTable = _programConstTable;
     }
 
@@ -33,6 +40,7 @@ public sealed class AstToIrLowering
         {
             if (stmt is ProcedureNode proc)
             {
+                _programProcedureNames.Add(proc.Name);
                 var procIr = LowerProcedure(proc);
                 procedures.Add(procIr);
             }
@@ -51,6 +59,7 @@ public sealed class AstToIrLowering
         _activeConstTable = BuildProcedureConstTable(proc);
         _recordLocals = new Dictionary<string, RecordTypeSymbol>(StringComparer.OrdinalIgnoreCase);
         _procedureRecordTypes = new Dictionary<string, RecordTypeSymbol>(StringComparer.OrdinalIgnoreCase);
+        _functionPointerNames.Clear();
         foreach (var node in proc.Records)
         {
             if (node is RecordBlockNode block)
@@ -58,10 +67,19 @@ public sealed class AstToIrLowering
         }
         var func = new IrFunction(proc.Name);
         func.IsExport = proc.IsExport;
+        func.ReturnsRegister = proc.ReturnsRegister;
 
         foreach (var param in proc.Parameters)
         {
             func.ParameterValues.Add(new IrValue { Name = param.Name });
+            func.ParameterTypes.Add((param.Name, param.Type));
+            if (_procedureTypeRegistry.Contains(param.Type))
+                _functionPointerNames.Add(param.Name);
+            else if (TryResolveRecordType(param.Type, out var recordType))
+            {
+                func.RecordPointerParams.Add(param.Name);
+                _recordLocals[param.Name] = recordType;
+            }
         }
 
         foreach (var variable in proc.Variables)
@@ -69,6 +87,9 @@ public sealed class AstToIrLowering
             if (variable is VariableNode varNode)
             {
                 func.LocalValues.Add(new IrValue { Name = varNode.Name });
+                func.LocalTypes[varNode.Name] = varNode.Type;
+                if (_procedureTypeRegistry.Contains(varNode.Type))
+                    _functionPointerNames.Add(varNode.Name);
                 if (TryResolveRecordType(varNode.Type, out var recordType))
                 {
                     _recordLocals[varNode.Name] = recordType;
@@ -263,6 +284,7 @@ public sealed class AstToIrLowering
             var opcode = mnemonic switch
             {
                 "mov" => IrOpcode.Move,
+                "movsd" or "movss" or "movd" or "movq" => IrOpcode.Move,
                 "add" => IrOpcode.Add,
                 "sub" => IrOpcode.Subtract,
                 "imul" => IrOpcode.Multiply,
@@ -279,7 +301,8 @@ public sealed class AstToIrLowering
             }
             else
             {
-                block.Add(new IrInstruction(opcode, dst, new List<IrValue> { src }));
+                object? imm = mnemonic is "movsd" or "movss" or "movd" or "movq" ? mnemonic : null;
+                block.Add(new IrInstruction(opcode, dst, new List<IrValue> { src }, immediate: imm));
             }
         }
         else if (instr.Operands.Count == 1)
@@ -318,7 +341,15 @@ public sealed class AstToIrLowering
         foreach (var arg in call.Arguments)
             callArgs.Add(ResolveOperand(arg));
 
-        block.Add(new IrInstruction(IrOpcode.Call, operands: callArgs, immediate: call.Name));
+        string immediate;
+        if (call.IsIndirect || _functionPointerNames.Contains(call.Name))
+            immediate = $"indirect:{call.Name}";
+        else if (_externRegistry.Contains(call.Name))
+            immediate = $"extern:{call.Name}";
+        else
+            immediate = call.Name;
+
+        block.Add(new IrInstruction(IrOpcode.Call, operands: callArgs, immediate: immediate));
     }
 
     private int _labelCounter;
@@ -455,6 +486,8 @@ public sealed class AstToIrLowering
                 => new IrValue { Name = $"imm:{constVal}" },
             IdentifierNode ident when _globalDataRegistry.Contains(ident.Name)
                 => new IrValue { Name = GlobalDataEncoding.Encode(ident.Name) },
+            IdentifierNode ident when _programProcedureNames.Contains(ident.Name)
+                => new IrValue { Name = $"proc:{ident.Name}" },
             IdentifierNode ident => GetOrCreateValue(ident.Name),
             DotAccessNode dot => ResolveDotAccess(dot),
             AddressOfNode addr => new IrValue { Name = $"addr:{addr.VariableName}" },

@@ -1,0 +1,5 @@
+program unknown_call;
+
+begin unknown_call;
+    call NoSuchProc();
+end unknown_call;

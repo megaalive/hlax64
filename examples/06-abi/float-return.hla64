@@ -1,0 +1,22 @@
+// float-return.hla64 — float64 parameter homing and xmm0 return (MVP)
+
+program float_return;
+
+#include("stdlib64.hhf")
+
+procedure ReturnOne(x: float64); @returns("xmm0");
+begin ReturnOne;
+    movsd(x, xmm0);
+end ReturnOne;
+
+procedure Main; @returns("rax");
+begin Main;
+    xor(rax, rax);
+    call ReturnOne;
+    movq(xmm0, rax);
+end Main;
+
+begin float_return;
+    call Main;
+    stdout.put("float bits in rax = ", rax, nl);
+end float_return;

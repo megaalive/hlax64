@@ -22,10 +22,13 @@ public class ProgramNode : AstNode
     public List<AstNode> Enums { get; }
     public List<AstNode> Records { get; }
     public List<AstNode> Statics { get; }
+    public List<AstNode> Externs { get; }
+    public List<AstNode> TypeAliases { get; }
     public List<AstNode> Statements { get; }
 
     public ProgramNode(string name, List<AstNode> includes, List<AstNode> constants,
-        List<AstNode> enums, List<AstNode> records, List<AstNode> statics, List<AstNode> statements)
+        List<AstNode> enums, List<AstNode> records, List<AstNode> statics,
+        List<AstNode> externs, List<AstNode> typeAliases, List<AstNode> statements)
     {
         Name = name;
         Includes = includes;
@@ -33,6 +36,8 @@ public class ProgramNode : AstNode
         Enums = enums;
         Records = records;
         Statics = statics;
+        Externs = externs;
+        TypeAliases = typeAliases;
         Statements = statements;
     }
 }
@@ -107,11 +112,13 @@ public class CallNode : AstNode
     public override string Kind => "Call";
     public string Name { get; }
     public List<AstNode> Arguments { get; }
+    public bool IsIndirect { get; set; }
 
-    public CallNode(string name, List<AstNode> arguments)
+    public CallNode(string name, List<AstNode> arguments, bool isIndirect = false)
     {
         Name = name;
         Arguments = arguments;
+        IsIndirect = isIndirect;
     }
 }
 
@@ -125,6 +132,10 @@ public class ProcedureNode : AstNode
     public List<ParameterNode> Parameters { get; }
     public string? ReturnsRegister { get; }
     public bool IsExport { get; }
+    public bool IsExtern { get; }
+    public string? ReturnType { get; }
+    public string? LinkLibrary { get; }
+    public bool IsVariadic { get; }
     public List<AstNode> Constants { get; }
     public List<AstNode> Enums { get; }
     public List<AstNode> Records { get; }
@@ -134,6 +145,7 @@ public class ProcedureNode : AstNode
     public Dictionary<string, long> ResolvedConstants { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
     public ProcedureNode(string name, List<ParameterNode> parameters, string? returnsRegister, bool isExport,
+        bool isExtern, string? returnType, string? linkLibrary, bool isVariadic,
         List<AstNode> constants, List<AstNode> enums, List<AstNode> records,
         List<AstNode> variables, List<AstNode> body)
     {
@@ -141,11 +153,56 @@ public class ProcedureNode : AstNode
         Parameters = parameters;
         ReturnsRegister = returnsRegister;
         IsExport = isExport;
+        IsExtern = isExtern;
+        ReturnType = returnType;
+        LinkLibrary = linkLibrary;
+        IsVariadic = isVariadic;
         Constants = constants;
         Enums = enums;
         Records = records;
         Variables = variables;
         Body = body;
+    }
+}
+
+/// <summary>
+/// extern procedure declaration (no body).
+/// </summary>
+public class ExternProcedureNode : AstNode
+{
+    public override string Kind => "ExternProcedure";
+    public string Name { get; }
+    public List<ParameterNode> Parameters { get; }
+    public string ReturnType { get; }
+    public string? LinkLibrary { get; }
+    public bool IsVariadic { get; }
+
+    public ExternProcedureNode(string name, List<ParameterNode> parameters, string returnType,
+        string? linkLibrary, bool isVariadic)
+    {
+        Name = name;
+        Parameters = parameters;
+        ReturnType = returnType;
+        LinkLibrary = linkLibrary;
+        IsVariadic = isVariadic;
+    }
+}
+
+/// <summary>
+/// type Name := procedure(...): RetType; function pointer signature alias.
+/// </summary>
+public class TypeAliasNode : AstNode
+{
+    public override string Kind => "TypeAlias";
+    public string Name { get; }
+    public List<ParameterNode> Parameters { get; }
+    public string ReturnType { get; }
+
+    public TypeAliasNode(string name, List<ParameterNode> parameters, string returnType)
+    {
+        Name = name;
+        Parameters = parameters;
+        ReturnType = returnType;
     }
 }
 
