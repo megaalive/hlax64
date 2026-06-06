@@ -82,10 +82,10 @@ public sealed class LinkerTool
     }
 
     /// <summary>
-    /// Links an object file into an executable using the detected linker.
+    /// Links an object file into an executable or shared library using the detected linker.
     /// Returns true if linking succeeded. Sets requiresWslRun if the executable must be run via WSL.
     /// </summary>
-    public static bool TryLink(string objectFile, string executable, out string error, out bool requiresWslRun)
+    public static bool TryLink(string objectFile, string output, out string error, out bool requiresWslRun, bool shared = false)
     {
         requiresWslRun = false;
         
@@ -101,34 +101,30 @@ public sealed class LinkerTool
             bool isWsl = linker == "wsl";
             bool isMingw = !isWsl && (linker.Contains("mingw") || linker.Contains("w64"));
 
+            string linkFlag = shared ? "-shared" : "-no-pie";
+
             if (isWsl)
             {
-                requiresWslRun = true;
-                // Convert Windows paths to WSL paths
+                requiresWslRun = !shared;
                 string wslObjectFile = ToWslPath(objectFile);
-                string wslExecutable = ToWslPath(executable);
-                
-                // WSL: wsl gcc -nostdlib -no-pie -o executable objectFile
-                // -nostdlib: don't link with C runtime (we provide our own _start)
-                // -no-pie: avoid PIE issues with raw object files
-                args = $"gcc -nostdlib -no-pie -o \"{wslExecutable}\" \"{wslObjectFile}\"";
+                string wslOutput = ToWslPath(output);
+
+                // WSL: wsl gcc -nostdlib -no-pie/-shared -o output objectFile
+                args = shared
+                    ? $"gcc -nostdlib {linkFlag} -o \"{wslOutput}\" \"{wslObjectFile}\""
+                    : $"gcc -nostdlib {linkFlag} -o \"{wslOutput}\" \"{wslObjectFile}\"";
             }
             else if (isMingw)
             {
-                // MinGW targeting ELF: gcc -nostdlib -no-pie -o executable objectFile (with -f elf64 from NASM)
-                args = $"-nostdlib -no-pie -o \"{executable}\" \"{objectFile}\"";
+                args = $"-nostdlib {linkFlag} -o \"{output}\" \"{objectFile}\"";
             }
             else
             {
                 // Native Linux
                 if (linker.Contains("gcc"))
-                {
-                    args = $"-nostdlib -no-pie -o \"{executable}\" \"{objectFile}\"";
-                }
+                    args = $"-nostdlib {linkFlag} -o \"{output}\" \"{objectFile}\"";
                 else
-                {
-                    args = $"-o \"{executable}\" \"{objectFile}\"";
-                }
+                    args = $"-o \"{output}\" \"{objectFile}\"";
             }
 
             var psi = new ProcessStartInfo

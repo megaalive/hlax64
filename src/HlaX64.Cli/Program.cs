@@ -26,6 +26,12 @@ app.Configure(config =>
 
     config.AddCommand<BenchCommand>("bench")
         .WithDescription("Benchmark .hla64 programs (warmup + measured iterations)");
+
+    config.AddCommand<GenerateHeaderCommand>("generate-header")
+        .WithDescription("Generate a C header file with declarations for exported procedures");
+
+    config.AddCommand<GeneratePInvokeCommand>("generate-pinvoke")
+        .WithDescription("Generate C# P/Invoke declarations for exported procedures");
 });
 
 return app.Run(args);

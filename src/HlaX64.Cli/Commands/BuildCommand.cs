@@ -20,6 +20,10 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
         [Description("Runtime mode: inline (default) or library")]
         [CommandOption("--runtime")]
         public string? RuntimeMode { get; set; }
+
+        [Description("Output kind: executable (default) or shared-library")]
+        [CommandOption("--output-kind")]
+        public string? OutputKind { get; set; }
     }
 
     protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation)
@@ -40,9 +44,13 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
         if (settings.RuntimeMode?.ToLowerInvariant() == "library")
             options = options with { RuntimeMode = HlaX64.Compiler.Options.RuntimeMode.Library };
 
+        bool isShared = settings.OutputKind?.ToLowerInvariant() == "shared-library";
+        string ext = isShared ? ".so" : "";
+        string libPrefix = isShared ? "lib" : "";
+
         var nasmFile = Path.Combine(outputDir, $"{sourceName}.nasm");
         var objFile = Path.Combine(outputDir, $"{sourceName}.o");
-        var exeFile = Path.Combine(outputDir, sourceName);
+        var outputFile = Path.Combine(outputDir, $"{libPrefix}{sourceName}{ext}");
 
         try
         {
@@ -71,24 +79,24 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
             }
             Console.WriteLine($"  -> {objFile}");
 
-            // 3. Link .o -> executable
-            Console.WriteLine("Linking...");
-            if (!LinkerTool.TryLink(objFile, exeFile, out var linkError, out var requiresWslRun))
+            // 3. Link .o -> output
+            Console.WriteLine(isShared ? "Linking shared library..." : "Linking...");
+            if (!LinkerTool.TryLink(objFile, outputFile, out var linkError, out var requiresWslRun, shared: isShared))
             {
                 Console.Error.WriteLine($"Link error:\n{linkError}");
                 return 1;
             }
-            Console.WriteLine($"  -> {exeFile}");
+            Console.WriteLine($"  -> {outputFile}");
 
-            // 4. Make executable (if on Unix)
-            if (!requiresWslRun)
+            // 4. Make executable (if on Unix) — skip for shared libraries
+            if (!requiresWslRun && !isShared)
             {
                 try
                 {
                     var chmod = new System.Diagnostics.ProcessStartInfo
                     {
                         FileName = "chmod",
-                        Arguments = $"+x \"{exeFile}\"",
+                        Arguments = $"+x \"{outputFile}\"",
                         UseShellExecute = false
                     };
                     System.Diagnostics.Process.Start(chmod)?.WaitForExit(2000);
@@ -98,7 +106,7 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
                 }
             }
 
-            Console.WriteLine($"\nBuild successful: {exeFile}");
+            Console.WriteLine($"\nBuild successful: {outputFile}");
             return 0;
         }
         catch (InvalidOperationException ex)
