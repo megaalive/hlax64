@@ -77,6 +77,16 @@ public sealed class SysVAbiLowerer : IAbiLowerer
                     if (_valueMap.TryGetValue(param.Name!, out var slot))
                         loweredBlock.Instructions.Add(new LoweredInstruction($"    mov {slot}, {ArgumentRegisters[i]}"));
                 }
+
+                for (int i = ArgumentRegisters.Count; i < function.ParameterValues.Count; i++)
+                {
+                    var param = function.ParameterValues[i];
+                    if (_valueMap.TryGetValue(param.Name!, out var slot))
+                    {
+                        var src = ProcedureStackMap.StackParamSource(i, ArgumentRegisters.Count, firstStackArgOffset: 16);
+                        loweredBlock.Instructions.Add(new LoweredInstruction($"    mov rax, {src}\n    mov {slot}, rax"));
+                    }
+                }
             }
 
             // Emit entry point prologue (_start)
@@ -398,18 +408,30 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         }
 
         var sb = new System.Text.StringBuilder();
-
-        // Assign arguments to registers
         var args = inst.Operands;
-        for (int i = 0; i < args.Count && i < ArgumentRegisters.Count; i++)
+        int regCount = ArgumentRegisters.Count;
+        int stackArgs = Math.Max(0, args.Count - regCount);
+
+        for (int i = args.Count - 1; i >= regCount; i--)
+        {
+            var argVal = ResolveOperand(args[i]);
+            sb.AppendLine($"    push {argVal}      ; stack arg {i + 1}");
+        }
+
+        for (int i = 0; i < args.Count && i < regCount; i++)
         {
             var argVal = ResolveOperand(args[i]);
             sb.AppendLine($"    mov {ArgumentRegisters[i]}, {argVal}");
         }
 
-        sb.Append("    sub rsp, 8      ; align stack to 16 bytes\n");
-        sb.Append($"    call {inst.Immediate}\n");
-        sb.Append("    add rsp, 8      ; restore stack alignment");
+        int alignPad = stackArgs == 0 ? 8 : (stackArgs % 2 == 1 ? 8 : 0);
+        if (alignPad > 0)
+            sb.AppendLine($"    sub rsp, {alignPad}      ; align stack to 16 bytes");
+
+        sb.AppendLine($"    call {inst.Immediate}");
+
+        int cleanup = stackArgs * 8 + alignPad;
+        sb.Append($"    add rsp, {cleanup}      ; restore stack");
 
         return new LoweredInstruction(sb.ToString());
     }

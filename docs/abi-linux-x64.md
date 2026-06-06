@@ -26,8 +26,9 @@ in source order. The first six arguments do not touch the stack.
 
 > Floating-point arguments use `xmm0..xmm7` (not used in MVP).
 
-The HlaX64 MVP supports up to **six** integer arguments. A seventh or
-later argument is not yet lowered (it is a Fase 6+ follow-up).
+The first **six** integer arguments use registers; the **7th and later**
+are pushed right-to-left by the caller and loaded from `[rbp+16+8*k]`
+in the callee prologue (RFC 0009).
 
 ## 2. Return value
 
@@ -114,9 +115,9 @@ Parameter and variable offsets are assigned in declaration order:
 | 0    | `[rbp-8]` | 1st param (came from `rdi`) |
 | 1    | `[rbp-16]`| 2nd param (came from `rsi`) |
 | 2    | `[rbp-24]`| 3rd param (came from `rdx`) |
-| …    | …         | …                      |
-| 6    | `[rbp-56]`| 1st `var`              |
-| 7    | `[rbp-64]`| 2nd `var`              |
+| 5    | `[rbp-48]`| 6th param (came from `r9`) |
+| 6    | `[rbp-56]`| 7th param (stack at `[rbp+16]`) |
+| 7    | `[rbp-64]`| 8th param (stack at `[rbp+24]`) |
 | …    | …         | …                      |
 
 The compiler currently generates **load-on-use** addressing: every time
@@ -129,15 +130,14 @@ The System V ABI requires `rsp` to be **16-byte aligned** at the point
 of a `call` instruction. HlaX64 takes a simple approach:
 
 ```asm
-    sub  rsp, 8      ; align stack to 16 bytes before the call
+    sub  rsp, 8      ; align stack to 16 bytes before register-only call
     call AddTwo
     add  rsp, 8      ; restore stack alignment
 ```
 
-This is emitted unconditionally around `call` instructions from the
-main body. It is correct as long as `rsp` is 16-byte aligned at the
-main program's `_start` (which the Linux kernel guarantees) and as
-long as the body doesn't independently perturb `rsp`.
+For calls with stack arguments, extra qwords are pushed right-to-left;
+an additional `sub rsp, 8` is emitted when the stack-arg count is odd.
+See RFC 0009.
 
 ## 6. System calls
 

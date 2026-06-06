@@ -192,7 +192,13 @@ end AddTwo;
 ```
 
 Up to 6 integer parameters are passed in `rdi`, `rsi`, `rdx`, `rcx`,
-`r8`, `r9`. Return value goes in `rax` (specified via `@returns`).
+`r8`, `r9`; additional parameters are passed on the stack (7th at caller
+`[rbp+16]` in the callee prologue). Return value goes in `rax`
+(specified via `@returns`).
+
+On Windows x64 (`--target windows-x64-msabi`), the first four integer
+parameters use `rcx`, `rdx`, `r8`, `r9`; the 5th and later use the
+stack (after 32-byte shadow space). See RFC 0009 and `hla64 explain-abi`.
 
 ## Compile-time constants (Implemented — RFC 0004)
 

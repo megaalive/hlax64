@@ -68,6 +68,16 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
                     if (_valueMap.TryGetValue(param.Name!, out var slot))
                         loweredBlock.Instructions.Add(new LoweredInstruction($"    mov {slot}, {ArgumentRegisters[i]}"));
                 }
+
+                for (int i = ArgumentRegisters.Count; i < function.ParameterValues.Count; i++)
+                {
+                    var param = function.ParameterValues[i];
+                    if (_valueMap.TryGetValue(param.Name!, out var slot))
+                    {
+                        var src = ProcedureStackMap.StackParamSource(i, ArgumentRegisters.Count, firstStackArgOffset: 48);
+                        loweredBlock.Instructions.Add(new LoweredInstruction($"    mov rax, {src}\n    mov {slot}, rax"));
+                    }
+                }
             }
 
             // Emit entry point prologue (_start)

@@ -130,6 +130,45 @@ public class NasmEmitterTests
     }
 
     [Fact]
+    public void Emit_ProcedureEightArgs_LoadsStackParamsFromCallerFrame()
+    {
+        var source = @"program test;
+procedure Sum8(a:int64; b:int64; c:int64; d:int64; e:int64; f:int64; g:int64; h:int64); @returns(""rax"");
+begin Sum8;
+    mov(a, rax);
+    add(h, rax);
+end Sum8;
+begin test;
+    call Sum8(1, 2, 3, 4, 5, 6, 7, 8);
+end test;";
+        var nasm = Emit(source);
+        Assert.Contains("mov [rbp-48], r9", nasm);
+        Assert.Contains("mov rax, [rbp+16]", nasm);
+        Assert.Contains("mov [rbp-56], rax", nasm);
+        Assert.Contains("mov rax, [rbp+24]", nasm);
+        Assert.Contains("mov [rbp-64], rax", nasm);
+    }
+
+    [Fact]
+    public void Emit_CallEightArgs_PushesStackArgsRightToLeft()
+    {
+        var source = @"program test;
+procedure Sum8(a:int64; b:int64; c:int64; d:int64; e:int64; f:int64; g:int64; h:int64); @returns(""rax"");
+begin Sum8;
+    mov(a, rax);
+end Sum8;
+begin test;
+    call Sum8(1, 2, 3, 4, 5, 6, 7, 8);
+end test;";
+        var nasm = Emit(source);
+        Assert.Contains("push 8", nasm);
+        Assert.Contains("push 7", nasm);
+        Assert.Contains("mov rdi, 1", nasm);
+        Assert.Contains("mov r9, 6", nasm);
+        Assert.Contains("call Sum8", nasm);
+    }
+
+    [Fact]
     public void Emit_ExitSyscall_UsesRaxAsExitCode()
     {
         var nasm = Emit("program test;\nbegin test;\n    mov(42, rbx);\nend test;");
@@ -412,5 +451,41 @@ end test;";
         Assert.Contains("mov rcx, rax", nasm);
         Assert.Contains("call stdout_put_int", nasm);
         Assert.Contains("call stdout_put_nl", nasm);
+    }
+
+    [Fact]
+    public void Emit_WindowsProcedureFiveArgs_LoadsStackParamFromCallerFrame()
+    {
+        var source = @"program test;
+procedure Sum5(a:int64; b:int64; c:int64; d:int64; e:int64); @returns(""rax"");
+begin Sum5;
+    mov(a, rax);
+    add(e, rax);
+end Sum5;
+begin test;
+    call Sum5(1, 2, 3, 4, 5);
+end test;";
+        var nasm = EmitForWindows(source);
+        Assert.Contains("mov [rbp-32], r9", nasm);
+        Assert.Contains("mov rax, [rbp+48]", nasm);
+        Assert.Contains("mov [rbp-40], rax", nasm);
+    }
+
+    [Fact]
+    public void Emit_WindowsCallFiveArgs_UsesShadowSpaceAndStackSlot()
+    {
+        var source = @"program test;
+procedure Sum5(a:int64; b:int64; c:int64; d:int64; e:int64); @returns(""rax"");
+begin Sum5;
+    mov(a, rax);
+end Sum5;
+begin test;
+    call Sum5(1, 2, 3, 4, 5);
+end test;";
+        var nasm = EmitForWindows(source);
+        Assert.Contains("sub rsp, 40", nasm);
+        Assert.Contains("mov qword [rsp+32], 5", nasm);
+        Assert.Contains("mov rcx, 1", nasm);
+        Assert.Contains("call Sum5", nasm);
     }
 }

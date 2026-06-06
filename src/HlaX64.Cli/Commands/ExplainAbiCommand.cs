@@ -74,6 +74,7 @@ public sealed class ExplainAbiCommand : Command<ExplainAbiCommand.Settings>
             CalleeSaved = ["rbx", "rbp", "r12", "r13", "r14", "r15"],
             StackAlignment = "RSP mod 16 == 0 before call",
             ShadowSpaceBytes = 0,
+            StackArgumentsNote = "arg7+ pushed right-to-left; callee loads from [rbp+16+8*k]",
             Reference = "https://refspecs.linuxfoundation.org/elf/x86_64-abi-0.99.pdf"
         },
         "windows-x64-msabi" => new AbiInfo
@@ -87,6 +88,7 @@ public sealed class ExplainAbiCommand : Command<ExplainAbiCommand.Settings>
             CalleeSaved = ["rbx", "rbp", "rdi", "rsi", "r12", "r13", "r14", "r15"],
             StackAlignment = "RSP mod 16 == 8 before call",
             ShadowSpaceBytes = 32,
+            StackArgumentsNote = "arg5+ at [rsp+32] in caller frame; callee loads from [rbp+48+8*k]",
             Reference = "https://learn.microsoft.com/en-us/cpp/build/x64-calling-convention"
         },
         _ => null
@@ -102,6 +104,11 @@ public sealed class ExplainAbiCommand : Command<ExplainAbiCommand.Settings>
         Console.WriteLine("Argument registers (left-to-right):");
         for (int i = 0; i < info.ArgumentRegisters.Count; i++)
             Console.WriteLine($"  arg{i + 1} -> {info.ArgumentRegisters[i]}");
+        if (!string.IsNullOrEmpty(info.StackArgumentsNote))
+        {
+            Console.WriteLine();
+            Console.WriteLine($"Stack arguments: {info.StackArgumentsNote}");
+        }
         Console.WriteLine();
         Console.WriteLine($"Return value: {info.ReturnRegister}");
         Console.WriteLine();
@@ -135,6 +142,7 @@ public sealed class ExplainAbiCommand : Command<ExplainAbiCommand.Settings>
         public List<string> CalleeSaved { get; set; } = [];
         public string StackAlignment { get; set; } = "";
         public int ShadowSpaceBytes { get; set; }
+        public string StackArgumentsNote { get; set; } = "";
         public string Reference { get; set; } = "";
     }
 }
