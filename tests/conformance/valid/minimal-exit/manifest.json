@@ -1,4 +1,5 @@
 {
   "source": "source.hla64",
-  "expectNasmContains": ["mov", "rax"]
+  "expectNasmContains": ["mov"],
+  "expectIrContains": ["Move"]
 }

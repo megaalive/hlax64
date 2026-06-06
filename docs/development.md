@@ -29,8 +29,20 @@ Or run from source without installing (below).
 git clone https://github.com/megaalive/hlax64.git
 cd hlax64
 dotnet build
-dotnet test
+dotnet test   # includes ExamplesCompileTests (all 20 examples)
 ```
+
+### Language Server (diagnostics MVP)
+
+```bash
+dotnet run --project src/HlaX64.LanguageServer
+```
+
+Configure VS Code/Cursor with `"languageServerExample"` pointing to the command above for `.hla64` files. See [editors/vscode/README.md](../editors/vscode/README.md).
+
+### Static playground
+
+Open [docs/playground/index.html](../docs/playground/index.html) (GitHub Pages compatible).
 
 On Windows, use `.\scripts\build.ps1` for a scripted restore + build.
 

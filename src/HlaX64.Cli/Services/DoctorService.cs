@@ -1,6 +1,8 @@
 using HlaX64.Cli.Formatting;
 using HlaX64.Cli.Toolchain;
 using HlaX64.Compiler;
+using HlaX64.Compiler.Formatting;
+using HlaX64.Compiler.Parsing;
 
 namespace HlaX64.Cli.Services;
 
@@ -128,7 +130,16 @@ public static class FormatService
     public static (bool Changed, string Formatted) FormatFile(string path, bool write)
     {
         var original = File.ReadAllText(path);
-        var formatted = SourceFormatter.Format(original);
+        string formatted;
+        try
+        {
+            formatted = AstFormatter.Format(original);
+        }
+        catch (ParseException)
+        {
+            formatted = SourceFormatter.Format(original);
+        }
+
         var changed = original != formatted;
         if (changed && write)
             File.WriteAllText(path, formatted);

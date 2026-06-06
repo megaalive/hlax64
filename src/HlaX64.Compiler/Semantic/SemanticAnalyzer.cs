@@ -248,8 +248,16 @@ public sealed class SemanticAnalyzer
         foreach (var param in proc.Parameters)
         {
             var type = TypeRegistry.Lookup(param.Type);
-            if (type != null)
+            if (type == null)
+            {
+                _diagnostics.Error("HLAX0020",
+                    $"Unknown type '{param.Type}' for parameter '{param.Name}'",
+                    param.Line, param.Column);
+            }
+            else
+            {
                 _variableTypes[param.Name] = type;
+            }
         }
 
         foreach (var stmt in proc.Body)

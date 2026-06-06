@@ -1,6 +1,8 @@
 // add-two.hla64 — Linux SysV procedure call (rdi, rsi, rax return)
 program main;
 
+#include("stdlib64.hhf")
+
 procedure AddTwo(a:int64; b:int64); @returns("rax");
 begin AddTwo;
     mov(a, rax);
