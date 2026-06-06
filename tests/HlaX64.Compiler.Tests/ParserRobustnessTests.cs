@@ -1,3 +1,4 @@
+using HlaX64.Compiler;
 using HlaX64.Compiler.Lexing;
 using HlaX64.Compiler.Parsing;
 
@@ -52,6 +53,21 @@ public class ParserRobustnessTests
             catch (ParseException)
             {
             }
+        }
+    }
+
+    [Fact]
+    public void Compile_RandomAsciiStrings_DoesNotThrowUnhandled()
+    {
+        for (int i = 0; i < 100; i++)
+        {
+            var len = Rng.Next(0, 512);
+            var chars = new char[len];
+            for (int j = 0; j < len; j++)
+                chars[j] = (char)Rng.Next(9, 127);
+
+            var source = new string(chars);
+            _ = new Compilation("(fuzz)", source).Process();
         }
     }
 }

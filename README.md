@@ -5,7 +5,7 @@
 > assemble, link, and run — all from a single `hla64` CLI.
 
 [![Status](https://img.shields.io/badge/Fase%200%E2%80%9313-Done-green)](./docs/roadmap.md)
-[![Tests](https://img.shields.io/badge/tests-119%2F119%20+%2017%2F17%20native%20+%2018%20curriculum-2ea44f)](#test-status)
+[![Tests](https://img.shields.io/badge/tests-122%20unit%20+%2017%20native%20+%2019%20curriculum-2ea44f)](#test-status)
 [![Target](https://img.shields.io/badge/target-linux--x64--sysv%20|%20windows--x64--msabi-1f6feb)](#targets)
 [![Language](https://img.shields.io/badge/language-v0.1%20Draft-blueviolet)](#language-reference)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](#license)
@@ -74,7 +74,7 @@ Tutorials: [Getting started](docs/tutorials/01-getting-started.md) · [Native ro
 | Area                | Status | Details |
 |---------------------|--------|---------|
 | **CLI**             | ✅     | `build`, `emit-nasm`, `run`, `test`, `bench`, `explain`, `explain-abi`, `format`, `generate-header`, `generate-pinvoke`, `doctor` |
-| **Test runner**     | ✅     | 119 unit tests (+ 20 example compile guards) + 17 native samples + 18 curriculum manifests |
+| **Test runner**     | ✅     | 122 unit tests + 22 example compile guards + 17 native samples + 19 curriculum manifests |
 | **Benchmark runner**| ✅     | `hla64 bench` with warmup, median, binary size, JSON manifest |
 | **MCP server**      | ✅     | 12 tools via stdio JSON-RPC: compile, build, run, test, explain, explain-abi, format-source, doctor, generate-header, generate-pinvoke, get-version, list-instructions |
 | **ABI explainer**   | ✅     | `hla64 explain-abi --target linux-x64-sysv` (or `windows-x64-msabi`) |
@@ -173,17 +173,22 @@ HlaX64 is inspired by the educational ideas of Randall Hyde's High Level Assembl
 ```text
 HlaX64/
 ├─ src/
-│  ├─ HlaX64.Compiler/        # Lexer, Parser, AST, Semantic, IR, TestRunner
+│  ├─ HlaX64.Compiler/        # Lexer, parser, AST, semantic, IR, ABI lowerers
 │  ├─ HlaX64.Backend.Nasm/    # NASM x64 code emitter
-│  ├─ HlaX64.Cli/             # CLI (hla64) — build, run, test, bench, etc.
-│  ├─ HlaX64.Runtime/         # Runtime library (Linux + Windows)
-│  └─ HlaX64.McpServer/       # MCP server for AI agent integration
+│  ├─ HlaX64.Cli/             # CLI (hla64) — build, run, test, bench, explain, …
+│  ├─ HlaX64.Runtime/         # Runtime library (Linux + Windows NASM)
+│  ├─ HlaX64.McpServer/       # MCP server for AI agent integration
+│  └─ HlaX64.LanguageServer/  # LSP diagnostics MVP
 ├─ tests/
-│  ├─ HlaX64.Compiler.Tests/  # xUnit suite (117 tests)
-│  └─ samples/                # Integration test manifests + expected output
-├─ benchmarks/                # Benchmark manifests
-├─ examples/                  # *.hla64 sample programs
-└─ docs/                      # Language spec, ABI docs, roadmap
+│  ├─ HlaX64.Compiler.Tests/  # xUnit (unit + conformance + example compile guards)
+│  ├─ samples/                # Native integration manifests (17 programs)
+│  ├─ examples-curriculum/    # Curriculum manifests → `examples/` (19 programs)
+│  └─ conformance/            # Valid/invalid source conformance cases
+├─ examples/                  # Structured curriculum (*.hla64 by topic)
+├─ benchmarks/                # Benchmark JSON manifests
+├─ schemas/                   # CLI JSON output schemas
+├─ editors/vscode/            # VS Code syntax highlighting + snippets
+└─ docs/                      # Spec, ABI, tutorials, playground
 ```
 
 > See [`docs/compiler-architecture.md`](./docs/compiler-architecture.md) for the full pipeline diagram.
@@ -205,20 +210,19 @@ HlaX64/
 
 ## 🧪 Test Status
 
-```
-$ dotnet test
-Passed!  - Failed: 0, Passed: 117, Skipped: 0, Total: 117
+```bash
+dotnet test
+# Passed! 122 unit/conformance tests (+ example compile guards)
 ```
 
-| Suite               | Count | Coverage |
-|---------------------|-------|----------|
-| `LexerTests`        | ~14   | Keywords, registers, literals, comments, positions |
-| `ParserTests`       | ~7    | Programs, calls, includes, control flow, procedures |
-| `NasmEmitterTests`  | ~25   | Instruction lowering, ABI (SysV + Windows), runtime markers, hello world |
-| `SemanticAnalyzerTests` | ~7 | Register & instruction validation, diagnostics |
-| `TestRunnerTests`   | ~8    | Manifest loading, runner flow, source resolution |
-| `WindowsAbiLowererTests` | ~11 | MS x64 arg regs, shadow space, stack alignment, calls, epilogue |
-| **Total**           | **117** | All passing ✅ |
+| Suite | Count | Coverage |
+|-------|-------|----------|
+| Unit tests (`HlaX64.Compiler.Tests`) | **122** | Lexer, parser, semantic, IR, NASM emit, ABI, test runner, conformance, fuzz |
+| Example compile guards | **22** | Every `examples/**/*.hla64` emits NASM without errors |
+| Native samples (`tests/samples/`) | **17** | Linux CI: compile → link → run → assert stdout/exit |
+| Curriculum (`tests/examples-curriculum/`) | **19** | Structured `examples/` programs via manifests |
+
+Native integration runs on **Linux CI** (`hla64 test`); Windows CI runs MS ABI build smoke tests.
 
 ---
 
@@ -292,7 +296,8 @@ See [`docs/language-spec.md`](./docs/language-spec.md) for full details.
 - [Code of Conduct](CODE_OF_CONDUCT.md) — our community standards
 - [Security Policy](SECURITY.md) — how to report vulnerabilities
 - [Support](SUPPORT.md) — documentation and getting help
-- [Open Issues](https://github.com/megaalive/hlax64/issues) — 20 curated good-first and help-wanted tasks
+- [VS Code extension](editors/vscode/README.md) — syntax highlighting for `.hla64`
+- [Open Issues](https://github.com/megaalive/hlax64/issues) — curated good-first and help-wanted tasks
 - [MCP Tools](docs/mcp-tools.md) — agent tool catalog
 - [Changelog](CHANGELOG.md) — release history
 
