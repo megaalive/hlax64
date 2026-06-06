@@ -24,6 +24,8 @@ hla64 run examples/00-getting-started/hello.hla64
 
 Tutorials: [Getting started](docs/tutorials/01-getting-started.md) · [Native routines](docs/tutorials/02-native-routines.md) · [C# interop](docs/tutorials/03-csharp-interop.md) · [MCP agents](docs/tutorials/04-mcp-agent.md)
 
+![hla64 demo](docs/assets/demo.gif)
+
 ---
 
 ## ✨ Feature Status
@@ -290,6 +292,7 @@ See [`docs/language-spec.md`](./docs/language-spec.md) for full details.
 - [Code of Conduct](CODE_OF_CONDUCT.md) — our community standards
 - [Security Policy](SECURITY.md) — how to report vulnerabilities
 - [Support](SUPPORT.md) — documentation and getting help
+- [Open Issues](https://github.com/megaalive/hlax64/issues) — 20 curated good-first and help-wanted tasks
 - [MCP Tools](docs/mcp-tools.md) — agent tool catalog
 - [Changelog](CHANGELOG.md) — release history
 
