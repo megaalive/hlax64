@@ -28,3 +28,6 @@ nasm/
 
 # Personal NASM test files
 nasm-test/
+
+# Project plan (internal, not for public repo)
+HlaX64_Project_Plan.md
