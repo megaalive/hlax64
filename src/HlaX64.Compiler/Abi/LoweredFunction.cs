@@ -6,12 +6,30 @@ public sealed class LoweredFunction
     public List<LoweredBlock> Blocks { get; }
     public int StackFrameSize { get; set; }
     public List<string> PreservedRegisters { get; }
+    public bool IsEntryPoint { get; set; }
+    public List<ParamInfo> Parameters { get; }
 
-    public LoweredFunction(string name)
+    public List<string> RequiredExterns { get; set; } = new();
+
+    public LoweredFunction(string name, bool isEntryPoint = false)
     {
         Name = name;
+        IsEntryPoint = isEntryPoint;
         Blocks = new List<LoweredBlock>();
         PreservedRegisters = new List<string>();
+        Parameters = new List<ParamInfo>();
+    }
+}
+
+public sealed class ParamInfo
+{
+    public string Name { get; }
+    public int Index { get; }
+
+    public ParamInfo(string name, int index)
+    {
+        Name = name;
+        Index = index;
     }
 }
 
@@ -34,5 +52,17 @@ public sealed class LoweredInstruction
     public LoweredInstruction(string asmText)
     {
         AsmText = asmText;
+    }
+}
+
+public sealed class StringLiteralInfo
+{
+    public string Label { get; }
+    public string Value { get; }
+
+    public StringLiteralInfo(string label, string value)
+    {
+        Label = label;
+        Value = value;
     }
 }

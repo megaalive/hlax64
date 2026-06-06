@@ -11,5 +11,6 @@ public interface IAbiLowerer
     IReadOnlyList<string> CallerSaved { get; }
     IReadOnlyList<string> CalleeSaved { get; }
     int StackAlignment { get; }
+    IReadOnlyList<StringLiteralInfo> StringLiterals { get; }
     LoweredFunction Lower(IrFunction function, CompilationOptions options);
 }

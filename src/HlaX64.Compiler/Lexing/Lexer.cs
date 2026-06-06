@@ -113,10 +113,20 @@ public sealed class Lexer
 
             case '<':
                 Advance();
+                if (_pos < _source.Length && _source[_pos] == '?')
+                {
+                    Advance();
+                    return CreateToken(TokenType.LessThanUnsigned, "<?", line, col);
+                }
                 return CreateToken(TokenType.LessThan, "<", line, col);
 
             case '>':
                 Advance();
+                if (_pos < _source.Length && _source[_pos] == '?')
+                {
+                    Advance();
+                    return CreateToken(TokenType.GreaterThanUnsigned, ">?", line, col);
+                }
                 return CreateToken(TokenType.GreaterThan, ">", line, col);
         }
 

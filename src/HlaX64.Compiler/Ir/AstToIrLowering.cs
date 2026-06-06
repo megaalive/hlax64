@@ -1,60 +1,49 @@
 using HlaX64.Compiler.Ast;
-using HlaX64.Compiler.Types;
 
 namespace HlaX64.Compiler.Ir;
 
 public sealed class AstToIrLowering
 {
-    private readonly Dictionary<string, IntegerTypeSymbol> _regTypes = new()
-    {
-        ["al"] = TypeRegistry.Int8, ["bl"] = TypeRegistry.Int8,
-        ["cl"] = TypeRegistry.Int8, ["dl"] = TypeRegistry.Int8,
-        ["ax"] = TypeRegistry.Int16, ["bx"] = TypeRegistry.Int16,
-        ["cx"] = TypeRegistry.Int16, ["dx"] = TypeRegistry.Int16,
-        ["eax"] = TypeRegistry.Int32, ["ebx"] = TypeRegistry.Int32,
-        ["ecx"] = TypeRegistry.Int32, ["edx"] = TypeRegistry.Int32,
-        ["esi"] = TypeRegistry.Int32, ["edi"] = TypeRegistry.Int32,
-        ["r8d"] = TypeRegistry.Int32, ["r9d"] = TypeRegistry.Int32,
-        ["r10d"] = TypeRegistry.Int32, ["r11d"] = TypeRegistry.Int32,
-        ["r12d"] = TypeRegistry.Int32, ["r13d"] = TypeRegistry.Int32,
-        ["r14d"] = TypeRegistry.Int32, ["r15d"] = TypeRegistry.Int32,
-        ["rax"] = TypeRegistry.Int64, ["rbx"] = TypeRegistry.Int64,
-        ["rcx"] = TypeRegistry.Int64, ["rdx"] = TypeRegistry.Int64,
-        ["rsi"] = TypeRegistry.Int64, ["rdi"] = TypeRegistry.Int64,
-        ["rbp"] = TypeRegistry.Int64, ["rsp"] = TypeRegistry.Int64,
-        ["r8"] = TypeRegistry.Int64, ["r9"] = TypeRegistry.Int64,
-        ["r10"] = TypeRegistry.Int64, ["r11"] = TypeRegistry.Int64,
-        ["r12"] = TypeRegistry.Int64, ["r13"] = TypeRegistry.Int64,
-        ["r14"] = TypeRegistry.Int64, ["r15"] = TypeRegistry.Int64,
-    };
-
-    public IrFunction LowerProgram(ProgramNode program)
+    public IrFunction LowerProgram(ProgramNode program, List<IrFunction> procedures)
     {
         var func = new IrFunction("_start");
+        procedures.Clear();
 
         foreach (var stmt in program.Statements)
         {
             if (stmt is ProcedureNode proc)
-                LowerProcedure(proc);
+            {
+                var procIr = LowerProcedure(proc);
+                procedures.Add(procIr);
+            }
             else
-                LowerStatement(stmt, func.EntryBlock);
+            {
+                LowerStatement(stmt, func.EntryBlock, func);
+            }
         }
 
+        func.EnsureBlocksRegistered();
         return func;
     }
 
     public IrFunction LowerProcedure(ProcedureNode proc)
     {
         var func = new IrFunction(proc.Name);
-        var block = func.EntryBlock;
+
+        foreach (var param in proc.Parameters)
+        {
+            var v = new IrValue { Name = param.Name };
+            func.ParameterValues.Add(v);
+        }
 
         foreach (var stmt in proc.Body)
-            LowerStatement(stmt, block);
+            LowerStatement(stmt, func.EntryBlock, func);
 
+        func.EnsureBlocksRegistered();
         return func;
     }
 
-    private void LowerStatement(AstNode node, IrBasicBlock block)
+    private void LowerStatement(AstNode node, IrBasicBlock block, IrFunction func)
     {
         switch (node)
         {
@@ -65,10 +54,10 @@ public sealed class AstToIrLowering
                 LowerCall(call, block);
                 break;
             case IfNode ifNode:
-                LowerIf(ifNode, block);
+                LowerIf(ifNode, block, func);
                 break;
             case WhileNode whileNode:
-                LowerWhile(whileNode, block);
+                LowerWhile(whileNode, block, func);
                 break;
         }
     }
@@ -79,8 +68,14 @@ public sealed class AstToIrLowering
 
         if (instr.Operands.Count == 2)
         {
-            var dst = ResolveOrCreateValue(instr.Operands[1]);
-            var src = ResolveOrCreateValue(instr.Operands[0]);
+            var dst = ResolveOperand(instr.Operands[1]);
+            var src = ResolveOperand(instr.Operands[0]);
+
+            if (mnemonic == "xor" && IsSameReg(instr.Operands[0], instr.Operands[1]))
+            {
+                block.Add(new IrInstruction(IrOpcode.LoadConstant, dst, immediate: 0L));
+                return;
+            }
 
             var opcode = mnemonic switch
             {
@@ -89,9 +84,9 @@ public sealed class AstToIrLowering
                 "sub" => IrOpcode.Subtract,
                 "imul" => IrOpcode.Multiply,
                 "xor" => IrOpcode.Move,
-                "cmp" => IrOpcode.Compare,
                 "and" => IrOpcode.Move,
                 "or" => IrOpcode.Move,
+                "cmp" => IrOpcode.Compare,
                 _ => IrOpcode.Move
             };
 
@@ -99,27 +94,22 @@ public sealed class AstToIrLowering
             {
                 block.Add(new IrInstruction(IrOpcode.Compare, operands: new List<IrValue> { dst, src }));
             }
-            else if (opcode == IrOpcode.Move && mnemonic == "xor" && instr.Operands[0] is RegisterNode r1
-                     && instr.Operands[1] is RegisterNode r2 && r1.Name == r2.Name)
-            {
-                block.Add(new IrInstruction(IrOpcode.LoadConstant, dst, immediate: 0L));
-            }
             else
             {
-                var result = new IrValue(dst.Type);
-                block.Add(new IrInstruction(opcode, result, new List<IrValue> { src, dst }));
-                block.Add(new IrInstruction(IrOpcode.Move, dst, new List<IrValue> { result }));
+                block.Add(new IrInstruction(opcode, dst, new List<IrValue> { src }));
             }
         }
         else if (instr.Operands.Count == 1)
         {
-            var op = ResolveOrCreateValue(instr.Operands[0]);
+            var op = ResolveOperand(instr.Operands[0]);
             block.Add(new IrInstruction(IrOpcode.Move, op, new List<IrValue> { op }));
         }
-        else
-        {
-            block.Add(new IrInstruction(IrOpcode.Move));
-        }
+    }
+
+    private static bool IsSameReg(AstNode a, AstNode b)
+    {
+        return a is RegisterNode ra && b is RegisterNode rb &&
+               string.Equals(ra.Name, rb.Name, StringComparison.OrdinalIgnoreCase);
     }
 
     private void LowerCall(CallNode call, IrBasicBlock block)
@@ -128,84 +118,98 @@ public sealed class AstToIrLowering
         {
             foreach (var arg in call.Arguments)
             {
-                if (arg is RegisterNode || arg is IntegerLiteralNode)
-                {
-                    var val = ResolveOrCreateValue(arg);
-                    block.Add(new IrInstruction(IrOpcode.Call, operands: new List<IrValue> { val }, immediate: "stdout.put"));
-                }
+                var val = ResolveOperand(arg);
+                block.Add(new IrInstruction(IrOpcode.Call, operands: new List<IrValue> { val }, immediate: "stdout.put"));
             }
             return;
         }
 
+        var callArgs = new List<IrValue>();
         foreach (var arg in call.Arguments)
-            ResolveOrCreateValue(arg);
+            callArgs.Add(ResolveOperand(arg));
 
-        block.Add(new IrInstruction(IrOpcode.Call, immediate: call.Name));
+        block.Add(new IrInstruction(IrOpcode.Call, operands: callArgs, immediate: call.Name));
     }
 
-    private void LowerIf(IfNode ifNode, IrBasicBlock block)
+    private int _labelCounter;
+
+    private void LowerIf(IfNode ifNode, IrBasicBlock block, IrFunction func)
     {
-        if (ifNode.Condition is ComparisonNode comp)
+        if (ifNode.Condition is not ComparisonNode comp)
+            return;
+
+        var left = ResolveOperand(comp.Left);
+        var right = ResolveOperand(comp.Right);
+
+        var cmpKind = comp.Operator switch
         {
-            var left = ResolveOrCreateValue(comp.Left);
-            var right = ResolveOrCreateValue(comp.Right);
+            "=" => CompareKind.Equal,
+            "<" => CompareKind.LessThanSigned,
+            ">" => CompareKind.GreaterThanSigned,
+            "<?" => CompareKind.LessThanUnsigned,
+            ">?" => CompareKind.GreaterThanUnsigned,
+            _ => CompareKind.Equal
+        };
 
-            var cmpKind = comp.Operator switch
-            {
-                "=" => CompareKind.Equal,
-                "<" => CompareKind.LessThanSigned,
-                ">" => CompareKind.GreaterThanSigned,
-                _ => CompareKind.Equal
-            };
+        block.Add(new IrInstruction(IrOpcode.Compare, operands: new List<IrValue> { left, right })
+        {
+            CmpKind = cmpKind
+        });
 
-            block.Add(new IrInstruction(IrOpcode.Compare, operands: new List<IrValue> { left, right })
-            {
-                CmpKind = cmpKind
-            });
+        var id = _labelCounter++;
+        var thenBlock = new IrBasicBlock($"then_{id}");
+        var elseBlock = ifNode.ElseBody.Count > 0 ? new IrBasicBlock($"else_{id}") : null;
+        var endBlock = new IrBasicBlock($"endif_{id}");
 
-            var thenBlock = new IrBasicBlock("then");
-            var elseBlock = ifNode.ElseBody.Count > 0 ? new IrBasicBlock("else") : null;
-            var endBlock = new IrBasicBlock("endif");
+        func.AddBlock(thenBlock);
+        if (elseBlock != null) func.AddBlock(elseBlock);
+        func.AddBlock(endBlock);
 
-            block.Add(new IrInstruction(IrOpcode.ConditionalBranch)
-            {
-                TargetBlock = thenBlock.Label,
-                CmpKind = cmpKind
-            });
+        block.Add(new IrInstruction(IrOpcode.ConditionalBranch)
+        {
+            TargetBlock = thenBlock.Label,
+            CmpKind = cmpKind
+        });
 
-            block.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = (elseBlock ?? endBlock).Label });
+        block.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = (elseBlock ?? endBlock).Label });
 
-            foreach (var stmt in ifNode.ThenBody)
-                LowerStatement(stmt, thenBlock);
-            thenBlock.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = endBlock.Label });
+        foreach (var stmt in ifNode.ThenBody)
+            LowerStatement(stmt, thenBlock, func);
+        thenBlock.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = endBlock.Label });
 
-            if (elseBlock != null)
-            {
-                foreach (var stmt in ifNode.ElseBody)
-                    LowerStatement(stmt, elseBlock);
-                elseBlock.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = endBlock.Label });
-            }
+        if (elseBlock != null)
+        {
+            foreach (var stmt in ifNode.ElseBody)
+                LowerStatement(stmt, elseBlock, func);
+            elseBlock.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = endBlock.Label });
         }
     }
 
-    private void LowerWhile(WhileNode whileNode, IrBasicBlock block)
+    private void LowerWhile(WhileNode whileNode, IrBasicBlock block, IrFunction func)
     {
-        var headerBlock = new IrBasicBlock("while_header");
-        var bodyBlock = new IrBasicBlock("while_body");
-        var endBlock = new IrBasicBlock("endwhile");
+        var id = _labelCounter++;
+        var headerBlock = new IrBasicBlock($"while_header_{id}");
+        var bodyBlock = new IrBasicBlock($"while_body_{id}");
+        var endBlock = new IrBasicBlock($"endwhile_{id}");
+
+        func.AddBlock(headerBlock);
+        func.AddBlock(bodyBlock);
+        func.AddBlock(endBlock);
 
         block.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = headerBlock.Label });
 
         if (whileNode.Condition is ComparisonNode comp)
         {
-            var left = ResolveOrCreateValue(comp.Left);
-            var right = ResolveOrCreateValue(comp.Right);
+            var left = ResolveOperand(comp.Left);
+            var right = ResolveOperand(comp.Right);
 
             var cmpKind = comp.Operator switch
             {
                 "=" => CompareKind.Equal,
                 "<" => CompareKind.LessThanSigned,
                 ">" => CompareKind.GreaterThanSigned,
+                "<?" => CompareKind.LessThanUnsigned,
+                ">?" => CompareKind.GreaterThanUnsigned,
                 _ => CompareKind.Equal
             };
 
@@ -219,6 +223,8 @@ public sealed class AstToIrLowering
                 "=" => CompareKind.NotEqual,
                 "<" => CompareKind.GreaterOrEqualSigned,
                 ">" => CompareKind.LessOrEqualSigned,
+                "<?" => CompareKind.GreaterOrEqualUnsigned,
+                ">?" => CompareKind.LessOrEqualUnsigned,
                 _ => CompareKind.NotEqual
             };
 
@@ -232,30 +238,30 @@ public sealed class AstToIrLowering
         headerBlock.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = bodyBlock.Label });
 
         foreach (var stmt in whileNode.Body)
-            LowerStatement(stmt, bodyBlock);
+            LowerStatement(stmt, bodyBlock, func);
         bodyBlock.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = headerBlock.Label });
     }
 
-    private IrValue ResolveOrCreateValue(AstNode node)
+    private IrValue ResolveOperand(AstNode node)
     {
         return node switch
         {
-            RegisterNode reg => GetOrCreateRegisterValue(reg.Name),
-            IntegerLiteralNode lit => new IrValue(null) /* type unknown */,
-            _ => new IrValue(null)
+            RegisterNode reg => GetOrCreateValue(reg.Name),
+            IntegerLiteralNode lit => new IrValue { Name = $"imm:{lit.Value}" },
+            StringLiteralNode str => new IrValue { Name = $"str:{str.Value}" },
+            IdentifierNode ident => GetOrCreateValue(ident.Name),
+            _ => new IrValue()
         };
     }
 
-    private readonly Dictionary<string, IrValue> _registerValues = new();
+    private readonly Dictionary<string, IrValue> _values = new(StringComparer.OrdinalIgnoreCase);
 
-    private IrValue GetOrCreateRegisterValue(string name)
+    private IrValue GetOrCreateValue(string name)
     {
-        var key = name.ToLowerInvariant();
-        if (!_registerValues.TryGetValue(key, out var value))
+        if (!_values.TryGetValue(name, out var value))
         {
-            _regTypes.TryGetValue(key, out var type);
-            value = new IrValue(type);
-            _registerValues[key] = value;
+            value = new IrValue { Name = name };
+            _values[name] = value;
         }
         return value;
     }

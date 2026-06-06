@@ -61,6 +61,8 @@ public enum TokenType
     Equals,
     LessThan,
     GreaterThan,
+    LessThanUnsigned,
+    GreaterThanUnsigned,
     Plus,
     Minus,
     

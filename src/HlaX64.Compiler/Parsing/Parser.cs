@@ -94,25 +94,28 @@ public sealed class Parser
         if (token.Type == TokenType.Procedure || token.Type == TokenType.Export)
             return ParseProcedure();
 
-        // "call" is treated as a soft keyword: call ProcName(arg1, arg2);
+        // "call" is treated as a soft keyword: call ProcName(arg1, arg2); or call ProcName();
         if (token.Type == TokenType.Identifier && token.Value == "call" &&
-            _pos + 1 < _tokens.Count && _tokens[_pos + 1].Type == TokenType.Identifier &&
-            _pos + 2 < _tokens.Count && _tokens[_pos + 2].Type == TokenType.LeftParen)
+            _pos + 1 < _tokens.Count && _tokens[_pos + 1].Type == TokenType.Identifier)
         {
             Advance(); // skip "call"
             var procName = Expect(TokenType.Identifier).Value;
-            Expect(TokenType.LeftParen);
             var callArgs = new List<AstNode>();
-            if (Peek().Type != TokenType.RightParen)
+
+            // Support both call ProcName(); and call ProcName;
+            if (_pos < _tokens.Count && _tokens[_pos].Type == TokenType.LeftParen)
             {
-                callArgs.Add(ParseOperand());
-                while (Peek().Type == TokenType.Comma)
+                Advance(); // skip (
+                while (_pos < _tokens.Count && Peek().Type != TokenType.RightParen)
                 {
-                    Advance();
                     callArgs.Add(ParseOperand());
+                    if (Peek().Type == TokenType.Comma)
+                        Advance();
                 }
+                if (_pos < _tokens.Count && _tokens[_pos].Type == TokenType.RightParen)
+                    Advance(); // skip )
             }
-            Expect(TokenType.RightParen);
+
             Expect(TokenType.Semicolon);
             return new CallNode(procName, callArgs);
         }
@@ -156,19 +159,22 @@ public sealed class Parser
 
         Expect(TokenType.Procedure);
         var name = Expect(TokenType.Identifier).Value;
-        Expect(TokenType.LeftParen);
 
         var parameters = new List<ParameterNode>();
-        if (Peek().Type != TokenType.RightParen)
+        if (_pos < _tokens.Count && _tokens[_pos].Type == TokenType.LeftParen)
         {
-            parameters.Add(ParseParameter());
-            while (Peek().Type == TokenType.Semicolon)
+            Advance(); // skip (
+            if (Peek().Type != TokenType.RightParen)
             {
-                Advance(); // skip semicolon
                 parameters.Add(ParseParameter());
+                while (Peek().Type == TokenType.Semicolon)
+                {
+                    Advance();
+                    parameters.Add(ParseParameter());
+                }
             }
+            Expect(TokenType.RightParen);
         }
-        Expect(TokenType.RightParen);
         Expect(TokenType.Semicolon);
 
         // @returns("rax")
@@ -278,7 +284,8 @@ public sealed class Parser
         var left = ParseOperand();
         var op = Peek();
 
-        if (op.Type == TokenType.Equals || op.Type == TokenType.LessThan || op.Type == TokenType.GreaterThan)
+        if (op.Type == TokenType.Equals || op.Type == TokenType.LessThan || op.Type == TokenType.GreaterThan ||
+            op.Type == TokenType.LessThanUnsigned || op.Type == TokenType.GreaterThanUnsigned)
         {
             Advance();
             var right = ParseOperand();
@@ -387,6 +394,16 @@ public sealed class Parser
 
         switch (token.Type)
         {
+            case TokenType.Minus:
+                if (_pos + 1 < _tokens.Count && _tokens[_pos + 1].Type == TokenType.IntegerLiteral)
+                {
+                    Advance(); // skip -
+                    var lit = Advance();
+                    return new IntegerLiteralNode(-long.Parse(lit.Value));
+                }
+                Advance();
+                return new IdentifierNode("-");
+
             case TokenType.IntegerLiteral:
                 Advance();
                 return new IntegerLiteralNode(long.Parse(token.Value));

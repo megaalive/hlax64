@@ -1,5 +1,3 @@
-using HlaX64.Compiler.Types;
-
 namespace HlaX64.Compiler.Ir;
 
 public sealed class IrValue
@@ -7,13 +5,12 @@ public sealed class IrValue
     private static int _nextId;
 
     public int Id { get; }
-    public IntegerTypeSymbol? Type { get; }
+    public string? Name { get; set; }
 
-    public IrValue(IntegerTypeSymbol? type)
+    public IrValue()
     {
         Id = _nextId++;
-        Type = type;
     }
 
-    public override string ToString() => $"v{Id}{(Type != null ? $":{Type.Name}" : "")}";
+    public override string ToString() => $"v{Id}";
 }

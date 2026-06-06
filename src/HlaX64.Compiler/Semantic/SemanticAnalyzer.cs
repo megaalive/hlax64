@@ -1,15 +1,17 @@
 using HlaX64.Compiler.Ast;
 using HlaX64.Compiler.Diagnostics;
+using HlaX64.Compiler.Types;
 
 namespace HlaX64.Compiler.Semantic;
 
 /// <summary>
 /// Semantic analyzer for HLA-X64 programs.
-/// Validates program structure, registers, instructions, and procedure declarations.
+/// Validates program structure, registers, instructions, types, and procedure declarations.
 /// </summary>
 public sealed class SemanticAnalyzer
 {
     private readonly DiagnosticCollection _diagnostics = new();
+    private readonly Dictionary<string, IntegerTypeSymbol> _variableTypes = new(StringComparer.OrdinalIgnoreCase);
     private static readonly HashSet<string> KnownRegisters = new(StringComparer.OrdinalIgnoreCase)
     {
         // 64-bit
@@ -161,6 +163,27 @@ public sealed class SemanticAnalyzer
         {
             AnalyzeOperand(op);
         }
+
+        // Narrowing check for mov: storing into a narrower variable
+        if (mnemonic == "mov" && instr.Operands.Count == 2)
+        {
+            var dest = instr.Operands[1];
+            var src = instr.Operands[0];
+            if (dest is IdentifierNode destIdent && _variableTypes.TryGetValue(destIdent.Name, out var destType))
+            {
+                // Check if source is a wider variable
+                if (src is IdentifierNode srcIdent && _variableTypes.TryGetValue(srcIdent.Name, out var srcType))
+                {
+                    if (!TypeRegistry.CanImplicitlyConvert(srcType, destType))
+                    {
+                        _diagnostics.Error("HLAX0021",
+                            $"Cannot implicitly store {srcType.Name} into {destType.Name}. " +
+                            $"Use explicit narrowing if intended.",
+                            instr.Line, instr.Column);
+                    }
+                }
+            }
+        }
     }
 
     private void AnalyzeCall(CallNode call)
@@ -201,6 +224,34 @@ public sealed class SemanticAnalyzer
 
     private void AnalyzeProcedure(ProcedureNode proc)
     {
+        _variableTypes.Clear();
+
+        // Resolve variable and parameter types
+        foreach (var variable in proc.Variables)
+        {
+            if (variable is VariableNode varNode)
+            {
+                var type = TypeRegistry.Lookup(varNode.Type);
+                if (type == null)
+                {
+                    _diagnostics.Error("HLAX0020",
+                        $"Unknown type '{varNode.Type}' for variable '{varNode.Name}'",
+                        varNode.Line, varNode.Column);
+                }
+                else
+                {
+                    _variableTypes[varNode.Name] = type;
+                }
+            }
+        }
+
+        foreach (var param in proc.Parameters)
+        {
+            var type = TypeRegistry.Lookup(param.Type);
+            if (type != null)
+                _variableTypes[param.Name] = type;
+        }
+
         foreach (var stmt in proc.Body)
         {
             AnalyzeStatement(stmt);
@@ -228,8 +279,10 @@ public sealed class SemanticAnalyzer
         }
         else if (node is IdentifierNode ident)
         {
-            // Skip known identifiers like "nl"
+            // Skip known identifiers like "nl" and known variables
             if (KnownIdentifiers.Contains(ident.Name))
+                return;
+            if (_variableTypes.ContainsKey(ident.Name))
                 return;
 
             // Check if this identifier looks like a misspelled register (e.g., "raxz")
