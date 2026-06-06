@@ -37,13 +37,15 @@ All parameters still receive `[rbp-N]` home slots via `ProcedureStackMap`. On en
 - Stack args stored at `[rsp+32]`, `[rsp+40]`, …
 - Shadow space and stack slots released after `call`
 
-## Deferred (Phase 17 Sprint 2+)
+## Related (Phase 17 Sprint 2–5 — implemented)
 
-- Floating-point / vector args (`xmm0`–`xmm7`)
-- `extern` declarations and import libraries
-- Function pointers and indirect calls
-- Struct by-value passing
-- Variadic functions
+| Topic | RFC | MVP notes |
+|-------|-----|-----------|
+| `extern` / imports | [0010](0010-extern-imports.md) | `from "libc.so"` link hints |
+| Function pointers | [0011](0011-function-pointers.md) | indirect `call rax` |
+| Float args/return | [0012](0012-float-abi.md) | xmm registers; no float `:=` yet |
+| Record params | [0013](0013-variadic-calls.md) | hidden pointer, not by-value registers |
+| Variadic calls | [0013](0013-variadic-calls.md) | RFC + HLAX0055; `printf` deferred |
 
 ## Examples
 
