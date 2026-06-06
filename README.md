@@ -4,8 +4,8 @@
 > Write low-level x64 with a cleaner HLA-inspired syntax. Compile to NASM,
 > assemble, link, and run — all from a single `hla64` CLI.
 
-[![Status](https://img.shields.io/badge/Fase%200%E2%80%939-Done%20%C2%B7%209.5-Active-2ea44f)](./docs/roadmap.md)
-[![Tests](https://img.shields.io/badge/tests-66%2F66%20+%2010%2F10%20native-2ea44f)](#test-status)
+[![Status](https://img.shields.io/badge/Fase%200%E2%80%9310-Done%20%C2%B7%209.5%20E%2FF%2FH%20Done%20%C2%B7%20G%20Active-yellow)](./docs/roadmap.md)
+[![Tests](https://img.shields.io/badge/tests-66%2F66%20+%2012%2F12%20native-2ea44f)](#test-status)
 [![Target](https://img.shields.io/badge/target-linux--x64--sysv-1f6feb)](#target-abis)
 [![Language](https://img.shields.io/badge/language-v0.1%20Draft-blueviolet)](#language-reference)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](#license)
@@ -17,14 +17,16 @@
 | Area                | Status | Details |
 |---------------------|--------|---------|
 | **Lexer / Parser**  | ✅     | Full token set, recursive-descent parser, AST, source locations |
-| **NASM Backend**    | ✅     | Emits valid ELF64 NASM with HLA→NASM operand-order flip |
-| **Linux SysV ABI**  | ✅     | `_start`, exit code from `rax`, syscall conventions |
-| **Stdlib**          | ✅     | `stdout.put("str", nl, rax, 42)` — strings, registers, integers |
-| **Procedures**      | ✅     | Up to 6 integer args via `rdi`..`r9`, `@returns("rax")` |
+| **IR Pipeline**     | ✅     | AST → IR → ABI lowerer → NASM emitter (Fase 9.5 A–E) |
+| **NASM Backend**    | ✅     | Emits from lowered IR; operand-order flip in ABI lowerer |
+| **Linux SysV ABI**  | ✅     | `SysVAbiLowerer`: register mapping, prologue/epilogue, string/int/nl runtime |
+| **Stdlib**          | ✅     | `stdout.put("str", nl, rax, 42)` — inline syscall mode |
+| **Procedures**      | ✅     | 0–6 integer args via `rdi`..`r9`, `@returns("rax")`, no-paren syntax |
 | **Control flow**    | ✅     | `if/else/endif`, `while/endwhile` with `=`, `<`, `>` |
 | **Local variables** | ✅     | `var` block, stack frame with `[rbp-N]` addressing |
-| **CLI**             | ✅     | `build`, `emit-nasm`, `run`, plus `hla64 --version` |
-| **Test runner**     | ✅     | Library + sample manifests, JSON-driven (CLI command Fase 9) |
+| **CLI**             | ✅     | `build`, `emit-nasm`, `run`, `bench`, `test` + `--compile-only` |
+| **Test runner**     | ✅     | 66 unit tests + 12 sample integration tests |
+| **Runtime contract**| ✅     | `HLAX64-RUNTIME-FUNCTION` headers in `src/HlaX64.Runtime/` |
 | **Windows x64**     | 🔜     | Planned (Fase 11) |
 
 > The MVP compiler inlines `sys_write` syscalls. A hand-written runtime
