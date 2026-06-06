@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "instructions": [
+    { "mnemonic": "mov", "category": "data", "minOps": 2, "maxOps": 2, "features": [] },
+    { "mnemonic": "add", "category": "arith", "minOps": 2, "maxOps": 2, "features": [] },
+    { "mnemonic": "sub", "category": "arith", "minOps": 2, "maxOps": 2, "features": [] },
+    { "mnemonic": "imul", "category": "arith", "minOps": 1, "maxOps": 3, "features": [] },
+    { "mnemonic": "xor", "category": "logic", "minOps": 2, "maxOps": 2, "features": [] },
+    { "mnemonic": "and", "category": "logic", "minOps": 2, "maxOps": 2, "features": [] },
+    { "mnemonic": "or", "category": "logic", "minOps": 2, "maxOps": 2, "features": [] },
+    { "mnemonic": "cmp", "category": "compare", "minOps": 2, "maxOps": 2, "features": [] },
+    { "mnemonic": "lea", "category": "address", "minOps": 2, "maxOps": 2, "features": [] },
+    { "mnemonic": "push", "category": "stack", "minOps": 1, "maxOps": 1, "features": [] },
+    { "mnemonic": "pop", "category": "stack", "minOps": 1, "maxOps": 1, "features": [] },
+    { "mnemonic": "call", "category": "control", "minOps": 1, "maxOps": 1, "features": [] },
+    { "mnemonic": "ret", "category": "control", "minOps": 0, "maxOps": 0, "features": [] },
+    { "mnemonic": "syscall", "category": "system", "minOps": 0, "maxOps": 0, "features": [] },
+    { "mnemonic": "movsd", "category": "simd", "minOps": 2, "maxOps": 2, "features": ["sse2"] },
+    { "mnemonic": "movss", "category": "simd", "minOps": 2, "maxOps": 2, "features": ["sse"] },
+    { "mnemonic": "addsd", "category": "simd", "minOps": 2, "maxOps": 2, "features": ["sse2"] },
+    { "mnemonic": "subsd", "category": "simd", "minOps": 2, "maxOps": 2, "features": ["sse2"] },
+    { "mnemonic": "ucomisd", "category": "simd", "minOps": 2, "maxOps": 2, "features": ["sse2"] },
+    { "mnemonic": "movd", "category": "simd", "minOps": 2, "maxOps": 2, "features": ["sse2"] },
+    { "mnemonic": "movq", "category": "simd", "minOps": 2, "maxOps": 2, "features": ["sse2"] }
+  ]
+}

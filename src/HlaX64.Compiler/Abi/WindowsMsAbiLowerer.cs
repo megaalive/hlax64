@@ -122,7 +122,10 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
             foreach (var inst in irBlock.Instructions)
             {
                 _currentFunction = function;
-                loweredBlock.Instructions.Add(LowerInstruction(inst, function));
+                var loweredInst = LowerInstruction(inst, function);
+                loweredInst.IrId = inst.Id;
+                loweredInst.SourceLine = inst.SourceLine;
+                loweredBlock.Instructions.Add(loweredInst);
             }
 
             lowered.Blocks.Add(loweredBlock);
@@ -211,8 +214,9 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
         var dst = ResolveOperand(dstVal);
         var src = ResolveOperand(srcVal);
 
-        if (inst.Immediate is string sseMov && sseMov is "movsd" or "movss" or "movd" or "movq")
-            return new LoweredInstruction($"    {sseMov} {dst}, {src}");
+        if (inst.Immediate is string sseMnemonic &&
+            sseMnemonic is "movsd" or "movss" or "movd" or "movq" or "addsd" or "subsd" or "ucomisd")
+            return new LoweredInstruction($"    {sseMnemonic} {dst}, {src}");
 
         if (IsMemRef(srcVal))
         {

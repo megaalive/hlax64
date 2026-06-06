@@ -41,6 +41,9 @@ public enum CompareKind
 
 public sealed class IrInstruction
 {
+    private static int _nextId;
+
+    public int Id { get; } = Interlocked.Increment(ref _nextId);
     public IrOpcode Opcode { get; }
     public IrValue? Destination { get; set; }
     public List<IrValue> Operands { get; }
@@ -48,6 +51,8 @@ public sealed class IrInstruction
 
     public string? TargetBlock { get; set; }
     public CompareKind? CmpKind { get; set; }
+    public int? SourceLine { get; set; }
+    public int? SourceColumn { get; set; }
 
     public IrInstruction(IrOpcode opcode, IrValue? destination = null, List<IrValue>? operands = null, object? immediate = null)
     {

@@ -34,12 +34,12 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 | **16** | **Language core completion** | ✅ Done | const, expressions, enum, record, static, string model |
 | 17 | ABI and FFI completion | ✅ Done | Sprints 2–5: extern, fn ptr, float ABI, struct param, variadic RFC |
 | 18 | Compiler verification | ✅ Done | definite assignment, CFG, liveness, verify-stack/abi, fuzz |
-| 19 | Debug and explainability | ⏳ | source map, DWARF MVP, disassembly, trace mode |
-| 20 | Optimization | ⏳ | const fold/prop, DCE, peephole, regalloc |
-| 21 | CPU and SIMD | ⏳ | instruction DB, SSE2/AVX2, intrinsics, atomics |
-| 22 | Modules and packages | ⏳ | manifest, deps, incremental/reproducible builds |
-| 23 | Verified executable workflow | ⏳ | proof bundle, capability manifest, semantic diff |
-| 24 | Debugger and Assembly Lab | ⏳ | DAP, registers/stack/memory views, AI repair |
+| 19 | Debug and explainability | ✅ MVP | source map, DWARF MVP, disassembly, trace mode |
+| 20 | Optimization | ✅ MVP | const fold O1, DCE/peephole, regalloc RFC |
+| 21 | CPU and SIMD | ✅ MVP | instruction DB, SSE2 gates, intrinsics/atomics RFC stubs |
+| 22 | Modules and packages | ✅ MVP | manifest, restore stub, reproducible verify |
+| 23 | Verified executable workflow | ✅ MVP | proof bundle, capability manifest, semantic diff, plan |
+| 24 | Debugger and Assembly Lab | ✅ MVP | DAP stub, LSP virtual docs, MCP repair contract |
 
 ### Phase 16 sprint notes
 
@@ -67,6 +67,43 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 - **Sprint 5 (done):** `hla64 verify-abi`; per-procedure ABI report (params, return, externs)
 - **Sprint 6 (done):** fuzz tests (UTF-8 lexer, formatter round-trip, manifest JSON); `docs/development.md`
 - **Sprint 7 (deferred):** differential testing MVP → Phase 19 (RFC 0014)
+
+### Phase 19 sprint notes
+
+- **Sprint 1 (MVP):** `*.hlamap.json` via `--source-map`; IR id annotations; RFC 0015
+- **Sprint 2 (MVP):** `--debug-info` NASM `%line` + `.debug_line` stub (Linux); RFC 0016
+- **Sprint 3 (MVP):** `hla64 disasm`; `--trace` procedure entry/exit comments
+- **Deferred:** full DWARF on Windows, runtime trace sink
+
+### Phase 20 sprint notes
+
+- **Sprint 1 (MVP):** `--optimize O0|O1`; IR constant folding; RFC 0017
+- **Sprint 2 (MVP):** peephole `mov reg,reg` / `add reg,0`
+- **Deferred:** `--register-mode assisted`, global DCE, propagation
+
+### Phase 21 sprint notes
+
+- **Sprint 1 (MVP):** `data/instructions.json`; `hla64 list-instructions`; RFC 0018
+- **Sprint 2 (MVP):** `--cpu` / `--features`; HLAX0070; SSE2 mnemonics; `sse2-add.hla64`
+- **Deferred:** AVX2 codegen, intrinsics (RFC 0019), atomics (RFC 0020)
+
+### Phase 22 sprint notes
+
+- **Sprint 1 (MVP):** `hla64.toml` schema; `hla64 new console`; RFC 0021
+- **Sprint 2 (MVP):** `hla64 restore` stub; import graph via manifest `sources`
+- **Sprint 3 (MVP):** `hla64 verify-reproducible`; `hla64.lock` schema documented
+
+### Phase 23 sprint notes
+
+- **Sprint 1 (MVP):** `--proof-bundle`; `capabilities.json`; RFC 0022
+- **Sprint 2 (MVP):** `hla64 diff`; `hla64 plan --json`
+
+### Phase 24 sprint notes
+
+- **Sprint 1 (MVP):** `hla64 debug --stdio` stub; RFC 0023
+- **Sprint 2 (MVP):** LSP virtual IR/NASM/stack; VS Code commands
+- **Sprint 3 (MVP):** MCP `explain` structured `suggestedFix`
+- **Deferred:** full DAP server, desktop GUI (Phase 15)
 
 ---
 

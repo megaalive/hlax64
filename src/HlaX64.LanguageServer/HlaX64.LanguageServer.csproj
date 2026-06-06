@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HlaX64.Compiler\HlaX64.Compiler.csproj" />
+    <ProjectReference Include="..\HlaX64.Backend.Nasm\HlaX64.Backend.Nasm.csproj" />
   </ItemGroup>
 
 </Project>

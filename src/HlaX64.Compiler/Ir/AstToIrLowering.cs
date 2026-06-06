@@ -277,14 +277,14 @@ public sealed class AstToIrLowering
 
             if (mnemonic == "xor" && IsSameReg(instr.Operands[0], instr.Operands[1]))
             {
-                block.Add(new IrInstruction(IrOpcode.LoadConstant, dst, immediate: 0L));
+                block.Add(WithSource(new IrInstruction(IrOpcode.LoadConstant, dst, immediate: 0L), instr));
                 return;
             }
 
             var opcode = mnemonic switch
             {
                 "mov" => IrOpcode.Move,
-                "movsd" or "movss" or "movd" or "movq" => IrOpcode.Move,
+                "movsd" or "movss" or "movd" or "movq" or "addsd" or "subsd" or "ucomisd" => IrOpcode.Move,
                 "add" => IrOpcode.Add,
                 "sub" => IrOpcode.Subtract,
                 "imul" => IrOpcode.Multiply,
@@ -297,12 +297,14 @@ public sealed class AstToIrLowering
 
             if (opcode == IrOpcode.Compare)
             {
-                block.Add(new IrInstruction(IrOpcode.Compare, operands: new List<IrValue> { dst, src }));
+                block.Add(WithSource(new IrInstruction(IrOpcode.Compare, operands: new List<IrValue> { dst, src }), instr));
             }
             else
             {
-                object? imm = mnemonic is "movsd" or "movss" or "movd" or "movq" ? mnemonic : null;
-                block.Add(new IrInstruction(opcode, dst, new List<IrValue> { src }, immediate: imm));
+                object? imm = mnemonic is "movsd" or "movss" or "movd" or "movq" or "addsd" or "subsd" or "ucomisd"
+                    ? mnemonic
+                    : null;
+                block.Add(WithSource(new IrInstruction(opcode, dst, new List<IrValue> { src }, immediate: imm), instr));
             }
         }
         else if (instr.Operands.Count == 1)
@@ -311,13 +313,20 @@ public sealed class AstToIrLowering
             if (mnemonic is "inc" or "dec")
             {
                 var opcode = mnemonic == "inc" ? IrOpcode.Add : IrOpcode.Subtract;
-                block.Add(new IrInstruction(opcode, op, new List<IrValue> { new() { Name = "imm:1" } }));
+                block.Add(WithSource(new IrInstruction(opcode, op, new List<IrValue> { new() { Name = "imm:1" } }), instr));
             }
             else
             {
-                block.Add(new IrInstruction(IrOpcode.Move, op, new List<IrValue> { op }));
+                block.Add(WithSource(new IrInstruction(IrOpcode.Move, op, new List<IrValue> { op }), instr));
             }
         }
+    }
+
+    private static IrInstruction WithSource(IrInstruction inst, AstNode node)
+    {
+        inst.SourceLine = node.Line;
+        inst.SourceColumn = node.Column;
+        return inst;
     }
 
     private static bool IsSameReg(AstNode a, AstNode b)

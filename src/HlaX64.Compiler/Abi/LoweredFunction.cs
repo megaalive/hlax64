@@ -49,6 +49,9 @@ public sealed class LoweredBlock
 public sealed class LoweredInstruction
 {
     public string AsmText { get; set; }
+    public int? IrId { get; set; }
+    public int? SourceLine { get; set; }
+    public string? NasmLabel { get; set; }
 
     public LoweredInstruction(string asmText)
     {

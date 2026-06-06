@@ -27,7 +27,15 @@ public sealed class ExplainReport
         if (result.Success)
         {
             var emitter = new NasmEmitter();
-            nasm = emitter.Emit(result.LoweredFunctions, result.StringLiterals);
+            nasm = emitter.Emit(result.LoweredFunctions, result.StringLiterals, result.GlobalData,
+                new NasmEmitOptions
+                {
+                    AnnotateIrIds = options.EmitSourceMap,
+                    EmitDebugInfo = options.EmitDebugInfo,
+                    TraceProcedures = options.TraceProcedures,
+                    SourceFileName = Path.GetFileName(sourcePath),
+                    IsWindowsTarget = options.Target.Abi.Equals("msabi", StringComparison.OrdinalIgnoreCase)
+                });
         }
 
         return new ExplainReport

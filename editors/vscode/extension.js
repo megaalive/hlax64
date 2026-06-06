@@ -5,6 +5,42 @@ const { LanguageClient, TransportKind } = require('vscode-languageclient/node');
 /** @type {LanguageClient | undefined} */
 let client;
 
+function registerVirtualDocCommands(context) {
+  const commands = [
+    ['hla64.showIr', 'Show IR'],
+    ['hla64.showNasm', 'Show NASM'],
+    ['hla64.showStackLayout', 'Show stack layout'],
+  ];
+
+  for (const [command, title] of commands) {
+    context.subscriptions.push(
+      vscode.commands.registerCommand(command, async () => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor || editor.document.languageId !== 'hla64') {
+          vscode.window.showWarningMessage('Open a .hla64 file first.');
+          return;
+        }
+
+        if (!client) return;
+        const uri = editor.document.uri.toString();
+        const result = await client.sendRequest('workspace/executeCommand', {
+          command,
+          arguments: [uri],
+        });
+
+        if (result && result.content) {
+          const doc = await vscode.workspace.openTextDocument({
+            content: result.content,
+            language: 'plaintext',
+          });
+          await vscode.window.showTextDocument(doc, { preview: true, viewColumn: vscode.ViewColumn.Beside });
+          vscode.window.setStatusBarMessage(`${title} (read-only virtual document)`, 3000);
+        }
+      }),
+    );
+  }
+}
+
 /**
  * @param {vscode.ExtensionContext} context
  */
@@ -32,6 +68,7 @@ function activate(context) {
 
   client = new LanguageClient('hla64', 'HlaX64 Language Server', serverOptions, clientOptions);
   context.subscriptions.push(client.start());
+  registerVirtualDocCommands(context);
 }
 
 function deactivate() {

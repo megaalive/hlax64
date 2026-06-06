@@ -47,7 +47,8 @@ internal static class Program
                             completionProvider = new { triggerCharacters = new[] { ".", "[", "&" } },
                             definitionProvider = true,
                             documentSymbolProvider = true,
-                            documentFormattingProvider = true
+                            documentFormattingProvider = true,
+                            executeCommandProvider = new { commands = new[] { "hla64.showIr", "hla64.showNasm", "hla64.showStackLayout" } }
                         },
                         serverInfo = new { name = "HlaX64.LanguageServer", version = HlaX64.Compiler.Compilation.GetVersion() }
                     });
@@ -109,8 +110,27 @@ internal static class Program
                 case "textDocument/formatting" when hasId:
                     HandleFormatting(id, root);
                     break;
+
+                case "workspace/executeCommand" when hasId:
+                    HandleExecuteCommand(id, root);
+                    break;
             }
         }
+    }
+
+    private static void HandleExecuteCommand(JsonElement id, JsonElement root)
+    {
+        if (!root.TryGetProperty("params", out var p))
+        {
+            WriteResponse(id, null!);
+            return;
+        }
+
+        var command = p.GetProperty("command").GetString() ?? "";
+        var args = p.GetProperty("arguments");
+        var uri = args[0].GetString() ?? "";
+        Documents.TryGetValue(uri, out var text);
+        WriteResponse(id, LanguageServerEditorServices.ExecuteCommand(command, text ?? "", uri)!);
     }
 
     private static void HandleDefinition(JsonElement id, JsonElement root)

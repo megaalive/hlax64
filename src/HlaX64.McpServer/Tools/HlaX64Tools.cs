@@ -311,12 +311,13 @@ public class HlaX64Tools
     [McpServerTool, Description("List available instruction mnemonics supported by the compiler")]
     public static string ListInstructions()
     {
-        var instructions = new[]
+        var db = HlaX64.Compiler.Cpu.InstructionDatabase.LoadDefault();
+        var instructions = db.All.Select(i => new
         {
-            "mov", "add", "sub", "imul", "xor", "and", "or", "cmp",
-            "jmp", "je", "jne", "jg", "jl", "jge", "jle", "ja", "jb", "jae", "jbe",
-            "call", "ret"
-        };
+            mnemonic = i.Mnemonic,
+            category = i.Category,
+            features = i.Features
+        }).ToArray();
         return JsonSerializer.Serialize(new { instructions }, JsonOpts);
     }
 
@@ -345,12 +346,25 @@ public class HlaX64Tools
                 code = d.Code,
                 message = d.Message,
                 line = d.Line,
-                column = d.Column
+                column = d.Column,
+                span = new { d.Line, d.Column },
+                suggestedFix = SuggestFix(d)
             }),
             ir = report.Success ? report.IrFunctions.Select(f => f.ToString()).ToArray() : null,
             lowered = report.Success ? report.LoweredFunctions.Select(HlaX64.Cli.Services.ExplainReport.DescribeLowered).ToArray() : null,
             nasm = report.Nasm
         }, JsonOpts);
+    }
+
+    private static object? SuggestFix(HlaX64.Compiler.Diagnostics.Diagnostic d)
+    {
+        if (d.Code == "HLAX0003")
+            return new { template = "Check mnemonic spelling or run `hla64 list-instructions`." };
+        if (d.Code == "HLAX0070")
+            return new { template = "Add `--features +sse2` (or required feature) to build flags." };
+        if (d.Code == "HLAX0060")
+            return new { template = "Initialize `{var}` before use or assign in all paths." };
+        return d.Suggestion != null ? new { template = d.Suggestion } : null;
     }
 
     [McpServerTool, Description("Format a .hla64 source file in place")]

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HlaX64 project manifest",
+  "type": "object",
+  "required": ["name", "version", "target"],
+  "properties": {
+    "name": { "type": "string" },
+    "version": { "type": "string" },
+    "target": { "type": "string", "default": "linux-x64-sysv" },
+    "sources": { "type": "object", "additionalProperties": { "type": "string" } },
+    "dependencies": { "type": "array", "items": { "type": "string" } }
+  }
+}

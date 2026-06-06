@@ -77,7 +77,8 @@ HlaX64 is an **early multi-platform x64 language toolchain** — not a single-ta
 
 | Area | Status |
 |------|--------|
-| CLI (`build`, `run`, `test`, `bench`, `explain`, `doctor`, …) | ✅ |
+| CLI (`build`, `run`, `test`, `bench`, `explain`, `doctor`, `disasm`, `diff`, `plan`, …) | ✅ |
+| Source maps / proof bundle / `--optimize` / CPU features | ✅ MVP |
 | MCP server (12 tools, stdio JSON-RPC) | ✅ |
 | Benchmark runner + JSON manifests | ✅ |
 
@@ -89,7 +90,7 @@ Designed for verified vibe coding: explicit syntax, structured diagnostics, anno
 
 | Feature | Status |
 |---------|--------|
-| LSP (diagnostics, hover, completion, go-to-definition, symbols, format) | ✅ MVP |
+| LSP (diagnostics, hover, completion, go-to-definition, symbols, format, virtual IR/NASM) | ✅ MVP |
 | VS Code extension (`editors/vscode`) | ✅ syntax + LSP client |
 
 ### Testing
