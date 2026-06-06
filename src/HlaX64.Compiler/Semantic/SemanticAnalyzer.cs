@@ -285,6 +285,19 @@ public sealed class SemanticAnalyzer
                     suggestion);
             }
         }
+        else if (node is AddressOfNode addr)
+        {
+            if (!_variableTypes.ContainsKey(addr.VariableName))
+            {
+                _diagnostics.Error("HLAX0023",
+                    $"Address-of requires a local variable or parameter, not '{addr.VariableName}'",
+                    addr.Line, addr.Column);
+            }
+        }
+        else if (node is MemoryRefNode mem)
+        {
+            AnalyzeMemoryRef(mem.Inner, mem.Line, mem.Column);
+        }
         else if (node is IdentifierNode ident)
         {
             // Skip known identifiers like "nl" and known variables
@@ -305,6 +318,20 @@ public sealed class SemanticAnalyzer
                     suggestion);
             }
         }
+    }
+
+    private void AnalyzeMemoryRef(AstNode inner, int line, int column)
+    {
+        if (inner is RegisterNode reg)
+        {
+            if (!KnownRegisters.Contains(reg.Name))
+                _diagnostics.Error("HLAX0012", $"Unknown register '{reg.Name}'", line, column);
+            return;
+        }
+
+        _diagnostics.Error("HLAX0022",
+            "Memory dereference [..] requires a register holding an address",
+            line, column);
     }
 
     private static string? FindClosestRegisterOrInstruction(string input)

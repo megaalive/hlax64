@@ -102,6 +102,28 @@ Stable diagnostic codes help agents, IDE tooling, and contributors reference err
 | **Cause** | Storing a wider typed variable into a narrower one without explicit conversion |
 | **Fix** | Widen the destination, narrow the source explicitly, or adjust types |
 
+### HLAX0022 — Invalid memory dereference
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Type system |
+| **Since** | 0.2.0-alpha |
+| **Cause** | Operand inside `[..]` is not a register holding an address |
+| **Example** | `mov([42], rax);` |
+| **Fix** | Use a register that holds a pointer, e.g. `mov([rcx], rax);` after `mov(&slot, rcx);` |
+
+### HLAX0023 — Invalid address-of operand
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Type system |
+| **Since** | 0.2.0-alpha |
+| **Cause** | `&ident` does not refer to a local variable or parameter in the current procedure |
+| **Example** | `mov(&rax, rcx);` |
+| **Fix** | Take the address of a `var` or parameter, e.g. `mov(&slot, rcx);` |
+
 ## Toolchain messages (no code yet)
 
 CLI and linker errors currently use plain text (e.g. `Error: NASM not found`). Future releases will assign `HLAX4xxx` codes.

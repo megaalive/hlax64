@@ -20,18 +20,6 @@ Site base: `https://megaalive.github.io/hlax64/`
 
 See [architecture.md](architecture.md) for the Mermaid pipeline diagram (renders on GitHub and Pages).
 
-## Demo recording (maintainers)
-
-Regenerate the README GIF (uses real `hla64` CLI output):
-
-```bash
-python scripts/generate-demo-gif.py
-```
-
-Output: `docs/assets/demo.gif` (linked from README).
-
-Manual recording alternative: [asciinema](https://asciinema.org/) + [agg](https://github.com/asciinema/agg).
-
 ## Release announcement checklist
 
 When tagging `v0.1.0-alpha`:

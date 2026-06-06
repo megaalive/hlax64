@@ -1,0 +1,4 @@
+{
+  "source": "source.hla64",
+  "expectNasmContains": ["lea rcx", "mov rax, [rcx]"]
+}

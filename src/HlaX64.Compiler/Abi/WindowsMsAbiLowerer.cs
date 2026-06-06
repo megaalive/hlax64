@@ -43,6 +43,14 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
             _stackOffset = Math.Max(_stackOffset, (i + 1) * 8);
         }
 
+        for (int i = 0; i < function.LocalValues.Count; i++)
+        {
+            var local = function.LocalValues[i];
+            var offset = -(function.ParameterValues.Count + i + 1) * 8;
+            _valueMap[local.Name!] = $"[rbp{offset}]";
+            _stackOffset = Math.Max(_stackOffset, (function.ParameterValues.Count + i + 1) * 8);
+        }
+
         foreach (var irBlock in function.Blocks)
         {
             var loweredBlock = new LoweredBlock(irBlock.Label);
@@ -121,7 +129,7 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
         return inst.Opcode switch
         {
             IrOpcode.LoadConstant => LowerLoadConstant(inst),
-            IrOpcode.Move => LowerBinaryRmw(inst, "mov"),
+            IrOpcode.Move => LowerMove(inst),
             IrOpcode.Add => LowerBinaryRmw(inst, "add"),
             IrOpcode.Subtract => LowerBinaryRmw(inst, "sub"),
             IrOpcode.Multiply => LowerBinaryRmw(inst, "imul"),
@@ -147,12 +155,55 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
         return new LoweredInstruction($"    mov {dst}, {imm}");
     }
 
+    private LoweredInstruction LowerMove(IrInstruction inst)
+    {
+        var dstVal = inst.Destination;
+        var srcVal = inst.Operands[0];
+        var dst = ResolveOperand(dstVal);
+        var src = ResolveOperand(srcVal);
+
+        if (IsMemRef(srcVal))
+        {
+            var reg = MemRefTarget(srcVal);
+            return new LoweredInstruction($"    mov {dst}, [{reg}]");
+        }
+
+        if (IsMemRef(dstVal))
+        {
+            var reg = MemRefTarget(dstVal);
+            return new LoweredInstruction($"    mov [{reg}], {src}");
+        }
+
+        if (IsAddrRef(srcVal))
+        {
+            var varName = AddrVariable(srcVal);
+            if (_valueMap.TryGetValue(varName, out var slot))
+            {
+                if (dst.StartsWith("[rbp", StringComparison.Ordinal))
+                    return new LoweredInstruction($"    lea rax, {slot}\n    mov {dst}, rax");
+                return new LoweredInstruction($"    lea {dst}, {slot}");
+            }
+        }
+
+        return new LoweredInstruction($"    mov {dst}, {src}");
+    }
+
     private LoweredInstruction LowerBinaryRmw(IrInstruction inst, string asmMnemonic)
     {
         var dst = ResolveOperand(inst.Destination);
         var src = inst.Operands.Count > 0 ? ResolveOperand(inst.Operands[0]) : dst;
         return new LoweredInstruction($"    {asmMnemonic} {dst}, {src}");
     }
+
+    private static bool IsMemRef(IrValue? value)
+        => value?.Name?.StartsWith("mem:", StringComparison.Ordinal) == true;
+
+    private static bool IsAddrRef(IrValue? value)
+        => value?.Name?.StartsWith("addr:", StringComparison.Ordinal) == true;
+
+    private static string MemRefTarget(IrValue value) => value.Name![4..].ToLowerInvariant();
+
+    private static string AddrVariable(IrValue value) => value.Name![5..];
 
     private LoweredInstruction LowerCompare(IrInstruction inst)
     {

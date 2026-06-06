@@ -6,6 +6,7 @@ public sealed class IrFunction
     public List<IrBasicBlock> Blocks { get; }
     public IrBasicBlock EntryBlock { get; }
     public List<IrValue> ParameterValues { get; }
+    public List<IrValue> LocalValues { get; }
 
     public bool IsEntryPoint => Name == "_start";
     public bool IsExport { get; set; }
@@ -16,6 +17,7 @@ public sealed class IrFunction
         EntryBlock = new IrBasicBlock("entry");
         Blocks = new List<IrBasicBlock> { EntryBlock };
         ParameterValues = new List<IrValue>();
+        LocalValues = new List<IrValue>();
     }
 
     public void AddBlock(IrBasicBlock block)

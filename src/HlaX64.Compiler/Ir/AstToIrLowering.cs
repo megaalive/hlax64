@@ -34,8 +34,13 @@ public sealed class AstToIrLowering
 
         foreach (var param in proc.Parameters)
         {
-            var v = new IrValue { Name = param.Name };
-            func.ParameterValues.Add(v);
+            func.ParameterValues.Add(new IrValue { Name = param.Name });
+        }
+
+        foreach (var variable in proc.Variables)
+        {
+            if (variable is VariableNode varNode)
+                func.LocalValues.Add(new IrValue { Name = varNode.Name });
         }
 
         var currentBlock = func.EntryBlock;
@@ -271,7 +276,19 @@ public sealed class AstToIrLowering
             IntegerLiteralNode lit => new IrValue { Name = $"imm:{lit.Value}" },
             StringLiteralNode str => new IrValue { Name = $"str:{str.Value}" },
             IdentifierNode ident => GetOrCreateValue(ident.Name),
+            AddressOfNode addr => new IrValue { Name = $"addr:{addr.VariableName}" },
+            MemoryRefNode mem => new IrValue { Name = $"mem:{ResolveMemRef(mem.Inner)}" },
             _ => new IrValue()
+        };
+    }
+
+    private string ResolveMemRef(AstNode inner)
+    {
+        return inner switch
+        {
+            RegisterNode reg => reg.Name.ToLowerInvariant(),
+            IdentifierNode ident => ident.Name,
+            _ => "rax"
         };
     }
 

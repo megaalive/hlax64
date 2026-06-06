@@ -158,4 +158,51 @@ public class SemanticAnalyzerTests
         var error = Assert.Single(diagnostics.Diagnostics, d => d.Code == "HLAX0020");
         Assert.Contains("foobar", error.Message);
     }
+
+    [Fact]
+    public void Analyze_InvalidAddressOf_ReportsError()
+    {
+        var program = ParseProgram("""
+            program bad;
+            begin bad;
+                mov(&rax, rcx);
+            end bad;
+            """);
+        var diagnostics = new SemanticAnalyzer().Analyze(program);
+        var error = Assert.Single(diagnostics.Diagnostics, d => d.Code == "HLAX0023");
+        Assert.Contains("Address-of", error.Message);
+    }
+
+    [Fact]
+    public void Analyze_MemoryRefNonRegister_ReportsError()
+    {
+        var program = ParseProgram("""
+            program bad;
+            begin bad;
+                mov([42], rax);
+            end bad;
+            """);
+        var diagnostics = new SemanticAnalyzer().Analyze(program);
+        var error = Assert.Single(diagnostics.Diagnostics, d => d.Code == "HLAX0022");
+        Assert.Contains("register", error.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Analyze_PointerLoadStore_NoErrors()
+    {
+        var program = ParseProgram("""
+            program t;
+            procedure P; @returns("rax");
+            var slot: int64;
+            begin P;
+                mov(42, slot);
+                mov(&slot, rcx);
+                mov([rcx], rax);
+            end P;
+            begin t;
+            end t;
+            """);
+        var diagnostics = new SemanticAnalyzer().Analyze(program);
+        Assert.False(diagnostics.HasErrors);
+    }
 }

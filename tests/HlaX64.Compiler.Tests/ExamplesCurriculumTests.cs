@@ -8,7 +8,7 @@ public sealed class ExamplesCurriculumTests
     public void CurriculumManifest_LoadAll_HasNineteenPrograms()
     {
         var manifests = TestManifest.LoadAll("tests/examples-curriculum");
-        Assert.Equal(19, manifests.Count);
+        Assert.Equal(20, manifests.Count);
         Assert.Contains(manifests, m => m.Name == "curriculum-hello");
         Assert.All(manifests, m => Assert.Contains("examples/", m.Source.Replace('\\', '/')));
     }

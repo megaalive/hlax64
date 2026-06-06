@@ -1,0 +1,11 @@
+program ptr_test;
+procedure P; @returns("rax");
+var v: int64;
+begin P;
+    mov(7, v);
+    mov(&v, rcx);
+    mov([rcx], rax);
+end P;
+begin ptr_test;
+    call P();
+end ptr_test;

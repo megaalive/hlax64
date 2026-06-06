@@ -1,0 +1,6 @@
+{
+  "name": "pointer_load_store",
+  "source": "pointer_load_store.hla64",
+  "expectedExitCode": 99,
+  "description": "RFC 0002: address-of stack var and load via [reg]"
+}

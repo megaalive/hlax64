@@ -189,6 +189,34 @@ public class StringLiteralNode : AstNode
 }
 
 /// <summary>
+/// Address-of a stack variable: &amp;name
+/// </summary>
+public class AddressOfNode : AstNode
+{
+    public override string Kind => "AddressOf";
+    public string VariableName { get; }
+
+    public AddressOfNode(string variableName)
+    {
+        VariableName = variableName;
+    }
+}
+
+/// <summary>
+/// Memory dereference: [registerOrPtr]
+/// </summary>
+public class MemoryRefNode : AstNode
+{
+    public override string Kind => "MemoryRef";
+    public AstNode Inner { get; }
+
+    public MemoryRefNode(AstNode inner)
+    {
+        Inner = inner;
+    }
+}
+
+/// <summary>
 /// Represents an identifier (variable reference, label, etc.).
 /// </summary>
 public class IdentifierNode : AstNode
