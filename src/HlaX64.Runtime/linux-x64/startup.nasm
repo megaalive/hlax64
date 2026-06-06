@@ -1,46 +1,42 @@
 ; HlaX64 Runtime - Startup (Linux x64 / System V ABI)
 ; File: startup.nasm
 ;
-; This file provides the _start entry point and the newline constant
-; used by the inline-emitted hello-world programs. The MVP compiler
-; inlines equivalent code directly into the program output, but the
-; functions here serve as a stable, linkable runtime for:
-;   - C# interop (shared library exports)
-;   - Procedure-aware compilation
-;   - Manual assembly for testing
-;
-; Convention: System V ABI (Linux x64)
+; Provides _start entry point for HlaX64 programs when linked as
+; a standalone executable (--runtime library mode).
 
 bits 64
 default rel
 
-; ---------------------------------------------------------------------
-; Constants (in .rodata so they end up in a read-only section)
-; ---------------------------------------------------------------------
+; -----------------------------------------------------------------------
+; Constants
+; -----------------------------------------------------------------------
 section .rodata
     newline: db 0x0A
 
-; ---------------------------------------------------------------------
+; -----------------------------------------------------------------------
 ; Code
-; ---------------------------------------------------------------------
+; -----------------------------------------------------------------------
 section .text
 
-; _start: program entry point invoked by the Linux kernel.
-; Expected stack: [argc, argv, envp] (System V ABI)
-; rax must hold the desired exit code on entry to sys_exit.
+; --- _start -------------------------------------------------------------
+; HLAX64-RUNTIME-FUNCTION v0.1
+; name:    _start
+; target:  linux-x64-sysv
+; inputs:
+;   (none — kernel interface: argc, argv, envp on stack)
+; clobbers:
+;   rax, rdi
+; preserves:
+;   (none — terminates the process)
+; stack-align:
+;   RSP ≡ 8 (mod 16) on entry (kernel guarantee)
+; notes:
+;   Program entry point invoked by the Linux kernel.
+;   Expects the compiled program body to set rax = exit code.
 global _start
 _start:
-    ; Set up a frame pointer for any runtime helpers called from here.
     push rbp
     mov  rbp, rsp
-
-    ; The compiled program body is linked before this file, so by the
-    ; time control reaches _start the program has already executed.
-    ; The compiler is responsible for emitting the actual user code
-    ; and jumping here only for finalization. For the MVP the
-    ; compiler inlines everything in the main .text section, so
-    ; _start is provided here for completeness when this runtime is
-    ; linked as a shared library.
-    mov  rdi, rax        ; exit code = whatever rax holds
-    mov  rax, 60         ; sys_exit
+    mov  rdi, rax
+    mov  rax, 60
     syscall
