@@ -31,7 +31,7 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 | 13 | MCP server | ✅ Done | 9 tools via stdio JSON-RPC (compile, build, run, test, explain-abi, dll) |
 | 14 | LSP & editor tooling | ✅ MVP | diagnostics, hover, completion, go-to-definition, document symbols, format-on-save; VS Code client |
 | 15 | AI Assembly Lab / GUI | ⏳ Pending | eksperimen UI (Avalonia/WPF) |
-| **16** | **Language core completion** | 🚧 Sprint 4 done | const, expressions, enum, record, `sizeof`/`offsetof`; string model next |
+| **16** | **Language core completion** | ✅ Done | const, expressions, enum, record, static, string model |
 | 17 | ABI and FFI completion | ⏳ | stack args, float ABI, function pointers, external libs |
 | 18 | Compiler verification | ⏳ | definite assignment, CFG/stack/ABI verifiers, fuzz expansion |
 | 19 | Debug and explainability | ⏳ | source map, DWARF MVP, disassembly, trace mode |
@@ -47,7 +47,8 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 - **Sprint 2 (done):** runtime `:=` expressions for int64 scalars
 - **Sprint 3 (done):** `enum`/`endenum`, typed backing, `Color.Red` immediates (RFC 0005)
 - **Sprint 4 (done):** `record`/`endrecord`, natural layout, field access, `sizeof`/`offsetof` (RFC 0006)
-- **Sprint 5+:** global data, string model, `packed` records
+- **Sprint 5 (done):** `static`/`endstatic`, `.data`/`.bss`, `cstring`, `utf8slice` (RFC 0007/0008)
+- **Sprint 5+ (done):** `packed` records, procedure-scoped enum/record, enum auto-increment
 
 ---
 
@@ -83,8 +84,7 @@ Fase 13 (MCP) →  Fase 14 (LSP) →  Fase 15 (GUI)
 > *Fase 9.5 Workstream A–H done. Docs sync complete. Fase 10 (Bench), 11 (Windows), 12 (C# interop), 13 (MCP) all done.
 > **Level 3 memory curriculum** (RFC 0002/0003) — pointers, indexed `[reg+N]`, stack arrays `type[N]` (incl. packed `byte[N]`), string walk, optional `-Wbounds` (HLAX0030).
 > **Fase 14 LSP MVP** — diagnostics (incl. bounds warnings), hover, completion, go-to-definition, document symbols, format-on-save; VS Code language client.
-> **Phase 16 Sprint 3–4 done** — enums (`enum`/`endenum`, HLAX0039–41), records (`record`/`endrecord`, `sizeof`/`offsetof`, HLAX0042–44); examples `color-enum.hla64`, `patient-header.hla64`.
-> Next: Phase 16 Sprint 5 (global data / string model) or Fase 15 (GUI / AI Assembly Lab).
+> **Phase 16 complete** — language core (const, expressions, enum, record, static, cstring/utf8slice). Next: Phase 17 (ABI/FFI) or Fase 15 (GUI / AI Assembly Lab).
 
 ---
 

@@ -32,8 +32,9 @@ public sealed class Parser
         var constants = new List<AstNode>();
         var enums = new List<AstNode>();
         var records = new List<AstNode>();
+        var statics = new List<AstNode>();
         var procedures = new List<AstNode>();
-        while (Peek().Type is TokenType.Const or TokenType.Enum or TokenType.Record
+        while (Peek().Type is TokenType.Const or TokenType.Enum or TokenType.Record or TokenType.Static
             or TokenType.Procedure or TokenType.Export)
         {
             switch (Peek().Type)
@@ -46,6 +47,9 @@ public sealed class Parser
                     break;
                 case TokenType.Record:
                     records.Add(ParseRecordBlock());
+                    break;
+                case TokenType.Static:
+                    statics.Add(ParseStaticBlock());
                     break;
                 default:
                     procedures.Add(ParseProcedure());
@@ -75,7 +79,7 @@ public sealed class Parser
         allStatements.AddRange(procedures);
         allStatements.AddRange(statements);
 
-        return new ProgramNode(programName, includes, constants, enums, records, allStatements);
+        return new ProgramNode(programName, includes, constants, enums, records, statics, allStatements);
     }
 
     private List<AstNode> ParseStatementsUntilEnd()
@@ -216,11 +220,24 @@ public sealed class Parser
             Expect(TokenType.Semicolon);
         }
 
-        // Optional const declarations
+        // Optional const / enum / record declarations
         var constants = new List<AstNode>();
-        while (Peek().Type == TokenType.Const)
+        var enums = new List<AstNode>();
+        var records = new List<AstNode>();
+        while (Peek().Type is TokenType.Const or TokenType.Enum or TokenType.Record)
         {
-            constants.Add(ParseConstBlock());
+            switch (Peek().Type)
+            {
+                case TokenType.Const:
+                    constants.Add(ParseConstBlock());
+                    break;
+                case TokenType.Enum:
+                    enums.Add(ParseEnumBlock());
+                    break;
+                case TokenType.Record:
+                    records.Add(ParseRecordBlock());
+                    break;
+            }
         }
 
         // Optional var declarations
@@ -262,7 +279,7 @@ public sealed class Parser
         var endName = Expect(TokenType.Identifier).Value;
         Expect(TokenType.Semicolon);
 
-        return new ProcedureNode(name, parameters, returnsRegister, isExport, constants, variables, body);
+        return new ProcedureNode(name, parameters, returnsRegister, isExport, constants, enums, records, variables, body);
     }
 
     private ConstBlockNode ParseConstBlock()
@@ -295,8 +312,12 @@ public sealed class Parser
         while (Peek().Type == TokenType.Identifier)
         {
             var memberToken = Expect(TokenType.Identifier);
-            Expect(TokenType.ColonAssign);
-            var value = ParseConstExpression();
+            AstNode? value = null;
+            if (Peek().Type == TokenType.ColonAssign)
+            {
+                Advance();
+                value = ParseConstExpression();
+            }
             Expect(TokenType.Semicolon);
             members.Add(WithLocation(new EnumMemberNode(memberToken.Value, value), memberToken));
         }
@@ -310,6 +331,13 @@ public sealed class Parser
     {
         var open = Expect(TokenType.Record);
         var nameToken = Expect(TokenType.Identifier);
+        var isPacked = false;
+        if (Peek().Type == TokenType.Packed)
+        {
+            Advance();
+            isPacked = true;
+        }
+
         var fields = new List<RecordFieldNode>();
 
         while (Peek().Type == TokenType.Identifier)
@@ -323,7 +351,42 @@ public sealed class Parser
 
         Expect(TokenType.Endrecord);
         Expect(TokenType.Semicolon);
-        return WithLocation(new RecordBlockNode(nameToken.Value, fields), open);
+        return WithLocation(new RecordBlockNode(nameToken.Value, fields, isPacked), open);
+    }
+
+    private StaticBlockNode ParseStaticBlock()
+    {
+        var open = Expect(TokenType.Static);
+        var declarations = new List<StaticDeclarationNode>();
+
+        while (Peek().Type == TokenType.Identifier)
+        {
+            var nameToken = Expect(TokenType.Identifier);
+            Expect(TokenType.Colon);
+            var typeToken = Expect(TokenType.Identifier);
+            AstNode? arraySize = null;
+            if (Peek().Type == TokenType.LeftBracket)
+            {
+                Advance();
+                arraySize = ParseConstExpression();
+                Expect(TokenType.RightBracket);
+            }
+
+            AstNode? initializer = null;
+            if (Peek().Type == TokenType.ColonAssign)
+            {
+                Advance();
+                initializer = ParseConstExpression();
+            }
+
+            Expect(TokenType.Semicolon);
+            declarations.Add(WithLocation(
+                new StaticDeclarationNode(nameToken.Value, typeToken.Value, arraySize, initializer), nameToken));
+        }
+
+        Expect(TokenType.Endstatic);
+        Expect(TokenType.Semicolon);
+        return WithLocation(new StaticBlockNode(declarations), open);
     }
 
     private AstNode ParseConstExpression()

@@ -1,5 +1,6 @@
 using HlaX64.Compiler.Ir;
 using HlaX64.Compiler.Options;
+using HlaX64.Compiler.Types;
 
 namespace HlaX64.Compiler.Abi;
 
@@ -22,11 +23,15 @@ public sealed class SysVAbiLowerer : IAbiLowerer
     private List<string> _externs = new();
     private bool _stdoutUsed;
     private bool _rbxExitTouched;
+    private IReadOnlyDictionary<string, GlobalDataSymbol> _globalData =
+        new Dictionary<string, GlobalDataSymbol>(StringComparer.OrdinalIgnoreCase);
 
     public IReadOnlyList<StringLiteralInfo> StringLiterals => _stringLiterals;
 
-    public LoweredFunction Lower(IrFunction function, CompilationOptions options)
+    public LoweredFunction Lower(IrFunction function, CompilationOptions options,
+        IReadOnlyDictionary<string, GlobalDataSymbol>? globalData = null)
     {
+        _globalData = globalData ?? new Dictionary<string, GlobalDataSymbol>(StringComparer.OrdinalIgnoreCase);
         _labelCounter = 0;
         _stringLabelCounter = 0;
         _valueMap.Clear();
@@ -186,10 +191,17 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         }
 
         if (ArrayIndexEncoding.IsArrayIndex(srcVal))
-            return ArrayLoweringHelper.LowerArrayLoad(dst, srcVal!, _stackMap, ResolveOperand);
+            return ArrayLoweringHelper.LowerArrayLoad(dst, srcVal!, _stackMap, ResolveOperand, _globalData);
 
         if (FieldAccessEncoding.IsFieldAccess(srcVal))
             return FieldLoweringHelper.LowerFieldLoad(dst, srcVal!, _stackMap);
+
+        if (GlobalDataEncoding.IsGlobalRef(srcVal))
+        {
+            var gname = GlobalDataEncoding.DecodeName(srcVal!);
+            var bits = _globalData.TryGetValue(gname, out var sym) ? sym.Type.BitWidth : 64;
+            return new LoweredInstruction($"    mov {dst}, {GlobalDataEncoding.FormatMem(gname, bits)}");
+        }
 
         if (IsMemRef(dstVal))
         {
@@ -198,10 +210,17 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         }
 
         if (ArrayIndexEncoding.IsArrayIndex(dstVal))
-            return ArrayLoweringHelper.LowerArrayStore(dstVal!, src, _stackMap, ResolveOperand);
+            return ArrayLoweringHelper.LowerArrayStore(dstVal!, src, _stackMap, ResolveOperand, _globalData);
 
         if (FieldAccessEncoding.IsFieldAccess(dstVal))
             return FieldLoweringHelper.LowerFieldStore(dstVal!, src, _stackMap);
+
+        if (GlobalDataEncoding.IsGlobalRef(dstVal))
+        {
+            var gname = GlobalDataEncoding.DecodeName(dstVal!);
+            var bits = _globalData.TryGetValue(gname, out var sym) ? sym.Type.BitWidth : 64;
+            return new LoweredInstruction($"    mov {GlobalDataEncoding.FormatMem(gname, bits)}, {src}");
+        }
 
         if (AddressRefEncoding.IsStringRef(srcVal))
         {
@@ -212,6 +231,8 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         if (IsAddrRef(srcVal))
         {
             var varName = AddrVariable(srcVal);
+            if (_globalData.ContainsKey(varName))
+                return new LoweredInstruction($"    lea {dst}, [{varName}]");
             if (_valueMap.TryGetValue(varName, out var slot))
             {
                 if (dst.StartsWith("[rbp", StringComparison.Ordinal))

@@ -8,6 +8,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ### Added
 
+- **Phase 16 Sprint 5:** program-scope `static`/`endstatic` (`.data`/`.bss` globals); `cstring` type alias; built-in `utf8slice` record; HLAX0045–49; RFC 0007/0008; examples `global-counter.hla64`, `cstring-walk.hla64`
+- **Phase 16 Sprint 5+:** `packed record`; procedure-scoped `enum`/`record`; enum auto-increment members (`Red := 1; Green; Blue;`)
+- LSP grammar: `static`, `endstatic`, `cstring`, `utf8slice`, `packed`; formatter support
 - **Phase 16 Sprint 3:** program-level `enum`/`endenum` with typed backing (`uint32`/`int32`/`uint64`/`int64`); qualified `Enum.Member` immediates; HLAX0039–41; RFC 0005; example `examples/02-types/color-enum.hla64`; conformance `color-enum`, `enum-duplicate-member`, `enum-undefined-member`
 - **Phase 16 Sprint 4:** program-level `record`/`endrecord` with natural alignment; `var header: RecordType` stack blobs; dot field access; compile-time `sizeof`/`offsetof`; HLAX0042–44; RFC 0006; example `examples/02-types/patient-header.hla64`; conformance `patient-header`, `record-unknown-field`
 - LSP grammar: `enum`, `endenum`, `record`, `endrecord`, `sizeof`, `offsetof`; `AstFormatter` support for enums and records

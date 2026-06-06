@@ -1,0 +1,34 @@
+// Phase 16: cstring type and utf8slice (ptr + len) procedure args
+program cstring_walk;
+
+procedure WalkLen(data: ptr; len: uint64); @returns("rax");
+var
+    i: int64;
+    ch: int64;
+begin WalkLen;
+    mov(data, rcx);
+    mov(0, rax);
+    mov(0, i);
+    mov([rcx].byte, ch);
+    while(i < len) do
+        add(1, rax);
+        add(1, i);
+        add(1, rcx);
+        mov([rcx].byte, ch);
+    endwhile;
+end WalkLen;
+
+procedure Main; @returns("rax");
+var
+    text: cstring;
+    slice: utf8slice;
+begin Main;
+    mov(&"hello", text);
+    mov(text, slice.ptr);
+    mov(5, slice.len);
+    call WalkLen(slice.ptr, slice.len);
+end Main;
+
+begin cstring_walk;
+    call Main();
+end cstring_walk;

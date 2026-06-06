@@ -35,7 +35,7 @@ public sealed class ConformanceTests
         if (manifest.ExpectNasmContains is { Length: > 0 })
         {
             var emitter = new HlaX64.Backend.Nasm.Emitters.NasmEmitter();
-            var nasm = emitter.Emit(result.LoweredFunctions, result.StringLiterals);
+            var nasm = emitter.Emit(result.LoweredFunctions, result.StringLiterals, result.GlobalData);
             foreach (var fragment in manifest.ExpectNasmContains)
                 Assert.Contains(fragment, nasm, StringComparison.Ordinal);
         }

@@ -17,6 +17,9 @@ public enum TokenType
     Endenum,
     Record,
     Endrecord,
+    Static,
+    Endstatic,
+    Packed,
     Export,
     Returns,
     

@@ -1,4 +1,5 @@
 using HlaX64.Compiler.Ir;
+using HlaX64.Compiler.Types;
 
 namespace HlaX64.Compiler.Abi;
 
@@ -8,48 +9,82 @@ internal static class ArrayLoweringHelper
         string destination,
         IrValue source,
         ProcedureStackMap stack,
-        Func<IrValue?, string> resolveOperand)
+        Func<IrValue?, string> resolveOperand,
+        IReadOnlyDictionary<string, GlobalDataSymbol>? globals = null)
     {
         var parsed = ArrayIndexEncoding.Parse(source);
+        if (globals != null && globals.TryGetValue(parsed.ArrayName, out var global))
+        {
+            var elemSize = global.Type.BitWidth / 8;
+            if (parsed.IndexKind == "lit")
+            {
+                var mem = ArrayIndexEncoding.FormatGlobalMem(parsed.ArrayName, parsed, elemSize);
+                return new LoweredInstruction($"    {ArrayIndexEncoding.EmitLoad(destination, mem, elemSize)}");
+            }
+
+            var sb = new System.Text.StringBuilder();
+            var indexReg = PrepareIndexRegister(sb, parsed, resolveOperand);
+            var memReg = ArrayIndexEncoding.FormatGlobalMem(parsed.ArrayName, parsed, elemSize, indexReg);
+            sb.Append($"    {ArrayIndexEncoding.EmitLoad(destination, memReg, elemSize)}");
+            return new LoweredInstruction(sb.ToString());
+        }
+
         if (!stack.TryGetSlot(parsed.ArrayName, out var slot) || !stack.TryGetLayout(parsed.ArrayName, out var layout))
             return new LoweredInstruction($"    ; unknown array '{parsed.ArrayName}'");
 
-        var elemSize = layout.ElementSizeBytes;
+        var elemSizeLocal = layout.ElementSizeBytes;
         if (parsed.IndexKind == "lit")
         {
-            var mem = ArrayIndexEncoding.FormatMem(slot, parsed, elemSize);
-            return new LoweredInstruction($"    {ArrayIndexEncoding.EmitLoad(destination, mem, elemSize)}");
+            var mem = ArrayIndexEncoding.FormatMem(slot, parsed, elemSizeLocal);
+            return new LoweredInstruction($"    {ArrayIndexEncoding.EmitLoad(destination, mem, elemSizeLocal)}");
         }
 
-        var sb = new System.Text.StringBuilder();
-        var indexReg = PrepareIndexRegister(sb, parsed, resolveOperand);
-        var memReg = ArrayIndexEncoding.FormatMem(slot, parsed, elemSize, indexReg);
-        sb.Append($"    {ArrayIndexEncoding.EmitLoad(destination, memReg, elemSize)}");
-        return new LoweredInstruction(sb.ToString());
+        var sbLocal = new System.Text.StringBuilder();
+        var indexRegLocal = PrepareIndexRegister(sbLocal, parsed, resolveOperand);
+        var memRegLocal = ArrayIndexEncoding.FormatMem(slot, parsed, elemSizeLocal, indexRegLocal);
+        sbLocal.Append($"    {ArrayIndexEncoding.EmitLoad(destination, memRegLocal, elemSizeLocal)}");
+        return new LoweredInstruction(sbLocal.ToString());
     }
 
     internal static LoweredInstruction LowerArrayStore(
         IrValue destination,
         string source,
         ProcedureStackMap stack,
-        Func<IrValue?, string> resolveOperand)
+        Func<IrValue?, string> resolveOperand,
+        IReadOnlyDictionary<string, GlobalDataSymbol>? globals = null)
     {
         var parsed = ArrayIndexEncoding.Parse(destination);
+        if (globals != null && globals.TryGetValue(parsed.ArrayName, out var global))
+        {
+            var elemSize = global.Type.BitWidth / 8;
+            if (parsed.IndexKind == "lit")
+            {
+                var mem = ArrayIndexEncoding.FormatGlobalMem(parsed.ArrayName, parsed, elemSize);
+                return new LoweredInstruction($"    {ArrayIndexEncoding.EmitStore(mem, source, elemSize)}");
+            }
+
+            var sb = new System.Text.StringBuilder();
+            var indexReg = PrepareIndexRegister(sb, parsed, resolveOperand);
+            var memReg = ArrayIndexEncoding.FormatGlobalMem(parsed.ArrayName, parsed, elemSize, indexReg);
+            sb.Append($"    {ArrayIndexEncoding.EmitStore(memReg, source, elemSize)}");
+            return new LoweredInstruction(sb.ToString());
+        }
+
         if (!stack.TryGetSlot(parsed.ArrayName, out var slot) || !stack.TryGetLayout(parsed.ArrayName, out var layout))
             return new LoweredInstruction($"    ; unknown array '{parsed.ArrayName}'");
 
-        var elemSize = layout.ElementSizeBytes;
+        var elemSizeLocal = layout.ElementSizeBytes;
         if (parsed.IndexKind == "lit")
         {
-            var mem = ArrayIndexEncoding.FormatMem(slot, parsed, elemSize);
-            return new LoweredInstruction($"    {ArrayIndexEncoding.EmitStore(mem, source, elemSize)}");
+            var mem = ArrayIndexEncoding.FormatMem(slot, parsed, elemSizeLocal);
+            return new LoweredInstruction($"    {ArrayIndexEncoding.EmitStore(mem, source, elemSizeLocal)}");
         }
 
-        var sb = new System.Text.StringBuilder();
-        var indexReg = PrepareIndexRegister(sb, parsed, resolveOperand);
-        var memReg = ArrayIndexEncoding.FormatMem(slot, parsed, elemSize, indexReg);
-        sb.Append($"    {ArrayIndexEncoding.EmitStore(memReg, source, elemSize)}");
-        return new LoweredInstruction(sb.ToString());
+        var sbLocal = new System.Text.StringBuilder();
+        var indexRegLocal = PrepareIndexRegister(sbLocal, parsed, resolveOperand);
+        var memRegLocal = ArrayIndexEncoding.FormatMem(slot, parsed, elemSizeLocal, indexRegLocal);
+        sbLocal.Append($"    {ArrayIndexEncoding.EmitStore(memRegLocal, source, elemSizeLocal)}");
+        return new LoweredInstruction(sbLocal.ToString());
     }
 
     private static string PrepareIndexRegister(

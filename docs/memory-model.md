@@ -27,7 +27,7 @@ Const sizes: `var buf: byte[BufferSize];` when `BufferSize` is a compile-time co
 | Field access | `var.field` lowers to `[rbp-slot+offset]` with size-appropriate `mov` |
 | Builtins | `sizeof(Name)`, `offsetof(Name, field)` in const expressions |
 
-**Planned:** `packed` records (no inter-field padding except minimum for size).
+**Implemented:** `packed record Name` (`record Name packed`) — no inter-field padding except minimum field size.
 
 ---
 
@@ -71,25 +71,25 @@ mov(&"text", rax);
 - Ownership: compiler-managed labels; not freed
 - Mutability: immutable
 
-### 4.2 `cstring` (planned)
+### 4.2 `cstring` (implemented — RFC 0008)
 
 | Property | Value |
 |----------|-------|
-| Representation | Pointer to **null-terminated UTF-8** |
+| Representation | Type alias of `ptr` — null-terminated UTF-8 |
 | Length | Implicit (`strlen` style); not stored |
 | Use | C ABI, syscalls, `stdout.put` string args |
 
-**Status:** Documented; no distinct `cstring` type keyword yet. String literals and `&"..."` behave as cstring-compatible pointers.
+String literals and `&"..."` assign to `cstring` variables and parameters.
 
-### 4.3 `utf8slice` (planned)
+### 4.3 `utf8slice` (implemented — RFC 0008)
 
 | Property | Value |
 |----------|-------|
-| Representation | Pointer + **byte length** (two registers or struct) |
+| Representation | Built-in 16-byte record: `ptr: ptr; len: uint64` |
 | Null termination | Not required |
-| Use | Safer string walk without assuming `NUL` |
+| Use | Safer string walk; pass `ptr` + `len` as separate procedure args |
 
-**Status:** Planned (audit §5.11). No syntax yet.
+**Deferred:** single-parameter `utf8slice` ABI (two register args automatic).
 
 ### 4.4 Design rule
 
@@ -97,13 +97,15 @@ Do not introduce a single keyword `string` without specifying encoding, terminat
 
 ---
 
-## 5. Global data (planned)
+## 5. Global data (implemented — RFC 0007)
 
 | Section | Purpose | Status |
 |---------|---------|--------|
-| `.data` | Initialized globals | Planned (Phase 16+) |
-| `.bss` | Zero-initialized globals | Planned |
+| `.data` | Initialized globals (`:=` initializer) | Implemented |
+| `.bss` | Zero/uninitialized globals | Implemented |
 | `.rodata` | String literals (already emitted) | Partial (strings only) |
+
+Syntax: `static` / `endstatic` at program scope. Read/write via `mov`, address-of via `&name`.
 
 ---
 
@@ -124,8 +126,9 @@ Allocator modes (`--allocator libc|os|custom`) and `malloc`/`free` lowering are 
 
 | Audit item | This document |
 |------------|---------------|
-| §5.11 String model | §4 |
-| Tier B intro (memory correctness) | §1–§3 implemented; §4–§6 planned |
+| §5.11 String model | §4 (implemented) |
+| Tier B intro (memory correctness) | §1–§5 implemented; §6+ planned |
 | Const + array sizes | §1, RFC 0004 |
 | §5.3 Enum | RFC 0005 (implemented) |
 | §5.4 Struct / record | §1.1, RFC 0006 (implemented) |
+| §5.8 Global data | §5, RFC 0007 (implemented) |

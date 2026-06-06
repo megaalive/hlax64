@@ -5,6 +5,7 @@ using HlaX64.Compiler.Lexing;
 using HlaX64.Compiler.Options;
 using HlaX64.Compiler.Parsing;
 using HlaX64.Compiler.Semantic;
+using HlaX64.Compiler.Types;
 
 namespace HlaX64.Compiler;
 
@@ -14,6 +15,7 @@ public sealed class CompilationResult
     public List<IrFunction> IrFunctions { get; set; } = new();
     public List<LoweredFunction> LoweredFunctions { get; set; } = new();
     public List<StringLiteralInfo> StringLiterals { get; set; } = new();
+    public List<GlobalDataSymbol> GlobalData { get; set; } = new();
     public List<string> Diagnostics { get; set; } = new();
     public List<Diagnostic> StructuredDiagnostics { get; set; } = new();
 }
@@ -66,12 +68,13 @@ public class Compilation
             }
 
             // 4. Lower AST to IR
-            var lowering = new AstToIrLowering(semantic.ConstTable, semantic.RecordTypes);
+            var lowering = new AstToIrLowering(semantic.ConstTable, semantic.RecordTypes, semantic.GlobalData);
             var procedures = new List<IrFunction>();
             var entryIr = lowering.LowerProgram(program, procedures);
 
             result.IrFunctions.Add(entryIr);
             result.IrFunctions.AddRange(procedures);
+            result.GlobalData = semantic.GlobalData.Globals.Values.ToList();
 
             // 5. Lower IR to ABI-specific form
             IAbiLowerer abiLowerer;
@@ -85,9 +88,10 @@ public class Compilation
                     break;
             }
 
+            var globalMap = semantic.GlobalData.Globals;
             foreach (var irFunc in result.IrFunctions)
             {
-                var lowered = abiLowerer.Lower(irFunc, Options);
+                var lowered = abiLowerer.Lower(irFunc, Options, globalMap);
                 result.LoweredFunctions.Add(lowered);
             }
 
