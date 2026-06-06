@@ -4,9 +4,7 @@ Resources for sharing HlaX64 with new contributors and users.
 
 ## GitHub Pages
 
-Static docs under `docs/` deploy via `.github/workflows/pages.yml` on push to `main`.
-
-After the first workflow run, enable **Settings → Pages → Source: GitHub Actions** if prompted.
+Static docs under `docs/` deploy from the **`main`** branch (**Settings → Pages → Deploy from a branch → `/docs`**).
 
 Public URLs (once enabled):
 
