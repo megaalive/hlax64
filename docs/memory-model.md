@@ -18,6 +18,17 @@ This document formalizes how HlaX64 models memory at the language level. Items m
 
 Const sizes: `var buf: byte[BufferSize];` when `BufferSize` is a compile-time constant (**implemented**, RFC 0004).
 
+### 1.1 Records on stack (implemented — RFC 0006)
+
+| Concept | Behavior |
+|---------|----------|
+| Declaration | `record Name ... endrecord` at program scope; `var x: Name;` in a procedure |
+| Layout | Natural alignment: field offset = align-up cursor; total size rounded to max field alignment |
+| Field access | `var.field` lowers to `[rbp-slot+offset]` with size-appropriate `mov` |
+| Builtins | `sizeof(Name)`, `offsetof(Name, field)` in const expressions |
+
+**Planned:** `packed` records (no inter-field padding except minimum for size).
+
 ---
 
 ## 2. Pointers (implemented — Level 3)
@@ -116,3 +127,5 @@ Allocator modes (`--allocator libc|os|custom`) and `malloc`/`free` lowering are 
 | §5.11 String model | §4 |
 | Tier B intro (memory correctness) | §1–§3 implemented; §4–§6 planned |
 | Const + array sizes | §1, RFC 0004 |
+| §5.3 Enum | RFC 0005 (implemented) |
+| §5.4 Struct / record | §1.1, RFC 0006 (implemented) |

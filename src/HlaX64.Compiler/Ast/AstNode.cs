@@ -19,13 +19,18 @@ public class ProgramNode : AstNode
     public string Name { get; }
     public List<AstNode> Includes { get; }
     public List<AstNode> Constants { get; }
+    public List<AstNode> Enums { get; }
+    public List<AstNode> Records { get; }
     public List<AstNode> Statements { get; }
 
-    public ProgramNode(string name, List<AstNode> includes, List<AstNode> constants, List<AstNode> statements)
+    public ProgramNode(string name, List<AstNode> includes, List<AstNode> constants,
+        List<AstNode> enums, List<AstNode> records, List<AstNode> statements)
     {
         Name = name;
         Includes = includes;
         Constants = constants;
+        Enums = enums;
+        Records = records;
         Statements = statements;
     }
 }
@@ -173,6 +178,115 @@ public class VariableNode : AstNode
         ArraySizeExpression = arraySizeExpression;
         if (arraySizeExpression is IntegerLiteralNode lit)
             ElementCount = checked((int)lit.Value);
+    }
+}
+
+/// <summary>
+/// enum Name: backingType ... endenum block.
+/// </summary>
+public class EnumBlockNode : AstNode
+{
+    public override string Kind => "EnumBlock";
+    public string Name { get; }
+    public string BackingType { get; }
+    public List<EnumMemberNode> Members { get; }
+
+    public EnumBlockNode(string name, string backingType, List<EnumMemberNode> members)
+    {
+        Name = name;
+        BackingType = backingType;
+        Members = members;
+    }
+}
+
+/// <summary>
+/// Single enum member: Name := compile-time value;
+/// </summary>
+public class EnumMemberNode : AstNode
+{
+    public override string Kind => "EnumMember";
+    public string Name { get; }
+    public AstNode Value { get; }
+
+    public EnumMemberNode(string name, AstNode value)
+    {
+        Name = name;
+        Value = value;
+    }
+}
+
+/// <summary>
+/// record Name ... endrecord type declaration.
+/// </summary>
+public class RecordBlockNode : AstNode
+{
+    public override string Kind => "RecordBlock";
+    public string Name { get; }
+    public List<RecordFieldNode> Fields { get; }
+
+    public RecordBlockNode(string name, List<RecordFieldNode> fields)
+    {
+        Name = name;
+        Fields = fields;
+    }
+}
+
+/// <summary>
+/// Record field: name: type;
+/// </summary>
+public class RecordFieldNode : AstNode
+{
+    public override string Kind => "RecordField";
+    public string Name { get; }
+    public string Type { get; }
+
+    public RecordFieldNode(string name, string type)
+    {
+        Name = name;
+        Type = type;
+    }
+}
+
+/// <summary>
+/// Qualified dot access: Enum.Member or var.field
+/// </summary>
+public class DotAccessNode : AstNode
+{
+    public override string Kind => "DotAccess";
+    public string BaseName { get; }
+    public string MemberName { get; }
+
+    public DotAccessNode(string baseName, string memberName)
+    {
+        BaseName = baseName;
+        MemberName = memberName;
+    }
+}
+
+/// <summary>
+/// Compile-time sizeof(RecordType)
+/// </summary>
+public class SizeofNode : AstNode
+{
+    public override string Kind => "Sizeof";
+    public string TypeName { get; }
+
+    public SizeofNode(string typeName) => TypeName = typeName;
+}
+
+/// <summary>
+/// Compile-time offsetof(RecordType, field)
+/// </summary>
+public class OffsetofNode : AstNode
+{
+    public override string Kind => "Offsetof";
+    public string TypeName { get; }
+    public string FieldName { get; }
+
+    public OffsetofNode(string typeName, string fieldName)
+    {
+        TypeName = typeName;
+        FieldName = fieldName;
     }
 }
 

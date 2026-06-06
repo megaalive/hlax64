@@ -8,11 +8,14 @@ namespace HlaX64.Compiler.Ir;
 public sealed class AstToIrLowering
 {
     private readonly CompileTimeConstTable _programConstTable;
+    private readonly RecordTypeRegistry _recordRegistry;
     private CompileTimeConstTable _activeConstTable;
+    private Dictionary<string, RecordTypeSymbol> _recordLocals = new(StringComparer.OrdinalIgnoreCase);
 
-    public AstToIrLowering(CompileTimeConstTable? constTable = null)
+    public AstToIrLowering(CompileTimeConstTable? constTable = null, RecordTypeRegistry? recordRegistry = null)
     {
         _programConstTable = constTable ?? new CompileTimeConstTable();
+        _recordRegistry = recordRegistry ?? new RecordTypeRegistry();
         _activeConstTable = _programConstTable;
     }
 
@@ -42,6 +45,7 @@ public sealed class AstToIrLowering
     public IrFunction LowerProcedure(ProcedureNode proc)
     {
         _activeConstTable = BuildProcedureConstTable(proc);
+        _recordLocals = new Dictionary<string, RecordTypeSymbol>(StringComparer.OrdinalIgnoreCase);
         var func = new IrFunction(proc.Name);
         func.IsExport = proc.IsExport;
 
@@ -55,12 +59,24 @@ public sealed class AstToIrLowering
             if (variable is VariableNode varNode)
             {
                 func.LocalValues.Add(new IrValue { Name = varNode.Name });
-                var elemSize = (TypeRegistry.Lookup(varNode.Type)?.BitWidth ?? 64) / 8;
-                func.LocalLayouts[varNode.Name] = new IrLocalLayout
+                if (_recordRegistry.TryGet(varNode.Type, out var recordType))
                 {
-                    ElementCount = varNode.ElementCount,
-                    ElementSizeBytes = elemSize
-                };
+                    _recordLocals[varNode.Name] = recordType;
+                    func.LocalLayouts[varNode.Name] = new IrLocalLayout
+                    {
+                        ElementCount = 1,
+                        ElementSizeBytes = recordType.SizeInBytes
+                    };
+                }
+                else
+                {
+                    var elemSize = (TypeRegistry.Lookup(varNode.Type)?.BitWidth ?? 64) / 8;
+                    func.LocalLayouts[varNode.Name] = new IrLocalLayout
+                    {
+                        ElementCount = varNode.ElementCount,
+                        ElementSizeBytes = elemSize
+                    };
+                }
             }
         }
 
@@ -428,6 +444,7 @@ public sealed class AstToIrLowering
             IdentifierNode ident when _activeConstTable.TryGetValue(ident.Name, out var constVal)
                 => new IrValue { Name = $"imm:{constVal}" },
             IdentifierNode ident => GetOrCreateValue(ident.Name),
+            DotAccessNode dot => ResolveDotAccess(dot),
             AddressOfNode addr => new IrValue { Name = $"addr:{addr.VariableName}" },
             AddressOfStringNode addrStr => new IrValue { Name = AddressRefEncoding.EncodeString(addrStr.Value) },
             MemoryRefNode mem => new IrValue
@@ -439,11 +456,50 @@ public sealed class AstToIrLowering
         };
     }
 
+    private IrValue ResolveDotAccess(DotAccessNode dot)
+    {
+        if (_recordLocals.TryGetValue(dot.BaseName, out var record)
+            && record.TryGetField(dot.MemberName, out var field))
+        {
+            return new IrValue
+            {
+                Name = FieldAccessEncoding.Encode(dot.BaseName, field.Offset, field.Type.BitWidth)
+            };
+        }
+
+        var qualified = EnumTypeRegistry.QualifiedName(dot.BaseName, dot.MemberName);
+        if (_activeConstTable.TryGetValue(qualified, out var enumVal))
+            return new IrValue { Name = $"imm:{enumVal}" };
+
+        return new IrValue { Name = "imm:0" };
+    }
+
     private string EncodeArrayIndex(ArrayIndexNode arr)
     {
-        if (arr.Index is IdentifierNode id && _activeConstTable.TryGetValue(id.Name, out var value))
-            return ArrayIndexEncoding.Encode(arr.ArrayName, new IntegerLiteralNode(value));
+        if (TryResolveConstIndex(arr.Index, out var constIndex))
+            return ArrayIndexEncoding.Encode(arr.ArrayName, new IntegerLiteralNode(constIndex));
         return ArrayIndexEncoding.Encode(arr.ArrayName, arr.Index);
+    }
+
+    private bool TryResolveConstIndex(AstNode index, out long value)
+    {
+        value = 0;
+        if (index is IntegerLiteralNode lit)
+        {
+            value = lit.Value;
+            return true;
+        }
+
+        if (index is IdentifierNode id && _activeConstTable.TryGetValue(id.Name, out value))
+            return true;
+
+        if (index is DotAccessNode dot)
+        {
+            var qualified = EnumTypeRegistry.QualifiedName(dot.BaseName, dot.MemberName);
+            return _activeConstTable.TryGetValue(qualified, out value);
+        }
+
+        return false;
     }
 
     private readonly Dictionary<string, IrValue> _values = new(StringComparer.OrdinalIgnoreCase);

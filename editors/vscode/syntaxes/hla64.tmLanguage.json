@@ -35,13 +35,13 @@
     "keywords": {
       "patterns": [{
         "name": "keyword.control.hla64",
-        "match": "\\b(program|begin|end|procedure|call|export|var|const|endconst|if|else|endif|while|endwhile|do|then|returns)\\b"
+        "match": "\\b(program|begin|end|procedure|call|export|var|const|endconst|enum|endenum|record|endrecord|if|else|endif|while|endwhile|do|then|returns)\\b"
       }, {
         "name": "keyword.operator.assignment.hla64",
         "match": ":="
       }, {
         "name": "keyword.other.hla64",
-        "match": "\\b(mov|add|sub|imul|xor|and|or|cmp|lea|push|pop|inc|dec|neg|not|shl|shr|sar|jmp|call|ret|syscall|nop|hlt|stdout|stderr|stdin|nl)\\b"
+        "match": "\\b(mov|add|sub|imul|xor|and|or|cmp|lea|push|pop|inc|dec|neg|not|shl|shr|sar|jmp|call|ret|syscall|nop|hlt|stdout|stderr|stdin|nl|sizeof|offsetof)\\b"
       }]
     },
     "types": {

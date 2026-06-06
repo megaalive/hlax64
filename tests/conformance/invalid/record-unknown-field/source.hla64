@@ -1,0 +1,11 @@
+program p;
+record PatientHeader
+    version: uint16;
+endrecord;
+procedure P; @returns("rax");
+var header: PatientHeader;
+begin P;
+    mov(1, header.nope);
+end P;
+begin p;
+end p;

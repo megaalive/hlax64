@@ -1,0 +1,20 @@
+program PatientHeaderDemo;
+
+record PatientHeader
+    version: uint16;
+    flags: uint16;
+    length: uint32;
+    timestamp: uint64;
+endrecord;
+
+procedure BuildHeader; @returns("rax");
+var header: PatientHeader;
+begin BuildHeader;
+    mov(1, header.version);
+    mov(0, header.flags);
+    mov(256, header.length);
+    mov(0, header.timestamp);
+end BuildHeader;
+
+begin PatientHeaderDemo;
+end PatientHeaderDemo;

@@ -28,15 +28,29 @@ public sealed class Parser
             includes.Add(ParseInclude());
         }
 
-        // Optional program-level constants and procedures before begin (any order)
+        // Optional program-level declarations before begin (any order)
         var constants = new List<AstNode>();
+        var enums = new List<AstNode>();
+        var records = new List<AstNode>();
         var procedures = new List<AstNode>();
-        while (Peek().Type is TokenType.Const or TokenType.Procedure or TokenType.Export)
+        while (Peek().Type is TokenType.Const or TokenType.Enum or TokenType.Record
+            or TokenType.Procedure or TokenType.Export)
         {
-            if (Peek().Type == TokenType.Const)
-                constants.Add(ParseConstBlock());
-            else
-                procedures.Add(ParseProcedure());
+            switch (Peek().Type)
+            {
+                case TokenType.Const:
+                    constants.Add(ParseConstBlock());
+                    break;
+                case TokenType.Enum:
+                    enums.Add(ParseEnumBlock());
+                    break;
+                case TokenType.Record:
+                    records.Add(ParseRecordBlock());
+                    break;
+                default:
+                    procedures.Add(ParseProcedure());
+                    break;
+            }
         }
 
         // begin name;
@@ -61,7 +75,7 @@ public sealed class Parser
         allStatements.AddRange(procedures);
         allStatements.AddRange(statements);
 
-        return new ProgramNode(programName, includes, constants, allStatements);
+        return new ProgramNode(programName, includes, constants, enums, records, allStatements);
     }
 
     private List<AstNode> ParseStatementsUntilEnd()
@@ -270,6 +284,48 @@ public sealed class Parser
         return WithLocation(new ConstBlockNode(declarations), open);
     }
 
+    private EnumBlockNode ParseEnumBlock()
+    {
+        var open = Expect(TokenType.Enum);
+        var nameToken = Expect(TokenType.Identifier);
+        Expect(TokenType.Colon);
+        var backingToken = Expect(TokenType.Identifier);
+        var members = new List<EnumMemberNode>();
+
+        while (Peek().Type == TokenType.Identifier)
+        {
+            var memberToken = Expect(TokenType.Identifier);
+            Expect(TokenType.ColonAssign);
+            var value = ParseConstExpression();
+            Expect(TokenType.Semicolon);
+            members.Add(WithLocation(new EnumMemberNode(memberToken.Value, value), memberToken));
+        }
+
+        Expect(TokenType.Endenum);
+        Expect(TokenType.Semicolon);
+        return WithLocation(new EnumBlockNode(nameToken.Value, backingToken.Value, members), open);
+    }
+
+    private RecordBlockNode ParseRecordBlock()
+    {
+        var open = Expect(TokenType.Record);
+        var nameToken = Expect(TokenType.Identifier);
+        var fields = new List<RecordFieldNode>();
+
+        while (Peek().Type == TokenType.Identifier)
+        {
+            var fieldToken = Expect(TokenType.Identifier);
+            Expect(TokenType.Colon);
+            var typeToken = Expect(TokenType.Identifier);
+            Expect(TokenType.Semicolon);
+            fields.Add(WithLocation(new RecordFieldNode(fieldToken.Value, typeToken.Value), fieldToken));
+        }
+
+        Expect(TokenType.Endrecord);
+        Expect(TokenType.Semicolon);
+        return WithLocation(new RecordBlockNode(nameToken.Value, fields), open);
+    }
+
     private AstNode ParseConstExpression()
     {
         return ParseBitwiseOr();
@@ -380,12 +436,44 @@ public sealed class Parser
 
         if (token.Type == TokenType.Identifier)
         {
-            Advance();
-            return new IdentifierNode(token.Value);
+            return ParseConstIdentifierOrBuiltin(token);
         }
 
         throw new ParseException(
             $"Expected integer literal, constant name, or '(' in compile-time expression but got '{token.Type}' ('{token.Value}') at line {token.Line}, column {token.Column}");
+    }
+
+    private AstNode ParseConstIdentifierOrBuiltin(Token token)
+    {
+        var name = Advance().Value;
+        if (string.Equals(name, "sizeof", StringComparison.OrdinalIgnoreCase)
+            && Peek().Type == TokenType.LeftParen)
+        {
+            Advance();
+            var typeName = Expect(TokenType.Identifier).Value;
+            Expect(TokenType.RightParen);
+            return WithLocation(new SizeofNode(typeName), token);
+        }
+
+        if (string.Equals(name, "offsetof", StringComparison.OrdinalIgnoreCase)
+            && Peek().Type == TokenType.LeftParen)
+        {
+            Advance();
+            var typeName = Expect(TokenType.Identifier).Value;
+            Expect(TokenType.Comma);
+            var fieldName = Expect(TokenType.Identifier).Value;
+            Expect(TokenType.RightParen);
+            return WithLocation(new OffsetofNode(typeName, fieldName), token);
+        }
+
+        if (Peek().Type == TokenType.Dot)
+        {
+            Advance();
+            var memberToken = Expect(TokenType.Identifier);
+            return WithLocation(new DotAccessNode(name, memberToken.Value), token);
+        }
+
+        return new IdentifierNode(name);
     }
 
     private bool TryParseAssignTarget(out AstNode target)
@@ -777,8 +865,15 @@ public sealed class Parser
                 {
                     Advance();
                     var index = ParseOperand();
-                    var close = Expect(TokenType.RightBracket);
+                    Expect(TokenType.RightBracket);
                     return WithLocation(new ArrayIndexNode(name, index), token);
+                }
+
+                if (Peek().Type == TokenType.Dot)
+                {
+                    Advance();
+                    var memberToken = Expect(TokenType.Identifier);
+                    return WithLocation(new DotAccessNode(name, memberToken.Value), token);
                 }
 
                 return new IdentifierNode(name);

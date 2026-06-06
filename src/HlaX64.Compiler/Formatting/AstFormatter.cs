@@ -40,6 +40,20 @@ public static class AstFormatter
                 EmitConstBlock(sb, block, 0);
         }
 
+        if (program.Enums.Count > 0)
+        {
+            sb.AppendLine();
+            foreach (EnumBlockNode block in program.Enums)
+                EmitEnumBlock(sb, block, 0);
+        }
+
+        if (program.Records.Count > 0)
+        {
+            sb.AppendLine();
+            foreach (RecordBlockNode block in program.Records)
+                EmitRecordBlock(sb, block, 0);
+        }
+
         if (procedures.Count > 0)
         {
             sb.AppendLine();
@@ -159,6 +173,7 @@ public static class AstFormatter
         IntegerLiteralNode i => i.Value.ToString(),
         StringLiteralNode s => EscapeString(s.Value),
         IdentifierNode id => id.Name,
+        DotAccessNode d => $"{d.BaseName}.{d.MemberName}",
         _ => "?"
     };
 
@@ -178,10 +193,31 @@ public static class AstFormatter
     {
         IntegerLiteralNode i => i.Value.ToString(),
         IdentifierNode id => id.Name,
+        DotAccessNode d => $"{d.BaseName}.{d.MemberName}",
+        SizeofNode s => $"sizeof({s.TypeName})",
+        OffsetofNode o => $"offsetof({o.TypeName}, {o.FieldName})",
         UnaryExprNode u => $"{u.Operator}{EmitConstExpr(u.Operand)}",
         BinaryExprNode b => $"({EmitConstExpr(b.Left)} {b.Operator} {EmitConstExpr(b.Right)})",
         _ => "?"
     };
+
+    private static void EmitEnumBlock(StringBuilder sb, EnumBlockNode block, int indent)
+    {
+        var pad = Indent(indent);
+        sb.AppendLine($"{pad}enum {block.Name}: {block.BackingType}");
+        foreach (var member in block.Members)
+            sb.AppendLine($"{pad}    {member.Name} := {EmitConstExpr(member.Value)};");
+        sb.AppendLine($"{pad}endenum;");
+    }
+
+    private static void EmitRecordBlock(StringBuilder sb, RecordBlockNode block, int indent)
+    {
+        var pad = Indent(indent);
+        sb.AppendLine($"{pad}record {block.Name}");
+        foreach (var field in block.Fields)
+            sb.AppendLine($"{pad}    {field.Name}: {field.Type};");
+        sb.AppendLine($"{pad}endrecord;");
+    }
 
     private static string Indent(int level) => new(' ', level * 4);
 }

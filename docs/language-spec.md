@@ -233,6 +233,49 @@ mask := value & $FF;
 
 See [RFC 0004](../rfcs/0004-expressions-and-constants.md).
 
+## Enumerations (Implemented — RFC 0005)
+
+Program-scoped typed enums with compile-time member values:
+
+```hla
+enum Color: uint32
+    Red   := 1;
+    Green := 2;
+    Blue  := 3;
+endenum;
+
+mov(Color.Red, rax);
+```
+
+- Backing types: `uint32`, `int32`, `uint64`, `int64`.
+- Members use the same compile-time expression evaluator as `const`.
+- Qualified access `EnumName.Member` resolves as an immediate.
+- Errors: duplicate type/member (`HLAX0039`), invalid backing type (`HLAX0040`), undefined member (`HLAX0041`).
+
+See [RFC 0005](../rfcs/0005-enum-model.md).
+
+## Records (Implemented — RFC 0006)
+
+Program-scoped record types with natural alignment and dot field access:
+
+```hla
+record PatientHeader
+    version: uint16;
+    length: uint32;
+endrecord;
+
+var header: PatientHeader;
+mov(42, header.length);
+```
+
+- Layout: fields in order, align each field to its size, pad, round total size to max alignment.
+- Compile-time builtins: `sizeof(RecordName)`, `offsetof(RecordName, field)`.
+- Stack allocation: one blob per `var` (sized via `IrLocalLayout`).
+- Errors: unknown record (`HLAX0042`), unknown field (`HLAX0043`), invalid `offsetof` (`HLAX0044`).
+- `packed` records deferred to a future sprint.
+
+See [RFC 0006](../rfcs/0006-struct-layout.md).
+
 ## Memory & pointers (Implemented — Level 3 baseline)
 
 See [tutorials/05-memory.md](tutorials/05-memory.md) and [memory-and-bounds.md](memory-and-bounds.md).

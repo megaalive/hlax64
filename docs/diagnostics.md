@@ -258,6 +258,66 @@ Stable diagnostic codes help agents, IDE tooling, and contributors reference err
 | **Cause** | `/` or `%` with a literal or const-folded zero divisor in a runtime expression |
 | **Fix** | Use a non-zero divisor |
 
+### HLAX0039 — Duplicate enum member or type
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | Enum type or member name declared twice |
+| **Fix** | Remove or rename the duplicate |
+
+### HLAX0040 — Invalid enum backing type
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | Enum backing type is not `uint32`, `int32`, `uint64`, or `int64` |
+| **Fix** | Use a supported integer backing type |
+
+### HLAX0041 — Undefined enum member
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | `EnumName.Member` does not exist |
+| **Fix** | Declare the member or fix spelling |
+
+### HLAX0042 — Unknown record type
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | `sizeof`, variable type, or layout references an undefined record |
+| **Fix** | Declare the record at program scope |
+
+### HLAX0043 — Unknown record field
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | Field access or `offsetof` names a field not in the record |
+| **Fix** | Fix the field name or add the field to the record |
+
+### HLAX0044 — Invalid offsetof
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.0-alpha |
+| **Cause** | `offsetof` references an unknown record type |
+| **Fix** | Use a declared record name |
+
 ## Toolchain messages (no code yet)
 
 CLI and linker errors currently use plain text (e.g. `Error: NASM not found`). Future releases will assign `HLAX4xxx` codes.

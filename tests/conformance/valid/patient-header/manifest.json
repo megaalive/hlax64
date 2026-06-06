@@ -1,0 +1,7 @@
+{
+  "source": "source.hla64",
+  "expectNasmContains": [
+    "mov dword",
+    "+4]"
+  ]
+}

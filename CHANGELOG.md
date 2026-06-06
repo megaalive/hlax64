@@ -8,6 +8,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ### Added
 
+- **Phase 16 Sprint 3:** program-level `enum`/`endenum` with typed backing (`uint32`/`int32`/`uint64`/`int64`); qualified `Enum.Member` immediates; HLAX0039–41; RFC 0005; example `examples/02-types/color-enum.hla64`; conformance `color-enum`, `enum-duplicate-member`, `enum-undefined-member`
+- **Phase 16 Sprint 4:** program-level `record`/`endrecord` with natural alignment; `var header: RecordType` stack blobs; dot field access; compile-time `sizeof`/`offsetof`; HLAX0042–44; RFC 0006; example `examples/02-types/patient-header.hla64`; conformance `patient-header`, `record-unknown-field`
+- LSP grammar: `enum`, `endenum`, `record`, `endrecord`, `sizeof`, `offsetof`; `AstFormatter` support for enums and records
 - **Phase 16 Sprint 2:** runtime `:=` assignment for int64 scalar locals and 64-bit registers; operators `+ - * / % & | ^ ~ << >>` and comparisons `== != < <= > >=`; IR + SysV/Win64 NASM lowering; HLAX0035–HLAX0038; example `examples/01-arithmetic/expr-assign.hla64`; conformance `expr-assign`, `expr-invalid-target`, `expr-divide-by-zero`
 - Expression evaluation uses **`rax`/`rbx` as scratch** (documented in RFC 0004 and language spec)
 - LSP grammar: `const`, `endconst`, `:=`, hex `$..`; formatter support for `:=` statements

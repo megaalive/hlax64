@@ -1,0 +1,12 @@
+program p;
+record PatientHeader
+    version: uint16;
+    length: uint32;
+endrecord;
+procedure P; @returns("rax");
+var header: PatientHeader;
+begin P;
+    mov(42, header.length);
+end P;
+begin p;
+end p;
