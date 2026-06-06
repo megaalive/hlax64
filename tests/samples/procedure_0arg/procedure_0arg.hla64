@@ -1,0 +1,13 @@
+program proc0arg;
+
+#include("stdlib64.hhf")
+
+procedure GetAnswer; @returns("rax");
+begin GetAnswer;
+    mov(42, rax);
+end GetAnswer;
+
+begin proc0arg;
+    call GetAnswer();
+    stdout.put("Answer is ", rax, nl);
+end proc0arg;

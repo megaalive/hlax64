@@ -1,0 +1,7 @@
+{
+  "name": "stack_alignment",
+  "source": "stack_alignment.hla64",
+  "expectedStdout": "10 + 5 = 15\n",
+  "expectedExitCode": 0,
+  "description": "Verifies stack alignment with local variables and procedure calls"
+}

@@ -1,0 +1,7 @@
+{
+  "name": "callee_saved",
+  "source": "callee_saved.hla64",
+  "expectedStdout": "7 doubled = 14, original was 7\n",
+  "expectedExitCode": 0,
+  "description": "Verifies rbp preservation across procedure calls"
+}

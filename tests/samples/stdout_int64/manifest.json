@@ -1,0 +1,7 @@
+{
+  "name": "stdout_int64",
+  "source": "stdout_int64.hla64",
+  "expectedStdout": "The answer is 42\n",
+  "expectedExitCode": 0,
+  "description": "Print a string followed by an integer register"
+}

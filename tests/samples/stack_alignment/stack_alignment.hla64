@@ -1,0 +1,19 @@
+// stack_alignment.hla64
+// Verify stack alignment with procedure calls.
+
+program stack_alignment;
+
+#include("stdlib64.hhf")
+
+procedure AddFive(x:int64); @returns("rax");
+begin AddFive;
+    mov(x, rax);
+    add(5, rax);
+end AddFive;
+
+begin stack_alignment;
+    mov(10, rax);
+
+    call AddFive(rax);
+    stdout.put("10 + 5 = ", rax, nl);
+end stack_alignment;

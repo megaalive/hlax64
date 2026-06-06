@@ -1,0 +1,7 @@
+{
+  "name": "procedure_0arg",
+  "source": "procedure_0arg.hla64",
+  "expectedStdout": "Answer is 42\n",
+  "expectedExitCode": 0,
+  "description": "Procedure with no arguments"
+}

@@ -1,0 +1,7 @@
+{
+  "name": "comparison_unsigned",
+  "source": "comparison_unsigned.hla64",
+  "expectedStdout": "unsigned: greater\nsigned: not greater\n",
+  "expectedExitCode": 0,
+  "description": "Verifies unsigned vs signed comparison with high-bit values"
+}

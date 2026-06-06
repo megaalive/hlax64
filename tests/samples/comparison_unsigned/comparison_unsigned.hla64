@@ -1,0 +1,24 @@
+// comparison_unsigned.hla64
+// Verify unsigned comparison (<?, >?) correctly handles high-bit values.
+// rax = -1 (0xFFFFFFFFFFFFFFFF), rcx = 1
+// Unsigned: 0xFFFFFFFFFFFFFFFF > 1 = true  => "unsigned: greater"
+// Signed:   -1 > 1 = false                  => "signed: not greater"
+
+program comparison_unsigned;
+
+#include("stdlib64.hhf")
+
+begin comparison_unsigned;
+    mov(-1, rax);
+    mov(1, rcx);
+
+    if(rax >? rcx) then
+        stdout.put("unsigned: greater", nl);
+    endif;
+
+    if(rax > rcx) then
+        stdout.put("signed: greater", nl);
+    else
+        stdout.put("signed: not greater", nl);
+    endif;
+end comparison_unsigned;

@@ -1,0 +1,8 @@
+program stdoutInt64;
+
+#include("stdlib64.hhf")
+
+begin stdoutInt64;
+    mov(42, rax);
+    stdout.put("The answer is ", rax, nl);
+end stdoutInt64;

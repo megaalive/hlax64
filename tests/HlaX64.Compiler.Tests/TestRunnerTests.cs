@@ -1,6 +1,5 @@
 using HlaX64.Backend.Nasm.Emitters;
-using HlaX64.Compiler.Lexing;
-using HlaX64.Compiler.Parsing;
+using HlaX64.Compiler;
 using System.Text.Json;
 
 namespace HlaX64.Compiler.Tests;
@@ -9,12 +8,12 @@ public class TestRunnerTests
 {
     private static string CompileToNasm(string source)
     {
-        var lexer = new Lexer(source);
-        var tokens = lexer.Tokenize();
-        var parser = new Parser(tokens);
-        var program = parser.Parse();
+        var compilation = new Compiler.Compilation("(test)", source);
+        var result = compilation.Process();
+        if (!result.Success)
+            throw new InvalidOperationException(string.Join("; ", result.Diagnostics));
         var emitter = new NasmEmitter();
-        return emitter.Emit(program);
+        return emitter.Emit(result.LoweredFunctions, result.StringLiterals);
     }
 
     [Fact]
