@@ -15,6 +15,8 @@ $ErrorActionPreference = "Stop"
 $candidates = @(
     "$env:LOCALAPPDATA\bin\NASM"
     "C:\Program Files\NASM"
+    "C:\Program Files\LLVM\bin"
+    "C:\Program Files (x86)\LLVM\bin"
     "C:\ProgramData\mingw64\mingw64\bin"
 )
 

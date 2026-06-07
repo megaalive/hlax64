@@ -51,7 +51,7 @@ Avalonia desktop app `HlaX64.AssemblyLab` — visual pipeline shell (source, IR/
 - **Sprint 15.4 (done):** Debug button + DAP output panel (MVP; Linux gdb via CLI follow-up)
 - **Sprint 15.5 (done):** Proof bundle export + capabilities panel
 - **Sprint 15.6 (done):** RFC 0024, tutorial, docs
-- **Deferred:** AvaloniaEdit + gutter breakpoints, Windows lldb DAP, embedded MCP explain client, disasm pane, release RID packaging
+- **Deferred:** Windows lldb DAP, embedded MCP explain client, semantic diff / plan approval gate, full gdb breakpoint session
 
 ---
 

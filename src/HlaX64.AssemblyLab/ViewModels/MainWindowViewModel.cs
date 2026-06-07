@@ -17,23 +17,27 @@ public partial class MainWindowViewModel : ViewModelBase
     private CancellationTokenSource? _debounceCts;
     private SourceMapDocument? _sourceMap;
     private string _rawNasmText = "";
+    private string? _lastBuiltOutputFile;
     private string _repoRoot = FindRepoRoot();
 
     [ObservableProperty] private string _sourceText = "// Open a .hla64 file or folder with hla64.toml\n";
     [ObservableProperty] private string _sourcePath = "(unsaved)";
     [ObservableProperty] private string _projectFolder = "";
-    [ObservableProperty] private string _selectedTarget = "linux-x64-sysv";
+    [ObservableProperty] private string _selectedTarget = AssemblyLabBackend.ResolveDefaultTarget();
     [ObservableProperty] private string _irText = "";
     [ObservableProperty] private string _nasmText = "";
     [ObservableProperty] private string _abiText = "";
     [ObservableProperty] private string _outputText = "";
     [ObservableProperty] private string _dapText = "";
     [ObservableProperty] private string _capabilitiesText = "";
+    [ObservableProperty] private string _disasmText = "";
+    [ObservableProperty] private string _toolchainText = "";
     [ObservableProperty] private string _statusText = "Ready";
     [ObservableProperty] private int _selectedTabIndex;
     [ObservableProperty] private int _highlightedNasmLine;
 
     public ObservableCollection<LabDiagnosticItem> Diagnostics { get; } = [];
+    public ObservableCollection<int> BreakpointLines { get; } = [];
     public IReadOnlyList<string> TargetChoices => AssemblyLabBackend.TargetChoices;
 
     public IStorageProvider? StorageProvider { get; set; }
@@ -42,6 +46,32 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _debugHost.MessageReceived += msg =>
             Dispatcher.UIThread.Post(() => DapText += msg + Environment.NewLine);
+        RefreshToolchainInfo();
+        RefreshDisasmText();
+    }
+
+    private void RefreshToolchainInfo()
+    {
+        var info = LabToolchainService.Detect();
+        ToolchainText = LabToolchainService.Summarize(info);
+    }
+
+    private void RefreshDisasmText()
+    {
+        DisasmText = _backend.GetDisasmText(_rawNasmText, _sourceMap, _lastBuiltOutputFile);
+    }
+
+    public void ToggleBreakpoint(int line)
+    {
+        if (line <= 0)
+            return;
+
+        if (!BreakpointLines.Remove(line))
+            BreakpointLines.Add(line);
+
+        StatusText = BreakpointLines.Contains(line)
+            ? $"Breakpoint set at line {line}"
+            : $"Breakpoint cleared at line {line}";
     }
 
     partial void OnSourceTextChanged(string value)
@@ -116,6 +146,8 @@ public partial class MainWindowViewModel : ViewModelBase
             _sourceMap = result.SourceMap;
         else if (result.SourceMapFile != null)
             _sourceMap = _backend.LoadSourceMap(result.SourceMapFile);
+        _lastBuiltOutputFile = result.OutputFile;
+        RefreshDisasmText();
 
         AppendOutput(result.Success ? result.Message : $"Build failed: {result.Message}");
         StatusText = result.Success ? "Build OK" : "Build failed";
@@ -150,18 +182,35 @@ public partial class MainWindowViewModel : ViewModelBase
     [RelayCommand]
     private async Task ExportProofBundle()
     {
-        try
+        StatusText = "Exporting proof bundle…";
+        var result = await Task.Run(() => _backend.ExportProofBundle(SourcePath, SourceText, SelectedTarget));
+        if (result.NasmText != null)
         {
-            var dir = await Task.Run(() => _backend.ExportProofBundle(SourcePath, SourceText, SelectedTarget));
-            AppendOutput($"Proof bundle exported: {dir}");
-            var capPath = Path.Combine(dir, "capabilities.json");
+            _rawNasmText = result.NasmText;
+            NasmText = _rawNasmText;
+        }
+        if (result.SourceMap != null)
+            _sourceMap = result.SourceMap;
+        else if (result.SourceMapFile != null)
+            _sourceMap = _backend.LoadSourceMap(result.SourceMapFile);
+        _lastBuiltOutputFile = result.OutputFile;
+        RefreshDisasmText();
+
+        if (result.Success && result.ProofBundleDir != null)
+        {
+            AppendOutput(result.Message.Contains("compile-only", StringComparison.OrdinalIgnoreCase)
+                ? result.Message
+                : $"Proof bundle exported: {result.ProofBundleDir}");
+            var capPath = Path.Combine(result.ProofBundleDir, "capabilities.json");
             if (File.Exists(capPath))
                 CapabilitiesText = await File.ReadAllTextAsync(capPath);
-            StatusText = "Proof bundle exported";
+            StatusText = result.Message.Contains("compile-only", StringComparison.OrdinalIgnoreCase)
+                ? "Proof bundle (compile-only)"
+                : "Proof bundle exported";
         }
-        catch (Exception ex)
+        else
         {
-            AppendOutput($"Proof bundle failed: {ex.Message}");
+            AppendOutput($"Proof bundle failed: {result.Message}");
             StatusText = "Proof export failed";
         }
     }
@@ -220,6 +269,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 }
                 AbiText = result.AbiText ?? "";
                 _sourceMap = result.SourceMap;
+                RefreshDisasmText();
                 StatusText = result.Success
                     ? $"Compile OK · {Diagnostics.Count} diagnostic(s)"
                     : $"Compile failed · {Diagnostics.Count} diagnostic(s)";

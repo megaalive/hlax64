@@ -25,7 +25,7 @@ On Windows, ensure NASM is on PATH (`scripts/setup-toolchain-path.ps1`).
 
 ### 2. Live diagnostics
 
-Edit source in the **Source** tab. After a short debounce, diagnostics appear in the left panel with line numbers and HLAX codes.
+Edit source in the **Source** tab (AvaloniaEdit with HlaX64 syntax highlighting and line numbers). Click the left gutter to toggle breakpoints (stored in the session; DAP wiring is follow-up). After a short debounce, diagnostics appear in the left panel with line numbers and HLAX codes.
 
 ### 3. Pipeline tabs
 
@@ -33,6 +33,7 @@ Edit source in the **Source** tab. After a short debounce, diagnostics appear in
 |-----|-------|
 | **IR** | Lowered intermediate representation |
 | **NASM** | Emitted assembly (matches `hla64 explain` / `emit-nasm`) |
+| **Disasm** | NASM listing with source-map columns; objdump when a binary exists |
 | **ABI** | Lowered functions, stack frames, verification hints |
 
 Select **Target**: `linux-x64-sysv` (default) or `windows-x64-msabi`.
@@ -56,7 +57,15 @@ Try `examples/06-abi/stack-args-sysv.hla64` after building with source map enabl
 
 **Proof Bundle** exports `proof-bundle/` under the build directory with `capabilities.json`, `ir.json`, `abi.json`, NASM, and binary — same as `hla64 build --proof-bundle`.
 
-The **Capabilities** tab shows a summary (`filesystemAccess`, syscalls, externs).
+The **Capabilities** tab shows a summary (`filesystemAccess`, syscalls, externs). **Toolchain** shows auto-detected WSL/linker status.
+
+## Release build (optional)
+
+```powershell
+.\scripts\publish-assembly-lab.ps1 -Rids win-x64,linux-x64
+```
+
+GitHub tag releases also attach `assembly-lab-win-x64.zip` and `assembly-lab-linux-x64.tar.gz`.
 
 ## CLI equivalents
 
