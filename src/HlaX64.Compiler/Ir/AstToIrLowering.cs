@@ -1,5 +1,6 @@
 using HlaX64.Compiler.Abi;
 using HlaX64.Compiler.Ast;
+using HlaX64.Compiler.Builtins;
 using HlaX64.Compiler.Semantic;
 using HlaX64.Compiler.Types;
 
@@ -284,7 +285,8 @@ public sealed class AstToIrLowering
             var opcode = mnemonic switch
             {
                 "mov" => IrOpcode.Move,
-                "movsd" or "movss" or "movd" or "movq" or "addsd" or "subsd" or "ucomisd" => IrOpcode.Move,
+                "movsd" or "movss" or "movd" or "movq" or "addsd" or "subsd" or "ucomisd"
+                    or "vaddpd" or "vmovapd" or "vxorpd" => IrOpcode.Move,
                 "add" => IrOpcode.Add,
                 "sub" => IrOpcode.Subtract,
                 "imul" => IrOpcode.Multiply,
@@ -302,6 +304,7 @@ public sealed class AstToIrLowering
             else
             {
                 object? imm = mnemonic is "movsd" or "movss" or "movd" or "movq" or "addsd" or "subsd" or "ucomisd"
+                    or "vaddpd" or "vmovapd" or "vxorpd"
                     ? mnemonic
                     : null;
                 block.Add(WithSource(new IrInstruction(opcode, dst, new List<IrValue> { src }, immediate: imm), instr));
@@ -343,6 +346,21 @@ public sealed class AstToIrLowering
             foreach (var arg in call.Arguments)
                 allArgs.Add(ResolveOperand(arg));
             block.Add(new IrInstruction(IrOpcode.Call, operands: allArgs, immediate: "stdout.put"));
+            return;
+        }
+
+        if (BuiltinNames.IsBuiltin(call.Name))
+        {
+            var builtinArgs = new List<IrValue>();
+            foreach (var arg in call.Arguments)
+            {
+                if (arg is IdentifierNode id &&
+                    BuiltinNames.AtomicOrderings.Contains(id.Name))
+                    builtinArgs.Add(new IrValue { Name = $"order:{id.Name.ToLowerInvariant()}" });
+                else
+                    builtinArgs.Add(ResolveOperand(arg));
+            }
+            block.Add(new IrInstruction(IrOpcode.Call, operands: builtinArgs, immediate: call.Name));
             return;
         }
 

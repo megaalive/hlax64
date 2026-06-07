@@ -11,7 +11,13 @@ public sealed class ExamplesCompileTests
     public void Example_EmitsNasmWithoutErrors(string path)
     {
         var source = File.ReadAllText(path);
-        var result = new Compilation(path, source).Process();
+        var options = Path.GetFileName(path).Contains("avx2", StringComparison.OrdinalIgnoreCase)
+            ? HlaX64.Compiler.Options.CompilationOptions.Default with
+            {
+                CpuFeatures = HlaX64.Compiler.Cpu.CpuFeatureSet.Parse("baseline-x64", ["+avx2"])
+            }
+            : null;
+        var result = new Compilation(path, source, options).Process();
         Assert.True(result.Success, $"{path}: {string.Join("; ", result.Diagnostics)}");
         Assert.NotEmpty(result.LoweredFunctions);
     }

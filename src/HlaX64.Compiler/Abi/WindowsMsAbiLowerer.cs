@@ -1,6 +1,7 @@
 using HlaX64.Compiler.Ir;
 using HlaX64.Compiler.Options;
 using HlaX64.Compiler.Types;
+using HlaX64.Compiler.Builtins;
 
 namespace HlaX64.Compiler.Abi;
 
@@ -218,6 +219,9 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
             sseMnemonic is "movsd" or "movss" or "movd" or "movq" or "addsd" or "subsd" or "ucomisd")
             return new LoweredInstruction($"    {sseMnemonic} {dst}, {src}");
 
+        if (inst.Immediate is string avxMnemonic && BuiltinLoweringHelper.IsAvx2Mnemonic(avxMnemonic))
+            return new LoweredInstruction(BuiltinLoweringHelper.FormatAvx2Instruction(avxMnemonic, dst, src));
+
         if (IsMemRef(srcVal))
         {
             var mem = MemoryRefEncoding.Parse(srcVal!);
@@ -417,6 +421,13 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
         if (inst.Immediate is string name && name == "stdout.put")
             return LowerStdoutPut(inst);
 
+        if (inst.Immediate is string builtin && BuiltinNames.IsBuiltin(builtin))
+        {
+            if (BuiltinLoweringHelper.TryLowerCall(builtin, inst, ResolveOperand, out var asm))
+                return new LoweredInstruction(asm);
+            return new LoweredInstruction($"    ; (unlowered builtin) {builtin}");
+        }
+
         var sb = new System.Text.StringBuilder();
         AbiCallLoweringHelper.AppendWindowsCall(sb, inst, _currentFunction!, ResolveOperand,
             _externRegistry, _procedureTypes, _recordTypes, _externs);
@@ -521,7 +532,10 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
 
     private static bool IsRegisterName(string name)
     {
-        return name.ToLowerInvariant() switch
+        var lower = name.ToLowerInvariant();
+        if (lower.StartsWith("xmm") || lower.StartsWith("ymm"))
+            return true;
+        return lower switch
         {
             "rax" or "rbx" or "rcx" or "rdx" or "rsi" or "rdi" or
             "rbp" or "rsp" or "r8" or "r9" or "r10" or "r11" or

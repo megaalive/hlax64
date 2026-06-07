@@ -1,0 +1,8 @@
+// AVX2 inline asm + simd.* intrinsics (requires --features +avx2)
+program avx2_intrinsic;
+
+begin avx2_intrinsic;
+    vxorpd(ymm0, ymm0);
+    vaddpd(ymm0, ymm1);
+    simd.add_f64x4(ymm2, ymm3);
+end avx2_intrinsic;
