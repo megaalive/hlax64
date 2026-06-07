@@ -52,7 +52,7 @@ Avalonia desktop app `HlaX64.AssemblyLab` — visual pipeline shell (source, IR/
 - **Sprint 15.5 (done):** Proof bundle export + capabilities panel
 - **Sprint 15.6 (done):** RFC 0024, tutorial, docs
 - **Batch 3 (done):** lldb/gdb DAP via CLI, ExplainAgentService + Agent tab, plan/diff tabs + approval gate
-- **Deferred:** one-click apply suggested fix, full MI register view, external MCP stdio client in Lab
+- **Batch 4 (done):** one-click Apply Fix (`SuggestFixApplier`), DAP MI stopped/stack/register view (`MiOutputParser`, `DebugEngineSession`), external MCP stdio client in Lab (`McpSessionHost` + MCP tab)
 
 ---
 
@@ -120,7 +120,7 @@ Avalonia desktop app `HlaX64.AssemblyLab` — visual pipeline shell (source, IR/
 - **Sprint 1 (MVP):** `hla64 debug --stdio` DAP + gdb (Linux); RFC 0023 partial
 - **Sprint 2 (MVP):** LSP virtual IR/NASM/stack; VS Code commands
 - **Sprint 3 (MVP):** MCP `explain` structured `suggestedFix`
-- **Deferred:** full MI register/memory view, external MCP stdio client spawn
+- **Deferred:** full MI memory view, MCP tool parity with CLI in Lab UI
 
 ---
 

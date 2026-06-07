@@ -13,6 +13,17 @@ Setup, build, test, and debug HlaX64 locally.
 
 Run `hla64 doctor` (or `dotnet run --project src/HlaX64.Cli -- doctor`) to verify your environment.
 
+## Cursor MCP (project-local only)
+
+MCP servers for this repo are configured in [`.cursor/mcp.json`](../.cursor/mcp.json) — **not** in global Cursor settings.
+
+| Server | Purpose |
+|--------|---------|
+| `codegraph` | CodeGraph Codex — symbol search, impact, build/test diagnostics |
+| `agentmemory` | AgentMemory profile **HlaX64** @ `http://127.0.0.1:5123` |
+
+Prerequisites: AgentMemory API running on port 5123; CodeGraph index at `.codegraph/codegraph.json` (run `scripts/reindex-codegraph.ps1` after code changes, or set `CODEGRAPH_AUTO_INDEX=1` before `dotnet build`).
+
 On Windows, add NASM to PATH after install:
 
 ```powershell
