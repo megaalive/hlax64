@@ -3,7 +3,7 @@
 > **Language version:** 0.1  
 > **Specification status:** Draft  
 > **Compiler compatibility:** HlaX64 0.x  
-> **Last updated:** 2026-06-07  
+> **Last updated:** 2026-06-08  
 > **Targets:** `linux-x64-sysv` (default), `windows-x64-msabi` (via `--target`)
 
 ## Overview
@@ -81,46 +81,50 @@ al bl cl dl
 
 | Instruction | Description          | Status   |
 |-------------|----------------------|----------|
-| `mov`       | Move source to dest  | ✅ MVP   |
-| `add`       | Add source to dest   | ✅ MVP   |
-| `sub`       | Subtract source from dest | ✅ MVP |
-| `imul`      | Signed multiply      | ✅ MVP   |
-| `xor`       | Bitwise XOR          | ✅ MVP   |
-| `and`       | Bitwise AND          | ✅ MVP   |
-| `or`        | Bitwise OR           | ✅ MVP   |
-| `cmp`       | Compare              | ✅ MVP   |
-| `idiv`      | Signed divide        | ✅ MVP (1–2 operands; 2-op sets quotient) |
-| `div`       | Unsigned divide      | ✅ MVP (1–2 operands) |
-| `jmp`       | Unconditional jump   | ✅ MVP (local label) |
-| `je` / `jne`| Jump if equal / not equal | ✅ MVP (via `if`/`while`) |
-| `jg` / `jl` | Jump if greater / less | ✅ MVP (via `if`/`while`) |
-| `call`      | Call procedure       | ✅ MVP (basic) |
-| `ret`       | Return from procedure| ✅ MVP (auto-emitted) |
+| `mov`       | Move source to dest  | ✅ Implemented |
+| `add`       | Add source to dest   | ✅ Implemented |
+| `sub`       | Subtract source from dest | ✅ Implemented |
+| `imul`      | Signed multiply      | ✅ Implemented |
+| `xor`       | Bitwise XOR          | ✅ Implemented |
+| `and`       | Bitwise AND          | ✅ Implemented |
+| `or`        | Bitwise OR           | ✅ Implemented |
+| `cmp`       | Compare              | ✅ Implemented |
+| `idiv`      | Signed divide        | ✅ Implemented (1–2 operands; 2-op sets quotient) |
+| `div`       | Unsigned divide      | ✅ Implemented (1–2 operands) |
+| `jmp`       | Unconditional jump   | ✅ Implemented (local label) |
+| `je` / `jne`| Jump if equal / not equal | ✅ Implemented (via `if`/`while`) |
+| `jg` / `jl` | Jump if greater / less | ✅ Implemented (via `if`/`while`) |
+| `call`      | Call procedure       | ✅ Implemented |
+| `ret`       | Return from procedure| ✅ Implemented (auto-emitted) |
 
 > Operand order follows HLA convention: `mov(source, dest)`. The NASM
 > backend reverses this to NASM's `mov dest, source`.
 
-## Standard Library: `stdout.put`
+## Standard library (runtime)
 
-`stdout.put` is the only standard library call available in MVP. It accepts
-a comma-separated list of arguments and prints each in order.
+The HlaX64 runtime ships with a small stdlib documented in
+[`stdlib64.hhf`](../src/HlaX64.Runtime/include/stdlib64.hhf). Include it for
+constants such as `nl` and for the stable procedure names used when linking
+against `HlaX64.Runtime`.
 
-### Signature
+### Built-in I/O calls
 
-```hla
-stdout.put(arg1, arg2, ...);
-```
+These are recognized by the compiler as special calls (no ordinary `procedure`
+declaration required):
 
-### Supported argument types
+| Call | Purpose |
+|------|---------|
+| `stdout.put(arg1, arg2, …)` | Print arguments in order |
+| `stdout.putu(arg1, arg2, …)` | Same as `stdout.put`, but **registers and integer literals** print as **unsigned** decimal |
+
+Supported argument forms for both calls:
 
 | Argument form         | Behaviour                                   |
 |-----------------------|---------------------------------------------|
 | `"literal"`           | Print the literal string verbatim           |
 | `nl`                  | Print a newline (`0x0A`)                    |
-| `register`            | Print the register as a signed decimal int  |
+| `register`            | Print register as signed (`put`) or unsigned (`putu`) decimal |
 | `integer literal`     | Print the literal as decimal text           |
-
-### Examples
 
 ```hla
 program hello;
@@ -138,8 +142,26 @@ program greet;
 begin greet;
     mov(42, rax);
     stdout.put("answer=", rax, nl);
+    mov($FFFFFFFFFFFFFFFF, rax);
+    stdout.putu("hash=", rax, nl);
 end greet;
 ```
+
+### Linked runtime procedures
+
+When building with the runtime library (default for `hla64 run` / linked
+examples), these procedures are provided per target under
+`src/HlaX64.Runtime/`:
+
+| Procedure | Purpose |
+|-----------|---------|
+| `stdout_put_str`, `stdout_put_nl`, `stdout_put_int`, `stdout_put_uint` | Low-level stdout helpers |
+| `hlax_argv_init`, `hlax_argv_count`, `hlax_argv_get` | Command-line `argc`/`argv` access |
+| `int_to_str`, `uint_to_str` | Integer → decimal C string in a caller buffer |
+
+See [examples/10-real-tools](../examples/10-real-tools/) and
+[examples/12-real-tools-linux](../examples/12-real-tools-linux/) for argv and
+`stdout.putu` usage (e.g. FNV-1a hash output).
 
 ### Escape sequences in string literals
 
@@ -153,12 +175,10 @@ end greet;
 
 ### Implementation notes
 
-- The MVP compiler inlines `sys_write` calls; the stable runtime functions
-  `stdout_put_str`, `stdout_put_nl`, `stdout_put_int`, and `int_to_str`
-  live in `src/HlaX64.Runtime/linux-x64/` and are documented in
-  `src/HlaX64.Runtime/include/stdlib64.hhf`.
-- Generated NASM contains `; RUNTIME: <function-name>` comments at each
-  inlined call site to mark the future integration point.
+- On some paths the compiler **inlines** equivalent syscalls for `stdout.put` /
+  `stdout.putu`; the runtime objects remain the stable link-time API.
+- Generated NASM may contain `; RUNTIME: <function-name>` comments at inlined
+  call sites.
 
 ## Control Flow (Implemented)
 
@@ -358,13 +378,26 @@ mov(10, data[1]);
 32-byte shadow space required; `--target windows-x64-msabi` flag selects
 Windows ABI lowering (NASM `win64` format + `lld-link`/`link.exe`).
 
-## Target Pragma
+## Target selection
+
+**Implemented today:** choose the ABI/backend with the CLI flag:
+
+```bash
+hla64 run --target linux-x64-sysv   program.hla64   # default
+hla64 run --target windows-x64-msabi program.hla64
+```
+
+The Assembly Lab target selector and MCP `target` parameter use the same
+values. See [Calling Convention](#calling-convention) for register differences.
+
+### `#pragma target` — planned (not implemented)
+
+Per-file target pragmas are **reserved but not parsed** in current releases.
+The syntax below is informative only; do not rely on it until marked implemented
+in [roadmap.md](roadmap.md):
 
 ```hla
 #pragma target("linux-x64-sysv")
-```
-
-```hla
 #pragma target("windows-x64-msabi")
 ```
 
@@ -394,7 +427,39 @@ true false null nil nl stdout stderr stdin
 
 ## Undefined behavior
 
-Not fully diagnosed in v0.1: uninitialized reads, stack misalignment before foreign calls, out-of-bounds pointer/index access (see [memory-and-bounds.md](memory-and-bounds.md)).
+Some unsafe patterns remain **undefined behavior (UB)** even when the program
+compiles. See [memory-and-bounds.md](memory-and-bounds.md) for the memory model.
+
+### Static warnings (Phase 18 — compile / LSP)
+
+The compiler can **warn** about common mistakes (enabled in the language server
+by default; CLI: `-Wverify` or individual flags):
+
+| Code | Topic |
+|------|-------|
+| [HLAX0060](diagnostics.md#hlax0060--use-before-definite-assignment) | Read of a local before definite assignment |
+| [HLAX0061](diagnostics.md#hlax0061--unreachable-code) | Unreachable statements |
+| [HLAX0062](diagnostics.md#hlax0062--missing-return-register-assignment) | Procedure declares `@returns` but never assigns the return register |
+| [HLAX0063](diagnostics.md#hlax0063--register-live-across-call) | Caller-saved register may be clobbered across `call` |
+| [HLAX0030](diagnostics.md#hlax0030--possible-out-of-bounds-array-index) | Literal array index possibly out of range (`-Wbounds`) |
+
+Warnings do not change program semantics; ignoring them can still produce UB at
+runtime.
+
+### Offline verification tools
+
+`hla64 verify-stack` and `hla64 verify-abi` report frame alignment, prologue/
+epilogue consistency, and ABI slot layout ([HLAX0064–HLAX0068](diagnostics.md#hlax0064hlax0068--stack-verification)).
+These are separate from a normal `build` / `run`.
+
+### Still UB or not fully diagnosed
+
+- **Runtime** out-of-bounds array or pointer access (especially non-literal
+  indices; no runtime trap in 0.x).
+- **Uninitialized reads** not caught by definite-assignment analysis (e.g.
+  complex control flow, or reads through pointers).
+- **Stack / ABI misuse** before foreign calls if verification tools are not run
+  or warnings are suppressed.
 
 ## Compatibility
 
