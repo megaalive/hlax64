@@ -257,11 +257,19 @@ Phases are summarized in [`docs/roadmap.md`](./docs/roadmap.md).
 | 11   | Windows x64 backend                  | ✅      |
 | 12   | C ABI & C# interop generator         | ✅      |
 | 13   | MCP server (for AI agents)           | ✅      |
-| 14   | LSP & editor tooling                 | ✅ MVP (diagnostics, hover, completion) |
-| 15   | AI Assembly Lab / IDE plugin         | ⏳      |
-| 16+  | Language core completion (const, expr, struct, …) | 🚧 Sprint 1 |
+| 14   | LSP & editor tooling                 | ✅ Hardened |
+| 15   | AI Assembly Lab (Avalonia desktop)   | ✅ Done |
+| 16   | Language core (const, expr, enum, record, static) | ✅ Done |
+| 17   | ABI & FFI (extern, fn ptr, float, struct param) | ✅ Done |
+| 18   | Compiler verification                | ✅ Done |
+| 19   | Debug & explainability               | ✅ Hardened |
+| 20   | Optimization (O1/O2)                 | ✅ Hardened |
+| 21   | CPU & SIMD                           | ✅ Hardened |
+| 22   | Modules & packages                   | ✅ Hardened |
+| 23   | Verified executable workflow         | ✅ Hardened |
+| 24   | Debugger & Assembly Lab integration  | ✅ Hardened |
 
-Phases 16–24 are summarized in [`docs/roadmap.md`](./docs/roadmap.md).
+Detail per sprint: [`docs/roadmap.md`](./docs/roadmap.md). Yang masih **planned** (bukan fase 16 inti) — typed pointers, `slice<T>`, `idiv`/`jmp` sebagai instruksi sumber, full DWARF Windows.
 
 ### 📚 Dokumentasi tambahan
 
