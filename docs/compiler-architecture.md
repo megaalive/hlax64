@@ -102,10 +102,10 @@ Opcodes include `Move`, `Add`, `Subtract`, `Multiply`, `Divide`, `Compare`, `Bra
 | Phase 15 GUI | Avalonia/WPF Assembly Lab — skipped until cross-platform decision |
 | Assisted regalloc | `--register-mode assisted` |
 | Full DWARF/PDB | Debuggers on Windows; live trace sink |
-| Package resolver | Lock enforcement + remote deps |
-| Full DAP | Launch/run against GDB/LLDB |
-| Variadic printf | SysV/Windows AL rules |
-| Differential run tests | Full link+run in CI (compile-only test exists) |
+| Package resolver | Version ranges, transitive deps, registry |
+| Full DAP | Windows lldb; variables/evaluate; full GDB MI |
+| Variadic printf | Windows MS ABI + float variadic in AL/xmm |
+| Differential run on Windows | WSL or native link in CI |
 
 ---
 
