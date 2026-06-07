@@ -636,7 +636,18 @@ public class AssemblyLabBackendTests
             var nativeDllDest = Path.Combine(callerOutputDir, $"{example}.dll");
             File.Copy(dllFile, nativeDllDest, overwrite: true);
 
-            var fixture = Path.Combine(exampleDir, "fixtures", "sample-b.txt");
+            var argumentsPath = Path.Combine(exampleDir, "expected.arguments");
+            string fixture;
+            if (File.Exists(argumentsPath))
+            {
+                var arg = File.ReadAllText(argumentsPath).Trim();
+                fixture = Path.IsPathRooted(arg) ? arg : Path.Combine(exampleDir, arg);
+            }
+            else
+            {
+                fixture = Path.Combine(exampleDir, "fixtures", "sample-b.txt");
+            }
+
             var callerExe = Directory.GetFiles(callerOutputDir, "*.exe").FirstOrDefault();
             Assert.NotNull(callerExe);
 

@@ -45,10 +45,12 @@ dotnet run -- ../fixtures/sample-b.txt
 ## Regression
 
 - **Compile-only** — `tests/examples-curriculum/interop-*` manifests.
-- **Native Windows** — `InteropReal_caller_runs_on_windows` builds the DLL, runs `dotnet run`, and checks `expected.stdout` / `expected.exitcode`.
+- **Native Windows** — `InteropReal_caller_runs_on_windows` builds the DLL, runs the caller, and checks `expected.stdout`, `expected.exitcode`, and optional `expected.arguments`.
 
 ## Examples
 
 | Folder | Export | C# use case |
 |--------|--------|-------------|
 | `native_count_lines` | `CountLines(data, length)` | Count `\n` bytes in a file buffer (same logic as `10-real-tools/linecount`) |
+| `native_fnv1a` | `Fnv1a64(data, length)` | FNV-1a 64-bit hash of a buffer (same logic as `10-real-tools/fnv1a`) |
+| `native_sum_bytes` | `SumBytes(data, length)` | Sum of byte values — smallest interop sanity check |

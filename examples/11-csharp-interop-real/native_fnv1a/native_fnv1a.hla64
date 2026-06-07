@@ -1,0 +1,31 @@
+// native_fnv1a.hla64 - FNV-1a 64-bit hash of a buffer (exported for C# P/Invoke).
+//
+// Stress: export procedure, imul/xor loop, 64-bit constants, volatile Win64 regs only.
+
+program native_fnv1a;
+
+const
+    FnvOffset := $cbf29ce484222325;
+    FnvPrime  := $100000001b3;
+endconst;
+
+export procedure Fnv1a64(data: ptr; length: int64); @returns("rax");
+begin Fnv1a64;
+    mov(FnvOffset, r11);
+    mov(0, r8);
+    mov(data, r10);
+
+    while(r8 < length) do
+        mov([r10].byte, r9);
+        xor(r9, r11);
+        mov(FnvPrime, rax);
+        imul(rax, r11);
+        add(1, r8);
+        add(1, r10);
+    endwhile;
+
+    mov(r11, rax);
+end Fnv1a64;
+
+begin native_fnv1a;
+end native_fnv1a;

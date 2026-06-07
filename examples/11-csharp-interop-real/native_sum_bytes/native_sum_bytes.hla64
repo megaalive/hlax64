@@ -1,0 +1,24 @@
+// native_sum_bytes.hla64 - sum byte values in a buffer (exported for C# P/Invoke).
+//
+// Stress: minimal export loop, add in volatile regs, easy C# baseline check.
+
+program native_sum_bytes;
+
+export procedure SumBytes(data: ptr; length: int64); @returns("rax");
+begin SumBytes;
+    mov(0, r11);
+    mov(0, r8);
+    mov(data, r10);
+
+    while(r8 < length) do
+        mov([r10].byte, r9);
+        add(r9, r11);
+        add(1, r8);
+        add(1, r10);
+    endwhile;
+
+    mov(r11, rax);
+end SumBytes;
+
+begin native_sum_bytes;
+end native_sum_bytes;
