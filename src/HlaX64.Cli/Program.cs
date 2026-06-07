@@ -21,6 +21,9 @@ app.Configure(config =>
     config.AddCommand<TestCommand>("test")
         .WithDescription("Run all test manifests in a directory");
 
+    config.AddCommand<TestDifferentialCommand>("test-differential")
+        .WithDescription("Run compile→link→run differential suite (tests/differential/)");
+
     config.AddCommand<ExplainAbiCommand>("explain-abi")
         .WithDescription("Print ABI details for a target triple (e.g. linux-x64-sysv, windows-x64-msabi)");
 
@@ -52,7 +55,7 @@ app.Configure(config =>
         .WithDescription("Disassemble NASM or binary with optional source map");
 
     config.AddCommand<DebugCommand>("debug")
-        .WithDescription("Debug adapter protocol stub (--stdio)");
+        .WithDescription("Debug Adapter Protocol server (--stdio, Linux gdb backend)");
 
     config.AddCommand<DiffCommand>("diff")
         .WithDescription("Semantic diff between two .hla64 files");
@@ -64,7 +67,7 @@ app.Configure(config =>
         .WithDescription("Create a new project from a template (console)");
 
     config.AddCommand<RestoreCommand>("restore")
-        .WithDescription("Read hla64.toml manifest (restore stub)");
+        .WithDescription("Resolve hla64.toml dependencies and write hla64.lock");
 
     config.AddCommand<VerifyReproducibleCommand>("verify-reproducible")
         .WithDescription("Verify build.json source hash and compiler version");

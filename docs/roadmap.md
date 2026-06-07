@@ -85,13 +85,14 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 ### Phase 21 sprint notes
 
 - **Sprint 1 (MVP):** `data/instructions.json`; `hla64 list-instructions`; RFC 0018
-- **Sprint 2 (MVP):** `--cpu` / `--features`; HLAX0070/0071; SSE2 + AVX2 (`vaddpd`, `vmovapd`); 34 mnemonics in DB
-- **Deferred:** AVX2 codegen, intrinsics (RFC 0019), atomics (RFC 0020)
+- **Advanced hardening round 2 (done):** AVX2 codegen; simd/atomic intrinsics; dependency resolver; DAP; variadic printf; differential CI; 308 tests
+- **Sprint 2 (MVP):** `--cpu` / `--features`; HLAX0070/0071; SSE2 + AVX2; intrinsics RFC 0019/0020 partial
+- **Deferred:** typed f64x4, cmpxchg atomics, Windows ymm save/restore
 
 ### Phase 22 sprint notes
 
 - **Sprint 1 (MVP):** `hla64.toml` schema; `hla64 new console`; RFC 0021
-- **Sprint 2 (MVP):** `hla64 restore` writes `hla64.lock`; `hla64 build` reads `hla64.toml` sources
+- **Sprint 2 (MVP):** `hla64 restore` resolves path deps; lock verification on build; RFC 0021 partial
 - **Sprint 3 (MVP):** `hla64 verify-reproducible`; `hla64.lock` schema documented
 
 ### Phase 23 sprint notes
@@ -101,10 +102,10 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 
 ### Phase 24 sprint notes
 
-- **Sprint 1 (MVP):** `hla64 debug --stdio` stub; RFC 0023
+- **Sprint 1 (MVP):** `hla64 debug --stdio` DAP + gdb (Linux); RFC 0023 partial
 - **Sprint 2 (MVP):** LSP virtual IR/NASM/stack; VS Code commands
 - **Sprint 3 (MVP):** MCP `explain` structured `suggestedFix`
-- **Deferred:** full DAP server, desktop GUI (Phase 15)
+- **Deferred:** Windows DAP/lldb, desktop GUI (Phase 15)
 
 ---
 

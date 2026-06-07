@@ -56,6 +56,14 @@ jobs:
           dotnet run --project src/HlaX64.Cli -- test tests/examples-curriculum/
           dotnet run --project src/HlaX64.Cli -- run examples/00-getting-started/hello.hla64
 
+      - name: Differential tests (Linux full run)
+        if: runner.os == 'Linux'
+        run: dotnet run --project src/HlaX64.Cli -- test-differential
+
+      - name: Differential tests (Windows compile-only)
+        if: runner.os == 'Windows'
+        run: dotnet run --project src/HlaX64.Cli -- test-differential --compile-only
+
       - name: Windows MS ABI build smoke test
         if: runner.os == 'Windows'
         shell: pwsh
