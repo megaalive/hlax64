@@ -1,179 +1,197 @@
 # HlaX64 — Roadmap
 
-> **Status dokumen**: Aktif · selaras dengan `HlaX64_Project_Plan.md` (konsolidasi)
+> **Status dokumen**: Aktif · selaras dengan `HlaX64_Project_Plan.md` (konsolidasi lokal)
 > **Bahasa**: `HlaX64` v0.1 (Draft Language Reference)
 > **Target aktif**: `linux-x64-sysv`
 
 Dokumen ini adalah ringkasan eksekusi yang bisa dibaca cepat. Untuk
 detail lengkap (rationale, deliverable, acceptance criteria), lihat
-[`HlaX64_Project_Plan.md`](../HlaX64_Project_Plan.md).
+[`HlaX64_Project_Plan.md`](../HlaX64_Project_Plan.md) bila tersedia di clone lokal.
+
+### Legenda status
+
+| Label | Arti |
+|-------|------|
+| **✅ Done** | Scope fase selesai; ada di toolchain dan contoh/tes. |
+| **✅ Hardened** | MVP fase sudah shipped; dilanjutkan hardening (lookup, stub, CI, docs). |
+| **🔜 Deferred** | Belum dikerjakan; lihat [§6 Backlog terbuka](#6-backlog-terbuka-deferred). |
+
+> **Catatan:** Istilah *MVP* di RFC/commit lama hanya berarti *scope minimum yang
+> pernah dijanjikan*, bukan “masih belum ada”. Jika sprint tercantum **(done)**,
+> fiturnya sudah ada meski belum “versi final”.
 
 ---
 
 ## 1. Peta fase
 
-| Fase | Nama | Status | Target |
-|------|------|--------|--------|
+| Fase | Nama | Status | Ringkasan |
+|------|------|--------|-----------|
 | 0 | Foundation & repo setup | ✅ Done | repo, solution, CLI `--version` |
-| 1 | Lexer & Parser MVP | ✅ Done | program, procedure, call |
-| 2 | NASM Backend MVP | ✅ Done | NASM x64 valid, operand order |
+| 1 | Lexer & Parser | ✅ Done | program, procedure, call |
+| 2 | NASM Backend | ✅ Done | NASM x64 valid, operand order |
 | 3 | Toolchain build Linux x64 | ✅ Done | `hla64 build`, `hla64 run` |
-| 4 | Runtime `stdout.put` | ✅ Done | syscall/inline write |
-| 5 | Semantic Analyzer | ✅ Done | validasi register, instruksi, scope |
-| 6 | Procedure & SysV ABI | ✅ Done | 1–6 args, `rdi..r9`, return `rax` |
+| 4 | Runtime `stdout.put` | ✅ Done | syscall / library write |
+| 5 | Semantic Analyzer | ✅ Done | register, instruksi, scope |
+| 6 | Procedure & SysV ABI | ✅ Done | `rdi..r9`, return `rax` |
 | 7 | Control flow | ✅ Done | `if/else/endif`, `while/endwhile` |
-| 8 | Local variables & stack frame | ✅ Done | `var` block, `[rbp-N]` |
+| 8 | Local variables & stack frame | ✅ Done | `var`, `[rbp-N]` |
 | 9 | Test runner | ✅ Done | `hla64 test`, manifest JSON |
-| **9.5** | **Compiler Architecture Stabilization** | ✅ Done | A ✅ B ✅ C ✅ D ✅ E ✅ F ✅ G ✅ H ✅ — 15/15 checklist |
-| 10 | Benchmark runner | ✅ Done | `hla64 bench` dengan warmup, median, compile duration, binary size, JSON manifest |
-| 11 | Windows x64 backend | ✅ Done | RCX/RDX/R8/R9, 32-byte shadow space, `ExitProcess`, `WriteConsoleA`, `--target windows-x64-msabi` |
-| 12 | C ABI & C# interop | ✅ Done | `export procedure`, `--output-kind shared-library`, C header generator, C# P/Invoke generator |
-| 13 | MCP server | ✅ Done | 9 tools via stdio JSON-RPC (compile, build, run, test, explain-abi, dll) |
-| 14 | LSP & editor tooling | ✅ Hardened | + signatureHelp, highlights/references, semanticTokens, format codeAction |
-| 15 | AI Assembly Lab / GUI | ✅ Done | Avalonia 11 desktop Lab — see RFC 0024 |
-| **16** | **Language core completion** | ✅ Done | const, expressions, enum, record, static, string model |
-| 17 | ABI and FFI completion | ✅ Done | Sprints 2–5: extern, fn ptr, float ABI, struct param, variadic RFC |
-| 18 | Compiler verification | ✅ Done | definite assignment, CFG, liveness, verify-stack/abi, fuzz |
-| 19 | Debug and explainability | ✅ Hardened | source map lookup, DWARF file table, disasm+objdump, `--trace` int3 |
-| 20 | Optimization | ✅ Hardened | O1 fold, O2 propagation + xor-zero peephole |
-| 21 | CPU and SIMD | ✅ Hardened | HLAX0071 + instruction DB (34 mnemonics), AVX2 gates |
-| 22 | Modules and packages | ✅ Hardened | `hla64.lock`, manifest `build` |
-| 23 | Verified executable workflow | ✅ Hardened | capabilities extern/stdout, diff stack/return, proof-bundle tests |
-| 24 | Debugger and Assembly Lab | ✅ Hardened | DAP setBreakpoint/stackTrace stub, stack clobber doc, MCP abiIssues |
+| **9.5** | **Compiler Architecture Stabilization** | ✅ Done | IR, ABI lowerer, native tests, runtime contract |
+| 10 | Benchmark runner | ✅ Done | `hla64 bench`, warmup, median, JSON manifest |
+| 11 | Windows x64 backend | ✅ Done | MS ABI, shadow space, `ExitProcess` |
+| 12 | C ABI & C# interop | ✅ Done | export DLL, header / P/Invoke generator |
+| 13 | MCP server | ✅ Done | stdio JSON-RPC tools (compile, build, run, …) |
+| 14 | LSP & editor tooling | ✅ Hardened | diagnostics, hover, completion, semantic tokens |
+| 15 | AI Assembly Lab | ✅ Done | Avalonia Lab — [RFC 0024](../rfcs/0024-assembly-lab.md) |
+| 16 | Language core | ✅ Done | const, expr, enum, record/struct, static, strings |
+| 17 | ABI & FFI | ✅ Done | extern, fn ptr, float, record param, variadic |
+| 18 | Compiler verification | ✅ Done | definite assignment, CFG, liveness, verify-* |
+| 19 | Debug & explainability | ✅ Hardened | source map, DWARF stub Linux, disasm, `--trace` |
+| 20 | Optimization | ✅ Hardened | `--optimize O0\|O1\|O2`, fold, peephole |
+| 21 | CPU & SIMD | ✅ Hardened | instruction DB, `--features`, AVX2 intrinsics |
+| 22 | Modules & packages | ✅ Hardened | `hla64.toml`, lockfile, restore |
+| 23 | Verified executable workflow | ✅ Hardened | proof bundle, capabilities, diff/plan |
+| 24 | Debugger & Assembly Lab | ✅ Hardened | DAP, Lab debug/MCP integration |
 
-### Phase 15 — Assembly Lab (done)
-
-Avalonia desktop app `HlaX64.AssemblyLab` — visual pipeline shell (source, IR/NASM/ABI, build/run, source map sync, DAP MVP, proof bundle). See [RFC 0024](../rfcs/0024-assembly-lab.md) and [tutorial 06](tutorials/06-assembly-lab.md).
-
-- **Sprint 15.1 (done):** Avalonia 11 + MVVM shell, `AssemblyLabBackend.Compile`, open file/folder, live debounced diagnostics, CI build
-- **Sprint 15.2 (done):** IR/NASM/ABI tabs, Build/Run, target selector (`linux-x64-sysv` / `windows-x64-msabi`)
-- **Sprint 15.3 (done):** `.hlamap.json` load, diagnostic → NASM line highlight
-- **Sprint 15.4 (done):** Debug button + DAP output panel (MVP; Linux gdb via CLI follow-up)
-- **Sprint 15.5 (done):** Proof bundle export + capabilities panel
-- **Sprint 15.6 (done):** RFC 0024, tutorial, docs
-- **Batch 3 (done):** lldb/gdb DAP via CLI, ExplainAgentService + Agent tab, plan/diff tabs + approval gate
-- **Batch 4 (done):** one-click Apply Fix (`SuggestFixApplier`), DAP MI stopped/stack/register view (`MiOutputParser`, `DebugEngineSession`), external MCP stdio client in Lab (`McpSessionHost` + MCP tab)
+**Semua fase 0–24 sudah minimal Done/Hardened.** Pekerjaan lanjutan hanya item **Deferred** (§6).
 
 ---
 
-### Phase 16 sprint notes
+## 2. Catatan sprint (riwayat — semua shipped)
 
-- **Sprint 1 (done):** docs sync, RFC 0004, `const`/`endconst`, compile-time expressions, hex `$FF`
-- **Sprint 2 (done):** runtime `:=` expressions for int64 scalars
-- **Sprint 3 (done):** `enum`/`endenum`, typed backing, `Color.Red` immediates (RFC 0005)
-- **Sprint 4 (done):** `record`/`endrecord`, natural layout, field access, `sizeof`/`offsetof` (RFC 0006)
-- **Sprint 5 (done):** `static`/`endstatic`, `.data`/`.bss`, `cstring`, `utf8slice` (RFC 0007/0008)
-- **Sprint 5+ (done):** `packed` records, procedure-scoped enum/record, enum auto-increment
+### Phase 15 — Assembly Lab
 
-### Phase 17 sprint notes
+- **15.1–15.6 (done):** shell Avalonia, IR/NASM/ABI tabs, build/run, source map, DAP panel, proof bundle, RFC + tutorial
+- **Batch 3–4 (done):** gdb/lldb DAP, Explain/Agent tab, Apply Fix, MI registers, MCP tab
 
-- **Sprint 1 (done):** stack arguments beyond register limit (SysV 7+, Windows 5+); RFC 0009; example `stack-args-sysv.hla64`
-- **Sprint 2 (done):** `extern procedure` + `from "lib"` link hints; RFC 0010; example `extern-puts.hla64`; HLAX0050+
-- **Sprint 3 (done):** function pointer type aliases + indirect `call`; RFC 0011; example `indirect-call.hla64`
-- **Sprint 4 (done):** float32/float64 param/return MVP; RFC 0012; example `float-return.hla64`
-- **Sprint 5 (done):** record param as hidden pointer; variadic extern RFC + HLAX0055; RFC 0013; example `record-param.hla64`
+### Phase 16 — Language core
 
-### Phase 18 sprint notes
+- **Sprint 1–5+ (done):** const, runtime `:=`, enum, record, static, cstring/utf8slice, packed, scoped types
 
-- **Sprint 1 (done):** definite assignment analysis; HLAX0060; `-Wdefinite`; LSP default warning
-- **Sprint 2 (done):** unreachable code HLAX0061; missing `@returns` path HLAX0062; `-Wunreachable`
-- **Sprint 3 (done):** caller-saved register liveness across `call` HLAX0063; `-Wliveness`
-- **Sprint 4 (done):** `hla64 verify-stack`; `StackVerifier.cs`; HLAX0064–68; RFC 0014
-- **Sprint 5 (done):** `hla64 verify-abi`; per-procedure ABI report (params, return, externs)
-- **Sprint 6 (done):** fuzz tests (UTF-8 lexer, formatter round-trip, manifest JSON); `docs/development.md`
-- **Sprint 7 (done):** differential testing for `examples/01-arithmetic/simple.hla64` (curriculum manifest exit code 3)
+### Phase 17 — ABI & FFI
 
-### Phase 19 sprint notes
+- **Sprint 1–5 (done):** stack args, extern+link, indirect call, float return, record param, variadic extern
 
-- **Sprint 1 (MVP):** `*.hlamap.json` via `--source-map`; IR id annotations; RFC 0015
-- **Sprint 2 (MVP):** `--debug-info` NASM `%line` + `.debug_line` stub (Linux); RFC 0016
-- **Sprint 3 (MVP):** `hla64 disasm`; `--trace` procedure entry/exit + Linux `int3` breakpoint
-- **Hardening:** `SourceMapDocument.LookupBySource/NasmLine/IrId`; DWARF file table stub; objdump merge when on PATH
-- **Deferred:** full DWARF on Windows, runtime trace sink
+### Phase 18 — Verification
 
-### Phase 20 sprint notes
+- **Sprint 1–7 (done):** `-Wdefinite`, unreachable, liveness, `verify-stack`/`verify-abi`, fuzz, differential CI
 
-- **Sprint 1 (MVP):** `--optimize O0|O1|O2`; IR constant folding + copy propagation (O2); RFC 0017
-- **Sprint 2 (MVP):** peephole `mov reg,reg`, `add reg,0`, `mov reg,0` → `xor reg,reg` (O2)
-- **Deferred:** `--register-mode assisted`, global DCE, propagation
+### Phase 19 — Debug (Hardened)
 
-### Phase 21 sprint notes
+- **Sprint 1 (done):** `--source-map`, `*.hlamap.json`, IR id annotations — RFC 0015
+- **Sprint 2 (done):** `--debug-info`, NASM `%line`, `.debug_line` stub (Linux) — RFC 0016
+- **Sprint 3 (done):** `hla64 disasm`, `--trace`, Linux `int3` entry breakpoints
+- **Hardening (done):** `SourceMapDocument` lookup, DWARF file table stub, objdump merge
 
-- **Sprint 1 (MVP):** `data/instructions.json`; `hla64 list-instructions`; RFC 0018
-- **Advanced hardening round 2 (done):** AVX2 codegen; simd/atomic intrinsics; dependency resolver; DAP; variadic printf; differential CI; 308 tests
-- **Sprint 2 (MVP):** `--cpu` / `--features`; HLAX0070/0071; SSE2 + AVX2; intrinsics RFC 0019/0020 partial
-- **Deferred:** typed f64x4, cmpxchg atomics, Windows ymm save/restore
+### Phase 20 — Optimization (Hardened)
 
-### Phase 22 sprint notes
+- **Sprint 1 (done):** `--optimize O0|O1|O2`, constant folding, copy propagation (O2) — RFC 0017
+- **Sprint 2 (done):** peephole `mov reg,reg`, `add reg,0`, `xor` zeroing (O2)
 
-- **Sprint 1 (MVP):** `hla64.toml` schema; `hla64 new console`; RFC 0021
-- **Sprint 2 (MVP):** `hla64 restore` resolves path deps; lock verification on build; RFC 0021 partial
-- **Sprint 3 (MVP):** `hla64 verify-reproducible`; `hla64.lock` schema documented
+### Phase 21 — CPU & SIMD (Hardened)
 
-### Phase 23 sprint notes
+- **Sprint 1 (done):** `data/instructions.json`, `hla64 list-instructions` — RFC 0018
+- **Sprint 2 (done):** `--cpu` / `--features`, HLAX0070/0071, SSE2/AVX2, partial intrinsics — RFC 0019/0020
+- **Hardening round 2 (done):** AVX2 codegen, simd/atomic builtins, variadic printf, expanded CI
 
-- **Sprint 1 (MVP):** `--proof-bundle`; `capabilities.json`; RFC 0022
-- **Sprint 2 (MVP):** `hla64 diff`; `hla64 plan --json`
+### Phase 22 — Packages (Hardened)
 
-### Phase 24 sprint notes
+- **Sprint 1–3 (done):** `hla64.toml`, `hla64 new`, restore, lock verification, `verify-reproducible` — RFC 0021
 
-- **Sprint 1 (MVP):** `hla64 debug --stdio` DAP + gdb (Linux); RFC 0023 partial
-- **Sprint 2 (MVP):** LSP virtual IR/NASM/stack; VS Code commands
-- **Sprint 3 (MVP):** MCP `explain` structured `suggestedFix`
-- **Deferred:** full MI memory view, MCP tool parity with CLI in Lab UI
+### Phase 23 — Verified workflow (Hardened)
+
+- **Sprint 1–2 (done):** `--proof-bundle`, `capabilities.json`, `hla64 diff`, `hla64 plan --json` — RFC 0022
+
+### Phase 24 — Debugger & Lab (Hardened)
+
+- **Sprint 1 (done):** `hla64 debug --stdio`, DAP + gdb (Linux) — RFC 0023 partial
+- **Sprint 2 (done):** LSP virtual IR/NASM/stack, VS Code commands
+- **Sprint 3 (done):** MCP `explain` + structured `suggestedFix`
 
 ---
 
-## 2. Tier eksekusi saat ini
+## 3. Snapshot saat ini
 
-### Tier 1 — Dokumentasi (zero risk)
+| Area | Status |
+|------|--------|
+| Fase compiler 0–24 | ✅ Done / Hardened (lihat §1) |
+| Kurikulum contoh | 57 manifest di `tests/examples-curriculum/` + real-tools / bug-farm / invalid |
+| Tes otomatis | 400+ (`dotnet test` — compiler + AssemblyLab) |
+| Target build | Linux SysV + Windows MS ABI |
+| Dokumentasi produk | `docs/language-spec.md`, tutorials, RFC 0001–0024 |
 
-- [x] `docs/roadmap.md` (file ini)
-- [x] `docs/compiler-architecture.md` — diagram pipeline IR + 7 workstream
-- [x] `docs/runtime-contract.md` — format clobber metadata per fungsi runtime
-- [x] `docs/examples.md` — katalog & cara menjalankan
-- [x] `README.md` — sync badge "Fase 0–13 Done"
-
-### Tier 2 — Sample tests (memenuhi target MVP "min 10 samples")
-
-✅ **Sudah 20 sample** — native integration tests under `tests/samples/` (incl. Level 3 memory).
-
-### Tier 3 — Mini CLI command (mitigasi Risiko 2)
-
-- [x] `hla64 explain-abi --target linux-x64-sysv` ✅
+**Fokus berikutnya:** item **Deferred** (§6), bukan “menyelesaikan MVP fase” yang sudah lewat.
 
 ---
 
-## 3. Setelah 9.5 selesai
+## 4. Tier eksekusi (historis)
 
-Urutan roadmap yang direkomendasikan (lihat Plan Section 9):
+Tier ini mencatat milestone awal proyek; semua sudah ✅.
 
-```
-Fase 9.5 →  Fase 11 (Windows) →  Fase 12 (C# interop) →  Fase 10 (Bench)
-Fase 13 (MCP) →  Fase 14 (LSP) →  Fase 15 (GUI)
-```
+### Tier 1 — Dokumentasi
 
-> *Fase 9.5 Workstream A–H done. Docs sync complete. Fase 10 (Bench), 11 (Windows), 12 (C# interop), 13 (MCP) all done.
-> **Level 3 memory curriculum** (RFC 0002/0003) — pointers, indexed `[reg+N]`, stack arrays `type[N]` (incl. packed `byte[N]`), string walk, optional `-Wbounds` (HLAX0030).
-> **Fase 14 LSP MVP** — diagnostics (incl. bounds warnings), hover, completion, go-to-definition, document symbols, format-on-save; VS Code language client.
-> **Phase 16 complete** — language core (const, expressions, enum, record, static, cstring/utf8slice). **Phase 17 complete** — ABI/FFI (extern, fn ptr, float, struct param). **Phase 18 complete** — verification (definite assignment, CFG, liveness, verify-stack/abi). Next: Phase 19 (debug/explainability) or Fase 15 (GUI / AI Assembly Lab).
+- [x] `docs/roadmap.md`, `docs/compiler-architecture.md`, `docs/runtime-contract.md`, `docs/examples.md`
+- [x] `README.md` — fase 0–24 Done/Hardened (bukan hanya 0–13)
 
----
+### Tier 2 — Sample & kurikulum
 
-## 4. Prioritas fitur (ringkas)
+- [x] Native integration tests (`tests/samples/`, `tests/examples-curriculum/`)
+- [x] Real-tools, bug-farm, invalid mirrors, Linux ports
 
-Lihat Plan Section 10 untuk detail.
+### Tier 3 — CLI utilitas
 
-- **P0 (wajib)**: parser, emitter, CLI, hello, procedure, test runner, **stabilisasi 9.5**.
-- **P1 (penting)**: control flow, local vars, semantic, **type system eksplisit, IR, ABI lowerer, native test**, Windows, C# interop.
-- **P2 (menarik)**: MCP, benchmark, LSP, `explain-abi`/`explain-error`, VS Code, GUI.
-- **P3 (nanti)**: macro, LLVM, SIMD, optimizer, OSDev, full HLA compatibility, JIT, self-hosting.
+- [x] `hla64 explain-abi`, `explain`, `verify-*`, `bench`, MCP tools
 
 ---
 
-## 5. Risiko aktif
+## 5. Prioritas fitur (ringkas)
 
-Lihat Plan Section 11.
+| Tier | Isi | Status |
+|------|-----|--------|
+| **P0** | parser, emitter, CLI, test runner, stabilisasi 9.5 | ✅ |
+| **P1** | control flow, types, IR/ABI, Windows, C# interop | ✅ |
+| **P2** | MCP, LSP, benchmark, Assembly Lab | ✅ |
+| **P3 / Deferred** | macro, LLVM, OSDev, full HLA compat, JIT, self-hosting, §6 | 🔜 |
 
-- **Risiko 6 (termitigasi)**: pertumbuhan fitur sebelum fondasi stabil.
-  → Mitigasi: **Fase 9.5 completed** — IR, ABI lowerer, native tests, runtime contract, docs all stable.
+Detail prioritas lama: Plan Section 10 (lokal).
+
+---
+
+## 6. Backlog terbuka (Deferred)
+
+Satu-satunya pekerjaan yang **belum** di roadmap aktif:
+
+### Debug & explainability (19)
+
+- Full DWARF debug info di **Windows**
+- Runtime trace sink (beyond `--trace` / `int3` stub)
+
+### Optimization (20)
+
+- `--register-mode assisted`
+- Global dead-code elimination
+- Propagation / optimization lanjutan
+
+### CPU & SIMD (21)
+
+- Typed `f64x4` vectors
+- `cmpxchg` atomics penuh
+- Windows ymm callee-save / restore
+
+### Debugger & Lab (24)
+
+- Full MI **memory** view di DAP
+- Parity MCP tools Lab UI ↔ CLI (semua perintah)
+
+### Language / memory (lintas-fase, lihat `docs/memory-model.md`)
+
+- `ptr<T>`, `slice<T>`, checked indexing
+- Macro system, LLVM backend, self-hosting (P3)
+
+---
+
+## 7. Risiko
+
+- **Risiko 6 (termitigasi):** pertumbuhan fitur sebelum fondasi stabil → Fase 9.5 + native tests selesai.
+
+Lihat Plan Section 11 untuk risiko lengkap (lokal).
