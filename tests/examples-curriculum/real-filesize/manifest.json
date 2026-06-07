@@ -1,0 +1,6 @@
+{
+  "name": "real-filesize",
+  "source": "../../../examples/10-real-tools/filesize/filesize.hla64",
+  "expectedExitCode": 0,
+  "description": "Real tool: print one fixture file size (compile-only until Windows manifest execution lands)"
+}

@@ -1,0 +1,6 @@
+{
+  "name": "real-exists",
+  "source": "../../../examples/10-real-tools/exists/exists.hla64",
+  "expectedExitCode": 0,
+  "description": "Real tool: check whether a fixture file exists (compile-only until Windows manifest execution lands)"
+}

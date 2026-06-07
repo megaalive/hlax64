@@ -1,0 +1,19 @@
+// exists.hla64 - return 0 when a known fixture exists, 1 otherwise.
+
+program exists;
+
+#include("stdlib64.hhf")
+
+extern procedure GetFileAttributesA(lpFileName: cstring): uint64 from "kernel32.dll";
+
+begin exists;
+    call GetFileAttributesA(&"examples\\10-real-tools\\_fixtures\\sample-a.txt");
+
+    if(rax = -1) then
+        stdout.put("missing", nl);
+        mov(1, rax);
+    else
+        stdout.put("exists", nl);
+        mov(0, rax);
+    endif;
+end exists;

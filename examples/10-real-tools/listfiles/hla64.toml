@@ -1,0 +1,4 @@
+name = "listfiles"
+version = "0.1.0"
+target = "windows-x64-msabi"
+main = "listfiles.hla64"

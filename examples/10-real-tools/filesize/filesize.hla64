@@ -1,0 +1,33 @@
+// filesize.hla64 - print the size of one known fixture file.
+// Uses FindFirstFileA as a compact GetFileAttributesEx-style probe.
+
+program filesize;
+
+#include("stdlib64.hhf")
+
+extern procedure FindFirstFileA(lpFileName: cstring; lpFindFileData: ptr): int64 from "kernel32.dll";
+extern procedure FindClose(hFindFile: int64): int32 from "kernel32.dll";
+
+static
+    findData: byte[592];
+endstatic;
+
+begin filesize;
+    call FindFirstFileA(&"examples\\10-real-tools\\_fixtures\\sample-a.txt", &findData);
+
+    if(rax = -1) then
+        stdout.put("missing", nl);
+        mov(1, rax);
+    else
+        mov(rax, r12);
+        mov(&findData, rcx);
+        mov([rcx + 32].dword, r8d);
+        mov([rcx + 28].dword, r9d);
+        mov(r9, r10);
+        shl(32, r10);
+        add(r8, r10);
+        stdout.put("sample-a.txt bytes: ", r10, nl);
+        call FindClose(r12);
+        mov(0, rax);
+    endif;
+end filesize;

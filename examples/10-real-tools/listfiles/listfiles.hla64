@@ -1,0 +1,67 @@
+// listfiles.hla64 - list files in a fixture folder with sizes (Win32 FindFirstFileA / FindNextFileA)
+// WIN32_FIND_DATAA offsets used here: nFileSizeHigh = 28, nFileSizeLow = 32, cFileName = 44.
+
+program listfiles;
+
+#include("stdlib64.hhf")
+
+extern procedure FindFirstFileA(lpFileName: cstring; lpFindFileData: ptr): int64 from "kernel32.dll";
+extern procedure FindNextFileA(hFindFile: int64; lpFindFileData: ptr): int32 from "kernel32.dll";
+extern procedure FindClose(hFindFile: int64): int32 from "kernel32.dll";
+
+static
+    findData: byte[592];
+endstatic;
+
+procedure PrintFileEntry; @returns("rax");
+var
+    base: ptr;
+    namePtr: ptr;
+begin PrintFileEntry;
+    mov(&findData, base);
+    mov(base, rcx);
+    add(44, rcx);
+    mov(rcx, namePtr);
+
+    mov(base, rcx);
+    mov([rcx + 32].dword, r8d);
+    mov([rcx + 28].dword, r9d);
+    mov(r9, r10);
+    shl(32, r10);
+    add(r8, r10);
+    mov(r10, r12);
+
+    stdout.put(namePtr, "  ", r12, nl);
+    mov(0, rax);
+end PrintFileEntry;
+
+procedure ListDir(pattern: cstring); @returns("rax");
+var
+    handle: int64;
+    more: int32;
+begin ListDir;
+    call FindFirstFileA(pattern, &findData);
+    mov(rax, handle);
+
+    if(handle = -1) then
+        stdout.put("no files", nl);
+        mov(1, rax);
+    else
+        call PrintFileEntry();
+        mov(1, more);
+        while(more > 0) do
+            call FindNextFileA(handle, &findData);
+            mov(rax, more);
+            if(more > 0) then
+                call PrintFileEntry();
+            endif;
+        endwhile;
+        call FindClose(handle);
+        mov(0, rax);
+    endif;
+end ListDir;
+
+begin listfiles;
+    stdout.put("Fixture files:", nl);
+    call ListDir(&"examples\\10-real-tools\\_fixtures\\*");
+end listfiles;

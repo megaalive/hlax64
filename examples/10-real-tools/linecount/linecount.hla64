@@ -1,0 +1,57 @@
+// linecount.hla64 - count newline bytes in a known fixture file.
+// This intentionally uses CreateFileA + ReadFile with a static byte buffer.
+
+program linecount;
+
+#include("stdlib64.hhf")
+
+extern procedure CreateFileA(lpFileName: cstring; dwDesiredAccess: uint64; dwShareMode: uint64; lpSecurityAttributes: ptr; dwCreationDisposition: uint64; dwFlagsAndAttributes: uint64; hTemplateFile: uint64): int64 from "kernel32.dll";
+extern procedure ReadFile(hFile: int64; lpBuffer: ptr; nNumberOfBytesToRead: uint64; lpNumberOfBytesRead: ptr; lpOverlapped: ptr): int32 from "kernel32.dll";
+extern procedure CloseHandle(hObject: int64): int32 from "kernel32.dll";
+
+static
+    buffer: byte[256];
+    bytesRead: int64;
+endstatic;
+
+procedure CountBuffer(n: int64); @returns("rax");
+begin CountBuffer;
+    mov(0, r11);
+    mov(0, r8);
+    mov(&buffer, r14);
+
+    while(r8 < n) do
+        mov([r14].byte, r9);
+        if(r9 = 10) then
+            add(1, r11);
+        endif;
+        add(1, r8);
+        add(1, r14);
+    endwhile;
+
+    mov(r11, rax);
+end CountBuffer;
+
+begin linecount;
+    call CreateFileA(&"examples\\10-real-tools\\_fixtures\\sample-b.txt", 2147483648, 1, 0, 3, 128, 0);
+
+    if(rax = -1) then
+        stdout.put("open failed", nl);
+        mov(1, rax);
+    else
+        mov(rax, r15);
+        call ReadFile(r15, &buffer, 256, &bytesRead, 0);
+        if(rax = 0) then
+            stdout.put("read failed", nl);
+            call CloseHandle(r15);
+            mov(1, rax);
+        else
+            mov(bytesRead, r10);
+            call CountBuffer(r10);
+            mov(rax, r12);
+            stdout.put("sample-b.txt lines: ", r12, nl);
+            call CloseHandle(r15);
+            mov(0, rax);
+        endif;
+    endif;
+end linecount;
