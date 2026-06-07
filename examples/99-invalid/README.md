@@ -25,6 +25,8 @@ bad-example-name/
 |---------|------|-------|
 | `address-of-register` | HLAX0023 | `mov(&rax, …)` |
 | `missing-return` | HLAX0062 | verification warning on empty `@returns` body |
+| `unknown-instruction` | HLAX0071 | `movz` is not a HlaX64 instruction |
+| `unknown-register` | HLAX0012 | `raxz` is not a valid register |
 
 Automated: `ExamplesInvalidTests` reads each folder's `manifest.json` + `expected-codes.txt`.
 

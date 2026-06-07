@@ -8,7 +8,7 @@ public sealed class ExamplesCurriculumTests
     public void CurriculumManifest_LoadAll_HasExpectedPrograms()
     {
         var manifests = TestManifest.LoadAll("tests/examples-curriculum");
-        Assert.Equal(42, manifests.Count);
+        Assert.Equal(44, manifests.Count);
         Assert.Contains(manifests, m => m.Name == "curriculum-hello");
         Assert.Contains(manifests, m => m.Name == "real-listfiles");
         Assert.Contains(manifests, m => m.Name == "real-filesize");
@@ -23,6 +23,8 @@ public sealed class ExamplesCurriculumTests
         Assert.Contains(manifests, m => m.Name == "interop-native-fnv1a");
         Assert.Contains(manifests, m => m.Name == "interop-native-sum-bytes");
         Assert.Contains(manifests, m => m.Name == "bugfarm-call-inside-loop");
+        Assert.Contains(manifests, m => m.Name == "bugfarm-nested-while");
+        Assert.Contains(manifests, m => m.Name == "bugfarm-register-pressure");
         Assert.All(manifests, m => Assert.Contains("examples/", m.Source.Replace('\\', '/')));
     }
 }

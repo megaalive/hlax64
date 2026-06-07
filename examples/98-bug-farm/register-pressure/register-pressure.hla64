@@ -1,0 +1,26 @@
+// register-pressure.hla64 - callee-saved live ranges across calls in a loop.
+//
+// Stress: r12–r14 must survive call boundaries (Win64/Linux callee-saved).
+program register_pressure;
+
+procedure Step(n: int64); @returns("rax");
+begin Step;
+    mov(n, rax);
+    add(rax, 1);
+end Step;
+
+begin register_pressure;
+    mov(0, r12);
+    mov(0, r13);
+    mov(0, r14);
+    mov(8, r15);
+
+    while(r12 < r15) do
+        call Step(r12);
+        add(1, r12);
+        add(r13, r14);
+        add(1, r14);
+    endwhile;
+
+    mov(0, rbx);
+end register_pressure;

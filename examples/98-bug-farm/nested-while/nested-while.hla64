@@ -1,0 +1,20 @@
+// nested-while.hla64 - nested loop header/continuation layout stress.
+program nested_while;
+
+begin nested_while;
+    mov(0, r8);
+    mov(3, r10);
+
+    while(r8 < r10) do
+        mov(0, r9);
+        mov(2, r11);
+
+        while(r9 < r11) do
+            add(1, r9);
+        endwhile;
+
+        add(1, r8);
+    endwhile;
+
+    mov(0, rbx);
+end nested_while;

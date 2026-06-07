@@ -23,6 +23,8 @@ First cases landed:
 | Case | Path |
 |------|------|
 | `call-inside-loop` | `call-inside-loop/` — compile-only manifest `bugfarm-call-inside-loop` |
+| `nested-while` | `nested-while/` — compile-only manifest `bugfarm-nested-while` |
+| `register-pressure` | `register-pressure/` — compile-only manifest `bugfarm-register-pressure` |
 
 Add one case per compiler fix so each regression has a minimal repro outside the full real-tool binaries.
 

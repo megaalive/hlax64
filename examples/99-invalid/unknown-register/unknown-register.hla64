@@ -1,0 +1,5 @@
+// unknown-register.hla64 - MUST NOT compile (HLAX0012).
+program unknown_register;
+begin unknown_register;
+    mov(1, raxz);
+end unknown_register;

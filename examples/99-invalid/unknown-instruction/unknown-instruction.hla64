@@ -1,0 +1,5 @@
+// unknown-instruction.hla64 - MUST NOT compile (HLAX0071).
+program unknown_instruction;
+begin unknown_instruction;
+    movz(1, rax);
+end unknown_instruction;
