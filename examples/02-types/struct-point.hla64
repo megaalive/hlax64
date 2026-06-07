@@ -1,0 +1,21 @@
+// struct-point.hla64 - struct/endstruct sugar for record layout.
+program struct_point;
+
+struct Point
+    x: int64;
+    y: int64;
+endstruct;
+
+procedure SumXY; @returns("rax");
+var p: Point;
+begin SumXY;
+    mov(10, p.x);
+    mov(32, p.y);
+    mov(p.x, rax);
+    add(p.y, rax);
+end SumXY;
+
+begin struct_point;
+    call SumXY();
+    mov(rax, rbx);
+end struct_point;

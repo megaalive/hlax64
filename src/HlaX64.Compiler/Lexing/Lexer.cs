@@ -281,6 +281,8 @@ public sealed class Lexer
             "endenum" => TokenType.Endenum,
             "record" => TokenType.Record,
             "endrecord" => TokenType.Endrecord,
+            "struct" => TokenType.Record,
+            "endstruct" => TokenType.Endrecord,
             "static" => TokenType.Static,
             "endstatic" => TokenType.Endstatic,
             "packed" => TokenType.Packed,

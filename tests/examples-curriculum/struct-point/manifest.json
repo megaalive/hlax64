@@ -1,0 +1,6 @@
+{
+  "name": "curriculum-struct-point",
+  "source": "../../../examples/02-types/struct-point.hla64",
+  "expectedExitCode": 42,
+  "description": "Curriculum: struct/endstruct record alias"
+}
