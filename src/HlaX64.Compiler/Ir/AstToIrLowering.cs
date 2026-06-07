@@ -292,9 +292,9 @@ public sealed class AstToIrLowering
                 "imul" => IrOpcode.Multiply,
                 "shl" => IrOpcode.ShiftLeft,
                 "shr" or "sar" => IrOpcode.ShiftRight,
-                "xor" => IrOpcode.Move,
-                "and" => IrOpcode.Move,
-                "or" => IrOpcode.Move,
+                "xor" => IrOpcode.BitwiseXor,
+                "and" => IrOpcode.BitwiseAnd,
+                "or" => IrOpcode.BitwiseOr,
                 "cmp" => IrOpcode.Compare,
                 _ => IrOpcode.Move
             };
