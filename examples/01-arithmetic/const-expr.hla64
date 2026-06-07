@@ -1,0 +1,13 @@
+// const-expr.hla64 - compile-time const folding (Width * Height).
+program const_expr;
+
+const
+    Width := 8;
+    Height := 3;
+    Area := Width * Height;
+endconst;
+
+begin const_expr;
+    mov(Area, rax);
+    mov(rax, rbx);
+end const_expr;
