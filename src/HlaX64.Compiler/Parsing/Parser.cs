@@ -874,7 +874,8 @@ public sealed class Parser
     private AstNode ParseCallOrInstruction()
     {
         // Could be "call AddTwo(10, 20)" or "mov(1, rax)"
-        var identifier = Peek().Value;
+        var mnemonicToken = Peek();
+        var identifier = mnemonicToken.Value;
         Advance();
 
         if (Peek().Type == TokenType.Dot)
@@ -913,18 +914,27 @@ public sealed class Parser
             }
             Expect(TokenType.RightParen);
             Expect(TokenType.Semicolon);
-            return new InstructionNode(identifier, operands);
+            return new InstructionNode(identifier, operands)
+            {
+                Line = mnemonicToken.Line,
+                Column = mnemonicToken.Column
+            };
         }
 
         // Just an identifier with no parens — treat as comment or skip
         Expect(TokenType.Semicolon);
-        return new InstructionNode(identifier, new List<AstNode>());
+        return new InstructionNode(identifier, new List<AstNode>())
+        {
+            Line = mnemonicToken.Line,
+            Column = mnemonicToken.Column
+        };
     }
 
     private AstNode ParseInstruction()
     {
         // Parse: mnemonic(operand1, operand2, ...) ;
-        var mnemonic = Expect(TokenType.Identifier).Value;
+        var mnemonicToken = Expect(TokenType.Identifier);
+        var mnemonic = mnemonicToken.Value;
         Expect(TokenType.LeftParen);
         var operands = new List<AstNode>();
         if (Peek().Type != TokenType.RightParen)
@@ -938,7 +948,11 @@ public sealed class Parser
         }
         Expect(TokenType.RightParen);
         Expect(TokenType.Semicolon);
-        return new InstructionNode(mnemonic, operands);
+        return new InstructionNode(mnemonic, operands)
+        {
+            Line = mnemonicToken.Line,
+            Column = mnemonicToken.Column
+        };
     }
 
     private AstNode ParseOperand()

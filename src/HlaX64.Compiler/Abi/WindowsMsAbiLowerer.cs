@@ -40,7 +40,6 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
         _externRegistry = externProcedures ?? new ExternProcedureRegistry();
         _procedureTypes = procedureTypes ?? new ProcedureTypeRegistry();
         _recordTypes = recordTypes ?? new RecordTypeRegistry();
-        _stringLabelCounter = 0;
         _valueMap.Clear();
         _stackOffset = 0;
         _mode = options.RuntimeMode;
@@ -69,7 +68,8 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
             {
                 loweredBlock.Instructions.Add(new LoweredInstruction("    push rbp"));
                 loweredBlock.Instructions.Add(new LoweredInstruction("    mov rbp, rsp"));
-                var alignedOffset = ((_stackOffset + 15) / 16) * 16;
+                // After push rbp, RSP is 16-byte aligned; Win64 calls need RSP mod 16 == 8.
+                var alignedOffset = _stackOffset == 0 ? 0 : ((_stackOffset + 8 + 15) / 16) * 16;
                 if (alignedOffset > 0)
                     loweredBlock.Instructions.Add(new LoweredInstruction($"    sub rsp, {alignedOffset}"));
 
@@ -115,7 +115,8 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
             if (isEntry)
             {
                 loweredBlock.Instructions.Add(new LoweredInstruction("    xor ebx, ebx    ; default exit code = 0"));
-                loweredBlock.Instructions.Add(new LoweredInstruction("    sub rsp, 32     ; shadow space for Win64 calls"));
+                // 32-byte shadow + 8 for Win64 call alignment (RSP mod 16 == 8 before call).
+                loweredBlock.Instructions.Add(new LoweredInstruction("    sub rsp, 40     ; shadow + align for Win64 calls"));
                 _externs.Add("ExitProcess");
             }
 
@@ -148,8 +149,9 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
             {
                 if (function.IsEntryPoint)
                 {
-                    lastBlock.Instructions.Add(new LoweredInstruction("    mov ecx, ebx    ; exit code"));
-                    lastBlock.Instructions.Add(new LoweredInstruction("    call ExitProcess"));
+                    lastBlock.Instructions.Add(new LoweredInstruction("    add rsp, 40     ; restore entry shadow + align"));
+                    lastBlock.Instructions.Add(new LoweredInstruction("    mov rcx, rbx    ; exit code"));
+                    lastBlock.Instructions.Add(new LoweredInstruction("    jmp ExitProcess"));
                 }
                 else if (!function.IsEntryPoint)
                 {
@@ -163,7 +165,7 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
 
         lowered.StackFrameSize = function.IsEntryPoint
             ? 8
-            : ((_stackOffset + 15) / 16) * 16;
+            : _stackOffset == 0 ? 0 : ((_stackOffset + 8 + 15) / 16) * 16;
         lowered.RequiredExterns = _externs;
         return lowered;
     }
@@ -270,7 +272,11 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
         {
             var varName = AddrVariable(srcVal);
             if (_globalData.ContainsKey(varName))
+            {
+                if (dst.StartsWith('['))
+                    return new LoweredInstruction($"    lea rax, [{varName}]\n    mov {dst}, rax");
                 return new LoweredInstruction($"    lea {dst}, [{varName}]");
+            }
             if (_valueMap.TryGetValue(varName, out var slot))
             {
                 if (dst.StartsWith("[rbp", StringComparison.Ordinal))
@@ -429,7 +435,7 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
         }
 
         var sb = new System.Text.StringBuilder();
-        AbiCallLoweringHelper.AppendWindowsCall(sb, inst, _currentFunction!, ResolveOperand,
+        AbiCallLoweringHelper.AppendWindowsCall(sb, inst, _currentFunction!, ResolveCallOperand,
             _externRegistry, _procedureTypes, _recordTypes, _externs);
         return new LoweredInstruction(sb.ToString());
     }
@@ -440,16 +446,22 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
         // The runtime functions (windows-x64/*.nasm) use Win32 API internally.
         var sb = new System.Text.StringBuilder();
         var args = inst.Operands;
-        int regCount = 0;
 
+        var savedRegs = new List<(IrValue Arg, string Reg, int SlotOffset)>();
         foreach (var arg in args)
         {
             var val = ResolveOperand(arg);
             if (IsRegisterRef(val))
-            {
-                sb.AppendLine($"    push {val}      ; save for stdout.put");
-                regCount++;
-            }
+                savedRegs.Add((arg, val, savedRegs.Count * 8));
+        }
+
+        int saveBytes = savedRegs.Count * 8;
+        int saveAlloc = saveBytes == 0 ? 0 : ((saveBytes + 8 + 15) / 16) * 16;
+        if (saveAlloc > 0)
+        {
+            sb.AppendLine($"    sub rsp, {saveAlloc}      ; stdout.put saves (keep Win64 alignment)");
+            foreach (var (arg, reg, offset) in savedRegs)
+                sb.AppendLine($"    mov [rsp+{offset}], {reg}      ; save for stdout.put");
         }
 
         foreach (var arg in args)
@@ -486,16 +498,30 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
             }
             else if (IsRegisterRef(val))
             {
+                var slot = savedRegs.First(s => s.Arg == arg).SlotOffset;
                 _externs.Add("stdout_put_int");
                 sb.AppendLine($"    ; RUNTIME: stdout_put_int({val}) (library)");
-                sb.AppendLine("    pop rax         ; get saved register value");
-                sb.AppendLine("    mov rcx, rax");
+                sb.AppendLine($"    mov rcx, [rsp+{slot}]");
                 sb.AppendLine("    call stdout_put_int");
+            }
+            else if (rawName != null && _valueMap.TryGetValue(rawName, out var slot))
+            {
+                _externs.Add("stdout_put_str");
+                sb.AppendLine("    ; RUNTIME: stdout_put_str (local/pointer var)");
+                sb.AppendLine($"    mov rcx, {slot}");
+                sb.AppendLine("    call stdout_put_str");
+            }
+            else if (rawName != null && _globalData.ContainsKey(rawName))
+            {
+                _externs.Add("stdout_put_str");
+                sb.AppendLine("    ; RUNTIME: stdout_put_str (global pointer)");
+                sb.AppendLine($"    mov rcx, [{rawName}]");
+                sb.AppendLine("    call stdout_put_str");
             }
             else
             {
                 var labelv = NewStringLabel();
-                _stringLiterals.Add(new StringLiteralInfo(labelv, rawName));
+                _stringLiterals.Add(new StringLiteralInfo(labelv, rawName ?? ""));
                 _externs.Add("stdout_put_str");
                 sb.AppendLine("    ; RUNTIME: stdout_put_str (library)");
                 sb.AppendLine($"    lea rcx, [{labelv}]");
@@ -503,10 +529,38 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
             }
         }
 
-        if (regCount > 0)
-            sb.Append("    pop rcx           ; restore caller's rcx");
+        if (saveAlloc > 0)
+            sb.AppendLine($"    add rsp, {saveAlloc}      ; restore stdout.put saves");
 
         return new LoweredInstruction(sb.ToString().TrimEnd());
+    }
+
+    private string ResolveCallOperand(IrValue? value)
+    {
+        if (value is null)
+            return "0";
+
+        var name = value.Name;
+        if (name is null)
+            return "0";
+
+        if (AddressRefEncoding.IsStringRef(value))
+            return $"rel {EnsureStringLabel(AddressRefEncoding.DecodeString(value))}";
+
+        if (name.StartsWith("addr:", StringComparison.Ordinal))
+        {
+            var varName = name[5..];
+            if (_globalData.ContainsKey(varName))
+                return varName;
+            if (_valueMap.TryGetValue(varName, out var slot))
+            {
+                if (slot.StartsWith('[') && slot.EndsWith(']'))
+                    return slot[1..^1];
+                return slot;
+            }
+        }
+
+        return ResolveOperand(value);
     }
 
     private string ResolveOperand(IrValue? value)

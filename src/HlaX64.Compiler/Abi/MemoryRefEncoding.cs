@@ -37,7 +37,7 @@ internal static class MemoryRefEncoding
         {
             8 => $"movzx {destination}, byte [{addr}]",
             16 => $"movzx {destination}, word [{addr}]",
-            32 => $"mov {destination}, dword [{addr}]",
+            32 => $"mov {RegisterForBits(destination, 32)}, dword [{addr}]",
             _ => $"mov {destination}, [{addr}]",
         };
     }
@@ -49,8 +49,35 @@ internal static class MemoryRefEncoding
         {
             8 => $"mov byte [{addr}], {source}",
             16 => $"mov word [{addr}], {source}",
-            32 => $"mov dword [{addr}], {source}",
+            32 => $"mov dword [{addr}], {RegisterForBits(source, 32)}",
             _ => $"mov [{addr}], {source}",
+        };
+    }
+
+    private static string RegisterForBits(string operand, int bits)
+    {
+        if (bits != 32)
+            return operand;
+
+        return operand.ToLowerInvariant() switch
+        {
+            "rax" => "eax",
+            "rbx" => "ebx",
+            "rcx" => "ecx",
+            "rdx" => "edx",
+            "rsi" => "esi",
+            "rdi" => "edi",
+            "rbp" => "ebp",
+            "rsp" => "esp",
+            "r8" => "r8d",
+            "r9" => "r9d",
+            "r10" => "r10d",
+            "r11" => "r11d",
+            "r12" => "r12d",
+            "r13" => "r13d",
+            "r14" => "r14d",
+            "r15" => "r15d",
+            _ => operand
         };
     }
 }

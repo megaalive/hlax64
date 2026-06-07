@@ -290,6 +290,8 @@ public sealed class AstToIrLowering
                 "add" => IrOpcode.Add,
                 "sub" => IrOpcode.Subtract,
                 "imul" => IrOpcode.Multiply,
+                "shl" => IrOpcode.ShiftLeft,
+                "shr" or "sar" => IrOpcode.ShiftRight,
                 "xor" => IrOpcode.Move,
                 "and" => IrOpcode.Move,
                 "or" => IrOpcode.Move,
@@ -412,8 +414,6 @@ public sealed class AstToIrLowering
 
         func.AddBlock(thenBlock);
         if (elseBlock != null) func.AddBlock(elseBlock);
-        func.AddBlock(endBlock);
-        func.AddBlock(contBlock);
 
         block.Add(new IrInstruction(IrOpcode.ConditionalBranch)
         {
@@ -423,17 +423,21 @@ public sealed class AstToIrLowering
 
         block.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = (elseBlock ?? contBlock).Label });
 
+        var currentThen = thenBlock;
         foreach (var stmt in ifNode.ThenBody)
-            LowerStatement(stmt, thenBlock, func);
-        thenBlock.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = endBlock.Label });
+            currentThen = LowerStatement(stmt, currentThen, func);
+        currentThen.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = endBlock.Label });
 
         if (elseBlock != null)
         {
+            var currentElse = elseBlock;
             foreach (var stmt in ifNode.ElseBody)
-                LowerStatement(stmt, elseBlock, func);
-            elseBlock.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = endBlock.Label });
+                currentElse = LowerStatement(stmt, currentElse, func);
+            currentElse.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = endBlock.Label });
         }
 
+        func.AddBlock(endBlock);
+        func.AddBlock(contBlock);
         endBlock.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = contBlock.Label });
 
         return contBlock;
@@ -493,9 +497,10 @@ public sealed class AstToIrLowering
 
         headerBlock.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = bodyBlock.Label });
 
+        var current = bodyBlock;
         foreach (var stmt in whileNode.Body)
-            LowerStatement(stmt, bodyBlock, func);
-        bodyBlock.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = headerBlock.Label });
+            current = LowerStatement(stmt, current, func);
+        current.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = headerBlock.Label });
 
         endBlock.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = contBlock.Label });
 

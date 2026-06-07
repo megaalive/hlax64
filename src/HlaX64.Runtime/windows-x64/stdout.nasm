@@ -2,7 +2,7 @@
 ; File: stdout.nasm
 ;
 ; Provides runtime functions for stdout output on Windows x64.
-; Uses Win32 API (GetStdHandle, WriteConsoleA) from kernel32.
+; Uses Win32 API (GetStdHandle, WriteFile) from kernel32.
 
 bits 64
 default rel
@@ -35,15 +35,15 @@ section .text
 ; stack-align:
 ;   caller-rsp-mod-16 == 0 on entry
 ; notes:
-;   Uses WriteConsoleA to print to stdout.
+;   Uses WriteFile to print to stdout.
 global stdout_put_str
 extern GetStdHandle
-extern WriteConsoleA
+extern WriteFile
 stdout_put_str:
     push rbx
     push rsi
     push rdi
-    sub  rsp, 32         ; shadow space
+    sub  rsp, 48         ; 32-byte shadow + 8 for 5th arg (+ 16-byte alignment)
 
     mov  rbx, rcx        ; save string pointer
     ; Compute string length
@@ -58,18 +58,18 @@ stdout_put_str:
     mov  rsi, rcx        ; save length in rsi
 
     ; GetStdHandle(STD_OUTPUT_HANDLE = -11)
-    mov  ecx, -11
+    mov  rcx, -11
     call GetStdHandle
 
-    ; WriteConsoleA(hConsole, lpBuffer, nChars, &written, NULL)
-    mov  rcx, rax        ; hConsole
+    ; WriteFile(hFile, lpBuffer, nBytes, lpNumberOfBytesWritten, lpOverlapped)
+    mov  rcx, rax        ; hFile
     mov  rdx, rbx        ; lpBuffer
-    mov  r8, rsi         ; nChars
-    lea  r9, [rel written] ; &written
-    mov  qword [rsp+32], 0 ; lpReserved = NULL
-    call WriteConsoleA
+    mov  r8, rsi         ; nBytes
+    lea  r9, [rel written] ; lpNumberOfBytesWritten
+    mov  qword [rsp+32], 0 ; lpOverlapped = NULL
+    call WriteFile
 
-    add  rsp, 32
+    add  rsp, 48
     pop  rdi
     pop  rsi
     pop  rbx
@@ -88,24 +88,24 @@ stdout_put_str:
 ; stack-align:
 ;   caller-rsp-mod-16 == 0 on entry
 ; notes:
-;   Prints a single newline (0x0A) to stdout via WriteConsoleA.
+;   Prints a single newline (0x0A) to stdout via WriteFile.
 global stdout_put_nl
 stdout_put_nl:
     push rbp
     mov  rbp, rsp
-    sub  rsp, 32
+    sub  rsp, 48         ; 32-byte shadow + 8 for 5th arg (+ 16-byte alignment)
 
-    mov  ecx, -11          ; STD_OUTPUT_HANDLE
+    mov  rcx, -11          ; STD_OUTPUT_HANDLE
     call GetStdHandle
 
-    mov  rcx, rax          ; hConsole
+    mov  rcx, rax          ; hFile
     lea  rdx, [rel newline]; lpBuffer
-    mov  r8d, 1            ; nChars
-    lea  r9, [rel written] ; &written
-    mov  qword [rsp+32], 0 ; lpReserved = NULL
-    call WriteConsoleA
+    mov  r8d, 1            ; nBytes
+    lea  r9, [rel written] ; lpNumberOfBytesWritten
+    mov  qword [rsp+32], 0 ; lpOverlapped = NULL
+    call WriteFile
 
-    add  rsp, 32
+    add  rsp, 48
     pop  rbp
     ret
 
@@ -123,9 +123,16 @@ stdout_put_nl:
 ;   caller-rsp-mod-16 == 0 on entry
 ; notes:
 ;   Converts rcx to decimal via int_to_str, then prints via stdout_put_str.
+extern int_to_str
 global stdout_put_int
 stdout_put_int:
+    push rbp
+    mov  rbp, rsp
+    sub  rsp, 48         ; shadow + alignment for int_to_str / WriteFile calls
     lea  rdx, [rel intbuf]
     call int_to_str
     mov  rcx, rax
-    jmp  stdout_put_str
+    call stdout_put_str
+    add  rsp, 48
+    pop  rbp
+    ret

@@ -34,7 +34,7 @@ global int_to_str
 int_to_str:
     push rbx
     push r12
-    mov  r12, rdx
+    mov  r12, rdx        ; preserve original buffer start for return
     mov  rax, rcx
     xor  rcx, rcx
     mov  rbx, 10
@@ -61,22 +61,23 @@ int_to_str:
     test rax, rax
     jnz  .div_loop
 
+    mov  r9, r12         ; left pointer for in-place reverse
     mov  r8, r12
     add  r8, rcx
     dec  r8
 .reverse_loop:
-    cmp  r12, r8
+    cmp  r9, r8
     jge  .nul_terminate
-    mov  al, [r12]
+    mov  al, [r9]
     mov  bl, [r8]
-    mov  [r12], bl
+    mov  [r9], bl
     mov  [r8], al
-    inc  r12
+    inc  r9
     dec  r8
     jmp  .reverse_loop
 
 .nul_terminate:
-    mov  byte [r12], 0
+    mov  byte [r12 + rcx], 0
 
 .done:
     mov  rax, r12
