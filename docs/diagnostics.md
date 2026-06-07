@@ -415,8 +415,38 @@ Stable diagnostic codes help agents, IDE tooling, and contributors reference err
 | **Severity** | Error |
 | **Category** | Semantic / FFI |
 | **Since** | 0.2.0-alpha |
-| **Cause** | `extern variadic procedure` is declared but not implemented |
-| **Fix** | See RFC 0013; use fixed-arity externs until Phase 18 |
+| **Cause** | Variadic call uses unsupported float argument (integer + cstring only on SysV) |
+| **Fix** | Use integer/cstring variadic args; see RFC 0013 |
+
+### HLAX0070 — CPU feature required
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | CPU |
+| **Since** | 0.2.0-alpha |
+| **Cause** | Instruction or intrinsic requires a disabled CPU feature (e.g. AVX2) |
+| **Fix** | Pass `--features +avx2` on build/emit-nasm |
+
+### HLAX0072 — Intrinsic arity
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Builtin |
+| **Since** | 0.2.0-alpha |
+| **Cause** | Wrong argument count for `simd.*` intrinsic |
+| **Fix** | See RFC 0019 |
+
+### HLAX0073 — Atomic error
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Builtin |
+| **Since** | 0.2.0-alpha |
+| **Cause** | Invalid `atomic.*` call or unknown ordering |
+| **Fix** | Use relaxed/acquire/release/acq_rel/seq_cst; see RFC 0020 |
 
 ### HLAX0060 — Use before definite assignment
 

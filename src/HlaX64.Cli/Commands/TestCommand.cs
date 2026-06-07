@@ -39,6 +39,9 @@ public sealed class TestCommand : Command<TestCommand.Settings>
     }
 
     protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation)
+        => RunTests(settings, cancellation);
+
+    public static int RunTests(Settings settings, CancellationToken cancellation = default)
     {
         var directory = Path.GetFullPath(settings.Directory);
         if (!Directory.Exists(directory))

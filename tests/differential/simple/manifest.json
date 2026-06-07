@@ -1,0 +1,5 @@
+{
+  "name": "diff-simple",
+  "source": "source.hla64",
+  "expectedExitCode": 3
+}

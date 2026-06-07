@@ -1,0 +1,8 @@
+program diff_simple;
+procedure Main; @returns("rax");
+begin Main;
+    mov(3, rax);
+end Main;
+begin diff_simple;
+    call Main();
+end diff_simple;

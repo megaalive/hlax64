@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\src\HlaX64.Compiler\HlaX64.Compiler.csproj" />
     <ProjectReference Include="..\..\src\HlaX64.Backend.Nasm\HlaX64.Backend.Nasm.csproj" />
     <ProjectReference Include="..\..\src\HlaX64.Cli\HlaX64.Cli.csproj" />
+    <ProjectReference Include="..\..\src\HlaX64.DebugAdapter\HlaX64.DebugAdapter.csproj" />
     <ProjectReference Include="..\..\src\HlaX64.LanguageServer\HlaX64.LanguageServer.csproj" />
   </ItemGroup>
 
@@ -35,6 +36,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\..\tests\examples-curriculum\**\manifest.json" Link="tests\examples-curriculum\%(RecursiveDir)%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\tests\differential\**\manifest.json" Link="tests\differential\%(RecursiveDir)%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\tests\differential\**\*.hla64" Link="tests\differential\%(RecursiveDir)%(Filename)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

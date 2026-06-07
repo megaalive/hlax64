@@ -78,7 +78,7 @@ HlaX64 is an **early multi-platform x64 language toolchain** — not a single-ta
 | Area | Status |
 |------|--------|
 | CLI (`build`, `run`, `test`, `bench`, `explain`, `doctor`, `disasm`, `diff`, `plan`, …) | ✅ |
-| Source maps / proof bundle / `--optimize O0-O2` / CPU+AVX2 features / `hla64.lock` | ✅ |
+| Source maps / proof bundle / `--optimize O0-O2` / CPU+AVX2 / `simd.*`+`atomic.*` / dependency restore / DAP debug / `test-differential` | ✅ |
 | MCP server (12 tools, stdio JSON-RPC) | ✅ |
 | Benchmark runner + JSON manifests | ✅ |
 
