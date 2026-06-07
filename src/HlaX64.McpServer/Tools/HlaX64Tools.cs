@@ -71,8 +71,8 @@ public class HlaX64Tools
         var outputFile = Path.Combine(outDir, $"{libPrefix}{sourceName}{ext}");
 
         var sourceText = File.ReadAllText(sourceFile);
-        var nasmCode = CompilePipeline.EmitNasm(sourceFile, sourceText, opts);
-        File.WriteAllText(nasmFile, nasmCode);
+        var artifacts = CompilePipeline.Compile(sourceFile, sourceText, opts);
+        File.WriteAllText(nasmFile, artifacts.NasmCode);
 
         if (!NasmTool.TryFindNasm(out var nasmPath))
             throw new InvalidOperationException("NASM not found. Install NASM (https://nasm.us)");
@@ -81,12 +81,18 @@ public class HlaX64Tools
         if (!nasmTool.TryAssemble(nasmFile, objFile, out var nasmError, format: nasmFormat))
             throw new InvalidOperationException($"Assembly error:\n{nasmError}");
 
+        if (!RuntimeObjectProvider.TryBuildLinkExtras(
+                artifacts.Result, isWindows, outDir, out var linkExtras, out var runtimeError))
+            throw new InvalidOperationException(runtimeError!);
+
         bool linkSuccess;
         string linkError;
         if (isWindows)
-            linkSuccess = LinkerTool.TryLinkWindows(objFile, outputFile, out linkError, shared: isShared);
+            linkSuccess = LinkerTool.TryLinkWindows(objFile, outputFile, out linkError, shared: isShared,
+                extraLibraries: linkExtras);
         else
-            linkSuccess = LinkerTool.TryLink(objFile, outputFile, out linkError, out _, shared: isShared);
+            linkSuccess = LinkerTool.TryLink(objFile, outputFile, out linkError, out _, shared: isShared,
+                extraLibraries: linkExtras);
 
         if (!linkSuccess)
             throw new InvalidOperationException($"Link error:\n{linkError}");
@@ -118,8 +124,8 @@ public class HlaX64Tools
         var exeFile = Path.Combine(outDir, $"{sourceName}{ext}");
 
         var sourceText = File.ReadAllText(sourceFile);
-        var nasmCode = CompilePipeline.EmitNasm(sourceFile, sourceText, opts);
-        File.WriteAllText(nasmFile, nasmCode);
+        var artifacts = CompilePipeline.Compile(sourceFile, sourceText, opts);
+        File.WriteAllText(nasmFile, artifacts.NasmCode);
 
         if (!NasmTool.TryFindNasm(out var nasmPath))
             throw new InvalidOperationException("NASM not found.");
@@ -128,8 +134,22 @@ public class HlaX64Tools
         if (!nasmTool.TryAssemble(nasmFile, objFile, out var nasmError, format: nasmFormat))
             throw new InvalidOperationException($"Assembly error:\n{nasmError}");
 
+        if (!RuntimeObjectProvider.TryBuildLinkExtras(
+                artifacts.Result, isWindows, outDir, out var linkExtras, out var runtimeError))
+            throw new InvalidOperationException(runtimeError!);
+
         bool requiresWsl;
-        if (!LinkerTool.TryLink(objFile, exeFile, out var linkError, out requiresWsl))
+        bool linkSuccess;
+        string linkError;
+        if (isWindows)
+        {
+            requiresWsl = false;
+            linkSuccess = LinkerTool.TryLinkWindows(objFile, exeFile, out linkError, extraLibraries: linkExtras);
+        }
+        else
+            linkSuccess = LinkerTool.TryLink(objFile, exeFile, out linkError, out requiresWsl, extraLibraries: linkExtras);
+
+        if (!linkSuccess)
             throw new InvalidOperationException($"Link error:\n{linkError}");
 
         if (!isWindows && !requiresWsl)
