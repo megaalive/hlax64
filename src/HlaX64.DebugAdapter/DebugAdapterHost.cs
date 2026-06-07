@@ -14,6 +14,12 @@ public sealed class DebugAdapterHost
         _input = input;
         _output = output;
         _backend = backend ?? DebugBackendFactory.CreateDefault();
+        _backend.Stopped += OnBackendStopped;
+        _backend.OutputReceived += line => Write(_responses.Event("output", new
+        {
+            category = "console",
+            output = line + Environment.NewLine
+        }));
     }
 
     public IDebugBackend Backend => _backend;
@@ -40,6 +46,16 @@ public sealed class DebugAdapterHost
                     HandleRequest(req);
             }
         }
+    }
+
+    private void OnBackendStopped(DebugStopInfo info)
+    {
+        Write(_responses.Event("stopped", new
+        {
+            reason = info.Reason,
+            threadId = info.ThreadId,
+            allThreadsStopped = true
+        }));
     }
 
     private void HandleRequest(DapRequest req)
@@ -95,24 +111,60 @@ public sealed class DebugAdapterHost
                 break;
 
             case "stackTrace":
+                var frames = _backend.GetStackFrames();
                 Write(_responses.Success(req.Seq, "stackTrace", new
                 {
-                    stackFrames = _backend.GetStackFrames(),
-                    totalFrames = 1
+                    stackFrames = frames,
+                    totalFrames = frames.Count
                 }));
                 break;
 
             case "scopes":
                 Write(_responses.Success(req.Seq, "scopes", new
                 {
-                    scopes = new[] { new { name = "Locals", variablesReference = 1, expensive = false } }
+                    scopes = new[]
+                    {
+                        new { name = "Locals", variablesReference = 1, expensive = false },
+                        new { name = "Registers", variablesReference = 2, expensive = false }
+                    }
                 }));
+                break;
+
+            case "variables":
+                var variablesReference = req.Arguments?.TryGetProperty("variablesReference", out var vr) == true
+                    ? vr.GetInt32() : 0;
+                if (variablesReference == 2)
+                {
+                    var regs = _backend.GetRegisters()
+                        .Select(r => new { name = r.Name, value = r.Value, variablesReference = 0 })
+                        .ToArray();
+                    Write(_responses.Success(req.Seq, "variables", new { variables = regs }));
+                }
+                else
+                {
+                    Write(_responses.Success(req.Seq, "variables", new { variables = Array.Empty<object>() }));
+                }
                 break;
 
             case "continue":
                 _backend.Continue();
                 Write(_responses.Success(req.Seq, "continue", new { allThreadsContinued = true }));
                 Write(_responses.Event("continued", new { threadId = 1 }));
+                break;
+
+            case "next":
+                _backend.StepOver();
+                Write(_responses.Success(req.Seq, "next", new { allThreadsContinued = true }));
+                break;
+
+            case "stepIn":
+                _backend.StepInto();
+                Write(_responses.Success(req.Seq, "stepIn", new { allThreadsContinued = true }));
+                break;
+
+            case "stepOut":
+                _backend.StepOut();
+                Write(_responses.Success(req.Seq, "stepOut", new { allThreadsContinued = true }));
                 break;
 
             case "disconnect":
