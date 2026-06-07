@@ -7,8 +7,10 @@
     <Project Path="src/HlaX64.McpServer/HlaX64.McpServer.csproj" />
     <Project Path="src/HlaX64.DebugAdapter/HlaX64.DebugAdapter.csproj" />
     <Project Path="src/HlaX64.LanguageServer/HlaX64.LanguageServer.csproj" />
+    <Project Path="src/HlaX64.AssemblyLab/HlaX64.AssemblyLab.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/HlaX64.Compiler.Tests/HlaX64.Compiler.Tests.csproj" />
+    <Project Path="tests/HlaX64.AssemblyLab.Tests/HlaX64.AssemblyLab.Tests.csproj" />
   </Folder>
 </Solution>

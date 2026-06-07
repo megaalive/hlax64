@@ -1,0 +1,113 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:HlaX64.AssemblyLab.ViewModels"
+        xmlns:models="using:HlaX64.AssemblyLab.Models"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+        x:Class="HlaX64.AssemblyLab.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="HlaX64 Assembly Lab"
+        Width="1200" Height="800">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Open File…" Command="{Binding OpenFileCommand}"/>
+                <MenuItem Header="Open _Folder…" Command="{Binding OpenFolderCommand}"/>
+            </MenuItem>
+            <MenuItem Header="_Build" Command="{Binding BuildCommand}"/>
+            <MenuItem Header="_Run" Command="{Binding RunCommand}"/>
+            <MenuItem Header="_Debug" Command="{Binding DebugCommand}"/>
+            <MenuItem Header="Export _Proof Bundle" Command="{Binding ExportProofBundleCommand}"/>
+        </Menu>
+
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8,4" Spacing="8">
+            <Button Content="Open File" Command="{Binding OpenFileCommand}"/>
+            <Button Content="Open Folder" Command="{Binding OpenFolderCommand}"/>
+            <Button Content="Build" Command="{Binding BuildCommand}"/>
+            <Button Content="Run" Command="{Binding RunCommand}"/>
+            <Button Content="Debug" Command="{Binding DebugCommand}"/>
+            <Button Content="Proof Bundle" Command="{Binding ExportProofBundleCommand}"/>
+            <TextBlock VerticalAlignment="Center" Text="Target:"/>
+            <ComboBox MinWidth="180" ItemsSource="{Binding TargetChoices}" SelectedItem="{Binding SelectedTarget}"/>
+        </StackPanel>
+
+        <Border DockPanel.Dock="Bottom" BorderBrush="#444" BorderThickness="0,1,0,0" Padding="8,4">
+            <TextBlock Text="{Binding StatusText}"/>
+        </Border>
+
+        <Grid ColumnDefinitions="260,*" RowDefinitions="*,180">
+            <Border Grid.Row="0" Grid.Column="0" BorderBrush="#444" BorderThickness="0,0,1,0" Padding="4">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" FontWeight="Bold" Text="Diagnostics" Margin="0,0,0,4"/>
+                    <ListBox x:Name="diagList" ItemsSource="{Binding Diagnostics}"
+                             DoubleTapped="Diagnostics_DoubleTapped">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="models:LabDiagnosticItem">
+                                <TextBlock Text="{Binding Display}" TextWrapping="Wrap"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Border>
+
+            <TabControl Grid.Row="0" Grid.Column="1" SelectedIndex="{Binding SelectedTabIndex}">
+                <TabItem Header="Source">
+                    <TextBox AcceptsReturn="True" TextWrapping="Wrap"
+                             FontFamily="Consolas,Courier New,monospace"
+                             Text="{Binding SourceText, Mode=TwoWay}"/>
+                </TabItem>
+                <TabItem Header="IR">
+                    <ScrollViewer>
+                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                                 FontFamily="Consolas,Courier New,monospace"
+                                 Text="{Binding IrText}"/>
+                    </ScrollViewer>
+                </TabItem>
+                <TabItem Header="NASM">
+                    <ScrollViewer>
+                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap"
+                                 FontFamily="Consolas,Courier New,monospace"
+                                 Text="{Binding NasmText}"/>
+                    </ScrollViewer>
+                </TabItem>
+                <TabItem Header="ABI">
+                    <ScrollViewer>
+                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                                 FontFamily="Consolas,Courier New,monospace"
+                                 Text="{Binding AbiText}"/>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+
+            <TabControl Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,4,0,0">
+                <TabItem Header="Output">
+                    <ScrollViewer>
+                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                                 FontFamily="Consolas,Courier New,monospace"
+                                 Text="{Binding OutputText}"/>
+                    </ScrollViewer>
+                </TabItem>
+                <TabItem Header="DAP">
+                    <ScrollViewer>
+                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                                 FontFamily="Consolas,Courier New,monospace"
+                                 Text="{Binding DapText}"/>
+                    </ScrollViewer>
+                </TabItem>
+                <TabItem Header="Capabilities">
+                    <ScrollViewer>
+                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                                 FontFamily="Consolas,Courier New,monospace"
+                                 Text="{Binding CapabilitiesText}"/>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+        </Grid>
+    </DockPanel>
+</Window>
