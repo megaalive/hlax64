@@ -461,6 +461,62 @@ public class AssemblyLabBackendTests
         }
     }
 
+    [Theory]
+    [InlineData("exists", "exists", 0)]
+    [InlineData("filesize", "sample-a.txt bytes: 6", 0)]
+    [InlineData("listfiles", "sample-a.txt  6", 0)]
+    [InlineData("linecount", "sample-b.txt lines: 2", 0)]
+    public void RealTool_builds_and_runs_natively_on_windows(string tool, string expectedStdout, int expectedExit)
+    {
+        if (!OperatingSystem.IsWindows())
+            return;
+        if (!LinkerTool.TryFindWindowsLinker(out _, out _, out _))
+            return;
+
+        var repoRoot = FindRepoRoot();
+        var sourcePath = Path.Combine(repoRoot, "examples", "10-real-tools", tool, $"{tool}.hla64");
+        if (!File.Exists(sourcePath))
+            return;
+
+        var backend = new AssemblyLabBackend();
+        var outDir = Path.Combine(Path.GetTempPath(), $"hlax64-real-{tool}-" + Guid.NewGuid().ToString("N")[..8]);
+        try
+        {
+            var build = backend.Build(sourcePath, File.ReadAllText(sourcePath), "windows-x64-msabi", outDir);
+            Assert.True(build.Success, build.Message);
+            Assert.NotNull(build.OutputFile);
+            Assert.True(File.Exists(build.OutputFile!), build.Message);
+
+            // Run the executable with the repo root as the working directory so
+            // the tool's relative fixture paths resolve, and guard against any
+            // regression hang with an explicit timeout.
+            using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = build.OutputFile!,
+                WorkingDirectory = repoRoot,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            });
+            Assert.NotNull(process);
+            var stdout = process!.StandardOutput.ReadToEnd();
+            if (!process.WaitForExit(15000))
+            {
+                process.Kill(entireProcessTree: true);
+                Assert.Fail($"{tool} did not exit within 15s (possible loop/CFG regression)");
+            }
+
+            Assert.Equal(expectedExit, process.ExitCode);
+            Assert.Contains(expectedStdout, stdout, StringComparison.Ordinal);
+        }
+        finally
+        {
+            if (Directory.Exists(outDir))
+                Directory.Delete(outDir, recursive: true);
+        }
+    }
+
     private static string FindRepoRoot()
     {
         var dir = AppContext.BaseDirectory;

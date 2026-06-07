@@ -502,9 +502,78 @@ begin test;
     call Sum5(1, 2, 3, 4, 5);
 end test;";
         var nasm = EmitForWindows(source);
-        Assert.Contains("sub rsp, 40", nasm);
+        // 1 stack arg => 8 bytes, padded to 16 to keep RSP 16-byte aligned
+        // at the call (32-byte shadow + 16 = 48).
+        Assert.Contains("sub rsp, 48", nasm);
         Assert.Contains("qword [0 + rsp + 32], 5", nasm);
         Assert.Contains("mov rcx, 1", nasm);
         Assert.Contains("call Sum5", nasm);
+    }
+
+    [Fact]
+    public void Emit_WindowsCallSevenArgs_AllocatesSixteenByteAlignedStack()
+    {
+        // CreateFileA-style call: 4 register args + 3 stack args. The stack
+        // allocation must stay a multiple of 16 so RSP is 16-byte aligned at
+        // the CALL; an odd stack-arg count previously produced `sub rsp, 56`
+        // which crashed callees that use aligned SSE stores.
+        var source = @"program test;
+procedure Sum7(a:int64; b:int64; c:int64; d:int64; e:int64; f:int64; g:int64); @returns(""rax"");
+begin Sum7;
+    mov(a, rax);
+end Sum7;
+begin test;
+    call Sum7(1, 2, 3, 4, 5, 6, 7);
+end test;";
+        var nasm = EmitForWindows(source);
+        // 3 stack args => 24 bytes, padded to 32 (32-byte shadow + 32 = 64).
+        Assert.Contains("sub rsp, 64", nasm);
+        Assert.DoesNotContain("sub rsp, 56", nasm);
+        Assert.Contains("qword [0 + rsp + 32], 5", nasm);
+        Assert.Contains("qword [8 + rsp + 32], 6", nasm);
+        Assert.Contains("qword [16 + rsp + 32], 7", nasm);
+        Assert.Contains("call Sum7", nasm);
+    }
+
+    [Fact]
+    public void Emit_WindowsWhileWithNestedIf_DoesNotFallThroughLoopContinuation()
+    {
+        // Regression: when a while loop body contains an if, the loop's
+        // continuation block (which carries the procedure tail/epilogue) must
+        // be laid out AFTER the if's blocks. Otherwise the continuation falls
+        // through into the then-block and jumps back into the loop forever.
+        var source = @"program test;
+procedure CountNewlines(n:int64); @returns(""rax"");
+begin CountNewlines;
+    mov(0, r11);
+    mov(0, r8);
+    while(r8 < n) do
+        mov([r8].byte, r9);
+        if(r9 = 10) then
+            add(1, r11);
+        endif;
+        add(1, r8);
+    endwhile;
+    mov(r11, rax);
+end CountNewlines;
+begin test;
+    mov(1, rax);
+end test;";
+        var nasm = EmitForWindows(source);
+        var lines = nasm.Replace("\r", "").Split('\n');
+
+        int contIdx = Array.FindIndex(lines, l => l.Trim() == "cont_0:");
+        int thenIdx = Array.FindIndex(lines, l => l.Trim() == "then_1:");
+        Assert.True(contIdx >= 0, "expected loop continuation block cont_0");
+        Assert.True(thenIdx >= 0, "expected nested if then_1 block");
+
+        // The nested if blocks must precede the loop continuation block.
+        Assert.True(thenIdx < contIdx,
+            $"then_1 (idx {thenIdx}) must come before cont_0 (idx {contIdx}) so the loop tail does not fall into the if body");
+
+        // The continuation block must terminate with the procedure epilogue
+        // (ret), not fall through to another block.
+        var tail = string.Join("\n", lines[contIdx..]);
+        Assert.Contains("ret", tail);
     }
 }
