@@ -12,9 +12,9 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
 {
     public sealed class Settings : CommandSettings, IVerificationCliOptions
     {
-        [Description("Path to the .hla64 source file")]
-        [CommandArgument(0, "<source>")]
-        public string Source { get; set; } = string.Empty;
+        [Description("Path to the .hla64 source file (optional when hla64.toml is present)")]
+        [CommandArgument(0, "[source]")]
+        public string? Source { get; set; }
 
         [Description("Output directory (default: build/)")]
         [CommandOption("-o|--output")]
@@ -64,13 +64,17 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
         [CommandOption("--debug-info")]
         public bool DebugInfo { get; set; }
 
-        [Description("Optimization level: O0 (default) or O1")]
+        [Description("Optimization level: O0 (default), O1, or O2")]
         [CommandOption("--optimize")]
         public string? Optimize { get; set; }
 
         [Description("Emit proof bundle directory")]
         [CommandOption("--proof-bundle")]
         public bool ProofBundle { get; set; }
+
+        [Description("Include tests.json summary in proof bundle when present")]
+        [CommandOption("--proof-bundle-include-tests")]
+        public bool ProofBundleIncludeTests { get; set; }
 
         [Description("CPU baseline profile")]
         [CommandOption("--cpu")]
@@ -83,12 +87,16 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
 
     protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation)
     {
-        if (!File.Exists(settings.Source))
-            return Fail(settings, settings.Source, null, null, null, null, $"Source file '{settings.Source}' not found.");
+        var (sourceFile, sourceText, projectDir) = ResolveSource(settings);
+        if (sourceFile == null)
+            return Fail(settings, null, null, null, null, null, "No source file or hla64.toml manifest found.");
 
-        var sourceFile = Path.GetFullPath(settings.Source);
+        if (!File.Exists(sourceFile))
+            return Fail(settings, settings.Source, null, null, null, null, $"Source file '{sourceFile}' not found.");
+
+        sourceFile = Path.GetFullPath(sourceFile);
         var sourceName = Path.GetFileNameWithoutExtension(sourceFile);
-        var outputDir = settings.OutputDir ?? Path.Combine(Path.GetDirectoryName(sourceFile)!, "..", "build", sourceName);
+        var outputDir = settings.OutputDir ?? Path.Combine(projectDir ?? Path.GetDirectoryName(sourceFile)!, "build", sourceName);
         outputDir = Path.GetFullPath(outputDir);
         Directory.CreateDirectory(outputDir);
 
@@ -117,7 +125,6 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
             if (!settings.Json)
                 Console.WriteLine($"Compiling {sourceFile}...");
 
-            var sourceText = File.ReadAllText(sourceFile);
             var artifacts = CompilePipeline.Compile(sourceFile, sourceText, options);
             var compileResult = artifacts.Result;
             File.WriteAllText(nasmFile, artifacts.NasmCode);
@@ -186,7 +193,9 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
             if (settings.ProofBundle)
             {
                 proofBundleDir = ProofBundleWriter.Write(
-                    sourceFile, sourceText, options, outputDir, artifacts, nasmFile, objFile, outputFile);
+                    sourceFile, sourceText, options, outputDir, artifacts, nasmFile, objFile, outputFile,
+                    includeTestsSummary: settings.ProofBundleIncludeTests,
+                    projectDir: projectDir);
                 if (!settings.Json)
                     Console.WriteLine($"  -> proof bundle: {proofBundleDir}");
             }
@@ -251,5 +260,38 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
         }
 
         return 1;
+    }
+
+    private static (string? SourceFile, string SourceText, string? ProjectDir) ResolveSource(Settings settings)
+    {
+        if (!string.IsNullOrWhiteSpace(settings.Source))
+        {
+            var path = Path.GetFullPath(settings.Source);
+            return (path, File.ReadAllText(path), Path.GetDirectoryName(path));
+        }
+
+        var cwd = Directory.GetCurrentDirectory();
+        var manifestPath = Path.Combine(cwd, "hla64.toml");
+        if (!File.Exists(manifestPath))
+            return (null, "", null);
+
+        var manifest = HlaX64.Cli.Project.ProjectManifest.Load(manifestPath);
+        var parts = new List<string>();
+        string? primary = null;
+        foreach (var rel in manifest.Sources.Values)
+        {
+            var full = Path.GetFullPath(Path.Combine(cwd, rel));
+            if (File.Exists(full))
+            {
+                parts.Add($"// --- {rel} ---\n{File.ReadAllText(full)}");
+                primary ??= full;
+            }
+        }
+
+        if (primary == null)
+            return (null, "", cwd);
+
+        var combined = string.Join("\n\n", parts);
+        return (primary, combined, cwd);
     }
 }

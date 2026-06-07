@@ -95,6 +95,84 @@ public sealed class LanguageServerEditorServicesTests
     }
 
     [Fact]
+    public void GetSignatureHelp_OnProcedureCall_ReturnsParameters()
+    {
+        var source = """
+            program t;
+            procedure Add(a: int64; b: int64); @returns("rax");
+            begin Add;
+                mov(a, rax);
+            end Add;
+            begin t;
+                call Add(a, b);
+            end t;
+            """;
+        var help = LanguageServerEditorServices.GetSignatureHelp(source, 6, 17);
+        Assert.NotNull(help);
+        var json = System.Text.Json.JsonSerializer.Serialize(help);
+        Assert.Contains("Add", json);
+        Assert.Contains("signatures", json, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void GetDocumentHighlights_OnLocalVariable_ReturnsOccurrences()
+    {
+        var source = """
+            program t;
+            procedure P; @returns("rax");
+            var x: int64;
+            begin P;
+                mov(1, x);
+                add(x, rax);
+            end P;
+            begin t;
+            end t;
+            """;
+        var highlights = LanguageServerEditorServices.GetDocumentHighlights(source, 4, 12);
+        Assert.True(highlights.Length >= 2);
+    }
+
+    [Fact]
+    public void GetReferences_OnProcedureName_FindsCallSite()
+    {
+        var source = """
+            program t;
+            procedure Fill; @returns("rax");
+            begin Fill;
+                mov(0, rax);
+            end Fill;
+            begin t;
+                call Fill();
+            end t;
+            """;
+        var refs = LanguageServerEditorServices.GetReferences(source, 6, 10, "file:///test.hla64");
+        var json = System.Text.Json.JsonSerializer.Serialize(refs);
+        Assert.True(refs.Length >= 2);
+    }
+
+    [Fact]
+    public void GetSemanticTokens_MarksKeywordsAndRegisters()
+    {
+        var source = "program t;\nbegin t;\n    mov(1, rax);\nend t;";
+        var tokens = LanguageServerEditorServices.GetSemanticTokens(source);
+        var json = System.Text.Json.JsonSerializer.Serialize(tokens);
+        Assert.Contains("data", json, StringComparison.OrdinalIgnoreCase);
+        var data = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(json)
+            .GetProperty("data");
+        Assert.True(data.GetArrayLength() > 0);
+    }
+
+    [Fact]
+    public void GetCodeActions_IncludesFormatDocument()
+    {
+        var source = "program t;\nbegin t;\nmov(1,rax);\nend t;";
+        var actions = LanguageServerEditorServices.GetCodeActions(source, 0, 0, 3, 0);
+        Assert.NotNull(actions);
+        var json = System.Text.Json.JsonSerializer.Serialize(actions);
+        Assert.Contains("Format document", json);
+    }
+
+    [Fact]
     public void DocumentDiagnostics_BoundsWarning_WhenLiteralOutOfRange()
     {
         var source = """

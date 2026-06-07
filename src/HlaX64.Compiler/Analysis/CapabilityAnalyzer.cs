@@ -6,14 +6,22 @@ namespace HlaX64.Compiler.Analysis;
 
 public sealed class CapabilityManifest
 {
-    public bool FilesystemAccess { get; init; }
+    public bool FilesystemAccess { get; set; }
+    public bool HasStdoutPut { get; set; }
+    public bool HasExtern { get; set; }
     public List<string> Syscalls { get; init; } = [];
     public List<string> ExternalLibraries { get; init; } = [];
     public List<string> ExternProcedures { get; init; } = [];
+    public List<string> FileRelatedExterns { get; init; } = [];
 }
 
 public static class CapabilityAnalyzer
 {
+    private static readonly HashSet<string> FileExternHints = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "open", "close", "read", "write", "fopen", "fclose", "fread", "fwrite", "puts", "printf"
+    };
+
     public static CapabilityManifest Analyze(string sourceText)
     {
         var manifest = new CapabilityManifest();
@@ -22,9 +30,19 @@ public static class CapabilityAnalyzer
 
         foreach (var ext in program.Externs.OfType<ExternProcedureNode>())
         {
+            manifest.HasExtern = true;
             manifest.ExternProcedures.Add(ext.Name);
             if (!string.IsNullOrEmpty(ext.LinkLibrary))
                 manifest.ExternalLibraries.Add(ext.LinkLibrary);
+
+            if (FileExternHints.Contains(ext.Name) ||
+                ext.Name.Contains("file", StringComparison.OrdinalIgnoreCase) ||
+                ext.Name.Contains("read", StringComparison.OrdinalIgnoreCase) ||
+                ext.Name.Contains("write", StringComparison.OrdinalIgnoreCase))
+            {
+                manifest.FilesystemAccess = true;
+                manifest.FileRelatedExterns.Add(ext.Name);
+            }
         }
 
         foreach (var stmt in EnumerateStatements(program))
@@ -35,10 +53,14 @@ public static class CapabilityAnalyzer
                 if (!manifest.Syscalls.Contains("generic"))
                     manifest.Syscalls.Add("generic");
             }
+
+            if (stmt is CallNode call && call.Name.Equals("stdout.put", StringComparison.OrdinalIgnoreCase))
+                manifest.HasStdoutPut = true;
         }
 
         if (sourceText.Contains("stdout.put", StringComparison.Ordinal))
         {
+            manifest.HasStdoutPut = true;
             if (!manifest.Syscalls.Contains("write"))
                 manifest.Syscalls.Add("write");
             if (!manifest.Syscalls.Contains("exit"))

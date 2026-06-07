@@ -11,6 +11,7 @@
 |------|----------|
 | `--optimize O0` | Default — no IR optimization |
 | `--optimize O1` | Constant folding on IR (`imm+imm` → `imm`) |
+| `--optimize O2` | O1 + copy propagation through `mov` chains + aggressive peephole (`mov reg,0` → `xor reg,reg`) |
 
 ## Peephole
 

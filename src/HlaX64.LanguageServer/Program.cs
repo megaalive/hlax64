@@ -48,6 +48,15 @@ internal static class Program
                             definitionProvider = true,
                             documentSymbolProvider = true,
                             documentFormattingProvider = true,
+                            signatureHelpProvider = new { triggerCharacters = new[] { "(", "," } },
+                            documentHighlightProvider = true,
+                            referencesProvider = true,
+                            semanticTokensProvider = new
+                            {
+                                legend = LanguageServerEditorServices.GetSemanticTokensLegend(),
+                                full = true
+                            },
+                            codeActionProvider = true,
                             executeCommandProvider = new { commands = new[] { "hla64.showIr", "hla64.showNasm", "hla64.showStackLayout" } }
                         },
                         serverInfo = new { name = "HlaX64.LanguageServer", version = HlaX64.Compiler.Compilation.GetVersion() }
@@ -111,6 +120,26 @@ internal static class Program
                     HandleFormatting(id, root);
                     break;
 
+                case "textDocument/signatureHelp" when hasId:
+                    HandleSignatureHelp(id, root);
+                    break;
+
+                case "textDocument/documentHighlight" when hasId:
+                    HandleDocumentHighlight(id, root);
+                    break;
+
+                case "textDocument/references" when hasId:
+                    HandleReferences(id, root);
+                    break;
+
+                case "textDocument/semanticTokens/full" when hasId:
+                    HandleSemanticTokens(id, root);
+                    break;
+
+                case "textDocument/codeAction" when hasId:
+                    HandleCodeAction(id, root);
+                    break;
+
                 case "workspace/executeCommand" when hasId:
                     HandleExecuteCommand(id, root);
                     break;
@@ -155,6 +184,74 @@ internal static class Program
         var uri = p.GetProperty("textDocument").GetProperty("uri").GetString()!;
         Documents.TryGetValue(uri, out var text);
         WriteResponse(id, LanguageServerEditorServices.GetDocumentSymbols(text ?? ""));
+    }
+
+    private static void HandleSignatureHelp(JsonElement id, JsonElement root)
+    {
+        if (!TryGetDocumentPosition(root, out _, out var line, out var character, out var text))
+        {
+            WriteResponse(id, null!);
+            return;
+        }
+
+        WriteResponse(id, LanguageServerEditorServices.GetSignatureHelp(text, line, character)!);
+    }
+
+    private static void HandleDocumentHighlight(JsonElement id, JsonElement root)
+    {
+        if (!TryGetDocumentPosition(root, out _, out var line, out var character, out var text))
+        {
+            WriteResponse(id, Array.Empty<object>());
+            return;
+        }
+
+        WriteResponse(id, LanguageServerEditorServices.GetDocumentHighlights(text, line, character));
+    }
+
+    private static void HandleReferences(JsonElement id, JsonElement root)
+    {
+        if (!TryGetDocumentPosition(root, out var uri, out var line, out var character, out var text))
+        {
+            WriteResponse(id, Array.Empty<object>());
+            return;
+        }
+
+        WriteResponse(id, LanguageServerEditorServices.GetReferences(text, line, character, uri));
+    }
+
+    private static void HandleSemanticTokens(JsonElement id, JsonElement root)
+    {
+        if (!root.TryGetProperty("params", out var p))
+        {
+            WriteResponse(id, new { data = Array.Empty<int>() });
+            return;
+        }
+
+        var uri = p.GetProperty("textDocument").GetProperty("uri").GetString()!;
+        Documents.TryGetValue(uri, out var text);
+        WriteResponse(id, LanguageServerEditorServices.GetSemanticTokens(text ?? ""));
+    }
+
+    private static void HandleCodeAction(JsonElement id, JsonElement root)
+    {
+        if (!root.TryGetProperty("params", out var p))
+        {
+            WriteResponse(id, Array.Empty<object>());
+            return;
+        }
+
+        var uri = p.GetProperty("textDocument").GetProperty("uri").GetString()!;
+        Documents.TryGetValue(uri, out var text);
+        var range = p.GetProperty("range");
+        var start = range.GetProperty("start");
+        var end = range.GetProperty("end");
+        var result = LanguageServerEditorServices.GetCodeActions(
+            text ?? "",
+            start.GetProperty("line").GetInt32(),
+            start.GetProperty("character").GetInt32(),
+            end.GetProperty("line").GetInt32(),
+            end.GetProperty("character").GetInt32());
+        WriteResponse(id, result ?? new { actions = Array.Empty<object>() });
     }
 
     private static void HandleFormatting(JsonElement id, JsonElement root)

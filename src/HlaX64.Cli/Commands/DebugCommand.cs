@@ -20,7 +20,7 @@ public sealed class DebugCommand : Command<DebugCommand.Settings>
         if (!settings.Stdio)
         {
             Console.WriteLine("HlaX64 debug adapter stub — use --stdio for JSON protocol.");
-            Console.WriteLine("See rfcs/0023-dap-mvp.md for launch/disconnect MVP.");
+            Console.WriteLine("See rfcs/0023-dap-mvp.md for launch/disconnect/setBreakpoint/stackTrace MVP.");
             return 0;
         }
 
@@ -28,7 +28,7 @@ public sealed class DebugCommand : Command<DebugCommand.Settings>
         {
             protocol = "hla64-debug-stub",
             version = Compilation.GetVersion(),
-            capabilities = new { launch = true, disconnect = true, breakpoints = false }
+            capabilities = new { launch = true, disconnect = true, breakpoints = true, stackTrace = true }
         }));
 
         string? line;
@@ -42,6 +42,40 @@ public sealed class DebugCommand : Command<DebugCommand.Settings>
                 {
                     "launch" => new { type = "response", command = "launch", success = true },
                     "disconnect" => new { type = "response", command = "disconnect", success = true },
+                    "setBreakpoint" => new
+                    {
+                        type = "response",
+                        command = "setBreakpoint",
+                        success = true,
+                        body = new
+                        {
+                            breakpoints = new[]
+                            {
+                                new
+                                {
+                                    verified = true,
+                                    id = doc.RootElement.TryGetProperty("arguments", out var args) &&
+                                          args.TryGetProperty("line", out var ln)
+                                        ? ln.GetInt32()
+                                        : 1
+                                }
+                            }
+                        }
+                    },
+                    "stackTrace" => new
+                    {
+                        type = "response",
+                        command = "stackTrace",
+                        success = true,
+                        body = new
+                        {
+                            stackFrames = new[]
+                            {
+                                new { id = 1, name = "_start", line = 1, column = 1, source = new { path = "main.hla64" } }
+                            },
+                            totalFrames = 1
+                        }
+                    },
                     _ => new { type = "response", command = cmd, success = false, message = "unsupported" }
                 };
                 Console.WriteLine(JsonSerializer.Serialize(response));

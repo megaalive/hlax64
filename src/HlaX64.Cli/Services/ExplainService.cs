@@ -70,4 +70,22 @@ public sealed class ExplainReport
         }
         return string.Join('\n', lines);
     }
+
+    public static VerificationSummary CollectVerificationWarnings(string sourceText, CompilationOptions options)
+    {
+        var warnings = options.Warnings with { Liveness = true, Unreachable = true, DefiniteAssignment = true };
+        var compileOpts = options with { Warnings = warnings };
+        var result = new Compilation("(explain)", sourceText, compileOpts).Process();
+        var clobber = result.StructuredDiagnostics
+            .Where(d => d.Code == "HLAX0063")
+            .Select(d => d.Message)
+            .ToList();
+        var abiIssues = result.Success
+            ? HlaX64.Compiler.Verification.AbiVerifier.Verify(
+                compileOpts, result.IrFunctions, result.ExternProcedures, result.RecordTypes, result.ProcedureTypes).Issues.ToList()
+            : [];
+        return new VerificationSummary(clobber, abiIssues);
+    }
+
+    public sealed record VerificationSummary(IReadOnlyList<string> ClobberWarnings, IReadOnlyList<string> AbiIssues);
 }

@@ -37,6 +37,12 @@ public sealed class NasmEmitter
         foreach (var ext in allExterns)
             AppendLine($"extern {ext}");
 
+        if (_options.TraceProcedures && !_options.IsWindowsTarget)
+        {
+            AppendLine("extern hla64_trace_enter");
+            AppendLine("extern hla64_trace_exit");
+        }
+
         AppendLine("section .text");
         AppendLine("global _start");
         foreach (var func in functions)
@@ -63,7 +69,17 @@ public sealed class NasmEmitter
         {
             AppendLine("");
             AppendLine("section .debug_line align=1");
-            AppendLine("    dd 0  ; DWARF line table stub (MVP — Windows deferred to post-MVP)");
+            var srcFile = _options.SourceFileName ?? "source.hla64";
+            AppendLine($"    ; DWARF line table stub — file: {srcFile}");
+            AppendLine("    dd 0                    ; unit_length (placeholder)");
+            AppendLine("    dw 1                    ; version");
+            AppendLine("    dd 0                    ; header_length");
+            AppendLine("    db 1                    ; minimum_instruction_length");
+            AppendLine("    db 1                    ; default_is_stmt");
+            AppendLine("    db 0                    ; line_base");
+            AppendLine("    db 1                    ; line_range");
+            AppendLine("    db 0                    ; opcode_base");
+            AppendLine($"    db \"{EscapeString(srcFile)}\", 0  ; file table entry");
         }
 
         var bssGlobals = globalData.Where(g => g.InBss).ToList();
@@ -136,7 +152,14 @@ public sealed class NasmEmitter
             AppendLine($"%line 1 {_options.SourceFileName}");
 
         if (_options.TraceProcedures)
+        {
             AppendLine($"    ; @trace-enter {func.Name}");
+            if (!_options.IsWindowsTarget)
+            {
+                AppendLine("    int3    ; trace breakpoint (Linux MVP)");
+                AppendLine("    ; call hla64_trace_enter  ; link runtime trace stub when available");
+            }
+        }
 
         AppendLine($"{func.Name}:");
 
@@ -171,7 +194,11 @@ public sealed class NasmEmitter
         }
 
         if (_options.TraceProcedures)
+        {
             AppendLine($"    ; @trace-exit {func.Name}");
+            if (!_options.IsWindowsTarget)
+                AppendLine("    ; call hla64_trace_exit");
+        }
     }
 
     private void AppendLine(string line)
