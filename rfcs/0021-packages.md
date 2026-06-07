@@ -2,20 +2,28 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | MVP |
+| **Status** | Partially implemented |
 | **Phase** | 22 |
 
 ## Manifest
 
-`hla64.toml` — `name`, `version`, `target`, `sources`, `dependencies[]`.
+`hla64.toml` — `name`, `version`, `target`, `sources`, `[dependencies]`.
 
-Schema: `schemas/hla64.toml.schema.json`.
+```toml
+[dependencies]
+helpers = { path = "../helpers" }
+# remote = { git = "https://...", rev = "abc123" }
+```
 
 ## Commands
 
-- `hla64 new console [name]` — template project
-- `hla64 restore` — reads manifest (dependency resolution stub)
+- `hla64 restore` — resolves path/git deps, writes `hla64.lock`
+- `hla64 build` — compiles main + dependency sources; fails on lock mismatch
 
 ## Lock file
 
-`hla64.lock` — documented schema; full resolver deferred.
+`hla64.lock` — pinned name, rev/version, content hash, resolved path, source list.
+
+## Deferred
+
+- Version ranges, transitive dependency resolution, NuGet-style feeds
