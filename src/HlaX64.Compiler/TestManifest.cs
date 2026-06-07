@@ -43,6 +43,7 @@ public sealed class TestManifest
     public static List<TestManifest> LoadAll(string directory)
     {
         var manifests = new List<TestManifest>();
+        directory = ResolveDirectory(directory);
 
         if (!Directory.Exists(directory))
             return manifests;
@@ -60,6 +61,25 @@ public sealed class TestManifest
         }
 
         return manifests;
+    }
+
+    private static string ResolveDirectory(string directory)
+    {
+        if (Path.IsPathRooted(directory) || Directory.Exists(directory))
+            return directory;
+
+        var current = Directory.GetCurrentDirectory();
+        for (var dir = new DirectoryInfo(current); dir != null; dir = dir.Parent)
+        {
+            if (!File.Exists(Path.Combine(dir.FullName, "HlaX64.slnx")))
+                continue;
+
+            var candidate = Path.Combine(dir.FullName, directory);
+            if (Directory.Exists(candidate))
+                return candidate;
+        }
+
+        return directory;
     }
 
     /// <summary>
