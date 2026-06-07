@@ -2,9 +2,10 @@
 program missing_return;
 
 procedure P; @returns("rax");
-begin P;
+begin missing_return;
     mov(0, rbx);
-end P;
+end missing_return;
 
 begin missing_return;
 end missing_return;
+

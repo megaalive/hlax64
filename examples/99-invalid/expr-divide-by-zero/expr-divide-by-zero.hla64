@@ -1,0 +1,9 @@
+program expr_divide_by_zero;
+procedure P; @returns("rax");
+var x: int64;
+begin P;
+    x := 1 / 0;
+end P;
+begin expr_divide_by_zero;
+end expr_divide_by_zero;
+

@@ -6,6 +6,16 @@ namespace HlaX64.Compiler.Tests;
 
 public sealed class ExamplesInvalidTests
 {
+    [Fact]
+    public void InvalidExamples_catalog_covers_all_conformance_invalid_cases()
+    {
+        var root = FindExamplesInvalidRoot();
+        var exampleCount = Directory.GetDirectories(root).Count(d =>
+            File.Exists(Path.Combine(d, "manifest.json")) &&
+            Directory.GetFiles(d, "*.hla64").Length > 0);
+        Assert.Equal(21, exampleCount);
+    }
+
     [Theory]
     [MemberData(nameof(GetInvalidExampleCases))]
     public void InvalidExample_reports_expected_diagnostic(string exampleDir)
@@ -19,6 +29,12 @@ public sealed class ExamplesInvalidTests
             : CompilationOptions.Default.Warnings;
         var options = CompilationOptions.Default with { Warnings = warnings };
         var result = new Compilation(exampleDir, source, options).Process();
+
+        if (manifest.ExpectParseError)
+        {
+            Assert.False(result.Success);
+            return;
+        }
 
         if (manifest.ExpectWarningsOnly)
             Assert.True(result.Success, string.Join("; ", result.Diagnostics));
@@ -89,5 +105,6 @@ public sealed class ExamplesInvalidTests
         public string[]? ExpectCodes { get; set; }
         public bool ExpectWarningsOnly { get; set; }
         public bool EnableVerificationWarnings { get; set; }
+        public bool ExpectParseError { get; set; }
     }
 }

@@ -1,0 +1,8 @@
+program unknown_param_type;
+procedure Bad(x: foobar); @returns("rax");
+begin Bad;
+    mov(1, rax);
+end Bad;
+begin unknown_param_type;
+end unknown_param_type;
+

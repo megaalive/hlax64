@@ -1,0 +1,4 @@
+name = "linecount"
+version = "0.1.0"
+target = "linux-x64-sysv"
+main = "linecount.hla64"

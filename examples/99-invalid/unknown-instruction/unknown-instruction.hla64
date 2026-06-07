@@ -3,3 +3,4 @@ program unknown_instruction;
 begin unknown_instruction;
     movz(1, rax);
 end unknown_instruction;
+

@@ -1,0 +1,9 @@
+program array_unsupported_type;
+procedure P; @returns("rax");
+var a: foobar[4];
+begin P;
+    mov(0, rax);
+end P;
+begin array_unsupported_type;
+end array_unsupported_type;
+

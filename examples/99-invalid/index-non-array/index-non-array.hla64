@@ -1,0 +1,9 @@
+program index_non_array;
+procedure P; @returns("rax");
+var x: int64;
+begin P;
+    mov(1, x[0]);
+end P;
+begin index_non_array;
+end index_non_array;
+

@@ -3,3 +3,4 @@ program wrong_operand_count;
 begin wrong_operand_count;
     mov(rax);
 end wrong_operand_count;
+

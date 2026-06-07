@@ -1,0 +1,6 @@
+{
+  "name": "linux-linecount",
+  "source": "../../../examples/12-real-tools-linux/linecount/linecount.hla64",
+  "expectedExitCode": 0,
+  "description": "Linux real tool: linecount via libc open/read/close"
+}

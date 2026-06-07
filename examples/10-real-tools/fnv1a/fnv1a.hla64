@@ -25,20 +25,19 @@ const
     FnvPrime  := $100000001b3;
 endconst;
 
-procedure HashBuffer(n: int64); @returns("rax");
+procedure HashBuffer(data: ptr; n: int64); @returns("rax");
 begin HashBuffer;
     mov(FnvOffset, r11);
     mov(0, r8);
-    mov(n, r15);
-    mov(&buffer, r14);
+    mov(data, r10);
 
-    while(r8 < r15) do
-        mov([r14].byte, r9);
+    while(r8 < n) do
+        mov([r10].byte, r9);
         xor(r9, r11);
         mov(FnvPrime, rax);
         imul(rax, r11);
         add(1, r8);
-        add(1, r14);
+        add(1, r10);
     endwhile;
 
     mov(r11, rax);
@@ -67,10 +66,9 @@ begin fnv1a;
                 call CloseHandle(r15);
                 mov(1, rbx);
             else
-                mov(bytesRead, r10);
-                call HashBuffer(r10);
-                mov(rax, r12);
-                stdout.put("fnv1a=", r12, nl);
+                mov(bytesRead, r13);
+                call HashBuffer(&buffer, r13);
+                stdout.put("fnv1a=", rax, nl);
                 call CloseHandle(r15);
                 mov(0, rbx);
             endif;

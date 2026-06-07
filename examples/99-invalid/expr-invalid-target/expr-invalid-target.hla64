@@ -1,0 +1,9 @@
+program expr_invalid_target;
+procedure P; @returns("rax");
+var slot: byte;
+begin P;
+    slot := 1;
+end P;
+begin expr_invalid_target;
+end expr_invalid_target;
+

@@ -50,7 +50,7 @@ Run from the **repository root** so relative fixture paths resolve.
 
 - **`and` / `xor` / `or` in source**: fixed in IR lowering (were incorrectly emitted as `mov`); real tools include regression coverage.
 - **Calls inside loops**: prefer callee-saved registers (`r14` cursor, `r13` end sentinel) — volatile regs (`r8`–`r11`) are clobbered by Win64 calls.
-- **`stdout.put` integers**: printed as **signed** int64 (FNV hash displays as negative decimal for large unsigned values).
+- **`stdout.put` integers**: printed as **signed** int64 (FNV and other uint64 hashes may show a negative decimal when the high bit is set — this matches C# `long` / P/Invoke return values).
 - **Static names**: avoid identifiers like `inWord` that confuse the NASM backend.
 
 ## Roadmap (from review)
@@ -61,4 +61,6 @@ Run from the **repository root** so relative fixture paths resolve.
 | Done | Add `hexdump`, `wc`, `fnv1a` |
 | Done | Skeleton `98-bug-farm/`, `99-invalid/` |
 | Done | argv for all nine real-tools |
-| Next | `98-bug-farm/` / `99-invalid/` (in progress) |
+| Done | `98-bug-farm/` (9 stress cases) |
+| Done | `99-invalid/` (21 catalog entries mirroring conformance) |
+| Done | Linux `12-real-tools-linux/linecount` + WSL regression |

@@ -1,0 +1,8 @@
+program enum_undefined_member;
+enum Color: uint32
+    Red := 1;
+endenum;
+begin enum_undefined_member;
+    mov(Color.Missing, rax);
+end enum_undefined_member;
+

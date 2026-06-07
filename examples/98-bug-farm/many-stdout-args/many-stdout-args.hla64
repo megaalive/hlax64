@@ -1,0 +1,9 @@
+// many-stdout-args.hla64 - multi-argument stdout.put runtime expansion.
+program many_stdout_args;
+
+#include("stdlib64.hhf")
+
+begin many_stdout_args;
+    stdout.put("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", nl);
+    mov(0, rbx);
+end many_stdout_args;

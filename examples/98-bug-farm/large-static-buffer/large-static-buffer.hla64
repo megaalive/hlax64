@@ -1,0 +1,22 @@
+// large-static-buffer.hla64 - large BSS static array addressing stress.
+program large_static_buffer;
+
+static
+    blob: byte[4096];
+endstatic;
+
+begin large_static_buffer;
+    mov(0, r8);
+    mov(0, r11);
+    mov(4096, r10);
+    mov(&blob, r14);
+
+    while(r8 < r10) do
+        mov([r14].byte, r9);
+        add(r9, r11);
+        add(1, r8);
+        add(1, r14);
+    endwhile;
+
+    mov(0, rbx);
+end large_static_buffer;

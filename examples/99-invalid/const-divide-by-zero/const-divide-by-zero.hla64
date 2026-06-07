@@ -1,0 +1,7 @@
+program const_divide_by_zero;
+const
+    X := 1 / 0;
+endconst;
+begin const_divide_by_zero;
+end const_divide_by_zero;
+

@@ -1,0 +1,5 @@
+program memory_ref_literal;
+begin memory_ref_literal;
+    mov([42], rax);
+end memory_ref_literal;
+

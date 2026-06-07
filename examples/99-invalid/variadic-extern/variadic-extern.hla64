@@ -5,9 +5,10 @@ extern variadic procedure printf(fmt: cstring): int32 from "libc.so";
 
 procedure Bad; @returns("rax");
 var v: float64;
-begin Bad;
+begin variadic_extern;
     call printf(&"x=%f\n", v);
-end Bad;
+end variadic_extern;
 
 begin variadic_extern;
 end variadic_extern;
+

@@ -1,0 +1,12 @@
+program record_unknown_field;
+record PatientHeader
+    version: uint16;
+endrecord;
+procedure P; @returns("rax");
+var header: PatientHeader;
+begin P;
+    mov(1, header.nope);
+end P;
+begin record_unknown_field;
+end record_unknown_field;
+

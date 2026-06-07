@@ -4,3 +4,4 @@ program unknown_extern_call;
 begin unknown_extern_call;
     call NoSuchProc();
 end unknown_extern_call;
+

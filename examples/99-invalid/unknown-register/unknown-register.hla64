@@ -3,3 +3,4 @@ program unknown_register;
 begin unknown_register;
     mov(1, raxz);
 end unknown_register;
+

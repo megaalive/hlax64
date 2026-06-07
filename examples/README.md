@@ -14,8 +14,9 @@
 | [09-benchmarks/](09-benchmarks/) | README → `benchmarks/count.json` |
 | [10-real-tools/](10-real-tools/) | listfiles, filesize, exists, linecount, hexdump, wc, fnv1a, filemagic, cmp |
 | [11-csharp-interop-real/](11-csharp-interop-real/) | native_count_lines, native_fnv1a, native_sum_bytes (DLL + C# caller) |
-| [98-bug-farm/](98-bug-farm/) | call-inside-loop (+ planned stress cases) |
-| [99-invalid/](99-invalid/) | address-of-register, missing-return (must-not-compile catalog) |
+| [12-real-tools-linux/](12-real-tools-linux/) | linecount (libc open/read/close + Linux argv) |
+| [98-bug-farm/](98-bug-farm/) | 9 compile-only stress cases (CFG, locals, externs, stdout.put, …) |
+| [99-invalid/](99-invalid/) | 21 must-not-compile catalog entries (mirrors conformance invalid) |
 
 ```bash
 hla64 explain examples/08-ai-agent/smoke-test.hla64 --json
