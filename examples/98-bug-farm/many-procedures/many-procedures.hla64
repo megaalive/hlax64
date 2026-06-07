@@ -1,0 +1,38 @@
+// many-procedures.hla64 - call graph with many small procedures.
+program many_procedures;
+
+procedure P0; @returns("rax"); begin P0; mov(0, rax); end P0;
+procedure P1; @returns("rax"); begin P1; mov(1, rax); end P1;
+procedure P2; @returns("rax"); begin P2; mov(2, rax); end P2;
+procedure P3; @returns("rax"); begin P3; mov(3, rax); end P3;
+procedure P4; @returns("rax"); begin P4; mov(4, rax); end P4;
+procedure P5; @returns("rax"); begin P5; mov(5, rax); end P5;
+procedure P6; @returns("rax"); begin P6; mov(6, rax); end P6;
+procedure P7; @returns("rax"); begin P7; mov(7, rax); end P7;
+procedure P8; @returns("rax"); begin P8; mov(8, rax); end P8;
+procedure P9; @returns("rax"); begin P9; mov(9, rax); end P9;
+
+begin many_procedures;
+    mov(0, r10);
+    call P0();
+    add(rax, r10);
+    call P1();
+    add(rax, r10);
+    call P2();
+    add(rax, r10);
+    call P3();
+    add(rax, r10);
+    call P4();
+    add(rax, r10);
+    call P5();
+    add(rax, r10);
+    call P6();
+    add(rax, r10);
+    call P7();
+    add(rax, r10);
+    call P8();
+    add(rax, r10);
+    call P9();
+    add(rax, r10);
+    mov(r10, rbx);
+end many_procedures;

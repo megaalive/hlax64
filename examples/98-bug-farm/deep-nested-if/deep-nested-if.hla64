@@ -1,0 +1,39 @@
+// deep-nested-if.hla64 - nested if/else CFG block explosion.
+program deep_nested_if;
+
+procedure Classify(n: int64); @returns("rax");
+begin Classify;
+    mov(n, r8);
+    mov(0, rax);
+
+    if(r8 = 0) then
+        mov(1, rax);
+    else
+        if(r8 = 1) then
+            mov(2, rax);
+        else
+            if(r8 = 2) then
+                mov(3, rax);
+            else
+                if(r8 = 3) then
+                    mov(4, rax);
+                else
+                    if(r8 = 4) then
+                        mov(5, rax);
+                    else
+                        if(r8 = 5) then
+                            mov(6, rax);
+                        else
+                            mov(99, rax);
+                        endif;
+                    endif;
+                endif;
+            endif;
+        endif;
+    endif;
+end Classify;
+
+begin deep_nested_if;
+    call Classify(3);
+    mov(rax, rbx);
+end deep_nested_if;

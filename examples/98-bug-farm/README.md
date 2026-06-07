@@ -25,6 +25,10 @@ First cases landed:
 | `call-inside-loop` | `call-inside-loop/` — compile-only manifest `bugfarm-call-inside-loop` |
 | `nested-while` | `nested-while/` — compile-only manifest `bugfarm-nested-while` |
 | `register-pressure` | `register-pressure/` — compile-only manifest `bugfarm-register-pressure` |
+| `deep-nested-if` | `deep-nested-if/` — compile-only manifest `bugfarm-deep-nested-if` |
+| `many-locals` | `many-locals/` — compile-only manifest `bugfarm-many-locals` |
+| `many-procedures` | `many-procedures/` — compile-only manifest `bugfarm-many-procedures` |
+| `many-externs` | `many-externs/` — compile-only manifest `bugfarm-many-externs` |
 
 Add one case per compiler fix so each regression has a minimal repro outside the full real-tool binaries.
 

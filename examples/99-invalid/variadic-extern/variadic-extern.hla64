@@ -1,0 +1,13 @@
+// variadic-extern.hla64 - MUST NOT compile (HLAX0055).
+program variadic_extern;
+
+extern variadic procedure printf(fmt: cstring): int32 from "libc.so";
+
+procedure Bad; @returns("rax");
+var v: float64;
+begin Bad;
+    call printf(&"x=%f\n", v);
+end Bad;
+
+begin variadic_extern;
+end variadic_extern;

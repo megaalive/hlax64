@@ -27,6 +27,9 @@ bad-example-name/
 | `missing-return` | HLAX0062 | verification warning on empty `@returns` body |
 | `unknown-instruction` | HLAX0071 | `movz` is not a HlaX64 instruction |
 | `unknown-register` | HLAX0012 | `raxz` is not a valid register |
+| `wrong-operand-count` | HLAX0004 | `mov(rax)` missing operand |
+| `unknown-extern-call` | HLAX0054 | call to undeclared procedure |
+| `variadic-extern` | HLAX0055 | variadic `printf` with float64 |
 
 Automated: `ExamplesInvalidTests` reads each folder's `manifest.json` + `expected-codes.txt`.
 

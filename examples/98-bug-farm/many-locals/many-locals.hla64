@@ -1,0 +1,49 @@
+// many-locals.hla64 - stack frame with many spill candidates.
+program many_locals;
+
+procedure SumLocals; @returns("rax");
+var
+    v0: int64;
+    v1: int64;
+    v2: int64;
+    v3: int64;
+    v4: int64;
+    v5: int64;
+    v6: int64;
+    v7: int64;
+    v8: int64;
+    v9: int64;
+    v10: int64;
+    v11: int64;
+begin SumLocals;
+    mov(1, v0);
+    mov(2, v1);
+    mov(3, v2);
+    mov(4, v3);
+    mov(5, v4);
+    mov(6, v5);
+    mov(7, v6);
+    mov(8, v7);
+    mov(9, v8);
+    mov(10, v9);
+    mov(11, v10);
+    mov(12, v11);
+
+    mov(v0, rax);
+    add(v1, rax);
+    add(v2, rax);
+    add(v3, rax);
+    add(v4, rax);
+    add(v5, rax);
+    add(v6, rax);
+    add(v7, rax);
+    add(v8, rax);
+    add(v9, rax);
+    add(v10, rax);
+    add(v11, rax);
+end SumLocals;
+
+begin many_locals;
+    call SumLocals();
+    mov(rax, rbx);
+end many_locals;
