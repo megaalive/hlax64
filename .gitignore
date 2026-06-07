@@ -24,6 +24,8 @@ artifacts/
 .idea/
 *.swp
 .vscode/
+# Cursor project-local config (MCP, rules, agent settings — not for public repo)
+.cursor/
 .cursor/mcp-hla64/
 
 # OS

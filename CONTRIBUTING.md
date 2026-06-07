@@ -152,9 +152,8 @@ GitHub lists anyone who **authored** or **co-authored** commits on the default b
 2. **Rewrite history (one-time):** `powershell -File scripts/strip-coauthor-history.ps1 -Force` then `git push --force-with-lease origin main`.
 3. **Hooks (this repo):** `core.hooksPath` is set to `.githooks` locally — strips trailers on every commit.
 4. **Cursor IDE:** disable **Settings → Agents → Attribution → Commit Attribution**; keep `~/.cursor/cli-config.json` with `"attribution.attributeCommitsToAgent": false`.
-5. **Project rule:** `.cursor/rules/no-git-attribution.mdc` tells agents not to add trailers.
-6. **GitHub App:** if [Cursor](https://github.com/apps/cursor) has repository access, review **Settings → Integrations → Applications** and revoke if it pushed as `cursoragent`.
-7. **Stale graph:** after cleaning history, the Contributors graph can take days to refresh; there is no manual “remove contributor” button.
+5. **GitHub App:** if [Cursor](https://github.com/apps/cursor) has repository access, review **Settings → Integrations → Applications** and revoke if it pushed as `cursoragent`.
+6. **Stale graph:** after cleaning history, the Contributors graph can take days to refresh; there is no manual “remove contributor” button.
 
 Current `main` authors (verified): `megaalive`, `ded-furby` only — no `cursoragent` commit trailers on `origin/main` after history rewrite.
 
