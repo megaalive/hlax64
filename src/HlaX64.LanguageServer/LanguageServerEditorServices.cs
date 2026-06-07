@@ -314,7 +314,7 @@ public static class LanguageServerEditorServices
                 data.Add(deltaChar);
                 data.Add(token.Length);
                 data.Add(token.Type);
-                data.Add(0);
+                data.Add(token.Modifiers);
                 prevLine = lineIdx;
                 prevChar = token.Start + token.Length;
             }
@@ -325,8 +325,8 @@ public static class LanguageServerEditorServices
 
     public static object GetSemanticTokensLegend() => new
     {
-        tokenTypes = new[] { "keyword", "type", "register", "string", "number", "function", "variable" },
-        tokenModifiers = Array.Empty<string>()
+        tokenTypes = new[] { "keyword", "type", "register", "string", "number", "function", "variable", "deprecated" },
+        tokenModifiers = new[] { "declaration", "readonly", "static", "deprecated" }
     };
 
     public static object? GetCodeActions(string source, int startLine, int startChar, int endLine, int endChar)
@@ -436,7 +436,7 @@ public static class LanguageServerEditorServices
 
     private sealed record CallSiteInfo(string ProcedureName, int ActiveParameter);
 
-    private sealed record SemanticTokenSpan(int Start, int Length, int Type);
+    private sealed record SemanticTokenSpan(int Start, int Length, int Type, int Modifiers = 0);
 
     private static List<SymbolInfo> CollectSymbols(string source)
     {
@@ -510,10 +510,35 @@ public static class LanguageServerEditorServices
         }
         catch (ParseException)
         {
-            return null;
+            return ResolveProcedureSignatureFromText(source, name);
         }
 
-        return null;
+        return ResolveProcedureSignatureFromText(source, name);
+    }
+
+    private static ProcedureSignature? ResolveProcedureSignatureFromText(string source, string name)
+    {
+        var pattern = $@"(?:extern\s+(?:variadic\s+)?procedure|procedure)\s+{System.Text.RegularExpressions.Regex.Escape(name)}\s*\(([^)]*)\)";
+        var match = System.Text.RegularExpressions.Regex.Match(source, pattern,
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Singleline);
+        if (!match.Success)
+            return null;
+
+        var paramText = match.Groups[1].Value.Trim();
+        var ps = new List<(string Name, string Label, string Documentation)>();
+        if (paramText.Length > 0)
+        {
+            foreach (var part in paramText.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                var bits = part.Split(':', 2, StringSplitOptions.TrimEntries);
+                var pName = bits[0];
+                var pType = bits.Length > 1 ? bits[1] : "int64";
+                ps.Add((pName, $"{pName}: {pType}", $"parameter ({pType})"));
+            }
+        }
+
+        var kind = match.Value.Contains("extern", StringComparison.OrdinalIgnoreCase) ? "extern" : "procedure";
+        return new ProcedureSignature(name, kind, ps);
     }
 
     private static CallSiteInfo? FindCallSite(string source, int line, int character)
@@ -622,11 +647,17 @@ public static class LanguageServerEditorServices
                 while (i < line.Length && IsWordChar(line[i])) i++;
                 var word = line[start..i];
                 int type = 6;
-                if (Keywords.Contains(word, StringComparer.OrdinalIgnoreCase)) type = 0;
+                int mods = 0;
+                if (Keywords.Contains(word, StringComparer.OrdinalIgnoreCase))
+                {
+                    type = 0;
+                    if (word.Equals("const", StringComparison.OrdinalIgnoreCase)) mods |= 1 << 1;
+                    if (word.Equals("static", StringComparison.OrdinalIgnoreCase)) mods |= 1 << 2;
+                }
                 else if (Types.Contains(word, StringComparer.OrdinalIgnoreCase)) type = 1;
                 else if (Registers.Contains(word, StringComparer.OrdinalIgnoreCase)) type = 2;
                 else if (Mnemonics.Contains(word, StringComparer.OrdinalIgnoreCase)) type = 5;
-                yield return new SemanticTokenSpan(start, i - start, type);
+                yield return new SemanticTokenSpan(start, i - start, type, mods);
                 continue;
             }
 
