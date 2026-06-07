@@ -144,6 +144,18 @@ git config core.hooksPath .githooks
 
 Also disable **Cursor Settings → Agent → Attribution → Commit Attribution** for IDE commits.
 
+### Removing `cursoragent` from GitHub Contributors
+
+GitHub lists anyone who **authored** or **co-authored** commits on the default branch.
+
+1. **Audit local `main`:** `powershell -File scripts/audit-coauthors.ps1` — must report OK (no `cursoragent@cursor.com` trailers).
+2. **Hooks:** always commit with `git -c core.hooksPath=.githooks commit` so new trailers are stripped.
+3. **Cursor IDE:** turn off Commit Attribution (above).
+4. **GitHub App:** if [Cursor](https://github.com/apps/cursor) has repository access, review **Settings → Integrations → Applications** and revoke if it pushed as `cursoragent`.
+5. **Stale graph:** after cleaning history, the Contributors graph can take days to refresh; there is no manual “remove contributor” button. Orphan branches on GitHub were deleted when merged.
+
+Current `main` authors (verified): `megaalive`, `ded-furby` only — no `cursoragent` commit trailers on `origin/main`.
+
 ## Updating the Specification
 
 - Language version must be incremented for breaking changes
