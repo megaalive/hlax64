@@ -1,8 +1,26 @@
-# RFC 0020 — Atomics (Phase 21 stub)
+# RFC 0020 — Atomics
 
 | Field | Value |
 |-------|-------|
-| **Status** | Deferred |
-| **Phase** | 21+ |
+| **Status** | Partially implemented |
+| **Phase** | 21 |
 
-`lock` prefixes, `cmpxchg`, C++11-style atomics — future language RFC.
+## MVP intrinsics
+
+| Intrinsic | Lowers to |
+|-----------|-----------|
+| `atomic.load(ptr, ordering)` | `mov` + fences |
+| `atomic.store(ptr, value, ordering)` | `mov` + fences |
+| `atomic.fetch_add(ptr, delta, ordering)` | `lock xadd` + fences |
+
+Orderings: `relaxed`, `acquire`, `release`, `acq_rel`, `seq_cst`.
+
+Result of load/fetch_add is in `rax`.
+
+## Diagnostics
+
+- **HLAX0073** — invalid atomic call or ordering
+
+## Deferred
+
+- `cmpxchg`, typed atomic pointers, C++11 memory model verification

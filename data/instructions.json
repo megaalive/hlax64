@@ -36,6 +36,7 @@
     { "mnemonic": "movd", "category": "simd", "minOps": 2, "maxOps": 2, "features": ["sse2"] },
     { "mnemonic": "movq", "category": "simd", "minOps": 2, "maxOps": 2, "features": ["sse2"] },
     { "mnemonic": "vaddpd", "category": "simd", "minOps": 2, "maxOps": 2, "features": ["avx2"] },
-    { "mnemonic": "vmovapd", "category": "simd", "minOps": 2, "maxOps": 2, "features": ["avx2"] }
+    { "mnemonic": "vmovapd", "category": "simd", "minOps": 2, "maxOps": 2, "features": ["avx2"] },
+    { "mnemonic": "vxorpd", "category": "simd", "minOps": 2, "maxOps": 2, "features": ["avx2"] }
   ]
 }

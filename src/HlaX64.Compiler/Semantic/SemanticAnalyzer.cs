@@ -1,4 +1,5 @@
 using HlaX64.Compiler.Ast;
+using HlaX64.Compiler.Builtins;
 using HlaX64.Compiler.Cpu;
 using HlaX64.Compiler.Diagnostics;
 using HlaX64.Compiler.Options;
@@ -47,6 +48,8 @@ public sealed class SemanticAnalyzer
         "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15",
         "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7",
         "xmm8", "xmm9", "xmm10", "xmm11", "xmm12", "xmm13", "xmm14", "xmm15",
+        "ymm0", "ymm1", "ymm2", "ymm3", "ymm4", "ymm5", "ymm6", "ymm7",
+        "ymm8", "ymm9", "ymm10", "ymm11", "ymm12", "ymm13", "ymm14", "ymm15",
         // 32-bit
         "eax", "ebx", "ecx", "edx",
         "esi", "edi", "ebp", "esp",
@@ -237,10 +240,7 @@ public sealed class SemanticAnalyzer
 
             if (ext.IsVariadic)
             {
-                _diagnostics.Error("HLAX0055",
-                    "Variadic extern procedures are not yet supported (see RFC 0013)",
-                    ext.Line, ext.Column);
-                continue;
+                // Variadic extern allowed (RFC 0013 MVP — SysV integer/cstring args)
             }
 
             if (procedureNames.Contains(ext.Name))
@@ -559,19 +559,110 @@ public sealed class SemanticAnalyzer
             return;
         }
 
+        if (BuiltinNames.IsSimd(call.Name))
+        {
+            if (!_cpuFeatures.HasFeature("avx2"))
+            {
+                _diagnostics.Error("HLAX0070",
+                    $"Intrinsic '{call.Name}' requires CPU feature 'avx2' (enable with --features +avx2)",
+                    call.Line, call.Column);
+            }
+            ValidateSimdCall(call);
+            return;
+        }
+
+        if (BuiltinNames.IsAtomic(call.Name))
+        {
+            ValidateAtomicCall(call);
+            return;
+        }
+
         if (_functionPointerNames.Contains(call.Name))
         {
             call.IsIndirect = true;
         }
         else if (_externRegistry.Contains(call.Name))
         {
-            // extern call — validated
+            if (_externRegistry.TryGet(call.Name, out var ext) && ext.IsVariadic)
+                ValidateVariadicCall(call, ext);
         }
         else if (!_procedureNames.Contains(call.Name))
         {
             _diagnostics.Error("HLAX0054",
                 $"Unknown procedure or extern '{call.Name}'",
                 call.Line, call.Column);
+        }
+
+        foreach (var arg in call.Arguments)
+            AnalyzeOperand(arg);
+    }
+
+    private void ValidateSimdCall(CallNode call)
+    {
+        var (min, max) = call.Name.ToLowerInvariant() switch
+        {
+            "simd.add_f64x4" => (2, 2),
+            "simd.load_f64x4" => (1, 2),
+            "simd.store_f64x4" => (2, 2),
+            _ => (-1, -1)
+        };
+
+        if (min >= 0 && (call.Arguments.Count < min || call.Arguments.Count > max))
+        {
+            _diagnostics.Error("HLAX0072",
+                max == min
+                    ? $"'{call.Name}' expects {min} arguments, got {call.Arguments.Count}"
+                    : $"'{call.Name}' expects {min}-{max} arguments, got {call.Arguments.Count}",
+                call.Line, call.Column);
+        }
+
+        foreach (var arg in call.Arguments)
+            AnalyzeOperand(arg);
+    }
+
+    private void ValidateVariadicCall(CallNode call, ExternProcedureSymbol ext)
+    {
+        for (int i = 1; i < call.Arguments.Count; i++)
+        {
+            var arg = call.Arguments[i];
+            if (arg is IdentifierNode id && _floatVariables.Contains(id.Name))
+            {
+                _diagnostics.Error("HLAX0055",
+                    "Variadic float arguments are not yet supported on this target (integer + cstring only)",
+                    call.Line, call.Column);
+            }
+        }
+
+        foreach (var arg in call.Arguments)
+            AnalyzeOperand(arg);
+    }
+
+    private void ValidateAtomicCall(CallNode call)
+    {
+        var (minArgs, orderIndex) = call.Name.ToLowerInvariant() switch
+        {
+            "atomic.load" => (2, 1),
+            "atomic.store" => (3, 2),
+            "atomic.fetch_add" => (3, 2),
+            _ => (-1, -1)
+        };
+
+        if (minArgs >= 0 && call.Arguments.Count != minArgs)
+        {
+            _diagnostics.Error("HLAX0073",
+                $"'{call.Name}' expects {minArgs} arguments, got {call.Arguments.Count}",
+                call.Line, call.Column);
+        }
+
+        if (orderIndex >= 0 && orderIndex < call.Arguments.Count &&
+            call.Arguments[orderIndex] is IdentifierNode orderId)
+        {
+            if (!BuiltinNames.AtomicOrderings.Contains(orderId.Name))
+            {
+                _diagnostics.Error("HLAX0073",
+                    $"Unknown atomic ordering '{orderId.Name}' — use relaxed, acquire, release, acq_rel, or seq_cst",
+                    orderId.Line, orderId.Column);
+            }
         }
 
         foreach (var arg in call.Arguments)
