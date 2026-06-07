@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-HlaX64 is primarily MIT-licensed (see [LICENSE](../LICENSE)).
+HlaX64 is primarily MIT-licensed (see [LICENSE](../../LICENSE)).
 
 ## Runtime and toolchain
 

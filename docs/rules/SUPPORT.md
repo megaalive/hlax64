@@ -2,11 +2,11 @@
 
 ## Documentation
 
-- [Language Specification](docs/language-spec.md)
-- [Compiler Architecture](docs/compiler-architecture.md)
-- [Linux x64 ABI](docs/abi-linux-x64.md)
-- [Runtime Contract](docs/runtime-contract.md)
-- [Roadmap](docs/roadmap.md)
+- [Language Specification](../language-spec.md)
+- [Compiler Architecture](../compiler-architecture.md)
+- [Linux x64 ABI](../abi-linux-x64.md)
+- [Runtime Contract](../runtime-contract.md)
+- [Roadmap](../roadmap.md)
 
 ## Getting Help
 

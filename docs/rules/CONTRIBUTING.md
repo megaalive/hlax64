@@ -123,7 +123,7 @@ Every new language feature must update:
 
 ## Adding Diagnostics
 
-- Use error codes documented in [docs/diagnostics.md](docs/diagnostics.md): `HLAX000x` (general/semantic), `HLAX002x` (types). Reserved ranges: `HLAX1xxx` lexer/parser, `HLAX3xxx` ABI, `HLAX4xxx` toolchain, `HLAX5xxx` MCP.
+- Use error codes documented in [docs/diagnostics.md](../diagnostics.md): `HLAX000x` (general/semantic), `HLAX002x` (types). Reserved ranges: `HLAX1xxx` lexer/parser, `HLAX3xxx` ABI, `HLAX4xxx` toolchain, `HLAX5xxx` MCP.
 - Each diagnostic must have a clear message, source location, and remediation hint
 - Document new diagnostics in `docs/diagnostics.md`
 

@@ -17,22 +17,22 @@ Current lead: [@megaalive](https://github.com/megaalive)
 1. Open a **Language Proposal** issue (`.github/ISSUE_TEMPLATE/language_proposal.yml`) or start a GitHub Discussion.
 2. Describe motivation, syntax, semantics, ABI impact, compatibility, and test plan.
 3. Small, uncontroversial fixes may go directly to a PR.
-4. Breaking changes require a migration note and language version bump (see [docs/compatibility.md](docs/compatibility.md)).
+4. Breaking changes require a migration note and language version bump (see [docs/compatibility.md](../compatibility.md)).
 
 ### Releases
 
 - Pre-1.0 releases use semver with `-alpha`/`-beta` suffixes when needed.
-- Release notes live in [CHANGELOG.md](CHANGELOG.md).
+- Release notes live in [CHANGELOG.md](../../CHANGELOG.md).
 - The BDFL approves tagged releases on `main`.
 
 ### Security
 
 - Follow [SECURITY.md](SECURITY.md). Do not discuss vulnerabilities in public issues.
-- MCP execution boundaries are documented in [docs/mcp-security.md](docs/mcp-security.md).
+- MCP execution boundaries are documented in [docs/mcp-security.md](../mcp-security.md).
 
 ## Code Ownership
 
-See [.github/CODEOWNERS](.github/CODEOWNERS). The lead reviews changes in core compiler, runtime, CLI, and MCP areas.
+See [.github/CODEOWNERS](../../.github/CODEOWNERS). The lead reviews changes in core compiler, runtime, CLI, and MCP areas.
 
 ## Labels
 

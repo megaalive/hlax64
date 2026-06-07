@@ -2,7 +2,7 @@
 
 The HlaX64 MCP server (`src/HlaX64.McpServer/`) exposes compiler, build, run, test, and interop tools to AI agents over **stdio JSON-RPC**.
 
-See also [SECURITY.md](../SECURITY.md) for vulnerability reporting.
+See also [SECURITY.md](rules/SECURITY.md) for vulnerability reporting.
 
 ## Threat model
 
@@ -78,4 +78,4 @@ When configuring AI agents:
 
 ## Reporting issues
 
-Security issues in MCP path handling or toolchain invocation: see [SECURITY.md](../SECURITY.md). Do not file public issues for exploitable vulnerabilities.
+Security issues in MCP path handling or toolchain invocation: see [SECURITY.md](rules/SECURITY.md). Do not file public issues for exploitable vulnerabilities.

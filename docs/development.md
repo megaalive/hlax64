@@ -164,7 +164,7 @@ See [compiler-architecture.md](compiler-architecture.md) for the full pipeline.
 
 ## Making changes
 
-Follow [CONTRIBUTING.md](../CONTRIBUTING.md):
+Follow [CONTRIBUTING.md](rules/CONTRIBUTING.md):
 
 - Language changes → update lexer through backend + spec + samples
 - Diagnostics → [diagnostics.md](diagnostics.md)

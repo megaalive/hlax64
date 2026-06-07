@@ -518,4 +518,4 @@ CLI and linker errors currently use plain text (e.g. `Error: NASM not found`). F
 4. Document the code in this file.
 5. Mention in CHANGELOG if user-visible.
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md#adding-diagnostics).
+See [CONTRIBUTING.md](rules/CONTRIBUTING.md#adding-diagnostics).

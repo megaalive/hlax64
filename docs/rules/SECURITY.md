@@ -31,7 +31,7 @@ You will receive an acknowledgment within 48 hours. We will work on a fix and co
 - **Benchmark runner** — executes arbitrary commands from JSON manifests
 - **Dependencies** — keep NuGet packages updated; review transitive dependencies
 
-See [docs/mcp-security.md](docs/mcp-security.md) for MCP deployment guidance.
+See [docs/mcp-security.md](../mcp-security.md) for MCP deployment guidance.
 
 ## MCP Server Security
 

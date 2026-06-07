@@ -39,6 +39,7 @@ nasm/
 nasm-test/
 
 # Local agent skills (not for public repo)
+docs/rules/SKILL*.md
 /SKILL*.md
 /SKILL_*.md
 
@@ -46,11 +47,11 @@ nasm-test/
 /_codeHighlighter/
 
 # Project plan (internal, not for public repo)
-HlaX64_Project_Plan.md
+docs/rules/HlaX64_Project_Plan.md
 # Personal review notes
-HlaX64_Technical_Review_and_Next_Priorities.md
-HlaX64_Open_Source_Contributor_Evaluation.md
-HlaX64_Latest_Audit_and_Technical_Feature_Roadmap.md
+docs/rules/HlaX64_Technical_Review_and_Next_Priorities.md
+docs/rules/HlaX64_Open_Source_Contributor_Evaluation.md
+docs/rules/HlaX64_Latest_Audit_and_Technical_Feature_Roadmap.md
 docs/phase-15-assembly-lab-plan.md
 docs/cursor-handoff-office.md
 .codegraph/

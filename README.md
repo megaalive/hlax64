@@ -300,13 +300,13 @@ See [`docs/language-spec.md`](./docs/language-spec.md) for full details.
 
 ## 🤝 Community
 
-- [Contributing Guide](CONTRIBUTING.md) — how to build, test, and submit changes
+- [Contributing Guide](docs/rules/CONTRIBUTING.md) — how to build, test, and submit changes
 - [Install Guide](docs/install.md) — release archives and global tool
 - [Development Guide](docs/development.md) — local setup and CI parity
-- [Governance](GOVERNANCE.md) — decision process and labels
-- [Code of Conduct](CODE_OF_CONDUCT.md) — our community standards
-- [Security Policy](SECURITY.md) — how to report vulnerabilities
-- [Support](SUPPORT.md) — documentation and getting help
+- [Governance](docs/rules/GOVERNANCE.md) — decision process and labels
+- [Code of Conduct](docs/rules/CODE_OF_CONDUCT.md) — our community standards
+- [Security Policy](docs/rules/SECURITY.md) — how to report vulnerabilities
+- [Support](docs/rules/SUPPORT.md) — documentation and getting help
 - [VS Code extension](editors/vscode/README.md) — syntax highlighting for `.hla64`
 - [Open Issues](https://github.com/megaalive/hlax64/issues) — curated good-first and help-wanted tasks
 - [MCP Tools](docs/mcp-tools.md) — agent tool catalog

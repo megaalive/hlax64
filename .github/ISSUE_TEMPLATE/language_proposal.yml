@@ -4,7 +4,7 @@ labels: ["needs design", "type: feature"]
 body:
   - type: markdown
     attributes:
-      value: Language changes need motivation, semantics, and a compatibility plan. See [CONTRIBUTING.md](../CONTRIBUTING.md) and [docs/compatibility.md](../docs/compatibility.md).
+      value: Language changes need motivation, semantics, and a compatibility plan. See [CONTRIBUTING.md](../../docs/rules/CONTRIBUTING.md) and [docs/compatibility.md](../docs/compatibility.md).
   - type: textarea
     id: motivation
     attributes:

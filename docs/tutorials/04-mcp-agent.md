@@ -87,4 +87,4 @@ Full list: [mcp-tools.md](../mcp-tools.md).
 ## Next steps
 
 - [architecture.md](../architecture.md)
-- [CONTRIBUTING.md](../../CONTRIBUTING.md) — add MCP tools or manifests
+- [CONTRIBUTING.md](../rules/CONTRIBUTING.md) — add MCP tools or manifests

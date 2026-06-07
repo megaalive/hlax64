@@ -26,7 +26,7 @@ Classic HLA teaching progression (arrays, strings, procedures, control flow) inf
 
 ## Third-party source
 
-Do **not** copy Randall Hyde's example source into this repository unless license and redistribution rights are explicit. See [CONTRIBUTING.md](../CONTRIBUTING.md) and use [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) when importing licensed material.
+Do **not** copy Randall Hyde's example source into this repository unless license and redistribution rights are explicit. See [CONTRIBUTING.md](rules/CONTRIBUTING.md) and use [THIRD_PARTY_NOTICES.md](rules/THIRD_PARTY_NOTICES.md) when importing licensed material.
 
 ## Acknowledgement
 
