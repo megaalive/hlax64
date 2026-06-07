@@ -1,0 +1,6 @@
+{
+  "name": "linux-exists",
+  "source": "../../../examples/12-real-tools-linux/exists/exists.hla64",
+  "expectedExitCode": 0,
+  "description": "Linux real tool: exists via access(2)"
+}

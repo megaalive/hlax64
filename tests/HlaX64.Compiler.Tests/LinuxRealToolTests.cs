@@ -8,8 +8,17 @@ namespace HlaX64.Compiler.Tests;
 
 public sealed class LinuxRealToolTests
 {
-    [Fact]
-    public void LinuxRealTool_linecount_runs_under_wsl_when_available()
+    public static IEnumerable<object[]> LinuxRealToolCases()
+    {
+        yield return ["linecount"];
+        yield return ["exists"];
+        yield return ["wc"];
+        yield return ["fnv1a"];
+    }
+
+    [Theory]
+    [MemberData(nameof(LinuxRealToolCases))]
+    public void LinuxRealTool_runs_under_wsl_when_available(string tool)
     {
         if (!LinkerTool.TryFindLinker(out var linker, out _, out _))
             return;
@@ -19,8 +28,8 @@ public sealed class LinuxRealToolTests
             return;
 
         var repoRoot = FindRepoRoot();
-        var toolDir = Path.Combine(repoRoot, "examples", "12-real-tools-linux", "linecount");
-        var sourcePath = Path.Combine(toolDir, "linecount.hla64");
+        var toolDir = Path.Combine(repoRoot, "examples", "12-real-tools-linux", tool);
+        var sourcePath = Path.Combine(toolDir, $"{tool}.hla64");
         var expectedStdoutPath = Path.Combine(toolDir, "expected.stdout");
         var expectedExitPath = Path.Combine(toolDir, "expected.exitcode");
         var argumentsPath = Path.Combine(toolDir, "expected.arguments");
@@ -35,14 +44,14 @@ public sealed class LinuxRealToolTests
             : arg;
 
         var options = CompilationOptions.Default with { Target = TargetTriple.LinuxX64SysV };
-        var cache = Path.Combine(Path.GetTempPath(), "hlax64-linux-linecount-" + Guid.NewGuid().ToString("N")[..8]);
+        var cache = Path.Combine(Path.GetTempPath(), $"hlax64-linux-{tool}-" + Guid.NewGuid().ToString("N")[..8]);
         try
         {
             var artifacts = CompilePipeline.Compile(sourcePath, File.ReadAllText(sourcePath), options);
             Directory.CreateDirectory(cache);
-            var nasmFile = Path.Combine(cache, "linecount.nasm");
-            var objFile = Path.Combine(cache, "linecount.o");
-            var exeFile = Path.Combine(cache, "linecount");
+            var nasmFile = Path.Combine(cache, $"{tool}.nasm");
+            var objFile = Path.Combine(cache, $"{tool}.o");
+            var exeFile = Path.Combine(cache, tool);
             File.WriteAllText(nasmFile, artifacts.NasmCode);
 
             var nasmTool = new NasmTool(NasmTool.TryFindNasm(out var nasmPath) ? nasmPath : null);
@@ -68,7 +77,7 @@ public sealed class LinuxRealToolTests
             Assert.NotNull(process);
             var stdout = process!.StandardOutput.ReadToEnd();
             var stderr = process.StandardError.ReadToEnd();
-            Assert.True(process.WaitForExit(20000), "linux linecount did not exit within 20s\n" + stderr);
+            Assert.True(process.WaitForExit(20000), $"linux {tool} did not exit within 20s\n{stderr}");
 
             Assert.Equal(expectedExit, process.ExitCode);
             foreach (var line in expectedStdout.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))

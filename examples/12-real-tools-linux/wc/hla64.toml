@@ -1,0 +1,4 @@
+name = "wc"
+version = "0.1.0"
+target = "linux-x64-sysv"
+main = "wc.hla64"
