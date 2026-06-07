@@ -39,8 +39,18 @@ Or run from source without installing (below).
 git clone https://github.com/megaalive/hlax64.git
 cd hlax64
 dotnet build
-dotnet test   # 258 unit tests; native samples require Linux toolchain in CI
+dotnet test   # 314 unit tests; native samples require Linux toolchain in CI
 ```
+
+### Assembly Lab (Phase 15)
+
+Cross-platform Avalonia desktop app for visual pipeline exploration:
+
+```bash
+dotnet run --project src/HlaX64.AssemblyLab
+```
+
+See [docs/tutorials/06-assembly-lab.md](tutorials/06-assembly-lab.md) and [RFC 0024](../rfcs/0024-assembly-lab.md).
 
 ### Language Server (Phase 14 MVP)
 
@@ -115,8 +125,10 @@ src/HlaX64.Compiler/     Lexer, parser, AST, semantic, IR, ABI lowerers, test ru
 src/HlaX64.Backend.Nasm/ NASM emitter
 src/HlaX64.Runtime/      Platform runtime (Linux + Windows NASM)
 src/HlaX64.Cli/          hla64 commands
+src/HlaX64.AssemblyLab/  Avalonia Assembly Lab (Phase 15)
 src/HlaX64.McpServer/    MCP JSON-RPC server
 tests/HlaX64.Compiler.Tests/  xUnit
+tests/HlaX64.AssemblyLab.Tests/  Assembly Lab backend tests
 tests/samples/           Native integration manifests
 examples/                User-facing sample programs (29 curriculum manifests)
 editors/vscode/          VS Code grammar, snippets, LSP client

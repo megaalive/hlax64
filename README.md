@@ -22,7 +22,7 @@ hla64 doctor
 hla64 run examples/00-getting-started/hello.hla64
 ```
 
-Tutorials: [Getting started](docs/tutorials/01-getting-started.md) · [Native routines](docs/tutorials/02-native-routines.md) · [Memory & pointers](docs/tutorials/05-memory.md) · [C# interop](docs/tutorials/03-csharp-interop.md) · [MCP agents](docs/tutorials/04-mcp-agent.md)
+Tutorials: [Getting started](docs/tutorials/01-getting-started.md) · [Native routines](docs/tutorials/02-native-routines.md) · [Memory & pointers](docs/tutorials/05-memory.md) · [C# interop](docs/tutorials/03-csharp-interop.md) · [MCP agents](docs/tutorials/04-mcp-agent.md) · [Assembly Lab](docs/tutorials/06-assembly-lab.md)
 
 ---
 
@@ -78,6 +78,7 @@ HlaX64 is an **early multi-platform x64 language toolchain** — not a single-ta
 | Area | Status |
 |------|--------|
 | CLI (`build`, `run`, `test`, `bench`, `explain`, `doctor`, `disasm`, `diff`, `plan`, …) | ✅ |
+| **Assembly Lab** (Avalonia desktop — source, IR/NASM/ABI, build/run, proof bundle) | ✅ |
 | Source maps / proof bundle / `--optimize O0-O2` / CPU+AVX2 / `simd.*`+`atomic.*` / dependency restore / DAP debug / `test-differential` | ✅ |
 | MCP server (12 tools, stdio JSON-RPC) | ✅ |
 | Benchmark runner + JSON manifests | ✅ |
@@ -123,6 +124,9 @@ dotnet run --project src/HlaX64.Cli -- build examples/00-getting-started/exitcod
 
 # 5. Compile and run
 dotnet run --project src/HlaX64.Cli -- run examples/00-getting-started/hello.hla64
+
+# 6. Launch Assembly Lab (Phase 15)
+dotnet run --project src/HlaX64.AssemblyLab
 ```
 
 > Toolchain: `dotnet` 10.0+ on the build machine, plus `nasm` and `gcc` (or

@@ -99,7 +99,7 @@ Opcodes include `Move`, `Add`, `Subtract`, `Multiply`, `Divide`, `Compare`, `Bra
 
 | Area | Notes |
 |------|-------|
-| Phase 15 GUI | Avalonia/WPF Assembly Lab — skipped until cross-platform decision |
+| Phase 15 GUI | `HlaX64.AssemblyLab` — Avalonia 11 desktop shell (RFC 0024) |
 | Assisted regalloc | `--register-mode assisted` |
 | Full DWARF/PDB | Debuggers on Windows; live trace sink |
 | Package resolver | Version ranges, transitive deps, registry |
