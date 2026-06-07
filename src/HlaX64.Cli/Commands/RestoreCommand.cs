@@ -1,6 +1,4 @@
 using System.ComponentModel;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using HlaX64.Cli.Json;
 using HlaX64.Cli.Project;
@@ -18,6 +16,10 @@ public sealed class RestoreCommand : Command<RestoreCommand.Settings>
 
         [CommandOption("--json")]
         public bool Json { get; set; }
+
+        [CommandOption("--no-git")]
+        [Description("Skip git dependencies")]
+        public bool NoGit { get; set; }
     }
 
     protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation)
@@ -29,49 +31,45 @@ public sealed class RestoreCommand : Command<RestoreCommand.Settings>
             return 1;
         }
 
-        var manifestText = File.ReadAllText(path);
-        var manifest = ProjectManifest.Load(path);
-        var manifestDir = Path.GetDirectoryName(Path.GetFullPath(path))!;
-        var lockPath = Path.Combine(manifestDir, "hla64.lock");
-        var hash = Sha256Hex(manifestText);
-
-        var lockDoc = new
+        try
         {
-            schemaVersion = 1,
-            name = manifest.Name,
-            version = manifest.Version,
-            manifestHash = hash,
-            manifestPath = Path.GetFileName(path),
-            resolvedAt = DateTime.UtcNow.ToString("o"),
-            sources = manifest.Sources,
-            dependencies = manifest.Dependencies,
-            note = "Lock file records resolved manifest hash; dependency resolution deferred post-MVP"
-        };
-        File.WriteAllText(lockPath, JsonSerializer.Serialize(lockDoc, new JsonSerializerOptions { WriteIndented = true }));
+            var manifestDir = Path.GetDirectoryName(Path.GetFullPath(path))!;
+            var manifest = ProjectManifest.Load(path);
+            var lockDoc = DependencyResolver.Resolve(manifest, manifestDir, allowGit: !settings.NoGit);
+            var lockPath = Path.Combine(manifestDir, "hla64.lock");
+            DependencyResolver.SaveLock(lockDoc, lockPath);
 
-        Report(settings, true, new
+            Report(settings, true, new
+            {
+                manifest = manifest.Name,
+                version = manifest.Version,
+                target = manifest.Target,
+                sources = manifest.Sources,
+                dependencies = lockDoc.Dependencies.Select(d => new
+                {
+                    d.Name,
+                    d.Version,
+                    d.Rev,
+                    d.ContentHash,
+                    resolvedPath = d.ResolvedPath,
+                    sourceCount = d.Sources.Count
+                }),
+                lockFile = lockPath,
+                manifestHash = lockDoc.ManifestHash
+            });
+            return 0;
+        }
+        catch (Exception ex)
         {
-            manifest = manifest.Name,
-            version = manifest.Version,
-            target = manifest.Target,
-            sources = manifest.Sources,
-            dependencies = manifest.Dependencies,
-            lockFile = lockPath,
-            manifestHash = hash
-        });
-        return 0;
+            Report(settings, false, error: ex.Message);
+            return 1;
+        }
     }
 
     private static string? FindManifest(string dir)
     {
         var direct = Path.Combine(dir, "hla64.toml");
         return File.Exists(direct) ? direct : null;
-    }
-
-    private static string Sha256Hex(string text)
-    {
-        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(text));
-        return Convert.ToHexString(hash).ToLowerInvariant();
     }
 
     private static void Report(Settings settings, bool success, object? result = null, string? error = null)

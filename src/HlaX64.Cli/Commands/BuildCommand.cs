@@ -89,7 +89,10 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
     {
         var (sourceFile, sourceText, projectDir) = ResolveSource(settings);
         if (sourceFile == null)
-            return Fail(settings, null, null, null, null, null, "No source file or hla64.toml manifest found.");
+        {
+            var (_, _, _, lockError) = ProjectBuildHelper.ResolveProjectSource(settings.Source, requireLock: true);
+            return Fail(settings, null, null, null, null, null, lockError ?? "No source file or hla64.toml manifest found.");
+        }
 
         if (!File.Exists(sourceFile))
             return Fail(settings, settings.Source, null, null, null, null, $"Source file '{sourceFile}' not found.");
@@ -264,34 +267,10 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
 
     private static (string? SourceFile, string SourceText, string? ProjectDir) ResolveSource(Settings settings)
     {
-        if (!string.IsNullOrWhiteSpace(settings.Source))
-        {
-            var path = Path.GetFullPath(settings.Source);
-            return (path, File.ReadAllText(path), Path.GetDirectoryName(path));
-        }
-
-        var cwd = Directory.GetCurrentDirectory();
-        var manifestPath = Path.Combine(cwd, "hla64.toml");
-        if (!File.Exists(manifestPath))
-            return (null, "", null);
-
-        var manifest = HlaX64.Cli.Project.ProjectManifest.Load(manifestPath);
-        var parts = new List<string>();
-        string? primary = null;
-        foreach (var rel in manifest.Sources.Values)
-        {
-            var full = Path.GetFullPath(Path.Combine(cwd, rel));
-            if (File.Exists(full))
-            {
-                parts.Add($"// --- {rel} ---\n{File.ReadAllText(full)}");
-                primary ??= full;
-            }
-        }
-
-        if (primary == null)
-            return (null, "", cwd);
-
-        var combined = string.Join("\n\n", parts);
-        return (primary, combined, cwd);
+        var (sourceFile, sourceText, projectDir, error) =
+            ProjectBuildHelper.ResolveProjectSource(settings.Source, requireLock: true);
+        if (error != null && sourceFile == null)
+            return (null, "", projectDir);
+        return (sourceFile, sourceText, projectDir);
     }
 }
