@@ -1,0 +1,5 @@
+<Project>
+  <Target Name="ReindexCodeGraph" AfterTargets="Build" Condition="'$(CODEGRAPH_AUTO_INDEX)' == '1'">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\..\scripts\reindex-codegraph.ps1&quot; -RepoRoot &quot;$(MSBuildProjectDirectory)\..\..&quot;" IgnoreExitCode="true" />
+  </Target>
+</Project>

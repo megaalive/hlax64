@@ -24,6 +24,7 @@ artifacts/
 .idea/
 *.swp
 .vscode/
+.cursor/mcp-hla64/
 
 # OS
 .DS_Store
@@ -42,3 +43,6 @@ HlaX64_Technical_Review_and_Next_Priorities.md
 HlaX64_Open_Source_Contributor_Evaluation.md
 HlaX64_Latest_Audit_and_Technical_Feature_Roadmap.md
 docs/phase-15-assembly-lab-plan.md
+docs/cursor-handoff-office.md
+.codegraph/
+publish/
