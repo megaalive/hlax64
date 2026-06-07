@@ -76,10 +76,7 @@ internal static class AbiCallLoweringHelper
         }
 
         for (int i = stackArgs.Count - 1; i >= 0; i--)
-        {
-            var val = resolve(stackArgs[i].Arg);
-            sb.AppendLine($"    push {val}      ; stack arg");
-        }
+            AppendSysVStackArg(sb, stackArgs[i].Arg, resolve);
 
         regGpr = 0;
         regXmm = 0;
@@ -100,10 +97,7 @@ internal static class AbiCallLoweringHelper
             else if (regGpr < gprs.Length)
             {
                 var gpr = gprs[regGpr++];
-                if (IsProcedureRef(arg))
-                    sb.AppendLine($"    lea {gpr}, [rel {ProcedureRefName(arg)}]");
-                else
-                    sb.AppendLine($"    mov {gpr}, {val}");
+                AppendSysVGprArg(sb, gpr, arg, resolve);
             }
         }
 
@@ -154,12 +148,7 @@ internal static class AbiCallLoweringHelper
             if (regGpr < gprs.Length)
             {
                 var gpr = gprs[regGpr++];
-                if (IsProcedureRef(inst.Operands[i]))
-                    sb.AppendLine($"    lea {gpr}, [rel {ProcedureRefName(inst.Operands[i])}]");
-                else if (IsStringRef(inst.Operands[i]))
-                    sb.AppendLine($"    lea {gpr}, [{resolve(inst.Operands[i])}]");
-                else
-                    sb.AppendLine($"    mov {gpr}, {val}");
+                AppendSysVGprArg(sb, gpr, inst.Operands[i], resolve);
             }
         }
 
@@ -177,6 +166,32 @@ internal static class AbiCallLoweringHelper
     private static bool IsStringRef(IrValue arg)
         => arg.Name?.StartsWith("str:", StringComparison.Ordinal) == true
            || arg.Name?.StartsWith("addr:", StringComparison.Ordinal) == true;
+
+    private static bool NeedsAddressLoad(IrValue arg)
+        => IsProcedureRef(arg)
+           || AddressRefEncoding.IsStringRef(arg)
+           || arg.Name?.StartsWith("addr:", StringComparison.Ordinal) == true;
+
+    private static void AppendSysVGprArg(StringBuilder sb, string gpr, IrValue arg, Func<IrValue?, string> resolve)
+    {
+        if (IsProcedureRef(arg))
+            sb.AppendLine($"    lea {gpr}, [rel {ProcedureRefName(arg)}]");
+        else if (NeedsAddressLoad(arg))
+            sb.AppendLine($"    lea {gpr}, [{resolve(arg)}]");
+        else
+            sb.AppendLine($"    mov {gpr}, {resolve(arg)}");
+    }
+
+    private static void AppendSysVStackArg(StringBuilder sb, IrValue arg, Func<IrValue?, string> resolve)
+    {
+        if (NeedsAddressLoad(arg))
+        {
+            AppendSysVGprArg(sb, "rax", arg, resolve);
+            sb.AppendLine("    push rax      ; stack arg");
+        }
+        else
+            sb.AppendLine($"    push {resolve(arg)}      ; stack arg");
+    }
 
     public static void AppendWindowsCall(StringBuilder sb, IrInstruction inst, IrFunction caller,
         Func<IrValue?, string> resolve,

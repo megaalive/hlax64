@@ -69,15 +69,15 @@ hlax_argv_count:
 hlax_argv_get:
     cmp byte [rel hlax_argv_inited], 0
     jne .ready
-    push rcx
+    push rdi
     call hlax_argv_init
-    pop rcx
+    pop rdi
 .ready:
     movsxd rax, dword [rel hlax_argc]
-    cmp rcx, rax
+    cmp rdi, rax
     jge .none
     lea r11, [rel hlax_argv]
-    mov rax, [r11 + rcx * 8]
+    mov rax, [r11 + rdi * 8]
     ret
 .none:
     xor rax, rax

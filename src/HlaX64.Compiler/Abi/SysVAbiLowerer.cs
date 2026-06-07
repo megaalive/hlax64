@@ -461,7 +461,7 @@ public sealed class SysVAbiLowerer : IAbiLowerer
 
     private LoweredInstruction LowerCallInst(IrInstruction inst)
     {
-        if (inst.Immediate is string name && name == "stdout.put")
+        if (inst.Immediate is string name && name is "stdout.put" or "stdout.putu")
             return LowerStdoutPut(inst);
 
         if (inst.Immediate is string builtin && BuiltinNames.IsBuiltin(builtin))
@@ -472,7 +472,7 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         }
 
         var sb = new System.Text.StringBuilder();
-        AbiCallLoweringHelper.AppendSysVCall(sb, inst, _currentFunction!, ResolveOperand,
+        AbiCallLoweringHelper.AppendSysVCall(sb, inst, _currentFunction!, ResolveCallOperand,
             _externRegistry, _procedureTypes, _recordTypes, _externs);
         return new LoweredInstruction(sb.ToString());
     }
@@ -485,20 +485,23 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         if (_mode == RuntimeMode.Library)
             return LowerStdoutPutLibrary(inst);
 
+        var unsigned = string.Equals(inst.Immediate as string, "stdout.putu", StringComparison.Ordinal);
+
         var sb = new System.Text.StringBuilder();
         var args = inst.Operands;
 
         sb.AppendLine("    push rcx        ; preserve rcx (syscall clobbers it)");
 
-        // Pass 1: push register values before any syscalls
+        var savedRegs = new List<string>();
         foreach (var arg in args)
         {
             var val = ResolveOperand(arg);
             if (IsRegisterRef(val))
-            {
-                sb.AppendLine($"    push {val}      ; save for stdout.put");
-            }
+                savedRegs.Add(val);
         }
+
+        for (int i = savedRegs.Count - 1; i >= 0; i--)
+            sb.AppendLine($"    push {savedRegs[i]}      ; save for stdout.put");
 
         // Pass 2: emit print code
         foreach (var arg in args)
@@ -545,7 +548,7 @@ public sealed class SysVAbiLowerer : IAbiLowerer
             else if (IsRegisterRef(val))
             {
                 var uid = _labelCounter++;
-                sb.AppendLine($"    ; RUNTIME: stdout_put_int({val})");
+                sb.AppendLine($"    ; RUNTIME: stdout_put_{(unsigned ? "uint" : "int")}({val})");
                 sb.AppendLine("    pop rax         ; get saved register value");
                 sb.AppendLine("    mov r8, 10");
                 sb.AppendLine("    mov rdi, 0          ; digit count");
@@ -606,20 +609,21 @@ public sealed class SysVAbiLowerer : IAbiLowerer
 
     private LoweredInstruction LowerStdoutPutLibrary(IrInstruction inst)
     {
+        var unsigned = string.Equals(inst.Immediate as string, "stdout.putu", StringComparison.Ordinal);
+        var intRuntime = unsigned ? "stdout_put_uint" : "stdout_put_int";
         var sb = new System.Text.StringBuilder();
         var args = inst.Operands;
-        int regCount = 0;
 
-        // Pass 1: push register values before any calls
+        var savedRegs = new List<string>();
         foreach (var arg in args)
         {
             var val = ResolveOperand(arg);
             if (IsRegisterRef(val))
-            {
-                sb.AppendLine($"    push {val}      ; save for stdout.put");
-                regCount++;
-            }
+                savedRegs.Add(val);
         }
+
+        for (int i = savedRegs.Count - 1; i >= 0; i--)
+            sb.AppendLine($"    push {savedRegs[i]}      ; save for stdout.put");
 
         // Pass 2: emit library call code
         foreach (var arg in args)
@@ -656,11 +660,11 @@ public sealed class SysVAbiLowerer : IAbiLowerer
             }
             else if (IsRegisterRef(val))
             {
-                _externs.Add("stdout_put_int");
-                sb.AppendLine($"    ; RUNTIME: stdout_put_int({val}) (library)");
+                _externs.Add(intRuntime);
+                sb.AppendLine($"    ; RUNTIME: {intRuntime}({val}) (library)");
                 sb.AppendLine("    pop rax         ; get saved register value");
                 sb.AppendLine("    mov rdi, rax");
-                sb.AppendLine("    call stdout_put_int");
+                sb.AppendLine($"    call {intRuntime}");
             }
             else
             {
@@ -675,6 +679,34 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         }
 
         return new LoweredInstruction(sb.ToString().TrimEnd());
+    }
+
+    private string ResolveCallOperand(IrValue? value)
+    {
+        if (value is null)
+            return "0";
+
+        var name = value.Name;
+        if (name is null)
+            return "0";
+
+        if (AddressRefEncoding.IsStringRef(value))
+            return $"rel {EnsureStringLabel(AddressRefEncoding.DecodeString(value))}";
+
+        if (name.StartsWith("addr:", StringComparison.Ordinal))
+        {
+            var varName = name[5..];
+            if (_globalData.ContainsKey(varName))
+                return varName;
+            if (_valueMap.TryGetValue(varName, out var slot))
+            {
+                if (slot.StartsWith('[') && slot.EndsWith(']'))
+                    return slot[1..^1];
+                return slot;
+            }
+        }
+
+        return ResolveOperand(value);
     }
 
     private string ResolveOperand(IrValue? value)
