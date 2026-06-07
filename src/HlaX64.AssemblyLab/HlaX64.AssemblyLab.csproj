@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <RootNamespace>HlaX64.AssemblyLab</RootNamespace>
+    <AssemblyName>HlaX64.AssemblyLab</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.2" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.2" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.2" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.2" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HlaX64.Compiler\HlaX64.Compiler.csproj" />
+    <ProjectReference Include="..\HlaX64.Backend.Nasm\HlaX64.Backend.Nasm.csproj" />
+    <ProjectReference Include="..\HlaX64.Cli\HlaX64.Cli.csproj" />
+    <ProjectReference Include="..\HlaX64.DebugAdapter\HlaX64.DebugAdapter.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\data\instructions.json" Link="data\instructions.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>
