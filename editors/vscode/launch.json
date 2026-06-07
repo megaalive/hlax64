@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "HlaX64: Launch (DAP)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/HlaX64.Cli/bin/Debug/net10.0/HlaX64.Cli.dll",
+      "args": ["debug", "--stdio"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "HlaX64: Attach via hla64 debug",
+      "type": "node",
+      "request": "launch",
+      "preLaunchTask": "hla64: build",
+      "program": "${workspaceFolder}/src/HlaX64.Cli/bin/Debug/net10.0/HlaX64.Cli.dll",
+      "args": ["debug", "--stdio"],
+      "cwd": "${fileDirname}"
+    }
+  ]
+}
