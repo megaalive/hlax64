@@ -12,10 +12,12 @@
 | [07-interop/](07-interop/) | export-lib |
 | [08-ai-agent/](08-ai-agent/) | smoke-test |
 | [09-benchmarks/](09-benchmarks/) | README → `benchmarks/count.json` |
+| [10-real-tools/](10-real-tools/) | listfiles, filesize, exists, linecount |
 
 ```bash
 hla64 explain examples/08-ai-agent/smoke-test.hla64 --json
 hla64 build examples/06-abi/windows-exitcode.hla64 --target windows-x64-msabi -o build/win-exit
+hla64 test tests/examples-curriculum --filter real- --compile-only
 ```
 
 See [docs/examples.md](../docs/examples.md).
