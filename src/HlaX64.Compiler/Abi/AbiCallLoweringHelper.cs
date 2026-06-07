@@ -242,6 +242,8 @@ internal static class AbiCallLoweringHelper
                 var gpr = gprs[regGpr++];
                 if (IsProcedureRef(arg))
                     sb.AppendLine($"    lea {gpr}, [rel {ProcedureRefName(arg)}]");
+                else if (AddressRefEncoding.IsStringRef(arg) || arg.Name?.StartsWith("addr:", StringComparison.Ordinal) == true)
+                    sb.AppendLine($"    lea {gpr}, [{val}]");
                 else
                     sb.AppendLine($"    mov {gpr}, {val}");
             }

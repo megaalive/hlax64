@@ -43,7 +43,6 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         _procedureTypes = procedureTypes ?? new ProcedureTypeRegistry();
         _recordTypes = recordTypes ?? new RecordTypeRegistry();
         _labelCounter = 0;
-        _stringLabelCounter = 0;
         _valueMap.Clear();
         _stackOffset = 0;
         _mode = options.RuntimeMode;
@@ -290,7 +289,11 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         {
             var varName = AddrVariable(srcVal);
             if (_globalData.ContainsKey(varName))
+            {
+                if (dst.StartsWith('['))
+                    return new LoweredInstruction($"    lea rax, [{varName}]\n    mov {dst}, rax");
                 return new LoweredInstruction($"    lea {dst}, [{varName}]");
+            }
             if (_valueMap.TryGetValue(varName, out var slot))
             {
                 if (dst.StartsWith("[rbp", StringComparison.Ordinal))
@@ -662,9 +665,6 @@ public sealed class SysVAbiLowerer : IAbiLowerer
                 sb.AppendLine("    call stdout_put_str");
             }
         }
-
-        if (regCount > 0)
-            sb.Append("    pop rcx           ; restore caller's rcx");
 
         return new LoweredInstruction(sb.ToString().TrimEnd());
     }

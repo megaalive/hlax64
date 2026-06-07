@@ -36,9 +36,11 @@ section .text
 ;   caller-rsp-mod-16 == 0 on entry
 ; notes:
 ;   Calls sys_write(1, buf, len). fd=1 (stdout) must be open.
+;   Leaf routine — no stack frame; SysV ABI requires RSP%16==0 before call,
+;   but plain syscall does not use the call instruction stack push.
 global stdout_put_str
 stdout_put_str:
-    mov  rsi, rdi
+    mov  rsi, rdi        ; save string pointer (rdi = arg0)
     xor  rcx, rcx
 .strlen_loop:
     mov  al, [rsi + rcx]

@@ -119,7 +119,8 @@ internal sealed class ProcedureStackMap
                 ? l
                 : new IrLocalLayout();
             map._layouts[local.Name!] = layout;
-            map._slots[local.Name!] = SlotAt(slotIndex + 1);
+            // Base of each local at the lowest stack address (arrays grow upward in memory).
+            map._slots[local.Name!] = SlotAt(slotIndex + layout.StackSlots);
             slotIndex += layout.StackSlots;
             map.StackOffsetBytes = Math.Max(map.StackOffsetBytes, slotIndex * 8);
         }

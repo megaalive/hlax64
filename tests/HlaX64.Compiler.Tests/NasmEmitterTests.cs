@@ -355,9 +355,10 @@ public class WindowsMsAbiLowererTests
     {
         var nasm = EmitForWindows("program test;\nbegin test;\n    mov(1, rax);\nend test;");
         Assert.Contains("extern ExitProcess", nasm);
-        Assert.Contains("sub rsp, 32     ; shadow space", nasm);
-        Assert.Contains("mov ecx, ebx", nasm);
-        Assert.Contains("call ExitProcess", nasm);
+        Assert.Contains("sub rsp, 40     ; shadow + align", nasm);
+        Assert.Contains("add rsp, 40     ; restore entry shadow + align", nasm);
+        Assert.Contains("mov rcx, rbx", nasm);
+        Assert.Contains("jmp ExitProcess", nasm);
     }
 
     [Fact]
@@ -448,9 +449,27 @@ end test;";
     {
         var nasm = EmitForWindows("program test;\nbegin test;\n    stdout.put(rax, nl);\nend test;");
         Assert.Contains("extern stdout_put_int", nasm);
-        Assert.Contains("mov rcx, rax", nasm);
+        Assert.Contains("sub rsp,", nasm);
+        Assert.Contains("mov [rsp+0], rax", nasm);
+        Assert.Contains("mov rcx, [rsp+0]", nasm);
         Assert.Contains("call stdout_put_int", nasm);
         Assert.Contains("call stdout_put_nl", nasm);
+    }
+
+    [Fact]
+    public void Emit_WindowsShiftInstruction_LowersImmediateCount()
+    {
+        var nasm = EmitForWindows("program test;\nbegin test;\n    mov(1, r10);\n    shl(32, r10);\nend test;");
+        Assert.Contains("shl r10, 32", nasm);
+        Assert.DoesNotContain("mov r10, 32", nasm);
+    }
+
+    [Fact]
+    public void Emit_WindowsDwordMemoryLoad_UsesThirtyTwoBitRegisterAlias()
+    {
+        var nasm = EmitForWindows("program test;\nbegin test;\n    mov([rcx + 32].dword, r8);\nend test;");
+        Assert.Contains("mov r8d, dword [rcx+32]", nasm);
+        Assert.DoesNotContain("mov r8, dword", nasm);
     }
 
     [Fact]
