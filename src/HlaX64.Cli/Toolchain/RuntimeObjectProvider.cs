@@ -142,7 +142,8 @@ public static class RuntimeObjectProvider
         bool isWindows,
         string cacheDirectory,
         out List<string> linkExtras,
-        out string? error)
+        out string? error,
+        bool isSharedLibrary = false)
     {
         linkExtras = result.LinkLibraries.ToList();
         var externs = CollectRequiredExterns(result.LoweredFunctions);
@@ -151,6 +152,12 @@ public static class RuntimeObjectProvider
             if (!TryGetWindowsRuntimeObjects(externs, cacheDirectory, out var runtimeObjs, out error))
                 return false;
             linkExtras.AddRange(runtimeObjs);
+            if (isSharedLibrary)
+            {
+                if (!TryAssembleRuntimeDllMain(cacheDirectory, out var dllMainObj, out error))
+                    return false;
+                linkExtras.Add(dllMainObj);
+            }
         }
         else
         {
@@ -161,6 +168,20 @@ public static class RuntimeObjectProvider
 
         error = null;
         return true;
+    }
+
+    private static bool TryAssembleRuntimeDllMain(string cacheDirectory, out string? objectFile, out string? error)
+    {
+        objectFile = null;
+        var runtimeDir = FindRuntimeDirectory();
+        if (runtimeDir == null)
+        {
+            error = "HlaX64.Runtime sources not found. Clone/build the repo or set HLAX64_RUNTIME_DIR.";
+            return false;
+        }
+
+        var nasm = Path.Combine(runtimeDir, "windows-x64", "dllmain.nasm");
+        return TryAssembleRuntime(nasm, cacheDirectory, "hlax64-runtime-dllmain", "win64", out objectFile, out error);
     }
 
     private static bool TryAssembleRuntime(

@@ -1,0 +1,27 @@
+// native_count_lines.hla64 - count newline bytes in a buffer (exported for C# P/Invoke).
+//
+// Stress: export procedure, ptr + length params, Win64 MS ABI, no runtime stdout.
+// C# reads the file and passes bytes; this DLL only scans memory.
+
+program native_count_lines;
+
+export procedure CountLines(data: ptr; length: int64); @returns("rax");
+begin CountLines;
+    mov(0, r11);
+    mov(0, r8);
+    mov(data, r10);
+
+    while(r8 < length) do
+        mov([r10].byte, r9);
+        if(r9 = 10) then
+            add(1, r11);
+        endif;
+        add(1, r8);
+        add(1, r10);
+    endwhile;
+
+    mov(r11, rax);
+end CountLines;
+
+begin native_count_lines;
+end native_count_lines;

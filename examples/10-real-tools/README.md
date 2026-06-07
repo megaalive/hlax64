@@ -2,7 +2,7 @@
 
 Small programs that behave like everyday command-line tools. These examples are intentionally more realistic than arithmetic or ABI samples: they touch OS APIs, buffers, file metadata, loops over external data, integer formatting, and error paths.
 
-All seven tools use the Windows argv runtime (`hlax_argv_*`). File readers take a path as `argv[1]`; `listfiles` takes a glob (e.g. `fixtures\\*`).
+All nine tools use the Windows argv runtime (`hlax_argv_*`). File readers take a path as `argv[1]`; `listfiles` takes a glob (e.g. `fixtures\\*`).
 
 ## Tool layout
 
@@ -61,4 +61,4 @@ Run from the **repository root** so relative fixture paths resolve.
 | Done | Add `hexdump`, `wc`, `fnv1a` |
 | Done | Skeleton `98-bug-farm/`, `99-invalid/` |
 | Done | argv for all nine real-tools |
-| Next | C# interop folder `11-csharp-interop-real/` |
+| Next | C# interop folder `11-csharp-interop-real/` (started: `native_count_lines`) |

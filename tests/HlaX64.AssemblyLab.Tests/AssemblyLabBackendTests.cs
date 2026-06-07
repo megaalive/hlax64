@@ -2,8 +2,10 @@ using System.Diagnostics;
 using HlaX64.AssemblyLab;
 using HlaX64.AssemblyLab.Services;
 using HlaX64.AssemblyLab.ViewModels;
+using HlaX64.Cli.Commands;
 using HlaX64.Cli.Services;
 using HlaX64.Cli.Toolchain;
+using HlaX64.Compiler.Options;
 using HlaX64.DebugAdapter;
 
 namespace HlaX64.AssemblyLab.Tests;
@@ -544,6 +546,127 @@ public class AssemblyLabBackendTests
         {
             if (Directory.Exists(outDir))
                 Directory.Delete(outDir, recursive: true);
+        }
+    }
+
+    public static IEnumerable<object[]> InteropRealCases()
+    {
+        var repoRoot = FindRepoRoot();
+        var interopRoot = Path.Combine(repoRoot, "examples", "11-csharp-interop-real");
+        if (!Directory.Exists(interopRoot))
+            yield break;
+
+        foreach (var exampleDir in Directory.GetDirectories(interopRoot).OrderBy(d => d, StringComparer.OrdinalIgnoreCase))
+        {
+            var example = Path.GetFileName(exampleDir);
+            if (example.StartsWith('_'))
+                continue;
+
+            var expectedStdoutPath = Path.Combine(exampleDir, "expected.stdout");
+            var expectedExitPath = Path.Combine(exampleDir, "expected.exitcode");
+            var callerProject = Directory.GetFiles(Path.Combine(exampleDir, "caller"), "*.csproj").FirstOrDefault();
+            if (callerProject == null || !File.Exists(expectedStdoutPath) || !File.Exists(expectedExitPath))
+                continue;
+
+            var expectedStdout = File.ReadAllText(expectedStdoutPath).Replace("\r\n", "\n").TrimEnd('\n');
+            var expectedExit = int.Parse(File.ReadAllText(expectedExitPath).Trim(), System.Globalization.CultureInfo.InvariantCulture);
+            yield return new object[] { example, expectedStdout, expectedExit };
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(InteropRealCases))]
+    public void InteropReal_caller_runs_on_windows(string example, string expectedStdout, int expectedExit)
+    {
+        if (!OperatingSystem.IsWindows())
+            return;
+        if (!LinkerTool.TryFindWindowsLinker(out _, out _, out _))
+            return;
+        if (!NasmTool.TryFindNasm(out _))
+            return;
+
+        var repoRoot = FindRepoRoot();
+        var exampleDir = Path.Combine(repoRoot, "examples", "11-csharp-interop-real", example);
+        var sourcePath = Path.Combine(exampleDir, $"{example}.hla64");
+        var callerDir = Path.Combine(exampleDir, "caller");
+        var callerProject = Directory.GetFiles(callerDir, "*.csproj").FirstOrDefault();
+        if (!File.Exists(sourcePath) || callerProject == null)
+            return;
+
+        var buildDir = Path.Combine(Path.GetTempPath(), $"hlax64-interop-{example}-" + Guid.NewGuid().ToString("N")[..8]);
+        try
+        {
+            var options = CompilationOptions.Default with
+            {
+                Target = TargetTriple.WindowsX64MsAbi,
+                OutputKind = OutputKind.SharedLibrary
+            };
+            var artifacts = CompilePipeline.Compile(sourcePath, File.ReadAllText(sourcePath), options);
+            Directory.CreateDirectory(buildDir);
+            var nasmFile = Path.Combine(buildDir, $"{example}.nasm");
+            var objFile = Path.Combine(buildDir, $"{example}.obj");
+            var dllFile = Path.Combine(buildDir, $"lib{example}.dll");
+            File.WriteAllText(nasmFile, artifacts.NasmCode);
+
+            Assert.True(NasmTool.TryFindNasm(out var nasmPath));
+            var nasmTool = new NasmTool(nasmPath);
+            Assert.True(nasmTool.TryAssemble(nasmFile, objFile, out var nasmError, format: "win64"), nasmError);
+            Assert.True(RuntimeObjectProvider.TryBuildLinkExtras(
+                artifacts.Result, isWindows: true, buildDir, out var linkExtras, out var runtimeError, isSharedLibrary: true), runtimeError);
+            var moduleDef = Path.Combine(buildDir, $"{example}.def");
+            Assert.True(LinkerTool.TryWriteWindowsModuleDefinition(artifacts.Result.LoweredFunctions, moduleDef));
+            Assert.True(LinkerTool.TryLinkWindows(objFile, dllFile, out var linkError, shared: true,
+                extraLibraries: linkExtras, moduleDefinitionFile: moduleDef), linkError);
+
+            var buildCaller = System.Diagnostics.Process.Start(new ProcessStartInfo
+            {
+                FileName = "dotnet",
+                Arguments = $"build \"{callerProject}\" -v q",
+                WorkingDirectory = callerDir,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            });
+            Assert.NotNull(buildCaller);
+            buildCaller!.WaitForExit(120000);
+            Assert.Equal(0, buildCaller.ExitCode);
+
+            var callerOutputDir = Path.Combine(callerDir, "bin", "Debug", "net10.0");
+            var nativeDllDest = Path.Combine(callerOutputDir, $"{example}.dll");
+            File.Copy(dllFile, nativeDllDest, overwrite: true);
+
+            var fixture = Path.Combine(exampleDir, "fixtures", "sample-b.txt");
+            var callerExe = Directory.GetFiles(callerOutputDir, "*.exe").FirstOrDefault();
+            Assert.NotNull(callerExe);
+
+            using var process = System.Diagnostics.Process.Start(new ProcessStartInfo
+            {
+                FileName = callerExe!,
+                Arguments = $"\"{fixture}\"",
+                WorkingDirectory = callerDir,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            });
+            Assert.NotNull(process);
+            var stdout = process!.StandardOutput.ReadToEnd();
+            var stderr = process.StandardError.ReadToEnd();
+            if (!process.WaitForExit(15000))
+            {
+                process.Kill(entireProcessTree: true);
+                Assert.Fail($"{example} caller did not exit within 15s\nstderr: {stderr}");
+            }
+
+            Assert.Equal(expectedExit, process.ExitCode);
+            foreach (var line in expectedStdout.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                Assert.Contains(line, stdout, StringComparison.Ordinal);
+        }
+        finally
+        {
+            if (Directory.Exists(buildDir))
+                Directory.Delete(buildDir, recursive: true);
         }
     }
 

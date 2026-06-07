@@ -61,6 +61,8 @@ public class HlaX64Tools
 
         bool isWindows = triple.Abi.Equals("msabi", StringComparison.OrdinalIgnoreCase);
         bool isShared = outputKind?.ToLowerInvariant() == "shared-library";
+        if (isShared)
+            opts = opts with { OutputKind = OutputKind.SharedLibrary };
         string nasmFormat = isWindows ? "win64" : "elf64";
         string objExt = isWindows ? ".obj" : ".o";
         string ext = isShared ? (isWindows ? ".dll" : ".so") : (isWindows ? ".exe" : "");
@@ -82,14 +84,22 @@ public class HlaX64Tools
             throw new InvalidOperationException($"Assembly error:\n{nasmError}");
 
         if (!RuntimeObjectProvider.TryBuildLinkExtras(
-                artifacts.Result, isWindows, outDir, out var linkExtras, out var runtimeError))
+                artifacts.Result, isWindows, outDir, out var linkExtras, out var runtimeError, isSharedLibrary: isShared))
             throw new InvalidOperationException(runtimeError!);
+
+        string? moduleDef = null;
+        if (isShared && isWindows)
+        {
+            moduleDef = Path.Combine(outDir, $"{sourceName}.def");
+            if (!LinkerTool.TryWriteWindowsModuleDefinition(artifacts.Result.LoweredFunctions, moduleDef))
+                moduleDef = null;
+        }
 
         bool linkSuccess;
         string linkError;
         if (isWindows)
             linkSuccess = LinkerTool.TryLinkWindows(objFile, outputFile, out linkError, shared: isShared,
-                extraLibraries: linkExtras);
+                extraLibraries: linkExtras, moduleDefinitionFile: moduleDef);
         else
             linkSuccess = LinkerTool.TryLink(objFile, outputFile, out linkError, out _, shared: isShared,
                 extraLibraries: linkExtras);

@@ -1,0 +1,4 @@
+name = "native_count_lines"
+version = "0.1.0"
+target = "windows-x64-msabi"
+main = "native_count_lines.hla64"

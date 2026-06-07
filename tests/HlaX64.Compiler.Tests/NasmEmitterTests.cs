@@ -26,6 +26,37 @@ public class NasmEmitterTests
     }
 
     [Fact]
+    public void Emit_SharedLibrary_OmitsStartAndExitProcess()
+    {
+        const string source = """
+            program lib;
+            export procedure Add(a:int64; b:int64); @returns("rax");
+            begin Add;
+                mov(a, rax);
+                add(b, rax);
+            end Add;
+            begin lib;
+            end lib;
+            """;
+
+        var compilation = new Compilation("(test)", source);
+        var result = compilation.Process();
+        Assert.True(result.Success, string.Join("; ", result.Diagnostics));
+
+        var emitter = new NasmEmitter();
+        var nasm = emitter.Emit(
+            result.LoweredFunctions,
+            result.StringLiterals,
+            result.GlobalData,
+            new NasmEmitOptions { IsSharedLibrary = true });
+
+        Assert.Contains("global Add", nasm);
+        Assert.DoesNotContain("global _start", nasm);
+        Assert.DoesNotContain("_start:", nasm);
+        Assert.DoesNotContain("ExitProcess", nasm);
+    }
+
+    [Fact]
     public void Emit_MovInstruction_OperandOrderReversed()
     {
         var nasm = Emit("program test;\nbegin test;\n    mov(1, rax);\nend test;");

@@ -103,15 +103,17 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
         outputDir = Path.GetFullPath(outputDir);
         Directory.CreateDirectory(outputDir);
 
+        bool isShared = settings.OutputKind?.ToLowerInvariant() == "shared-library";
         var options = CliCompilationOptions.FromCli(
             settings.Target, settings.RuntimeMode, settings.WarnBounds,
             settings.WarnDefinite, settings.WarnUnreachable, settings.WarnLiveness, settings.WarnVerify,
             settings.Optimize, settings.SourceMap, settings.DebugInfo,
             features: settings.Features, cpu: settings.Cpu);
+        if (isShared)
+            options = options with { OutputKind = OutputKind.SharedLibrary };
         var targetTriple = options.Target;
 
         bool isWindows = options.Target.Abi.Equals("msabi", StringComparison.OrdinalIgnoreCase);
-        bool isShared = settings.OutputKind?.ToLowerInvariant() == "shared-library";
         string nasmFormat = isWindows ? "win64" : "elf64";
         string objExt = isWindows ? ".obj" : ".o";
         string ext = isShared ? (isWindows ? ".dll" : ".so") : (isWindows ? ".exe" : "");
@@ -165,12 +167,20 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
             bool requiresWslRun = false;
             string linkError = "";
             if (!RuntimeObjectProvider.TryBuildLinkExtras(
-                    compileResult, isWindows, outputDir, out var linkExtras, out var runtimeError))
+                    compileResult, isWindows, outputDir, out var linkExtras, out var runtimeError, isSharedLibrary: isShared))
                 return Fail(settings, sourceFile, targetName, outputKind, nasmFile, objFile, runtimeError!);
+
+            string? moduleDef = null;
+            if (isShared && isWindows)
+            {
+                moduleDef = Path.Combine(outputDir, $"{sourceName}.def");
+                if (!LinkerTool.TryWriteWindowsModuleDefinition(compileResult.LoweredFunctions, moduleDef))
+                    moduleDef = null;
+            }
 
             if (isWindows)
                 linkSuccess = LinkerTool.TryLinkWindows(objFile, outputFile, out linkError, shared: isShared,
-                    extraLibraries: linkExtras);
+                    extraLibraries: linkExtras, moduleDefinitionFile: moduleDef);
             else
                 linkSuccess = LinkerTool.TryLink(objFile, outputFile, out linkError, out requiresWslRun,
                     shared: isShared, extraLibraries: linkExtras);

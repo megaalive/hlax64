@@ -89,7 +89,8 @@ public static class CompilePipeline
                 TraceProcedures = opts.TraceProcedures,
                 AnnotateIrIds = opts.EmitSourceMap,
                 SourceFileName = Path.GetFileName(sourcePath),
-                IsWindowsTarget = opts.Target.Abi.Equals("msabi", StringComparison.OrdinalIgnoreCase)
+                IsWindowsTarget = opts.Target.Abi.Equals("msabi", StringComparison.OrdinalIgnoreCase),
+                IsSharedLibrary = opts.OutputKind == OutputKind.SharedLibrary
             });
 
         SourceMapDocument? map = null;

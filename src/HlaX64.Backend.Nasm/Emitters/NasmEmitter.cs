@@ -12,6 +12,7 @@ public sealed class NasmEmitOptions
     public bool AnnotateIrIds { get; init; }
     public string? SourceFileName { get; init; }
     public bool IsWindowsTarget { get; init; }
+    public bool IsSharedLibrary { get; init; }
 }
 
 public sealed class NasmEmitter
@@ -46,7 +47,8 @@ public sealed class NasmEmitter
         }
 
         AppendLine("section .text");
-        AppendLine("global _start");
+        if (!_options.IsSharedLibrary)
+            AppendLine("global _start");
         foreach (var func in functions)
             if (func.IsExport)
                 AppendLine($"global {func.Name}");
@@ -56,6 +58,8 @@ public sealed class NasmEmitter
         {
             if (func.IsEntryPoint)
             {
+                if (_options.IsSharedLibrary)
+                    continue;
                 hasEntry = true;
                 EmitFunction(func, includePrologue: false);
             }

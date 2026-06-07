@@ -319,11 +319,26 @@ public sealed class LinkerTool
     }
 
     /// <summary>
+    /// Writes a PE module-definition file listing exported procedure names.
+    /// </summary>
+    public static bool TryWriteWindowsModuleDefinition(
+        IEnumerable<HlaX64.Compiler.Abi.LoweredFunction> functions,
+        string defPath)
+    {
+        var exports = functions.Where(f => f.IsExport).Select(f => f.Name).ToList();
+        if (exports.Count == 0)
+            return false;
+
+        File.WriteAllText(defPath, "EXPORTS\n" + string.Join('\n', exports) + "\n");
+        return true;
+    }
+
+    /// <summary>
     /// Links a COFF object file into a Windows PE executable or DLL.
     /// Uses lld-link or MSVC link.exe.
     /// </summary>
     public static bool TryLinkWindows(string objectFile, string output, out string error, bool shared = false,
-        IEnumerable<string>? extraLibraries = null, bool emitDebugInfo = false)
+        IEnumerable<string>? extraLibraries = null, bool emitDebugInfo = false, string? moduleDefinitionFile = null)
     {
         if (!TryFindWindowsLinker(out var linker, out var displayName, out var subCommand))
         {
@@ -336,26 +351,27 @@ public sealed class LinkerTool
             bool isLld = linker.ToLowerInvariant().Contains("lld-link");
             bool isMsvc = linker.ToLowerInvariant().Contains("link");
 
-            string entryFlag = "/ENTRY:_start";
-            string subsystemFlag = "/SUBSYSTEM:CONSOLE";
+            string entryFlag = shared ? "/ENTRY:DllMain" : "/ENTRY:_start";
+            string subsystemFlag = shared ? "" : "/SUBSYSTEM:CONSOLE";
             string fixedImageFlags = "/DYNAMICBASE:NO /FIXED";
             string kernel32Lib = "kernel32.lib";
 
             string debugFlag = emitDebugInfo ? "/DEBUG " : "";
             string linkExtras = FormatExtraLibraries(extraLibraries, isWindows: true);
+            string defFlag = moduleDefinitionFile != null ? $"/DEF:\"{moduleDefinitionFile}\" " : "";
 
             string args;
             if (shared)
             {
                 args = isLld
-                    ? $"/NOLOGO {debugFlag}/DLL {entryFlag} {subsystemFlag} {fixedImageFlags} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib} {linkExtras}"
-                    : $"/NOLOGO {debugFlag}/DLL {entryFlag} {subsystemFlag} {fixedImageFlags} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib} {linkExtras}";
+                    ? $"/NOLOGO {debugFlag}/DLL {entryFlag} {subsystemFlag} {defFlag}{fixedImageFlags} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib} {linkExtras}"
+                    : $"/NOLOGO {debugFlag}/DLL {entryFlag} {subsystemFlag} {defFlag}{fixedImageFlags} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib} {linkExtras}";
             }
             else
             {
                 args = isLld
-                    ? $"/NOLOGO {debugFlag}{entryFlag} {subsystemFlag} {fixedImageFlags} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib} {linkExtras}"
-                    : $"/NOLOGO {debugFlag}{entryFlag} {subsystemFlag} {fixedImageFlags} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib} {linkExtras}";
+                    ? $"/NOLOGO {debugFlag}{entryFlag} {subsystemFlag} {defFlag}{fixedImageFlags} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib} {linkExtras}"
+                    : $"/NOLOGO {debugFlag}{entryFlag} {subsystemFlag} {defFlag}{fixedImageFlags} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib} {linkExtras}";
             }
 
             var psi = new ProcessStartInfo
