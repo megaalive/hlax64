@@ -134,29 +134,6 @@ Every new language feature must update:
 - Include a comment header describing the purpose
 - Add a manifest in `tests/samples/` or `tests/examples-curriculum/` for CI native tests
 
-## Git hooks (optional)
-
-To strip accidental `Co-authored-by: Cursor` trailers from commit messages:
-
-```bash
-git config core.hooksPath .githooks
-```
-
-Also disable **Cursor Settings → Agent → Attribution → Commit Attribution** for IDE commits.
-
-### Removing `cursoragent` from GitHub Contributors
-
-GitHub lists anyone who **authored** or **co-authored** commits on the default branch.
-
-1. **Audit local `main`:** `powershell -File scripts/audit-coauthors.ps1` — must report OK (no `cursoragent@cursor.com` trailers).
-2. **Rewrite history (one-time):** `powershell -File scripts/strip-coauthor-history.ps1 -Force` then `git push --force-with-lease origin main`.
-3. **Hooks (this repo):** `core.hooksPath` is set to `.githooks` locally — strips trailers on every commit.
-4. **Cursor IDE:** disable **Settings → Agents → Attribution → Commit Attribution**; keep `~/.cursor/cli-config.json` with `"attribution.attributeCommitsToAgent": false`.
-5. **GitHub App:** if [Cursor](https://github.com/apps/cursor) has repository access, review **Settings → Integrations → Applications** and revoke if it pushed as `cursoragent`.
-6. **Stale graph:** after cleaning history, the Contributors graph can take days to refresh; there is no manual “remove contributor” button.
-
-Current `main` authors (verified): `megaalive`, `ded-furby` only — no `cursoragent` commit trailers on `origin/main` after history rewrite.
-
 ## Updating the Specification
 
 - Language version must be incremented for breaking changes
