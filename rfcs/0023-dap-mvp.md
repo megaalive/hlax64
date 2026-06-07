@@ -2,19 +2,23 @@
 
 | Field | Value |
 |-------|-------|
-| **Status** | MVP stub |
+| **Status** | Partially implemented |
 | **Phase** | 24 |
 
-## DAP
+## DAP (`HlaX64.DebugAdapter`)
 
-`hla64 debug --stdio` — minimal JSON request/response (`launch`, `disconnect`).
+`hla64 debug --stdio` — Debug Adapter Protocol over stdin/stdout.
 
-Full Debug Adapter Protocol server deferred.
+Capabilities: `initialize`, `launch`, `configurationDone`, `setBreakpoints`, `threads`, `stackTrace`, `scopes`, `continue`, `disconnect`.
+
+Backend: Linux gdb (MI/CLI wrapper). **Windows:** follow-up (lldb or defer).
+
+VS Code: see `editors/vscode/launch.json`.
 
 ## LSP virtual documents
 
 Commands: `hla64.showIr`, `hla64.showNasm`, `hla64.showStackLayout` via `workspace/executeCommand`.
 
-## MCP repair contract
+## Deferred
 
-`explain` tool returns diagnostics with `span` and `suggestedFix` template JSON.
+- Variables/evaluate, conditional breakpoints, Windows lldb backend

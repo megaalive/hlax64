@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\HlaX64.Compiler\HlaX64.Compiler.csproj" />
     <ProjectReference Include="..\HlaX64.Backend.Nasm\HlaX64.Backend.Nasm.csproj" />
+    <ProjectReference Include="..\HlaX64.DebugAdapter\HlaX64.DebugAdapter.csproj" />
   </ItemGroup>
 
   <ItemGroup>
