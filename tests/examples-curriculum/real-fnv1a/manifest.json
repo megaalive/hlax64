@@ -1,0 +1,6 @@
+{
+  "name": "real-fnv1a",
+  "source": "../../../examples/10-real-tools/fnv1a/fnv1a.hla64",
+  "expectedExitCode": 0,
+  "description": "Real tool: FNV-1a 64-bit hash of a fixture file (compile-only; native run via AssemblyLab.Tests)"
+}

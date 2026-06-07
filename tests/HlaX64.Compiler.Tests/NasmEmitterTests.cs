@@ -536,6 +536,25 @@ end test;";
     }
 
     [Fact]
+    public void Emit_WindowsXorAndAndOr_EmitBitwiseOpsNotMove()
+    {
+        var source = @"program test;
+begin test;
+    mov(15, r11);
+    mov(255, r12);
+    xor(9, r11);
+    and(15, r12);
+    or(3, r12);
+end test;";
+        var nasm = EmitForWindows(source);
+        Assert.Contains("xor r11, 9", nasm);
+        Assert.Contains("and r12, 15", nasm);
+        Assert.Contains("or r12, 3", nasm);
+        Assert.DoesNotContain("mov r11, 9", nasm);
+        Assert.DoesNotContain("mov r12, 15", nasm);
+    }
+
+    [Fact]
     public void Emit_WindowsWhileWithNestedIf_DoesNotFallThroughLoopContinuation()
     {
         // Regression: when a while loop body contains an if, the loop's

@@ -1,0 +1,6 @@
+{
+  "name": "real-hexdump",
+  "source": "../../../examples/10-real-tools/hexdump/hexdump.hla64",
+  "expectedExitCode": 0,
+  "description": "Real tool: hex dump of a small fixture file (compile-only; native run via AssemblyLab.Tests)"
+}

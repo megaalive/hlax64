@@ -461,11 +461,33 @@ public class AssemblyLabBackendTests
         }
     }
 
+    public static IEnumerable<object[]> RealToolCases()
+    {
+        var repoRoot = FindRepoRoot();
+        var toolsRoot = Path.Combine(repoRoot, "examples", "10-real-tools");
+        if (!Directory.Exists(toolsRoot))
+            yield break;
+
+        foreach (var toolDir in Directory.GetDirectories(toolsRoot).OrderBy(d => d, StringComparer.OrdinalIgnoreCase))
+        {
+            var tool = Path.GetFileName(toolDir);
+            if (tool.StartsWith('_'))
+                continue;
+
+            var sourcePath = Path.Combine(toolDir, $"{tool}.hla64");
+            var expectedStdoutPath = Path.Combine(toolDir, "expected.stdout");
+            var expectedExitPath = Path.Combine(toolDir, "expected.exitcode");
+            if (!File.Exists(sourcePath) || !File.Exists(expectedStdoutPath) || !File.Exists(expectedExitPath))
+                continue;
+
+            var expectedStdout = File.ReadAllText(expectedStdoutPath).Replace("\r\n", "\n").TrimEnd('\n');
+            var expectedExit = int.Parse(File.ReadAllText(expectedExitPath).Trim(), System.Globalization.CultureInfo.InvariantCulture);
+            yield return new object[] { tool, expectedStdout, expectedExit };
+        }
+    }
+
     [Theory]
-    [InlineData("exists", "exists", 0)]
-    [InlineData("filesize", "sample-a.txt bytes: 6", 0)]
-    [InlineData("listfiles", "sample-a.txt  6", 0)]
-    [InlineData("linecount", "sample-b.txt lines: 2", 0)]
+    [MemberData(nameof(RealToolCases))]
     public void RealTool_builds_and_runs_natively_on_windows(string tool, string expectedStdout, int expectedExit)
     {
         if (!OperatingSystem.IsWindows())
@@ -508,7 +530,8 @@ public class AssemblyLabBackendTests
             }
 
             Assert.Equal(expectedExit, process.ExitCode);
-            Assert.Contains(expectedStdout, stdout, StringComparison.Ordinal);
+            foreach (var line in expectedStdout.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                Assert.Contains(line, stdout, StringComparison.Ordinal);
         }
         finally
         {
