@@ -1,5 +1,4 @@
 using AvaloniaEdit;
-using AvaloniaEdit.TextMate;
 using HlaX64.AssemblyLab.Controls;
 
 namespace HlaX64.AssemblyLab.Services;
@@ -12,17 +11,19 @@ public static class SourceEditorSetup
     {
         editor.ShowLineNumbers = true;
         editor.FontFamily = "Consolas,Courier New,monospace";
-        editor.WordWrap = true;
+        editor.WordWrap = false;
 
         var margin = new BreakpointMargin();
         if (onBreakpointToggled != null)
             margin.BreakpointToggled += onBreakpointToggled;
         editor.TextArea.LeftMargins.Insert(0, margin);
 
-        var registryOptions = new Hla64RegistryOptions();
-        TextMate.Installation installation = editor.InstallTextMate(registryOptions);
-        installation.SetGrammar(GrammarScope);
+        var currentLineHighlighter = new DebugCurrentLineHighlighter();
+        editor.TextArea.TextView.BackgroundRenderers.Add(currentLineHighlighter);
 
+        editor.TextArea.TextView.LineTransformers.Add(new Hla64SyntaxColorizer());
+
+        margin.CurrentLineHighlighter = currentLineHighlighter;
         return margin;
     }
 }

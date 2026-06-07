@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "HlaX64.AssemblyLab": {
+      "commandName": "Project"
+    },
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    }
+  }
+}

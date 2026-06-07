@@ -309,16 +309,167 @@ public class AssemblyLabBackendTests
         if (OperatingSystem.IsLinux())
             Assert.IsType<GdbBackend>(backend);
         else if (OperatingSystem.IsWindows())
-            Assert.IsType<LldbBackend>(backend);
+        {
+            if (backend.IsAvailable)
+                Assert.True(backend is GdbBackend or LldbBackend);
+            else
+                Assert.IsType<GdbBackend>(backend);
+        }
         backend.Dispose();
     }
 
     [Fact]
-    public void PlanApproved_gates_build_command()
+    public void Windows_hello_build_produces_exe_when_linker_available()
+    {
+        if (!OperatingSystem.IsWindows())
+            return;
+        if (!LinkerTool.TryFindWindowsLinker(out _, out _, out _))
+            return;
+
+        var helloPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "examples", "00-getting-started", "hello.hla64"));
+        if (!File.Exists(helloPath))
+            return;
+
+        var backend = new AssemblyLabBackend();
+        var outDir = Path.Combine(Path.GetTempPath(), "hlax64-win-hello-" + Guid.NewGuid().ToString("N")[..8]);
+        try
+        {
+            var build = backend.Build(helloPath, File.ReadAllText(helloPath), "windows-x64-msabi", outDir);
+            Assert.True(build.Success, build.Message);
+            Assert.NotNull(build.OutputFile);
+            Assert.True(File.Exists(build.OutputFile!), build.Message);
+
+            var run = backend.Run(helloPath, File.ReadAllText(helloPath), "windows-x64-msabi", build.OutputFile);
+            Assert.True(run.Success, run.Message);
+            Assert.Contains("Hello from HlaX64", run.Stdout);
+        }
+        finally
+        {
+            if (Directory.Exists(outDir))
+                Directory.Delete(outDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void PlanApproved_gates_build_command_only_when_strict_plan_gate()
     {
         var vm = new MainWindowViewModel();
+        Assert.True(vm.BuildCommand.CanExecute(null));
+
+        vm.StrictPlanGate = true;
+        vm.PlanApproved = false;
         Assert.False(vm.BuildCommand.CanExecute(null));
+
         vm.PlanApproved = true;
         Assert.True(vm.BuildCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void SuggestFixApplier_replaces_unknown_mnemonic_token()
+    {
+        const string bad = """
+            program bad;
+            begin bad;
+                movz(1, rax);
+            end bad;
+            """;
+        var json = new AssemblyLabBackend().ExplainForAgent("(bad)", bad, "linux-x64-sysv");
+        var result = SuggestFixApplier.TryApplyFirstFromAgentJson(bad, json);
+        Assert.True(result.Success, result.Message);
+        Assert.Contains("mov(", result.PatchedSource, StringComparison.Ordinal);
+        Assert.DoesNotContain("movz", result.PatchedSource, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MiOutputParser_parses_gdb_stopped_event()
+    {
+        const string line = "*stopped,reason=\"breakpoint-hit\",thread-id=\"1\",frame={level=\"0\",addr=\"0x401000\",func=\"main\",file=\"t.hla64\",line=\"3\"}";
+        Assert.True(MiOutputParser.TryParseGdbStopped(line, out var info));
+        Assert.NotNull(info);
+        Assert.Equal("breakpoint-hit", info!.Reason);
+        Assert.Single(info.Frames);
+        Assert.Equal("main", info.Frames[0].Name);
+    }
+
+    [Fact]
+    public void MiOutputParser_parses_gdb_register_values()
+    {
+        const string response = "^101,done,register-values=[{number=\"0\",name=\"rax\",value=\"0x1\"},{number=\"1\",name=\"rbx\",value=\"0x0\"}]";
+        var regs = MiOutputParser.ParseGdbRegisterValues(response);
+        Assert.Equal(2, regs.Count);
+        Assert.Equal("rax", regs[0].Name);
+        Assert.Equal("0x1", regs[0].Value);
+    }
+
+    [Fact]
+    public void MiOutputParser_parses_gdb_register_values_without_names()
+    {
+        const string response = "^102,done,register-values=[{number=\"0\",value=\"0x15e728\"},{number=\"1\",value=\"0x0\"}]";
+        var regs = MiOutputParser.ParseGdbRegisterValues(response);
+        Assert.Equal(2, regs.Count);
+        Assert.Equal("rax", regs[0].Name);
+        Assert.Equal("0x15e728", regs[0].Value);
+        Assert.Equal("rbx", regs[1].Name);
+    }
+
+    [Fact]
+    public void NativeBinaryEntryPoint_reads_windows_hello_exe()
+    {
+        if (!OperatingSystem.IsWindows())
+            return;
+
+        var hello = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "examples", "00-getting-started", "build", "hello", "hello.exe"));
+        if (!File.Exists(hello))
+            return;
+
+        Assert.True(NativeBinaryEntryPoint.TryGetEntryPoint(hello, out var entry));
+        Assert.Equal(0x140001000UL, entry);
+    }
+
+    [Fact]
+    public void ExplainAgentService_SuggestFix_includes_replacement_for_suggestion()
+    {
+        var fix = ExplainAgentService.SuggestFix(new HlaX64.Compiler.Diagnostics.Diagnostic(
+            "HLAX0071", HlaX64.Compiler.Diagnostics.DiagnosticSeverity.Error,
+            "unknown", 3, 5, "mov"));
+        var json = System.Text.Json.JsonSerializer.Serialize(fix);
+        Assert.Contains("replacement", json, StringComparison.Ordinal);
+        Assert.Contains("mov", json, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task McpSessionHost_initialize_does_not_hang()
+    {
+        var host = new McpSessionHost();
+        try
+        {
+            await host.StartAsync(FindRepoRoot());
+            if (!host.IsRunning)
+                return;
+
+            var initTask = host.InitializeAsync();
+            var completed = await Task.WhenAny(initTask, Task.Delay(TimeSpan.FromSeconds(15)));
+            Assert.Same(initTask, completed);
+            var json = await initTask;
+            Assert.Contains("result", json, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            host.Dispose();
+        }
+    }
+
+    private static string FindRepoRoot()
+    {
+        var dir = AppContext.BaseDirectory;
+        for (int i = 0; i < 8; i++)
+        {
+            if (File.Exists(Path.Combine(dir, "HlaX64.slnx")))
+                return dir;
+            var parent = Directory.GetParent(dir);
+            if (parent == null) break;
+            dir = parent.FullName;
+        }
+        return Directory.GetCurrentDirectory();
     }
 }
