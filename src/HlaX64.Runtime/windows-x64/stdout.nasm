@@ -136,3 +136,23 @@ stdout_put_int:
     add  rsp, 48
     pop  rbp
     ret
+
+; --- stdout_put_uint ----------------------------------------------------
+; HLAX64-RUNTIME-FUNCTION v0.1
+; name:    stdout_put_uint
+; target:  windows-x64-msabi
+; inputs:
+;   rcx = unsigned 64-bit integer value (bit pattern)
+extern uint_to_str
+global stdout_put_uint
+stdout_put_uint:
+    push rbp
+    mov  rbp, rsp
+    sub  rsp, 48
+    lea  rdx, [rel intbuf]
+    call uint_to_str
+    mov  rcx, rax
+    call stdout_put_str
+    add  rsp, 48
+    pop  rbp
+    ret

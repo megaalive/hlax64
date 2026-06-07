@@ -7,12 +7,12 @@ public static class RuntimeObjectProvider
 {
     private static readonly FrozenSet<string> StdoutSymbols = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "stdout_put_str", "stdout_put_nl", "stdout_put_int"
+        "stdout_put_str", "stdout_put_nl", "stdout_put_int", "stdout_put_uint"
     }.ToFrozenSet();
 
     private static readonly FrozenSet<string> ConversionSymbols = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "stdout_put_int", "int_to_str"
+        "stdout_put_int", "stdout_put_uint", "int_to_str", "uint_to_str"
     }.ToFrozenSet();
 
     private static readonly FrozenSet<string> ArgvSymbols = new HashSet<string>(StringComparer.OrdinalIgnoreCase)

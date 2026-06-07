@@ -98,3 +98,17 @@ stdout_put_int:
     call int_to_str
     mov  rdi, rax
     jmp  stdout_put_str
+
+; --- stdout_put_uint ----------------------------------------------------
+; HLAX64-RUNTIME-FUNCTION v0.1
+; name:    stdout_put_uint
+; target:  linux-x64-sysv
+; inputs:
+;   rdi = unsigned 64-bit integer value (bit pattern)
+extern uint_to_str
+global stdout_put_uint
+stdout_put_uint:
+    lea  rsi, [rel intbuf]
+    call uint_to_str
+    mov  rdi, rax
+    jmp  stdout_put_str

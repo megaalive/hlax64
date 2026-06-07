@@ -85,3 +85,61 @@ int_to_str:
     pop  r12
     pop  rbx
     ret
+
+; --- uint_to_str --------------------------------------------------------
+; HLAX64-RUNTIME-FUNCTION v0.1
+; name:    uint_to_str
+; target:  windows-x64-msabi
+; inputs:
+;   rcx = unsigned 64-bit integer value (bit pattern)
+;   rdx = pointer to output buffer (>= 21 bytes)
+; returns:
+;   rax = pointer to start of written string (same as rdx originally)
+global uint_to_str
+uint_to_str:
+    push rbx
+    push r12
+    mov  r12, rdx
+    mov  r9, rdx
+    mov  rax, rcx
+    xor  rcx, rcx
+    mov  rbx, 10
+
+    test rax, rax
+    jnz  .div_loop
+    mov  byte [r9], '0'
+    mov  byte [r9 + 1], 0
+    jmp  .done_u
+
+.div_loop:
+    xor  rdx, rdx
+    div  rbx
+    add  rdx, '0'
+    mov  [r9 + rcx], dl
+    inc  rcx
+    test  rax, rax
+    jnz  .div_loop
+
+    mov  r10, r9
+    mov  r8, r9
+    add  r8, rcx
+    dec  r8
+.reverse_loop_u:
+    cmp  r9, r8
+    jge  .nul_terminate_u
+    mov  al, [r9]
+    mov  bl, [r8]
+    mov  [r9], bl
+    mov  [r8], al
+    inc  r9
+    dec  r8
+    jmp  .reverse_loop_u
+
+.nul_terminate_u:
+    mov  byte [r10 + rcx], 0
+
+.done_u:
+    mov  rax, r12
+    pop  r12
+    pop  rbx
+    ret

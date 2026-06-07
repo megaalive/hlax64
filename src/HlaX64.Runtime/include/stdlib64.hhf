@@ -44,6 +44,12 @@ procedure stdout_put_nl; @returns("void");
 //   rdi = integer value to print
 procedure stdout_put_int(value:int64); @returns("void");
 
+// Prints an unsigned 64-bit integer in decimal to stdout (bit pattern).
+//   rdi = integer value to print
+procedure stdout_put_uint(value:int64); @returns("void");
+
+// High-level: stdout.put("text", nl); stdout.putu(hash, nl);
+
 // =====================================================================
 // Command-line argv (Windows: GetCommandLineA parser in windows-x64/argv.nasm)
 // =====================================================================
@@ -68,6 +74,9 @@ procedure hlax_argv_get(index:int64); @returns("rax");
 //   rsi = pointer to output buffer (at least 21 bytes)
 //   rax = pointer to output buffer (same as rsi on return)
 procedure int_to_str(value:int64; buf:ptr); @returns("rax");
+
+// Converts an unsigned 64-bit integer (bit pattern) to a NUL-terminated decimal string.
+procedure uint_to_str(value:int64; buf:ptr); @returns("rax");
 
 // =====================================================================
 // Startup (defined in linux-x64/startup.nasm)
