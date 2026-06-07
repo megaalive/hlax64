@@ -451,10 +451,14 @@ public sealed class AstToIrLowering
         var endBlock = new IrBasicBlock($"endwhile_{id}");
         var contBlock = new IrBasicBlock($"cont_{id}");
 
+        // Register the header and body up front; the end/continuation blocks
+        // are added AFTER the body is lowered so that any blocks created while
+        // lowering the body (e.g. a nested if/else) are laid out before the
+        // loop's continuation block. Otherwise the continuation block (which
+        // carries the procedure tail) would physically precede those nested
+        // blocks and fall through into them instead of reaching the epilogue.
         func.AddBlock(headerBlock);
         func.AddBlock(bodyBlock);
-        func.AddBlock(endBlock);
-        func.AddBlock(contBlock);
 
         block.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = headerBlock.Label });
 
@@ -502,6 +506,8 @@ public sealed class AstToIrLowering
             current = LowerStatement(stmt, current, func);
         current.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = headerBlock.Label });
 
+        func.AddBlock(endBlock);
+        func.AddBlock(contBlock);
         endBlock.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = contBlock.Label });
 
         return contBlock;

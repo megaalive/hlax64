@@ -210,9 +210,18 @@ internal static class AbiCallLoweringHelper
                 regGpr++;
         }
 
-        int shadowAndStack = 32 + stackArgCount * 8;
+        // Win64 requires RSP to be 16-byte aligned at the point of CALL.
+        // Callers reach this point with RSP already 16-aligned, so the total
+        // allocation must stay a multiple of 16. The 32-byte shadow space is
+        // already aligned; pad the stack-argument area (which sits above the
+        // shadow) up to an even number of 8-byte slots so an odd stack-arg
+        // count (e.g. CreateFileA's 7 args -> 3 stack args) does not misalign
+        // RSP and crash callees that use aligned SSE stores.
+        int stackArgBytes = stackArgCount * 8;
+        int alignedStackArgBytes = (stackArgBytes + 15) / 16 * 16;
+        int shadowAndStack = 32 + alignedStackArgBytes;
         if (shadowAndStack > 0)
-            sb.AppendLine($"    sub rsp, {shadowAndStack}      ; shadow + stack args");
+            sb.AppendLine($"    sub rsp, {shadowAndStack}      ; shadow + stack args (16-byte aligned)");
 
         regGpr = 0;
         regXmm = 0;
