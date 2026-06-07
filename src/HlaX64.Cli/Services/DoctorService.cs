@@ -111,11 +111,10 @@ internal static class DoctorChecks
 
     public static DoctorCheck CheckRuntimeFiles()
     {
-        var runtimeDir = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "HlaX64.Runtime");
-        var includeDir = Path.Combine(runtimeDir, "include");
-        if (Directory.Exists(includeDir) && Directory.GetFiles(includeDir, "*.hhf").Length > 0)
-            return Pass("Runtime files", $"Found in {Path.GetFullPath(runtimeDir)}");
-        return Fail("Runtime files", $"Not found at {runtimeDir}");
+        var runtimeDir = RuntimeObjectProvider.FindRuntimeDirectory();
+        if (runtimeDir != null)
+            return Pass("Runtime files", $"Found in {runtimeDir}");
+        return Fail("Runtime files", "Not found. Set HLAX64_RUNTIME_DIR or run from the hlax64 repo.");
     }
 
     private static DoctorCheck Pass(string name, string message) =>

@@ -12,11 +12,15 @@ public static class DisasmService
         var sb = new StringBuilder();
         for (int i = 0; i < lines.Length; i++)
         {
+            var line = lines[i];
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+
             var entry = map?.LookupByNasmLine(i + 1);
             if (entry?.SourceLine != null)
-                sb.AppendLine($"{i + 1,4} | src:{entry.SourceLine,3} | {lines[i]}");
+                sb.AppendLine($"; src:{entry.SourceLine,3} | {line}");
             else
-                sb.AppendLine($"{i + 1,4} | {lines[i]}");
+                sb.AppendLine(line);
         }
 
         return sb.ToString().TrimEnd();
@@ -33,17 +37,20 @@ public static class DisasmService
         var sb = new StringBuilder();
         foreach (var line in objdumpLines)
         {
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+
             if (map != null && TryParseObjdumpAddress(line, out _))
             {
                 var near = map.Entries.FirstOrDefault(e => e.NasmLine != null);
                 if (near != null)
                 {
-                    sb.AppendLine($"src:{near.SourceLine,3} | {line}");
+                    sb.AppendLine($"; src:{near.SourceLine,3} | {line.TrimEnd()}");
                     continue;
                 }
             }
 
-            sb.AppendLine(line);
+            sb.AppendLine(line.TrimEnd());
         }
 
         return sb.ToString().TrimEnd();
@@ -59,7 +66,12 @@ public static class DisasmService
         }
 
         if (!string.IsNullOrEmpty(nasmText))
-            return FormatNasmWithSourceMap(nasmText, map);
+        {
+            var listing = FormatNasmWithSourceMap(nasmText, map);
+            return string.IsNullOrEmpty(listing)
+                ? "; Build or compile to view disassembly."
+                : "; NASM listing — build linked binary for machine disassembly (objdump)." + Environment.NewLine + listing;
+        }
 
         return "Build or compile to view disassembly (NASM listing or linked binary).";
     }
@@ -76,7 +88,11 @@ public static class DisasmService
     private static bool TryObjdump(string binary, out List<string> lines)
     {
         lines = [];
-        foreach (var objdump in new[] { "objdump", "llvm-objdump" })
+        var tools = OperatingSystem.IsWindows()
+            ? new[] { "llvm-objdump", "objdump" }
+            : new[] { "objdump", "llvm-objdump" };
+
+        foreach (var objdump in tools)
         {
             var resolved = HlaX64.Cli.Toolchain.LinkerTool.ResolveToolExecutable(objdump);
             if (resolved == null)
@@ -89,6 +105,7 @@ public static class DisasmService
                     FileName = resolved,
                     Arguments = $"-d -M intel \"{binary}\"",
                     RedirectStandardOutput = true,
+                    RedirectStandardError = true,
                     UseShellExecute = false,
                     CreateNoWindow = true
                 });
@@ -100,7 +117,11 @@ public static class DisasmService
                 if (p.ExitCode != 0)
                     continue;
 
-                lines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries).ToList();
+                lines = output
+                    .Replace("\r\n", "\n")
+                    .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Where(l => !string.IsNullOrWhiteSpace(l))
+                    .ToList();
                 if (lines.Count > 0)
                     return true;
             }

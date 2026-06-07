@@ -164,12 +164,16 @@ public sealed class BuildCommand : Command<BuildCommand.Settings>
             bool linkSuccess;
             bool requiresWslRun = false;
             string linkError = "";
+            if (!RuntimeObjectProvider.TryBuildLinkExtras(
+                    compileResult, isWindows, outputDir, out var linkExtras, out var runtimeError))
+                return Fail(settings, sourceFile, targetName, outputKind, nasmFile, objFile, runtimeError!);
+
             if (isWindows)
                 linkSuccess = LinkerTool.TryLinkWindows(objFile, outputFile, out linkError, shared: isShared,
-                    extraLibraries: compileResult.LinkLibraries);
+                    extraLibraries: linkExtras);
             else
                 linkSuccess = LinkerTool.TryLink(objFile, outputFile, out linkError, out requiresWslRun,
-                    shared: isShared, extraLibraries: compileResult.LinkLibraries);
+                    shared: isShared, extraLibraries: linkExtras);
 
             if (!linkSuccess)
                 return Fail(settings, sourceFile, targetName, outputKind, nasmFile, objFile, linkError);

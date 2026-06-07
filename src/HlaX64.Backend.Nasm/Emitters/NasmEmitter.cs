@@ -32,6 +32,8 @@ public sealed class NasmEmitter
         globalData ??= Array.Empty<GlobalDataSymbol>();
 
         AppendLine("bits 64");
+        if (_options.IsWindowsTarget)
+            AppendLine("default rel");
 
         var allExterns = functions.SelectMany(f => f.RequiredExterns).Distinct().ToList();
         foreach (var ext in allExterns)
