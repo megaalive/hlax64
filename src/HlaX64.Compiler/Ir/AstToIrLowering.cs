@@ -146,6 +146,9 @@ public sealed class AstToIrLowering
             case AssignExprNode assign:
                 LowerAssignExpr(assign, block);
                 return block;
+            case LabelNode label:
+                block.Add(WithSource(new IrInstruction(IrOpcode.InlineAsm, immediate: $"{label.Name}:"), label));
+                return block;
         }
         return block;
     }
@@ -271,6 +274,37 @@ public sealed class AstToIrLowering
     {
         var mnemonic = instr.Mnemonic.ToLowerInvariant();
 
+        if (mnemonic == "jmp" && instr.Operands.Count == 1)
+        {
+            var target = FormatAsmOperand(instr.Operands[0]);
+            block.Add(WithSource(new IrInstruction(IrOpcode.InlineAsm, immediate: $"    jmp {target}"), instr));
+            return;
+        }
+
+        if (mnemonic == "idiv" && instr.Operands.Count == 2)
+        {
+            var divisor = ResolveOperand(instr.Operands[0]);
+            var dest = ResolveOperand(instr.Operands[1]);
+            block.Add(WithSource(new IrInstruction(IrOpcode.Divide, dest, new List<IrValue> { divisor }), instr));
+            return;
+        }
+
+        if (mnemonic is "idiv" or "div" && instr.Operands.Count == 1)
+        {
+            var divisor = FormatAsmOperand(instr.Operands[0]);
+            var setup = mnemonic == "idiv" ? "    cqo" : "    xor rdx, rdx";
+            block.Add(WithSource(new IrInstruction(IrOpcode.InlineAsm, immediate: $"{setup}\n    {mnemonic} {divisor}"), instr));
+            return;
+        }
+
+        if (mnemonic == "div" && instr.Operands.Count == 2)
+        {
+            var divisor = FormatAsmOperand(instr.Operands[0]);
+            var dest = FormatAsmOperand(instr.Operands[1]);
+            block.Add(WithSource(new IrInstruction(IrOpcode.InlineAsm, immediate: FormatUnsignedDivide(dest, divisor)), instr));
+            return;
+        }
+
         if (instr.Operands.Count == 2)
         {
             var dst = ResolveOperand(instr.Operands[1]);
@@ -325,6 +359,21 @@ public sealed class AstToIrLowering
                 block.Add(WithSource(new IrInstruction(IrOpcode.Move, op, new List<IrValue> { op }), instr));
             }
         }
+    }
+
+    private static string FormatAsmOperand(AstNode op) => op switch
+    {
+        RegisterNode r => r.Name.ToLowerInvariant(),
+        IdentifierNode id => id.Name,
+        IntegerLiteralNode lit => lit.Value.ToString(),
+        _ => "?"
+    };
+
+    private static string FormatUnsignedDivide(string dest, string divisor)
+    {
+        if (string.Equals(dest, "rax", StringComparison.OrdinalIgnoreCase))
+            return $"    xor rdx, rdx\n    div {divisor}";
+        return $"    mov rax, {dest}\n    xor rdx, rdx\n    div {divisor}\n    mov {dest}, rax";
     }
 
     private static IrInstruction WithSource(IrInstruction inst, AstNode node)

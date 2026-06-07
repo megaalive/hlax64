@@ -332,6 +332,8 @@ public sealed class SemanticAnalyzer
             case AssignExprNode assign:
                 AnalyzeAssignExpr(assign);
                 break;
+            case LabelNode:
+                break;
         }
     }
 

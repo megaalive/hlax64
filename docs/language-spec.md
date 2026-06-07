@@ -89,8 +89,9 @@ al bl cl dl
 | `and`       | Bitwise AND          | ✅ MVP   |
 | `or`        | Bitwise OR           | ✅ MVP   |
 | `cmp`       | Compare              | ✅ MVP   |
-| `idiv`      | Signed divide        | ⏳ planned |
-| `jmp`       | Unconditional jump   | ⏳ planned |
+| `idiv`      | Signed divide        | ✅ MVP (1–2 operands; 2-op sets quotient) |
+| `div`       | Unsigned divide      | ✅ MVP (1–2 operands) |
+| `jmp`       | Unconditional jump   | ✅ MVP (local label) |
 | `je` / `jne`| Jump if equal / not equal | ✅ MVP (via `if`/`while`) |
 | `jg` / `jl` | Jump if greater / less | ✅ MVP (via `if`/`while`) |
 | `call`      | Call procedure       | ✅ MVP (basic) |

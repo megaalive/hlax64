@@ -121,6 +121,14 @@ public sealed class Parser
         if (token.Type == TokenType.While)
             return ParseWhile();
 
+        if (token.Type == TokenType.Identifier && _pos + 1 < _tokens.Count &&
+            _tokens[_pos + 1].Type == TokenType.Colon)
+        {
+            var name = Advance().Value;
+            Advance();
+            return WithLocation(new LabelNode(name), token);
+        }
+
         if (token.Type == TokenType.Procedure || token.Type == TokenType.Export)
             return ParseProcedure();
 

@@ -350,6 +350,46 @@ end t;";
         Assert.Contains("movzx", nasm);
         Assert.Contains("byte [rcx]", nasm);
     }
+
+    [Fact]
+    public void Emit_IdivJmpAndLabel_EmitsInlineAsm()
+    {
+        const string source = """
+            program test;
+            procedure P; @returns("rax");
+            begin P;
+                mov(20, rax);
+                idiv(4, rax);
+                jmp(skip);
+                mov(99, rax);
+            skip:
+                mov(rax, rcx);
+            end P;
+            begin test;
+            end test;
+            """;
+        var nasm = Emit(source);
+        Assert.Contains("idiv", nasm);
+        Assert.Contains("jmp skip", nasm);
+        Assert.Contains("skip:", nasm);
+    }
+
+    [Fact]
+    public void Emit_StructAlias_ParsesRecordLayout()
+    {
+        const string source = """
+            program test;
+            struct Pair
+                a: int64;
+                b: int64;
+            endstruct;
+            begin test;
+                mov(0, rax);
+            end test;
+            """;
+        var result = new Compilation("(test)", source).Process();
+        Assert.True(result.Success, string.Join("; ", result.Diagnostics));
+    }
 }
 
 public class WindowsMsAbiLowererTests

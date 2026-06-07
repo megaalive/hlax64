@@ -22,7 +22,8 @@ public enum IrOpcode
     Branch,
     ConditionalBranch,
     Call,
-    Return
+    Return,
+    InlineAsm
 }
 
 public enum CompareKind

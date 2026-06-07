@@ -91,6 +91,15 @@ public class AssignExprNode : AstNode
 /// <summary>
 /// Represents an instruction like mov(src, dst), add(val, reg), etc.
 /// </summary>
+/// <summary>Assembly label within a procedure body: name:</summary>
+public class LabelNode : AstNode
+{
+    public override string Kind => "Label";
+    public string Name { get; }
+
+    public LabelNode(string name) => Name = name;
+}
+
 public class InstructionNode : AstNode
 {
     public override string Kind => "Instruction";

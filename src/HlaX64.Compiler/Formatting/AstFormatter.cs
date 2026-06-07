@@ -176,6 +176,9 @@ public static class AstFormatter
             case InstructionNode instr:
                 sb.AppendLine($"{pad}{instr.Mnemonic}({string.Join(", ", instr.Operands.Select(EmitOperand))});");
                 break;
+            case LabelNode label:
+                sb.AppendLine($"{pad}{label.Name}:");
+                break;
             case CallNode call:
                 sb.AppendLine($"{pad}{call.Name}({string.Join(", ", call.Arguments.Select(EmitOperand))});");
                 break;

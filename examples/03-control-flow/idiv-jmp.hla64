@@ -1,0 +1,17 @@
+// idiv-jmp.hla64 - signed divide via idiv and local jmp/label.
+program idiv_jmp;
+
+procedure Quo5; @returns("rax");
+begin Quo5;
+    mov(23, rax);
+    idiv(5, rax);
+    jmp(done);
+    mov(99, rax);
+done:
+    mov(rax, rcx);
+end Quo5;
+
+begin idiv_jmp;
+    call Quo5();
+    mov(rcx, rbx);
+end idiv_jmp;

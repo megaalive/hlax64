@@ -193,6 +193,7 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
             IrOpcode.ConditionalBranch => LowerConditionalBranch(inst),
             IrOpcode.Call => LowerCallInst(inst),
             IrOpcode.Return => new LoweredInstruction("    ret"),
+            IrOpcode.InlineAsm => new LoweredInstruction(inst.Immediate as string ?? "    ; inline"),
             _ => new LoweredInstruction($"    ; (unlowered) {inst}")
         };
     }
