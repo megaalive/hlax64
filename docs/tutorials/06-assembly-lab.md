@@ -49,11 +49,19 @@ After **Build**, double-click a diagnostic or navigate by line. When a mapping e
 
 Try `examples/06-abi/stack-args-sysv.hla64` after building with source map enabled.
 
-### 6. Debug (MVP)
+### 6. Plan approval gate
 
-**Debug** opens the **DAP** panel with adapter capabilities and an initialize request trace. Full gdb breakpoint sessions on Linux are documented in [RFC 0023](../rfcs/0023-dap-mvp.md); production debugging uses `hla64 debug --stdio` or VS Code.
+Review the **Plan** tab (compile/assemble/link steps). Check **Plan approved** before **Build**, **Run**, or **Proof Bundle**. The plan and **Diff** tab refresh when you edit source or change target; approval resets until you confirm again.
 
-### 7. Proof bundle
+### 7. Agent explain / repair
+
+Click **Explain** to run the in-process explain agent (same JSON shape as MCP `explain`, including `suggestedFix` per diagnostic). Results appear in the **Agent** tab.
+
+### 8. Debug
+
+**Debug** builds the program, spawns `hla64 debug --stdio`, and sends DAP initialize/launch/setBreakpoints (from gutter breakpoints)/configurationDone. Trace appears in the **DAP** tab. Linux uses gdb; Windows uses lldb when installed. See [RFC 0023](../rfcs/0023-dap-mvp.md).
+
+### 9. Proof bundle
 
 **Proof Bundle** exports `proof-bundle/` under the build directory with `capabilities.json`, `ir.json`, `abi.json`, NASM, and binary — same as `hla64 build --proof-bundle`.
 
@@ -79,7 +87,7 @@ GitHub tag releases also attach `assembly-lab-win-x64.zip` and `assembly-lab-lin
 
 ## Agent integration
 
-Lab actions map to MCP tools (`compile`, `build`, `run`, `explain`). See [04-mcp-agent.md](04-mcp-agent.md). An embedded MCP client in the Lab UI is deferred.
+Lab actions map to MCP tools (`compile`, `build`, `run`, `explain`). The **Agent** tab uses in-process `ExplainAgentService` (no MCP server spawn). External MCP stdio client from the Lab UI is deferred. See [04-mcp-agent.md](04-mcp-agent.md).
 
 ## Troubleshooting
 

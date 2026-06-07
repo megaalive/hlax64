@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Text;
+using System.Text.Json;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -18,7 +19,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private SourceMapDocument? _sourceMap;
     private string _rawNasmText = "";
     private string? _lastBuiltOutputFile;
-    private string _repoRoot = FindRepoRoot();
+    private string _diffBaselineText = "";
+    private readonly string _repoRoot = FindRepoRoot();
 
     [ObservableProperty] private string _sourceText = "// Open a .hla64 file or folder with hla64.toml\n";
     [ObservableProperty] private string _sourcePath = "(unsaved)";
@@ -32,9 +34,13 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private string _capabilitiesText = "";
     [ObservableProperty] private string _disasmText = "";
     [ObservableProperty] private string _toolchainText = "";
+    [ObservableProperty] private string _agentText = "";
+    [ObservableProperty] private string _planText = "";
+    [ObservableProperty] private string _diffText = "";
     [ObservableProperty] private string _statusText = "Ready";
     [ObservableProperty] private int _selectedTabIndex;
     [ObservableProperty] private int _highlightedNasmLine;
+    [ObservableProperty] private bool _planApproved;
 
     public ObservableCollection<LabDiagnosticItem> Diagnostics { get; } = [];
     public ObservableCollection<int> BreakpointLines { get; } = [];
@@ -48,6 +54,26 @@ public partial class MainWindowViewModel : ViewModelBase
             Dispatcher.UIThread.Post(() => DapText += msg + Environment.NewLine);
         RefreshToolchainInfo();
         RefreshDisasmText();
+        RefreshPlanAndDiff();
+    }
+
+    private bool CanExecuteGatedActions() => PlanApproved;
+
+    private void ResetPlanApproval()
+    {
+        PlanApproved = false;
+        RefreshPlanAndDiff();
+        BuildCommand.NotifyCanExecuteChanged();
+        RunCommand.NotifyCanExecuteChanged();
+        ExportProofBundleCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnPlanApprovedChanged(bool value)
+    {
+        BuildCommand.NotifyCanExecuteChanged();
+        RunCommand.NotifyCanExecuteChanged();
+        ExportProofBundleCommand.NotifyCanExecuteChanged();
+        StatusText = value ? "Plan approved — build/run enabled" : "Approve plan to enable build/run";
     }
 
     private void RefreshToolchainInfo()
@@ -59,6 +85,12 @@ public partial class MainWindowViewModel : ViewModelBase
     private void RefreshDisasmText()
     {
         DisasmText = _backend.GetDisasmText(_rawNasmText, _sourceMap, _lastBuiltOutputFile);
+    }
+
+    private void RefreshPlanAndDiff()
+    {
+        PlanText = _backend.GetPlanText(SourcePath, SelectedTarget);
+        DiffText = _backend.GetDiffText(_diffBaselineText, SourceText);
     }
 
     public void ToggleBreakpoint(int line)
@@ -78,9 +110,14 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _ = DebouncedCompileAsync();
         CapabilitiesText = _backend.SummarizeCapabilities(_backend.AnalyzeCapabilities(value));
+        ResetPlanApproval();
     }
 
-    partial void OnSelectedTargetChanged(string value) => _ = DebouncedCompileAsync();
+    partial void OnSelectedTargetChanged(string value)
+    {
+        _ = DebouncedCompileAsync();
+        ResetPlanApproval();
+    }
 
     [RelayCommand]
     private async Task OpenFile()
@@ -102,6 +139,8 @@ public partial class MainWindowViewModel : ViewModelBase
         SourcePath = path;
         ProjectFolder = Path.GetDirectoryName(path) ?? "";
         SourceText = await File.ReadAllTextAsync(path);
+        _diffBaselineText = SourceText;
+        RefreshPlanAndDiff();
         StatusText = $"Opened {Path.GetFileName(path)}";
     }
 
@@ -127,12 +166,14 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         SourcePath = hla64;
         SourceText = await File.ReadAllTextAsync(hla64);
+        _diffBaselineText = SourceText;
+        RefreshPlanAndDiff();
         StatusText = manifest
             ? $"Opened project {Path.GetFileName(ProjectFolder)} → {Path.GetFileName(hla64)}"
             : $"Opened {Path.GetFileName(hla64)}";
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanExecuteGatedActions))]
     private async Task Build()
     {
         StatusText = "Building…";
@@ -154,7 +195,7 @@ public partial class MainWindowViewModel : ViewModelBase
         SelectedTabIndex = 2;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanExecuteGatedActions))]
     private async Task Run()
     {
         StatusText = "Running…";
@@ -170,16 +211,39 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void Debug()
+    private async Task Debug()
     {
         DapText = "";
-        _debugHost.StartInProcess(msg => DapText += msg + Environment.NewLine);
+        StatusText = "Building for debug…";
+        var build = await Task.Run(() => _backend.Build(SourcePath, SourceText, SelectedTarget));
+        if (build.NasmText != null)
+        {
+            _rawNasmText = build.NasmText;
+            NasmText = _rawNasmText;
+        }
+        if (build.SourceMap != null)
+            _sourceMap = build.SourceMap;
+        _lastBuiltOutputFile = build.OutputFile;
+        RefreshDisasmText();
+
+        if (!build.Success || build.OutputFile == null)
+        {
+            AppendOutput($"Debug: build failed — {build.Message}");
+            StatusText = "Debug aborted (build failed)";
+            return;
+        }
+
+        _debugHost.StartCliProcess(_repoRoot);
         _debugHost.SendInitialize();
-        AppendOutput("Debug session started (DAP MVP — Linux gdb when launching binary).");
-        StatusText = "Debug session active";
+        _debugHost.SendSetBreakpoints(SourcePath, BreakpointLines.OrderBy(x => x));
+        _debugHost.SendLaunch(build.OutputFile);
+        _debugHost.SendConfigurationDone();
+
+        AppendOutput($"Debug session started for {build.OutputFile}");
+        StatusText = "Debug session active (DAP over hla64 debug --stdio)";
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanExecuteGatedActions))]
     private async Task ExportProofBundle()
     {
         StatusText = "Exporting proof bundle…";
@@ -213,6 +277,14 @@ public partial class MainWindowViewModel : ViewModelBase
             AppendOutput($"Proof bundle failed: {result.Message}");
             StatusText = "Proof export failed";
         }
+    }
+
+    [RelayCommand]
+    private void ExplainRepair()
+    {
+        var json = _backend.ExplainForAgent(SourcePath, SourceText, SelectedTarget);
+        AgentText = FormatAgentExplain(json);
+        StatusText = "Agent explain/repair report updated";
     }
 
     [RelayCommand]
@@ -276,6 +348,51 @@ public partial class MainWindowViewModel : ViewModelBase
             });
         }
         catch (OperationCanceledException) { }
+    }
+
+    private static string FormatAgentExplain(string json)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            var sb = new StringBuilder();
+            sb.AppendLine($"success: {root.GetProperty("success").GetBoolean()}");
+            sb.AppendLine($"target: {root.GetProperty("target").GetString()}");
+            sb.AppendLine();
+            if (root.TryGetProperty("diagnostics", out var diags))
+            {
+                sb.AppendLine("diagnostics:");
+                foreach (var d in diags.EnumerateArray())
+                {
+                    var code = d.GetProperty("code").GetString();
+                    var line = d.GetProperty("line").GetInt32();
+                    var message = d.GetProperty("message").GetString();
+                    sb.AppendLine($"  L{line} {code}: {message}");
+                    if (d.TryGetProperty("suggestedFix", out var fix) && fix.ValueKind != JsonValueKind.Null)
+                        sb.AppendLine($"    suggestedFix: {fix.GetRawText()}");
+                }
+            }
+            if (root.TryGetProperty("abiIssues", out var abi) && abi.GetArrayLength() > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine("abiIssues:");
+                foreach (var issue in abi.EnumerateArray())
+                    sb.AppendLine($"  {issue.GetString()}");
+            }
+            if (root.TryGetProperty("clobberWarnings", out var clobber) && clobber.GetArrayLength() > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine("clobberWarnings:");
+                foreach (var w in clobber.EnumerateArray())
+                    sb.AppendLine($"  {w.GetString()}");
+            }
+            return sb.ToString().TrimEnd();
+        }
+        catch
+        {
+            return json;
+        }
     }
 
     private void AppendOutput(string text)
