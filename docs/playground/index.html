@@ -3,72 +3,427 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>HlaX64 Playground (Static)</title>
+  <title>HlaX64 Playground</title>
   <style>
-    :root { color-scheme: dark; font-family: ui-monospace, Consolas, monospace; }
-    body { margin: 0; background: #0f1419; color: #e6edf3; }
-    header { padding: 1rem 1.5rem; border-bottom: 1px solid #30363d; }
-    main { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1rem; }
-    textarea, pre { width: 100%; min-height: 320px; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem; box-sizing: border-box; }
-    select, button { margin-top: 0.5rem; padding: 0.4rem 0.8rem; background: #238636; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
-    .note { padding: 1rem 1.5rem; color: #8b949e; font-size: 0.9rem; }
-    @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+    :root {
+      color-scheme: dark;
+      --bg: #0f1419;
+      --panel: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #238636;
+      --accent-hover: #2ea043;
+      --link: #58a6ff;
+      --sidebar-w: 220px;
+      font-family: system-ui, Segoe UI, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+    a { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem;
+    }
+    header h1 { margin: 0; font-size: 1.15rem; font-weight: 600; }
+    header p { margin: 0; color: var(--muted); font-size: 0.85rem; flex: 1 1 200px; }
+    .layout { display: flex; flex: 1; min-height: 0; }
+    nav {
+      width: var(--sidebar-w);
+      border-right: 1px solid var(--border);
+      background: var(--panel);
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    nav h2 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 1rem 0.75rem 0.5rem; }
+    nav button {
+      display: block; width: 100%; text-align: left;
+      padding: 0.45rem 0.75rem; border: none; background: transparent;
+      color: var(--text); cursor: pointer; font-size: 0.85rem;
+      border-left: 3px solid transparent;
+    }
+    nav button:hover { background: #21262d; }
+    nav button.active { background: #21262d; border-left-color: var(--accent); font-weight: 600; }
+    .workspace { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .panes { display: grid; grid-template-columns: 1fr 1fr; flex: 1; min-height: 0; }
+    .pane { display: flex; flex-direction: column; border-bottom: 1px solid var(--border); min-height: 0; }
+    .pane + .pane { border-left: 1px solid var(--border); }
+    .pane-head {
+      padding: 0.4rem 0.75rem; font-size: 0.75rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted);
+      border-bottom: 1px solid var(--border); background: var(--panel);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .pane-head .badge { font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 0.7rem; color: var(--muted); }
+    #source {
+      flex: 1; width: 100%; min-height: 200px; resize: none;
+      background: var(--bg); color: var(--text); border: none; padding: 0.75rem;
+      font-family: ui-monospace, Consolas, monospace; font-size: 13px; line-height: 1.45;
+      tab-size: 4;
+    }
+    pre.out {
+      flex: 1; margin: 0; overflow: auto; padding: 0.75rem;
+      font-family: ui-monospace, Consolas, monospace; font-size: 12px; line-height: 1.4;
+      background: var(--bg); white-space: pre-wrap; word-break: break-word;
+    }
+    .bottom { border-top: 1px solid var(--border); background: var(--panel); }
+    .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); }
+    .tabs button {
+      padding: 0.5rem 1rem; border: none; background: transparent; color: var(--muted);
+      cursor: pointer; font-size: 0.85rem; border-bottom: 2px solid transparent;
+    }
+    .tabs button.active { color: var(--text); border-bottom-color: var(--accent); }
+    .tab-panel { display: none; max-height: 220px; overflow: auto; }
+    .tab-panel.active { display: block; }
+    .toolbar {
+      padding: 0.5rem 0.75rem; display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .toolbar button, .toolbar a.btn {
+      padding: 0.35rem 0.65rem; font-size: 0.8rem; border: 1px solid var(--border);
+      background: #21262d; color: var(--text); border-radius: 6px; cursor: pointer;
+    }
+    .toolbar button:hover, .toolbar a.btn:hover { background: #30363d; text-decoration: none; }
+    .toolbar button.primary { background: var(--accent); border-color: var(--accent); }
+    .toolbar button.primary:hover { background: var(--accent-hover); }
+    .hint { padding: 0.5rem 0.75rem; font-size: 0.8rem; color: var(--muted); }
+    .toast {
+      position: fixed; bottom: 1rem; right: 1rem; background: var(--accent);
+      color: #fff; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem;
+      opacity: 0; transition: opacity 0.2s; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+    @media (max-width: 960px) {
+      .layout { flex-direction: column; }
+      nav { width: 100%; max-height: 160px; border-right: none; border-bottom: 1px solid var(--border); }
+      .panes { grid-template-columns: 1fr; }
+      .pane + .pane { border-left: none; border-top: 1px solid var(--border); }
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>HlaX64 Playground</h1>
-    <p>Static demo — edit sample source and view reference lowering notes. Full IR/NASM requires local CLI.</p>
-    <label>
-      Example
-      <select id="example"></select>
-    </label>
-    <button id="load">Load example</button>
+    <h1><a href="../index.html">HlaX64</a> Playground</h1>
+    <p>HlaX64 source → generated NASM → line notes. Cached compile output; edit source and copy AI prompts for local CLI.</p>
+    <a class="btn" href="../index.html" style="padding:0.35rem 0.65rem;background:#21262d;border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.8rem;">Docs home</a>
   </header>
-  <main>
-    <section>
-      <h2>Source (.hla64)</h2>
-      <textarea id="source"></textarea>
-    </section>
-    <section>
-      <h2>Reference output</h2>
-      <pre id="output"></pre>
-    </section>
-  </main>
-  <p class="note">
-    Run locally for real diagnostics and NASM:
-    <code>hla64 explain examples/00-getting-started/hello.hla64 --json</code>
-    · See <a href="../playground-design.md">playground-design.md</a>
-  </p>
+
+  <div class="layout">
+    <nav id="nav">
+      <h2>Examples</h2>
+    </nav>
+
+    <div class="workspace">
+      <div class="panes">
+        <div class="pane">
+          <div class="pane-head">HlaX64 source <span class="badge" id="source-path"></span></div>
+          <textarea id="source" spellcheck="false"></textarea>
+        </div>
+        <div class="pane">
+          <div class="pane-head">Generated NASM <span class="badge" id="nasm-meta"></span></div>
+          <pre class="out" id="nasm"></pre>
+        </div>
+      </div>
+
+      <div class="bottom">
+        <div class="tabs">
+          <button type="button" data-tab="explain" class="active">Explain this line</button>
+          <button type="button" data-tab="ir">IR (summary)</button>
+          <button type="button" data-tab="ai">AI prompts</button>
+        </div>
+        <div class="toolbar" id="ai-toolbar" style="display:none;">
+          <button type="button" data-prompt="debug">Copy AI Debug Prompt</button>
+          <button type="button" data-prompt="explain">Copy AI Explain Prompt</button>
+          <button type="button" data-prompt="optimize">Copy AI Optimize Prompt</button>
+        </div>
+        <div id="tab-explain" class="tab-panel active">
+          <p class="hint">Click a line in the source editor (or press Explain line).</p>
+          <pre class="out" id="line-explain" style="max-height:180px;"></pre>
+          <div class="toolbar">
+            <button type="button" id="explain-line" class="primary">Explain selected line</button>
+          </div>
+        </div>
+        <div id="tab-ir" class="tab-panel">
+          <pre class="out" id="ir"></pre>
+        </div>
+        <div id="tab-ai" class="tab-panel">
+          <p class="hint">Build a prompt from the current editor text. Paste into Cursor, Copilot, or any agent after editing.</p>
+          <pre class="out" id="ai-preview" style="max-height:160px;color:var(--muted);"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Copied</div>
+
   <script>
-    const samples = {
-      hello: {
-        source: `program hello;\n\n#include("stdlib64.hhf")\n\nbegin hello;\n    stdout.put("Hello from HlaX64", nl);\nend hello;`,
-        note: "Lowers to Linux _start + runtime stdout helpers.\nUse: hla64 explain examples/00-getting-started/hello.hla64"
-      },
-      exitcode: {
-        source: `program exitcode;\nbegin exitcode;\n    mov(42, rax);\nend exitcode;`,
-        note: "Exit code comes from rax at process exit.\nExpected exit code: 42"
-      },
-      add_two: {
-        source: `program main;\n\nprocedure AddTwo(a:int64; b:int64); @returns("rax");\nbegin AddTwo;\n    mov(a, rax);\n    add(b, rax);\nend AddTwo;\n\nbegin main;\n    call AddTwo(10, 20);\nend main;`,
-        note: "SysV ABI: args in rdi, rsi; return in rax.\nResult exit code: 30"
-      }
-    };
+    const REPO = 'megaalive/hlax64';
+    const BRANCH = 'main';
+    const rawUrl = (path) => `https://raw.githubusercontent.com/${REPO}/${BRANCH}/${path}`;
 
-    const sel = document.getElementById('example');
-    Object.keys(samples).forEach(k => {
-      const o = document.createElement('option');
-      o.value = k; o.textContent = k; sel.appendChild(o);
-    });
+    const EXAMPLES = [
+      { id: 'hello',       label: '00 Hello world',     path: 'examples/00-getting-started/hello.hla64' },
+      { id: 'exitcode',    label: '01 Exit code',       path: 'examples/00-getting-started/exitcode.hla64' },
+      { id: 'arithmetic',  label: '02 Arithmetic',      path: 'examples/01-arithmetic/simple.hla64' },
+      { id: 'if-while',    label: '03 If / while',      path: 'examples/03-control-flow/count.hla64' },
+      { id: 'procedure',   label: '04 Procedure call',  path: 'examples/04-procedures/add-two.hla64' },
+      { id: 'stack-local', label: '05 Stack local',     path: 'examples/05-memory/stack-array.hla64' },
+      { id: 'extern-puts', label: '06 Call libc puts',  path: 'examples/07-interop/extern-puts.hla64', note: 'C interop via extern; printf sample planned for v0.2.' },
+      { id: 'linecount',   label: '07 File read',       path: 'examples/10-real-tools/linecount/linecount.hla64' },
+      { id: 'argv',        label: '08 argv',            path: 'examples/10-real-tools/exists/exists.hla64' },
+      { id: 'wc',          label: '09 wc',              path: 'examples/10-real-tools/wc/wc.hla64' },
+      { id: 'hexdump',     label: '10 hexdump',         path: 'examples/10-real-tools/hexdump/hexdump.hla64' },
+      { id: 'filemagic',   label: '11 filemagic',       path: 'examples/10-real-tools/filemagic/filemagic.hla64' }
+    ];
 
-    function load(key) {
-      document.getElementById('source').value = samples[key].source;
-      document.getElementById('output').textContent = samples[key].note;
+    let current = null;
+    let explainCache = null;
+    let sourceDirty = false;
+
+    const $ = (id) => document.getElementById(id);
+
+    function toast(msg) {
+      const t = $('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 1800);
     }
 
-    document.getElementById('load').onclick = () => load(sel.value);
-    load('hello');
+    function buildNav() {
+      const nav = $('nav');
+      EXAMPLES.forEach((ex) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = ex.label;
+        b.dataset.id = ex.id;
+        b.onclick = () => loadExample(ex.id, true);
+        nav.appendChild(b);
+      });
+    }
+
+    function setActiveNav(id) {
+      $('nav').querySelectorAll('button').forEach((b) => b.classList.toggle('active', b.dataset.id === id));
+    }
+
+    async function fetchText(url) {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(r.statusText);
+      return r.text();
+    }
+
+    async function loadExample(id, pushUrl) {
+      const ex = EXAMPLES.find((e) => e.id === id) || EXAMPLES[0];
+      current = ex;
+      sourceDirty = false;
+      setActiveNav(ex.id);
+      $('source-path').textContent = ex.path;
+      $('nasm-meta').textContent = 'linux-x64-sysv · cached';
+
+      if (pushUrl) {
+        const u = new URL(location.href);
+        u.searchParams.set('example', ex.id);
+        history.replaceState(null, '', u);
+      }
+
+      try {
+        const cacheJson = await fetchText(`cache/${ex.id}.json`);
+        explainCache = JSON.parse(cacheJson);
+        $('nasm').textContent = explainCache.nasm || '(no NASM in cache)';
+        $('ir').textContent = (explainCache.ir || []).join('\n\n');
+        if (explainCache.diagnostics?.length) {
+          $('nasm-meta').textContent += ` · ${explainCache.diagnostics.length} diagnostic(s)`;
+        }
+      } catch {
+        explainCache = null;
+        $('nasm').textContent = 'No cached NASM. Run: scripts/generate-playground-cache.ps1';
+        $('ir').textContent = '';
+      }
+
+      try {
+        $('source').value = await fetchText(rawUrl(ex.path));
+      } catch {
+        $('source').value = `// Could not fetch ${ex.path}\n// Open the repo locally or check network.`;
+      }
+
+      $('line-explain').textContent = ex.note || 'Select a source line and click Explain selected line.';
+      updateAiPreview('debug');
+    }
+
+    function selectedLine() {
+      const ta = $('source');
+      const start = ta.selectionStart;
+      const text = ta.value;
+      let lineStart = text.lastIndexOf('\n', start - 1) + 1;
+      let lineEnd = text.indexOf('\n', start);
+      if (lineEnd === -1) lineEnd = text.length;
+      const line = text.slice(lineStart, lineEnd);
+      const lineNo = text.slice(0, lineStart).split('\n').length;
+      return { line: line.trim(), lineNo, raw: line };
+    }
+
+    function explainLineHeuristic(line) {
+      const L = line.trim();
+      if (!L || L.startsWith('//')) return 'Comment or blank line — no lowering.';
+      if (/^program\s/i.test(L)) return 'Program declaration — names the translation unit and must match begin/end.';
+      if (/^#include/i.test(L)) return 'Include directive — pulls in header constants (e.g. nl from stdlib64.hhf).';
+      if (/^begin\s|^end\s/i.test(L)) return 'Program or procedure block boundary.';
+      if (/^procedure\s|^end\s+\w/i.test(L)) return 'Procedure declaration or end — defines stack frame and ABI contract.';
+      if (/^extern\s/i.test(L)) return 'External symbol — linker resolves against libc, kernel32, or runtime .o.';
+      if (/^static|^endstatic/i.test(L)) return 'Static/global data section — lowers to .data or .bss.';
+      if (/^const|^endconst|^enum|^record|^struct/i.test(L)) return 'Compile-time or layout declaration — evaluated before code generation.';
+      if (/stdout\.putu\s*\(/i.test(L)) {
+        return `This line lowers into:
+• One or more sys_write (Linux) or runtime stdout_put_uint calls (Windows)
+• String literals → rodata (str_N labels)
+• Register/literal args → decimal formatting (unsigned / bit pattern)
+• nl → newline byte (0x0A)`;
+      }
+      if (/stdout\.put\s*\(/i.test(L)) {
+        return `This line lowers into:
+• String literals in .data (NUL-terminated)
+• Runtime stdout_put_str / sys_write for each string fragment
+• Register or literal integers → stdout_put_int / decimal conversion
+• nl → single newline write`;
+      }
+      if (/^call\s/i.test(L)) {
+        const m = L.match(/^call\s+(\w+)/i);
+        const name = m ? m[1] : 'target';
+        if (name === 'puts' || name.startsWith('hlax_argv')) {
+          return `Call to ${name}:
+• Arguments placed per SysV ABI (rdi, rsi, …) or MS ABI (rcx, rdx, …)
+• Stack aligned to 16 bytes before CALL
+• Foreign calls may clobber caller-saved registers`;
+        }
+        return `Call ${name}:
+• Integer args in ABI registers (see @returns on callee)
+• Compiler emits CALL rel or indirect as needed
+• Return value typically in rax`;
+      }
+      if (/^(if|while|endif|endwhile|else|then|do)/i.test(L)) {
+        return 'Control-flow construct — lowers to cmp/test + conditional or unconditional jumps (je, jne, jg, jl, jmp).';
+      }
+      if (/^(mov|add|sub|imul|xor|and|or|cmp|lea|push|pop|idiv|div|jmp)\s*\(/i.test(L)) {
+        const op = L.match(/^(\w+)/)[1];
+        return `${op}(…) — HLA operand order (source, dest); NASM backend emits Intel mov dest, src (or equivalent for ${op}).`;
+      }
+      if (/:=\s/.test(L)) return 'Runtime assignment — expression evaluated into rax/rbx scratch, then stored to local or register.';
+      if (/^var\s/.test(L)) return 'Stack local — allocates an 8-byte slot in the procedure frame ([rbp-N]).';
+      return `Line: ${L}\n\nNo specific rule matched. Run locally:\nhla64 explain --json <file.hla64>`;
+    }
+
+    function runExplainLine() {
+      const { line, lineNo } = selectedLine();
+      if (!line) {
+        $('line-explain').textContent = 'Place the cursor on a line first.';
+        return;
+      }
+      let out = `Line ${lineNo}: ${line}\n\n${explainLineHeuristic(line)}`;
+      if (sourceDirty) out += '\n\n⚠ Source edited — NASM pane is stale until you run hla64 explain locally.';
+      $('line-explain').textContent = out;
+    }
+
+    function buildAiPrompt(kind) {
+      const source = $('source').value;
+      const diag = explainCache?.diagnostics?.length
+        ? JSON.stringify(explainCache.diagnostics, null, 2)
+        : '(none in cached compile)';
+      const nasm = $('nasm').textContent.slice(0, 12000);
+      const path = current?.path || 'program.hla64';
+      const stale = sourceDirty ? '\nNote: editor source differs from cached NASM below.\n' : '';
+
+      if (kind === 'debug') {
+        return `You are helping debug HlaX64 code.
+
+Target: linux-x64-sysv
+File: ${path}
+${stale}
+Here is the source:
+\`\`\`hla64
+${source}
+\`\`\`
+
+Here are diagnostics:
+${diag}
+
+Here is generated NASM (cached):
+\`\`\`nasm
+${nasm}
+\`\`\`
+
+Explain the problem and suggest a minimal fix.`;
+      }
+      if (kind === 'explain') {
+        return `You are an assembly tutor for HlaX64 (HLA-style x64 that compiles to NASM).
+
+File: ${path}
+${stale}
+Source:
+\`\`\`hla64
+${source}
+\`\`\`
+
+Generated NASM:
+\`\`\`nasm
+${nasm}
+\`\`\`
+
+Walk through how this program lowers to NASM: ABI, stack frame, syscalls/runtime, and control flow.`;
+      }
+      return `You are optimizing HlaX64 programs for size and speed without changing behavior.
+
+File: ${path}
+Source:
+\`\`\`hla64
+${source}
+\`\`\`
+
+NASM today:
+\`\`\`nasm
+${nasm}
+\`\`\`
+
+Suggest concrete HlaX64 source changes and note any --optimize O1/O2 effects.`;
+    }
+
+    function updateAiPreview(kind) {
+      $('ai-preview').textContent = buildAiPrompt(kind).slice(0, 2000) + (buildAiPrompt(kind).length > 2000 ? '\n…' : '');
+    }
+
+    async function copyPrompt(kind) {
+      await navigator.clipboard.writeText(buildAiPrompt(kind));
+      toast('Copied to clipboard');
+    }
+
+    // Tabs
+    document.querySelectorAll('.tabs button').forEach((btn) => {
+      btn.onclick = () => {
+        document.querySelectorAll('.tabs button').forEach((b) => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.dataset.tab;
+        $('tab-' + tab).classList.add('active');
+        $('ai-toolbar').style.display = tab === 'ai' ? 'flex' : 'none';
+        if (tab === 'ai') updateAiPreview('debug');
+      };
+    });
+
+    $('explain-line').onclick = runExplainLine;
+    $('source').addEventListener('input', () => {
+      sourceDirty = true;
+      $('nasm-meta').textContent = 'linux-x64-sysv · stale (edited)';
+    });
+    $('source').addEventListener('click', () => runExplainLine());
+
+    document.querySelectorAll('[data-prompt]').forEach((btn) => {
+      btn.onclick = () => copyPrompt(btn.dataset.prompt);
+    });
+
+    buildNav();
+    const param = new URLSearchParams(location.search).get('example');
+    const initial = EXAMPLES.some((e) => e.id === param) ? param : 'hello';
+    loadExample(initial, false);
   </script>
 </body>
 </html>

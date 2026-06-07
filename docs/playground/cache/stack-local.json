@@ -1,0 +1,17 @@
+﻿{
+  "schemaVersion": 1,
+  "success": true,
+  "version": "0.1.0-alpha",
+  "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\05-memory\\stack-array.hla64",
+  "target": "linux-x64-sysv",
+  "diagnostics": [],
+  "ir": [
+    "function _start:\n  entry:\n    Call  [SumThree]",
+    "function SumThree:\n  entry:\n    v3 = Move v4\n    v5 = Move v6\n    v7 = Move v8\n    v9 = Move v10\n    v11 = Move v12\n    v13 = Move v14\n    v11 = Add v13\n    v13 = Move v15\n    v11 = Add v13"
+  ],
+  "lowered": [
+    "function _start:\n  entry: True, export: False\n  stack frame: 8 bytes\n  entry:\n        xor ebx, ebx    ; default exit code = 0 (callee-saved)\n        push rbp\n        mov rbp, rsp\n        sub rsp, 8      ; align stack to 16 bytes\n        sub rsp, 8      ; align stack\r\n    call SumThree\r\n    add rsp, 8      ; restore stack\n        mov rdi, rax    ; exit code\n        mov rax, 60     ; sys_exit\n        syscall",
+    "function SumThree:\n  entry: False, export: False\n  stack frame: 32 bytes\n  entry:\n        push rbp\n        mov rbp, rsp\n        sub rsp, 32\n        mov [rbp-8], 10\n        mov [rbp-16], 20\n        mov [rbp-24], 30\n        lea rcx, [rbp-8]\n        mov rax, [rcx]\n        mov rbx, [rcx\u002B8]\n        add rax, rbx\n        mov rbx, [rcx\u002B16]\n        add rax, rbx\n        mov rsp, rbp\n        pop rbp\n        ret"
+  ],
+  "nasm": "bits 64\r\nsection .text\r\nglobal _start\r\n\r\n_start:\r\n    xor ebx, ebx    ; default exit code = 0 (callee-saved)\r\n    push rbp\r\n    mov rbp, rsp\r\n    sub rsp, 8      ; align stack to 16 bytes\r\n    sub rsp, 8      ; align stack\r\n    call SumThree\r\n    add rsp, 8      ; restore stack\r\n    mov rdi, rax    ; exit code\r\n    mov rax, 60     ; sys_exit\r\n    syscall\r\n\r\nSumThree:\r\n    push rbp\r\n    mov rbp, rsp\r\n    sub rsp, 32\r\n    mov [rbp-8], 10\r\n    mov [rbp-16], 20\r\n    mov [rbp-24], 30\r\n    lea rcx, [rbp-8]\r\n    mov rax, [rcx]\r\n    mov rbx, [rcx\u002B8]\r\n    add rax, rbx\r\n    mov rbx, [rcx\u002B16]\r\n    add rax, rbx\r\n    mov rsp, rbp\r\n    pop rbp\r\n    ret\r\n\r\nsection .data\r\nnewline db 0x0A\r\n"
+}

@@ -24,6 +24,18 @@ hla64 run examples/00-getting-started/hello.hla64
 
 Tutorials: [Getting started](docs/tutorials/01-getting-started.md) · [Native routines](docs/tutorials/02-native-routines.md) · [Memory & pointers](docs/tutorials/05-memory.md) · [C# interop](docs/tutorials/03-csharp-interop.md) · [MCP agents](docs/tutorials/04-mcp-agent.md) · [Assembly Lab](docs/tutorials/06-assembly-lab.md)
 
+### Try in the browser (no install)
+
+**[Open playground](https://megaalive.github.io/hlax64/playground/)** — pick an example, view generated NASM, explain a line, copy AI prompts.
+
+Real tools in HlaX64:
+
+| Example | Playground |
+|---------|------------|
+| [wc](examples/10-real-tools/wc/wc.hla64) | [Try wc](https://megaalive.github.io/hlax64/playground/?example=wc) |
+| [hexdump](examples/10-real-tools/hexdump/hexdump.hla64) | [Try hexdump](https://megaalive.github.io/hlax64/playground/?example=hexdump) |
+| [filemagic](examples/10-real-tools/filemagic/filemagic.hla64) | [Try filemagic](https://megaalive.github.io/hlax64/playground/?example=filemagic) |
+
 ---
 
 ## Current Capabilities — HlaX64 0.1 Alpha

@@ -1,6 +1,7 @@
 # Web Playground Design (Draft)
 
-> **Status:** Design only — not implemented. Tracks evaluation item §5.6.
+> **Status:** Phase 1 (static site) in progress — see [roadmap.md](roadmap.md) §5.
+> Phase 2 (live explain API) not yet deployed.
 
 ## Goals
 

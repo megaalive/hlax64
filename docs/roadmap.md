@@ -120,7 +120,33 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 | Target build | Linux SysV + Windows MS ABI |
 | Dokumentasi produk | `docs/language-spec.md`, tutorials, RFC 0001–0024 |
 
-**Fokus berikutnya:** item **Deferred** (§6), bukan “menyelesaikan MVP fase” yang sudah lewat.
+**Fokus berikutnya:** **v0.2.0-alpha** (§5) — onboarding & playground, bukan fitur bahasa baru.
+
+---
+
+## 5. v0.2.0-alpha — Useful Assembly Tools & Onboarding
+
+> **Tema release:** Playground sebagai produk utama GitHub Pages — orang buka link →
+> coba contoh → lihat NASM → paham manfaat → baru clone repo.
+
+| Item | Status | Catatan |
+|------|--------|---------|
+| Playground example picker (12 contoh kurikulum + real-tools) | 🔜 In progress | `docs/playground/index.html`, `?example=wc` |
+| Generated NASM pane (cached `explain --json`) | 🔜 In progress | `docs/playground/cache/`, `scripts/generate-playground-cache.ps1` |
+| Explain-this-line (heuristic tutor) | 🔜 In progress | Klik baris + tab penjelasan |
+| Copy AI Debug / Explain / Optimize prompt | 🔜 In progress | Playground tab AI |
+| Live explain API (edit source → fresh NASM) | 🔜 Planned | `playground-design.md` Phase 2 |
+| Monaco + syntax highlighting | 🔜 Planned | Reuse `hla64.tmLanguage.json` |
+| Gallery deep links dari README | 🔜 In progress | `/playground?example=hexdump`, dll. |
+| GitHub Pages sebagai “produk” (Home / Playground / Course / …) | 🔜 In progress | `docs/index.html` nav |
+| Contoh `cat`, `strings`, `printf` di kurikulum | 🔜 Planned | `wc`/`hexdump`/`filemagic` sudah ada |
+| Tutorial argv + file I/O path | 🔜 Planned | Perluas tutorials / course doc |
+| Assembly Lab parity di browser (build/run) | 🔜 Deferred | Lab desktop tetap surface penuh |
+
+**Sudah ada (jangan duplikasi):** Assembly Lab (IR/NASM live, Explain, Agent, DAP), MCP
+`explain`, 57 manifest kurikulum, real-tools Windows + Linux ports.
+
+**Non-goals v0.2:** macro, LLVM, `ptr<T>`, per-file `#pragma target` — tetap §6.
 
 ---
 
