@@ -552,7 +552,7 @@ public sealed class SemanticAnalyzer
 
     private void AnalyzeCall(CallNode call)
     {
-        if (call.Name == "stdout.put")
+        if (call.Name is "stdout.put" or "stdout.putu")
         {
             foreach (var arg in call.Arguments)
                 AnalyzeOperand(arg);

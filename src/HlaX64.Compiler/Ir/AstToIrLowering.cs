@@ -342,12 +342,12 @@ public sealed class AstToIrLowering
 
     private void LowerCall(CallNode call, IrBasicBlock block)
     {
-        if (call.Name == "stdout.put")
+        if (call.Name is "stdout.put" or "stdout.putu")
         {
             var allArgs = new List<IrValue>();
             foreach (var arg in call.Arguments)
                 allArgs.Add(ResolveOperand(arg));
-            block.Add(new IrInstruction(IrOpcode.Call, operands: allArgs, immediate: "stdout.put"));
+            block.Add(new IrInstruction(IrOpcode.Call, operands: allArgs, immediate: call.Name));
             return;
         }
 

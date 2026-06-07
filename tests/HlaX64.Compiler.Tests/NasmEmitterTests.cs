@@ -427,6 +427,14 @@ public class WindowsMsAbiLowererTests
     }
 
     [Fact]
+    public void Emit_WindowsStdoutPutu_UsesRuntimeFunctions()
+    {
+        var nasm = EmitForWindows("program test;\nbegin test;\n    stdout.putu(r11, nl);\nend test;");
+        Assert.Contains("extern stdout_put_uint", nasm);
+        Assert.Contains("call stdout_put_uint", nasm);
+    }
+
+    [Fact]
     public void Emit_WindowsStdoutPut_UsesRuntimeFunctions()
     {
         var nasm = EmitForWindows("program test;\nbegin test;\n    stdout.put(\"Hello\", nl);\nend test;");

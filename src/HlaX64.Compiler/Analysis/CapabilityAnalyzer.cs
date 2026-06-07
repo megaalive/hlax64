@@ -19,7 +19,7 @@ public static class CapabilityAnalyzer
 {
     private static readonly HashSet<string> FileExternHints = new(StringComparer.OrdinalIgnoreCase)
     {
-        "open", "close", "read", "write", "fopen", "fclose", "fread", "fwrite", "puts", "printf"
+        "open", "close", "read", "write", "access", "fopen", "fclose", "fread", "fwrite", "puts", "printf"
     };
 
     public static CapabilityManifest Analyze(string sourceText)
@@ -54,11 +54,12 @@ public static class CapabilityAnalyzer
                     manifest.Syscalls.Add("generic");
             }
 
-            if (stmt is CallNode call && call.Name.Equals("stdout.put", StringComparison.OrdinalIgnoreCase))
+            if (stmt is CallNode call && call.Name is "stdout.put" or "stdout.putu")
                 manifest.HasStdoutPut = true;
         }
 
-        if (sourceText.Contains("stdout.put", StringComparison.Ordinal))
+        if (sourceText.Contains("stdout.put", StringComparison.Ordinal)
+            || sourceText.Contains("stdout.putu", StringComparison.Ordinal))
         {
             manifest.HasStdoutPut = true;
             if (!manifest.Syscalls.Contains("write"))

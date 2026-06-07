@@ -424,7 +424,7 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
 
     private LoweredInstruction LowerCallInst(IrInstruction inst)
     {
-        if (inst.Immediate is string name && name == "stdout.put")
+        if (inst.Immediate is string name && name is "stdout.put" or "stdout.putu")
             return LowerStdoutPut(inst);
 
         if (inst.Immediate is string builtin && BuiltinNames.IsBuiltin(builtin))
@@ -442,6 +442,8 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
 
     private LoweredInstruction LowerStdoutPut(IrInstruction inst)
     {
+        var unsigned = string.Equals(inst.Immediate as string, "stdout.putu", StringComparison.Ordinal);
+        var intRuntime = unsigned ? "stdout_put_uint" : "stdout_put_int";
         // On Windows, always use library-mode calls to runtime functions.
         // The runtime functions (windows-x64/*.nasm) use Win32 API internally.
         var sb = new System.Text.StringBuilder();
@@ -499,10 +501,10 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
             else if (IsRegisterRef(val))
             {
                 var slot = savedRegs.First(s => s.Arg == arg).SlotOffset;
-                _externs.Add("stdout_put_int");
-                sb.AppendLine($"    ; RUNTIME: stdout_put_int({val}) (library)");
+                _externs.Add(intRuntime);
+                sb.AppendLine($"    ; RUNTIME: {intRuntime}({val}) (library)");
                 sb.AppendLine($"    mov rcx, [rsp+{slot}]");
-                sb.AppendLine("    call stdout_put_int");
+                sb.AppendLine($"    call {intRuntime}");
             }
             else if (rawName != null && _valueMap.TryGetValue(rawName, out var slot))
             {
