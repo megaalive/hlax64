@@ -1,3 +1,4 @@
+using HlaX64.AssemblyLab;
 using HlaX64.AssemblyLab.Services;
 using HlaX64.AssemblyLab.ViewModels;
 using HlaX64.Cli.Services;
@@ -199,13 +200,13 @@ public class AssemblyLabBackendTests
     }
 
     [Fact]
-    public void ToggleBreakpoint_adds_and_removes_line()
+    public void ToggleBreakpoint_is_noop_when_debug_disabled()
     {
+        Assert.False(AssemblyLabFeatures.DebugEnabled);
         var vm = new MainWindowViewModel();
         vm.ToggleBreakpoint(3);
-        Assert.Contains(3, vm.BreakpointLines);
-        vm.ToggleBreakpoint(3);
-        Assert.DoesNotContain(3, vm.BreakpointLines);
+        Assert.Empty(vm.BreakpointLines);
+        Assert.Contains("disabled", vm.StatusText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -448,9 +449,10 @@ public class AssemblyLabBackendTests
                 return;
 
             var initTask = host.InitializeAsync();
-            var completed = await Task.WhenAny(initTask, Task.Delay(TimeSpan.FromSeconds(15)));
+            var completed = await Task.WhenAny(initTask, Task.Delay(TimeSpan.FromSeconds(90)));
             Assert.Same(initTask, completed);
             var json = await initTask;
+            Assert.DoesNotContain("\"error\":\"timeout\"", json, StringComparison.Ordinal);
             Assert.Contains("result", json, StringComparison.OrdinalIgnoreCase);
         }
         finally

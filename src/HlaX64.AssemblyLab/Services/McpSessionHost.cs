@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace HlaX64.AssemblyLab.Services;
 
-/// <summary>Spawns HlaX64.McpServer and speaks MCP JSON-RPC over stdio (Content-Length framing).</summary>
+/// <summary>Spawns HlaX64.McpServer and speaks MCP JSON-RPC over stdio.</summary>
 public sealed class McpSessionHost : IDisposable
 {
     private Process? _process;
@@ -252,11 +252,8 @@ public sealed class McpSessionHost : IDisposable
     {
         var json = JsonSerializer.Serialize(payload);
         Append($"→ {json}");
-        var bytes = Encoding.UTF8.GetBytes(json);
-        var header = $"Content-Length: {bytes.Length}\r\n\r\n";
-        var headerBytes = Encoding.UTF8.GetBytes(header);
-        _stdin!.Write(headerBytes, 0, headerBytes.Length);
-        _stdin.Write(bytes, 0, bytes.Length);
+        var bytes = Encoding.UTF8.GetBytes(json + "\n");
+        _stdin!.Write(bytes, 0, bytes.Length);
         _stdin.Flush();
     }
 
@@ -305,6 +302,8 @@ public sealed class McpSessionHost : IDisposable
             var line = await ReadLineAsync(stream, token).ConfigureAwait(false);
             if (line == null)
                 return headerLines.Count > 0 ? string.Join('\n', headerLines) : null;
+            if (line.TrimStart().StartsWith('{'))
+                return line;
             if (line.Length == 0)
                 break;
             headerLines.Add(line);
