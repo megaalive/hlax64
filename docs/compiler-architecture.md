@@ -70,9 +70,11 @@ Opcodes include `Move`, `Add`, `Subtract`, `Multiply`, `Divide`, `Compare`, `Bra
 
 ### Tooling integration
 
-- `CompilationOptions` centralizes target, output kind, runtime mode
+- `CompilationOptions` centralizes target, output kind, runtime mode, `--optimize O0|O1|O2`, `--cpu` / `--features`
 - CLI, MCP, and LSP share the same `Compilation` entry point
+- LSP: diagnostics, hover, completion, definition, references, signatureHelp, semanticTokens, format codeAction
 - Native integration tests: compile → assemble → link → run
+- Verification: `verify-stack`, `verify-abi`; proof bundle; `hla64 diff` / `plan`
 
 ---
 
@@ -80,26 +82,29 @@ Opcodes include `Move`, `Add`, `Subtract`, `Multiply`, `Divide`, `Compare`, `Bra
 
 | Area | Notes |
 |------|-------|
-| LSP virtual documents | IR/NASM/stack via executeCommand — read-only, no debug session |
-| Source maps / DWARF | Sidecar JSON + Linux `%line` stub; Windows PDB deferred |
-| O1 optimizer | Local constant fold + peephole only |
-| CPU feature gates | SSE2 MVP; AVX2/intrinsics deferred |
-| Proof bundle | Static capability manifest; not formal verification |
-| DAP | `hla64 debug --stdio` stub only |
+| LSP virtual documents | IR/NASM/stack via executeCommand — read-only, no live debug session |
+| Source maps / DWARF | Sidecar JSON with lookup; Linux `%line` + file table stub; Windows PDB deferred |
+| O2 optimizer | Copy propagation + xor-zero peephole; no global DCE or assisted regalloc |
+| CPU feature gates | SSE2 + AVX2 semantic gates (34 mnemonics in DB); intrinsics/atomics RFC-only |
+| Proof bundle | Static capability manifest + optional tests.json; not formal verification |
+| DAP | `hla64 debug --stdio` with setBreakpoint/stackTrace stubs; not a full adapter |
 | Bounds warnings | Literal / const indices only |
+| Packages | `hla64.toml` + `hla64.lock` hash; no dependency resolver |
 | Windows backend | CI smoke tests; fewer native run manifests than Linux |
 
 ---
 
-## Planned (post-MVP hardening)
+## Planned (post-hardening)
 
 | Area | Notes |
 |------|-------|
-| Phase 15 GUI | Avalonia/WPF Assembly Lab — skipped |
+| Phase 15 GUI | Avalonia/WPF Assembly Lab — skipped until cross-platform decision |
 | Assisted regalloc | `--register-mode assisted` |
-| Full DWARF/PDB | Debuggers on Windows |
-| Package resolver | `hla64.lock` enforcement |
-| Differential testing | RFC 0014 Sprint 7 |
+| Full DWARF/PDB | Debuggers on Windows; live trace sink |
+| Package resolver | Lock enforcement + remote deps |
+| Full DAP | Launch/run against GDB/LLDB |
+| Variadic printf | SysV/Windows AL rules |
+| Differential run tests | Full link+run in CI (compile-only test exists) |
 
 ---
 
