@@ -4,6 +4,8 @@ public sealed class SourceMapEntry
 {
     public int SourceLine { get; init; }
     public int? SourceColumn { get; init; }
+    public int? EndLine { get; init; }
+    public int? EndColumn { get; init; }
     public int IrId { get; init; }
     public string? IrOpcode { get; init; }
     public string? Function { get; init; }
@@ -70,6 +72,8 @@ public static class SourceMapBuilder
                     {
                         SourceLine = inst.SourceLine.Value,
                         SourceColumn = inst.SourceColumn,
+                        EndLine = inst.SourceLine,
+                        EndColumn = inst.SourceColumn.HasValue ? inst.SourceColumn + 1 : null,
                         IrId = inst.Id,
                         IrOpcode = inst.Opcode.ToString(),
                         Function = func.Name
@@ -118,6 +122,8 @@ public static class SourceMapBuilder
         {
             SourceLine = e.SourceLine,
             SourceColumn = e.SourceColumn,
+            EndLine = e.EndLine,
+            EndColumn = e.EndColumn,
             IrId = e.IrId,
             IrOpcode = e.IrOpcode,
             Function = e.Function,
