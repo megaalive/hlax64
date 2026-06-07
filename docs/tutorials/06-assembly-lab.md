@@ -16,56 +16,131 @@ dotnet run --project src/HlaX64.AssemblyLab
 
 On Windows, ensure NASM is on PATH (`scripts/setup-toolchain-path.ps1`).
 
-## Workflow
+---
 
-### 1. Open a program
+## Quick start — `hello.hla64` (step by step)
 
-- **Open File** — pick any `.hla64` file (e.g. `examples/00-getting-started/hello.hla64`)
-- **Open Folder** — pick a directory; if `hla64.toml` is present, the first `.hla64` source is loaded
+This walkthrough matches opening `examples/00-getting-started/hello.hla64`.
 
-### 2. Live diagnostics
+### Step 1 — Open the file
 
-Edit source in the **Source** tab (AvaloniaEdit with HlaX64 syntax highlighting and line numbers). Click the left gutter to toggle breakpoints (stored in the session; DAP wiring is follow-up). After a short debounce, diagnostics appear in the left panel with line numbers and HLAX codes.
+1. Click **Open File** for examples like `hello.hla64`
+2. Click **Open Project** for folders with `hla64.toml` (created via `hla64 new console`)
+3. **Save** / **Ctrl+S** / **Save As** persist edits to disk
 
-### 3. Pipeline tabs
+### Step 2 — Target triple
+
+Combo **Target** (toolbar):
+
+- `windows-x64-msabi` — native Windows `.exe` (needs `lld-link` / LLVM)
+- `linux-x64-sysv` — Linux ELF (on Windows, **Run** uses WSL if installed)
+
+Check **Toolchain** tab: confirms NASM, Windows linker, WSL.
+
+### Step 3 — Live compile (automatic)
+
+Edit the **Source** tab. After ~400 ms debounce:
+
+- Left **Diagnostics** panel updates
+- **IR**, **NASM**, **ABI** tabs refresh
+
+You do **not** need to click anything for live compile.
+
+### Step 4 — Build / Run / Proof bundle
+
+By default **Build**, **Run**, and **Proof Bundle** are **enabled immediately**.
+
+Optional **Strict plan gate** (checkbox, default **OFF**):
+
+- When **ON**: after each edit you must check **Plan approved** before Build/Run/Proof (agent safety workflow)
+- When **OFF** (default): build anytime; **Plan** tab is still useful to preview steps
+
+1. Click **Build**
+2. Read **Output** tab — shows paths to `.nasm`, `.hlamap.json`, and binary (if link succeeded)
+3. Click **Open Build Folder** to open `build\hello` in Explorer
+
+**Where is `hello.exe`?**
+
+```
+examples/00-getting-started/build/hello/
+  hello.nasm
+  hello.obj          ← always after successful assemble
+  hello.hlamap.json
+  hello.exe          ← only if linking succeeded (Windows target + linker found)
+  proof-bundle/      ← after Proof Bundle (may be compile-only)
+```
+
+If you see `.obj` but **no `.exe`**, linking failed. Common on Windows:
+
+- LLVM/`lld-link` not installed or not on PATH
+- Fix: install LLVM (`winget install LLVM.LLVM`) and run `scripts/setup-toolchain-path.ps1`
+- **Output** tab explains compile-only vs full build
+- **Proof Bundle** can still succeed in **compile-only** mode (see `proof-bundle/build.json` → `"compileOnly": true`)
+
+### Step 5 — Run
+
+**Run** = Build + execute. Stdout/stderr and exit code appear in **Output**.
+
+### Step 6 — Other tabs
+
+| Tab | Purpose |
+|-----|---------|
+| **Plan** | Steps the compiler will take (emit → assemble → link) |
+| **Diff** | Semantic diff vs file content when opened |
+| **Agent** | **Explain** → diagnostics + `suggestedFix`; **Apply Fix** patches source |
+| **MCP** | In-process MCP client to `HlaX64.McpServer` (Start / Tools / Explain) |
+| **DAP** | **Debug** session trace |
+| **Disasm** | NASM + objdump when binary exists |
+
+---
+
+## FAQ (common confusion)
+
+### Build/Run disabled until I check Plan approved?
+
+**Default (Strict plan gate OFF):** buttons should be enabled. If you enabled **Strict plan gate**, uncheck it or check **Plan approved** after reviewing the **Plan** tab.
+
+### Flash or flicker while typing?
+
+Previously the app refreshed plan/capabilities and toggled plan approval on **every keystroke** — fixed: heavy work is debounced (~400 ms). If you still see flicker when debugging from Visual Studio, try running Lab standalone: `dotnet run --project src/HlaX64.AssemblyLab`.
+
+### Open File vs Open Folder looks the same?
+
+Both load a `.hla64` into the editor. Difference is context:
+
+- **Open File** → one file, status: `Single file: …`
+- **Open Folder** → project scan, status: `Project: … (N files)` or `Folder: … (first of N, no hla64.toml)`
+
+### No `.exe` after Build?
+
+Link step failed. You still get NASM + `.obj` under `build/<name>/`. See **Toolchain** tab and **Output** tab for the linker message.
+
+---
+
+## Workflow reference
+
+### Pipeline tabs
 
 | Tab | Shows |
 |-----|-------|
 | **IR** | Lowered intermediate representation |
-| **NASM** | Emitted assembly (matches `hla64 explain` / `emit-nasm`) |
-| **Disasm** | NASM listing with source-map columns; objdump when a binary exists |
+| **NASM** | Emitted assembly |
+| **Disasm** | NASM listing with source-map columns; objdump when binary exists |
 | **ABI** | Lowered functions, stack frames, verification hints |
 
-Select **Target**: `linux-x64-sysv` (default) or `windows-x64-msabi`.
+### Source map sync
 
-### 4. Build and run
+After **Build**, double-click a diagnostic. **NASM** tab highlights the line (`>>>` prefix).
 
-- **Build** — compile, assemble, link; writes `build/<name>/` with `.nasm`, binary, and `.hlamap.json`
-- **Run** — build then execute; exit code and stdout/stderr appear in **Output**
+### Debug
 
-### 5. Source map sync
+**Debug** builds, spawns `hla64 debug --stdio`, sets breakpoints from gutter. Linux: gdb; Windows: lldb.
 
-After **Build**, double-click a diagnostic or navigate by line. When a mapping exists, the **NASM** tab highlights the corresponding line (`>>>` prefix).
+### Proof bundle
 
-Try `examples/06-abi/stack-args-sysv.hla64` after building with source map enabled.
+Same as `hla64 build --proof-bundle`. Exports under `build/<name>/proof-bundle/`.
 
-### 6. Plan approval gate
-
-Review the **Plan** tab (compile/assemble/link steps). Check **Plan approved** before **Build**, **Run**, or **Proof Bundle**. The plan and **Diff** tab refresh when you edit source or change target; approval resets until you confirm again.
-
-### 7. Agent explain / repair
-
-Click **Explain** to run the in-process explain agent (same JSON shape as MCP `explain`, including `suggestedFix` per diagnostic). Results appear in the **Agent** tab.
-
-### 8. Debug
-
-**Debug** builds the program, spawns `hla64 debug --stdio`, and sends DAP initialize/launch/setBreakpoints (from gutter breakpoints)/configurationDone. Trace appears in the **DAP** tab. Linux uses gdb; Windows uses lldb when installed. See [RFC 0023](../rfcs/0023-dap-mvp.md).
-
-### 9. Proof bundle
-
-**Proof Bundle** exports `proof-bundle/` under the build directory with `capabilities.json`, `ir.json`, `abi.json`, NASM, and binary — same as `hla64 build --proof-bundle`.
-
-The **Capabilities** tab shows a summary (`filesystemAccess`, syscalls, externs). **Toolchain** shows auto-detected WSL/linker status.
+---
 
 ## Release build (optional)
 
@@ -73,7 +148,7 @@ The **Capabilities** tab shows a summary (`filesystemAccess`, syscalls, externs)
 .\scripts\publish-assembly-lab.ps1 -Rids win-x64,linux-x64
 ```
 
-GitHub tag releases also attach `assembly-lab-win-x64.zip` and `assembly-lab-linux-x64.tar.gz`.
+---
 
 ## CLI equivalents
 
@@ -85,18 +160,30 @@ GitHub tag releases also attach `assembly-lab-win-x64.zip` and `assembly-lab-lin
 | Proof bundle | `hla64 build file.hla64 --proof-bundle` |
 | Debug | `hla64 debug --stdio` |
 
-## Agent integration
-
-Lab actions map to MCP tools (`compile`, `build`, `run`, `explain`). The **Agent** tab uses in-process `ExplainAgentService` (no MCP server spawn). External MCP stdio client from the Lab UI is deferred. See [04-mcp-agent.md](04-mcp-agent.md).
+---
 
 ## Troubleshooting
 
 | Issue | Fix |
 |-------|-----|
 | NASM not found | Install NASM; run `hla64 doctor` |
+| No `.exe`, only `.obj` | Install/link LLVM `lld-link`; see **Toolchain** tab |
 | Linux ELF on Windows | Install WSL + `gcc`; Lab run uses WSL when needed |
 | Empty NASM tab | Fix diagnostics first; check target triple |
 | No source map highlight | Run **Build** (source map emitted on build) |
+| MCP hang | Rebuild Lab; MCP uses single stdout reader (see development.md) |
+
+---
+
+## Panduan singkat (Bahasa Indonesia)
+
+1. **Buka file** → Open File → pilih `hello.hla64`
+2. **Target** → `windows-x64-msabi` untuk `.exe` di Windows
+3. **Build** → lihat tab **Output** → **Open Build Folder**
+4. Jika tidak ada `.exe`, baca pesan linker di Output; pasang LLVM atau gunakan WSL + target Linux
+5. **Strict plan gate** default mati — Build/Run langsung bisa dipakai tanpa centang Plan
+
+---
 
 ## Next steps
 

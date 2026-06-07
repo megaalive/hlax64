@@ -90,11 +90,16 @@ Additive. No language or CLI breaking changes. New solution projects only.
 - **Agent:** In-proc `ExplainAgentService` (MCP-style `suggestedFix`); Agent tab + Explain button
 - **Plan / diff:** `PlanService`, `SemanticDiffService`; Plan and Diff tabs; **Plan approved** checkbox gates Build/Run/Proof bundle until user confirms (refreshes on source/target change)
 
+## Batch 4 (done)
+
+- **Apply fix:** `SuggestFixApplier` + **Apply Fix** toolbar button; `suggestedFix.replacement` from agent explain JSON
+- **DAP MI:** `MiOutputParser`, `DebugEngineSession`; gdb/lldb stopped events, stack frames, register scope via DAP `variables`
+- **MCP Lab client:** `McpSessionHost` spawns `HlaX64.McpServer`; MCP tab with Start / Tools / Explain
+
 ## Deferred
 
-- Apply suggested fix as editor patch (one-click repair)
-- Full MI stack/register parsing in DAP (beyond stub frames)
-- External MCP stdio client spawn from Lab UI
+- Full MI memory view in DAP panel
+- MCP tool parity with full CLI surface from Lab UI
 
 ## Unresolved questions
 
