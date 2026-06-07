@@ -1,7 +1,9 @@
-// linecount.hla64 - count newline bytes in a known fixture file.
-// This intentionally uses CreateFileA + ReadFile with a static byte buffer.
+// fnv1a.hla64 - FNV-1a 64-bit hash of a small fixture file.
+//
+// Stress: imul/xor in a hot loop, 64-bit constants, file read, integer stdout.
+// Expected hash for fixtures/sample-a.txt verified against a C# baseline.
 
-program linecount;
+program fnv1a;
 
 #include("stdlib64.hhf")
 
@@ -14,26 +16,32 @@ static
     bytesRead: int64;
 endstatic;
 
-procedure CountBuffer(n: int64); @returns("rax");
-begin CountBuffer;
-    mov(0, r11);
+const
+    FnvOffset := $cbf29ce484222325;
+    FnvPrime  := $100000001b3;
+endconst;
+
+procedure HashBuffer(n: int64); @returns("rax");
+begin HashBuffer;
+    mov(FnvOffset, r11);
     mov(0, r8);
+    mov(n, r15);
     mov(&buffer, r14);
 
-    while(r8 < n) do
+    while(r8 < r15) do
         mov([r14].byte, r9);
-        if(r9 = 10) then
-            add(1, r11);
-        endif;
+        xor(r9, r11);
+        mov(FnvPrime, rax);
+        imul(rax, r11);
         add(1, r8);
         add(1, r14);
     endwhile;
 
     mov(r11, rax);
-end CountBuffer;
+end HashBuffer;
 
-begin linecount;
-    call CreateFileA(&"examples\\10-real-tools\\linecount\\fixtures\\sample-b.txt", 2147483648, 1, 0, 3, 128, 0);
+begin fnv1a;
+    call CreateFileA(&"examples\\10-real-tools\\fnv1a\\fixtures\\sample-a.txt", 2147483648, 1, 0, 3, 128, 0);
 
     if(rax = -1) then
         stdout.put("open failed", nl);
@@ -47,11 +55,11 @@ begin linecount;
             mov(1, rax);
         else
             mov(bytesRead, r10);
-            call CountBuffer(r10);
+            call HashBuffer(r10);
             mov(rax, r12);
-            stdout.put("sample-b.txt lines: ", r12, nl);
+            stdout.put("fnv1a=", r12, nl);
             call CloseHandle(r15);
             mov(0, rax);
         endif;
     endif;
-end linecount;
+end fnv1a;

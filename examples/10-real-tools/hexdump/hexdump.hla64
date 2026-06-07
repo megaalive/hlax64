@@ -1,0 +1,100 @@
+// hexdump.hla64 - print a small fixture file as offset + hex bytes.
+//
+// Stress: CreateFileA/ReadFile, static buffer, byte indexing, hex nibble
+// formatting via branches, while loop, nested if.
+//
+// Note: keep the byte in a callee-saved register (r14) across PrintHexNibble
+// calls — Win64 clobbers r9/r10/r11 at call boundaries.
+
+program hexdump;
+
+#include("stdlib64.hhf")
+
+extern procedure CreateFileA(lpFileName: cstring; dwDesiredAccess: uint64; dwShareMode: uint64; lpSecurityAttributes: ptr; dwCreationDisposition: uint64; dwFlagsAndAttributes: uint64; hTemplateFile: uint64): int64 from "kernel32.dll";
+extern procedure ReadFile(hFile: int64; lpBuffer: ptr; nNumberOfBytesToRead: uint64; lpNumberOfBytesRead: ptr; lpOverlapped: ptr): int32 from "kernel32.dll";
+extern procedure CloseHandle(hObject: int64): int32 from "kernel32.dll";
+
+static
+    buffer: byte[256];
+    bytesRead: int64;
+endstatic;
+
+procedure PrintHexNibble(n: int64); @returns("rax");
+begin PrintHexNibble;
+    if(n = 0) then stdout.put("0"); endif;
+    if(n = 1) then stdout.put("1"); endif;
+    if(n = 2) then stdout.put("2"); endif;
+    if(n = 3) then stdout.put("3"); endif;
+    if(n = 4) then stdout.put("4"); endif;
+    if(n = 5) then stdout.put("5"); endif;
+    if(n = 6) then stdout.put("6"); endif;
+    if(n = 7) then stdout.put("7"); endif;
+    if(n = 8) then stdout.put("8"); endif;
+    if(n = 9) then stdout.put("9"); endif;
+    if(n = 10) then stdout.put("a"); endif;
+    if(n = 11) then stdout.put("b"); endif;
+    if(n = 12) then stdout.put("c"); endif;
+    if(n = 13) then stdout.put("d"); endif;
+    if(n = 14) then stdout.put("e"); endif;
+    if(n = 15) then stdout.put("f"); endif;
+    mov(0, rax);
+end PrintHexNibble;
+
+procedure PrintHexByte(b: int64); @returns("rax");
+begin PrintHexByte;
+    mov(b, r15);
+
+    mov(r15, r12);
+    shr(4, r12);
+    call PrintHexNibble(r12);
+
+    mov(r15, r12);
+    shr(4, r12);
+    shl(4, r12);
+    mov(r15, r11);
+    sub(r12, r11);
+    call PrintHexNibble(r11);
+    mov(0, rax);
+end PrintHexByte;
+
+procedure DumpBuffer(n: int64); @returns("rax");
+begin DumpBuffer;
+    stdout.put("00000000  ");
+
+    mov(&buffer, r14);
+    mov(r14, r13);
+    mov(n, r15);
+    add(r15, r13);
+
+    while(r14 < r13) do
+        mov([r14].byte, r9);
+        call PrintHexByte(r9);
+        stdout.put(" ");
+        add(1, r14);
+    endwhile;
+
+    stdout.put(nl);
+    mov(0, rax);
+end DumpBuffer;
+
+begin hexdump;
+    call CreateFileA(&"examples\\10-real-tools\\hexdump\\fixtures\\sample-a.txt", 2147483648, 1, 0, 3, 128, 0);
+
+    if(rax = -1) then
+        stdout.put("open failed", nl);
+        mov(1, rax);
+    else
+        mov(rax, r15);
+        call ReadFile(r15, &buffer, 256, &bytesRead, 0);
+        if(rax = 0) then
+            stdout.put("read failed", nl);
+            call CloseHandle(r15);
+            mov(1, rax);
+        else
+            mov(bytesRead, r10);
+            call DumpBuffer(r10);
+            call CloseHandle(r15);
+            mov(0, rax);
+        endif;
+    endif;
+end hexdump;

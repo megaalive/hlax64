@@ -63,5 +63,5 @@ end ListDir;
 
 begin listfiles;
     stdout.put("Fixture files:", nl);
-    call ListDir(&"examples\\10-real-tools\\_fixtures\\*");
+    call ListDir(&"examples\\10-real-tools\\listfiles\\fixtures\\*");
 end listfiles;

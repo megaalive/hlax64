@@ -13,7 +13,7 @@ static
 endstatic;
 
 begin filesize;
-    call FindFirstFileA(&"examples\\10-real-tools\\_fixtures\\sample-a.txt", &findData);
+    call FindFirstFileA(&"examples\\10-real-tools\\filesize\\fixtures\\sample-a.txt", &findData);
 
     if(rax = -1) then
         stdout.put("missing", nl);

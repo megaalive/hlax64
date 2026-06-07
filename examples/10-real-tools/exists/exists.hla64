@@ -1,4 +1,6 @@
 // exists.hla64 - return 0 when a known fixture exists, 1 otherwise.
+//
+// Stress: minimal Win32 interop, branch, process exit code.
 
 program exists;
 
@@ -7,7 +9,8 @@ program exists;
 extern procedure GetFileAttributesA(lpFileName: cstring): uint64 from "kernel32.dll";
 
 begin exists;
-    call GetFileAttributesA(&"examples\\10-real-tools\\_fixtures\\sample-a.txt");
+    // Hardcoded fixture path until argv lands (see 10-real-tools/README.md).
+    call GetFileAttributesA(&"examples\\10-real-tools\\exists\\fixtures\\sample-a.txt");
 
     if(rax = -1) then
         stdout.put("missing", nl);

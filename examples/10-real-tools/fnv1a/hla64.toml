@@ -1,0 +1,4 @@
+name = "fnv1a"
+version = "0.1.0"
+target = "windows-x64-msabi"
+main = "fnv1a.hla64"

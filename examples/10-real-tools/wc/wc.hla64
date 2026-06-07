@@ -1,7 +1,9 @@
-// linecount.hla64 - count newline bytes in a known fixture file.
-// This intentionally uses CreateFileA + ReadFile with a static byte buffer.
+// wc.hla64 - count lines, words, and bytes in a small fixture file.
+//
+// Stress: file read loop, byte classification, multiple counters,
+// multi-value stdout.put, while+if nesting.
 
-program linecount;
+program wc;
 
 #include("stdlib64.hhf")
 
@@ -14,26 +16,51 @@ static
     bytesRead: int64;
 endstatic;
 
+procedure IsSpace(b: int64); @returns("rax");
+begin IsSpace;
+    mov(0, rax);
+    if(b = 32) then mov(1, rax); endif;
+    if(b = 9) then mov(1, rax); endif;
+    if(b = 10) then mov(1, rax); endif;
+    if(b = 13) then mov(1, rax); endif;
+end IsSpace;
+
 procedure CountBuffer(n: int64); @returns("rax");
 begin CountBuffer;
     mov(0, r11);
-    mov(0, r8);
+    mov(0, r12);
+    mov(0, r13);
+    mov(n, r15);
     mov(&buffer, r14);
+    mov(r14, r10);
+    add(r15, r10);
 
-    while(r8 < n) do
+    while(r14 < r10) do
         mov([r14].byte, r9);
+
         if(r9 = 10) then
             add(1, r11);
         endif;
-        add(1, r8);
+
+        call IsSpace(r9);
+        if(rax = 0) then
+            if(r13 = 0) then
+                add(1, r12);
+                mov(1, r13);
+            endif;
+        else
+            mov(0, r13);
+        endif;
+
         add(1, r14);
     endwhile;
 
-    mov(r11, rax);
+    stdout.put("lines=", r11, " words=", r12, " bytes=", r15, nl);
+    mov(0, rax);
 end CountBuffer;
 
-begin linecount;
-    call CreateFileA(&"examples\\10-real-tools\\linecount\\fixtures\\sample-b.txt", 2147483648, 1, 0, 3, 128, 0);
+begin wc;
+    call CreateFileA(&"examples\\10-real-tools\\wc\\fixtures\\sample-b.txt", 2147483648, 1, 0, 3, 128, 0);
 
     if(rax = -1) then
         stdout.put("open failed", nl);
@@ -48,10 +75,8 @@ begin linecount;
         else
             mov(bytesRead, r10);
             call CountBuffer(r10);
-            mov(rax, r12);
-            stdout.put("sample-b.txt lines: ", r12, nl);
             call CloseHandle(r15);
             mov(0, rax);
         endif;
     endif;
-end linecount;
+end wc;
