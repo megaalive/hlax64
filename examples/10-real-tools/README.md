@@ -30,6 +30,8 @@ tool-name/
 | `hexdump` | Offset + hex bytes (`argv[1]`) | argv runtime, hex nibble branches, calls inside loop |
 | `wc` | Lines / words / bytes (`argv[1]`) | argv runtime, byte classifiers, multiple counters |
 | `fnv1a` | FNV-1a 64-bit file hash (`argv[1]`) | argv runtime, xor/imul loop, large constants |
+| `filemagic` | Classify file type from magic bytes (`argv[1]`) | argv runtime, nested if, printable scan |
+| `cmp` | Compare two files (`argv[1]`, `argv[2]`) | argv runtime, dual ReadFile, byte compare loop |
 
 ## Build
 
@@ -58,5 +60,5 @@ Run from the **repository root** so relative fixture paths resolve.
 | Done | Standardize tool layout + expected files |
 | Done | Add `hexdump`, `wc`, `fnv1a` |
 | Done | Skeleton `98-bug-farm/`, `99-invalid/` |
-| Done | argv for all seven real-tools |
-| Next | `filemagic`, `cmp`, C# interop folder `11-csharp-interop-real/` |
+| Done | argv for all nine real-tools |
+| Next | C# interop folder `11-csharp-interop-real/` |

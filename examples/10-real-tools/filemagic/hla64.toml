@@ -1,0 +1,4 @@
+name = "filemagic"
+version = "0.1.0"
+target = "windows-x64-msabi"
+main = "filemagic.hla64"

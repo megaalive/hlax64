@@ -1,0 +1,6 @@
+{
+  "name": "real-cmp",
+  "source": "../../../examples/10-real-tools/cmp/cmp.hla64",
+  "expectedExitCode": 0,
+  "description": "Real tool: compare two small files (compile-only; native run via AssemblyLab.Tests)"
+}

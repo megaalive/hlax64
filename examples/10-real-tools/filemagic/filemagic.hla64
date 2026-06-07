@@ -1,0 +1,150 @@
+// filemagic.hla64 - classify a file from its leading bytes (argv[1]).
+//
+// Stress: argv runtime, ReadFile, byte probes, nested if, printable scan loop.
+
+program filemagic;
+
+#include("stdlib64.hhf")
+
+extern procedure hlax_argv_init(): int64;
+extern procedure hlax_argv_count(): int64;
+extern procedure hlax_argv_get(index:int64): ptr;
+
+extern procedure CreateFileA(lpFileName: cstring; dwDesiredAccess: uint64; dwShareMode: uint64; lpSecurityAttributes: ptr; dwCreationDisposition: uint64; dwFlagsAndAttributes: uint64; hTemplateFile: uint64): int64 from "kernel32.dll";
+extern procedure ReadFile(hFile: int64; lpBuffer: ptr; nNumberOfBytesToRead: uint64; lpNumberOfBytesRead: ptr; lpOverlapped: ptr): int32 from "kernel32.dll";
+extern procedure CloseHandle(hObject: int64): int32 from "kernel32.dll";
+
+static
+    buffer: byte[256];
+    bytesRead: int64;
+endstatic;
+
+procedure IsPrintable(b: int64); @returns("rax");
+begin IsPrintable;
+    mov(0, rax);
+    if(b = 9) then mov(1, rax); endif;
+    if(b = 10) then mov(1, rax); endif;
+    if(b = 13) then mov(1, rax); endif;
+    if(b > 31) then
+        if(b < 127) then
+            mov(1, rax);
+        endif;
+    endif;
+end IsPrintable;
+
+procedure ClassifyBuffer(n: int64); @returns("rax");
+begin ClassifyBuffer;
+    mov(n, r15);
+    mov(&buffer, r14);
+    mov(0, r12);
+
+    if(r15 > 3) then
+        if(r12 = 0) then
+            mov([r14].byte, r9);
+            if(r9 = 37) then
+                mov([r14 + 1].byte, r9);
+                if(r9 = 80) then
+                    mov([r14 + 2].byte, r9);
+                    if(r9 = 68) then
+                        mov([r14 + 3].byte, r9);
+                        if(r9 = 70) then
+                            stdout.put("type: pdf", nl);
+                            mov(1, r12);
+                        endif;
+                    endif;
+                endif;
+            endif;
+        endif;
+    endif;
+
+    if(r15 > 3) then
+        if(r12 = 0) then
+            mov([r14].byte, r9);
+            if(r9 = 137) then
+                mov([r14 + 1].byte, r9);
+                if(r9 = 80) then
+                    mov([r14 + 2].byte, r9);
+                    if(r9 = 78) then
+                        mov([r14 + 3].byte, r9);
+                        if(r9 = 71) then
+                            stdout.put("type: png", nl);
+                            mov(1, r12);
+                        endif;
+                    endif;
+                endif;
+            endif;
+        endif;
+    endif;
+
+    if(r15 > 1) then
+        if(r12 = 0) then
+            mov([r14].byte, r9);
+            if(r9 = 80) then
+                mov([r14 + 1].byte, r9);
+                if(r9 = 75) then
+                    stdout.put("type: zip", nl);
+                    mov(1, r12);
+                endif;
+            endif;
+        endif;
+    endif;
+
+    if(r12 = 0) then
+        mov(1, r13);
+        mov(0, r8);
+        mov(r14, r11);
+
+        while(r8 < r15) do
+            mov([r11].byte, r9);
+            call IsPrintable(r9);
+            if(rax = 0) then
+                mov(0, r13);
+                mov(r15, r8);
+            else
+                add(1, r8);
+                add(1, r11);
+            endif;
+        endwhile;
+
+        if(r13 = 1) then
+            stdout.put("type: text", nl);
+        else
+            stdout.put("type: binary", nl);
+        endif;
+        mov(1, r12);
+    endif;
+
+    mov(0, rax);
+end ClassifyBuffer;
+
+begin filemagic;
+    call hlax_argv_init();
+    call hlax_argv_count();
+
+    if(rax < 2) then
+        stdout.put("usage: filemagic <file>", nl);
+        mov(1, rbx);
+    else
+        call hlax_argv_get(1);
+        mov(rax, r12);
+        call CreateFileA(r12, 2147483648, 1, 0, 3, 128, 0);
+
+        if(rax = -1) then
+            stdout.put("open failed", nl);
+            mov(1, rbx);
+        else
+            mov(rax, r15);
+            call ReadFile(r15, &buffer, 256, &bytesRead, 0);
+            if(rax = 0) then
+                stdout.put("read failed", nl);
+                call CloseHandle(r15);
+                mov(1, rbx);
+            else
+                mov(bytesRead, r10);
+                call ClassifyBuffer(r10);
+                call CloseHandle(r15);
+                mov(0, rbx);
+            endif;
+        endif;
+    endif;
+end filemagic;
