@@ -1,107 +1,128 @@
-using System.Diagnostics;
-
 namespace HlaX64.DebugAdapter;
 
-public sealed class LldbBackend : IDebugBackend
+public sealed class LldbBackend : DebugEngineSession
 {
-    private Process? _lldb;
-    private StreamWriter? _stdin;
     private readonly List<string> _breakpoints = [];
+    private readonly List<string> _lldbLines = [];
+    private IReadOnlyList<DebugStackFrame> _cachedFrames = [];
+    private IReadOnlyList<DebugRegister> _cachedRegisters = [];
 
-    public string Name => "lldb";
-    public bool IsAvailable => TryFindLldb(out _);
+    public override string Name => "lldb";
+    public override bool IsAvailable => DebuggerProbe.IsLldbUsable(out _);
 
-    public static bool TryFindLldb(out string path)
-    {
-        path = "";
-        if (!OperatingSystem.IsWindows())
-            return false;
+    public static bool TryFindLldb(out string path) => DebuggerProbe.TryFindLldb(out path);
 
-        var llvmPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
-            "LLVM", "bin", "lldb.exe");
-        if (File.Exists(llvmPath))
-        {
-            path = llvmPath;
-            return true;
-        }
-
-        var pathEnv = Environment.GetEnvironmentVariable("PATH") ?? "";
-        foreach (var dir in pathEnv.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
-        {
-            var candidate = Path.Combine(dir.Trim(), "lldb.exe");
-            if (File.Exists(candidate))
-            {
-                path = candidate;
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public void Launch(string executable, string[]? args = null)
+    public override void Launch(string executable, string[]? args = null)
     {
         if (!TryFindLldb(out var lldbPath))
             throw new InvalidOperationException(
                 "lldb backend requires Windows with lldb on PATH or in Program Files/LLVM/bin.");
 
-        _lldb = new Process
-        {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = lldbPath,
-                Arguments = "-b -Q",
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false
-            }
-        };
-        _lldb.Start();
-        _stdin = _lldb.StandardInput;
-        Write($"target create \"{executable}\"");
+        StartEngine(lldbPath, "-Q");
+        WriteLine($"target create \"{executable}\"");
         foreach (var bp in _breakpoints)
-            Write(bp);
-        Write("run");
+            WriteLine(bp);
+        if (_breakpoints.Count == 0)
+            WriteLine("breakpoint set --name _start");
+        WriteLine("run");
     }
 
-    public void SetBreakpoint(string file, int line)
+    public override void SetBreakpoint(string file, int line)
     {
+        if (file.EndsWith(".hla64", StringComparison.OrdinalIgnoreCase))
+        {
+            SetBreakpointBySymbol("_start");
+            return;
+        }
+
         var cmd = $"breakpoint set -f \"{file}\" -l {line}";
         _breakpoints.Add(cmd);
-        if (_stdin != null)
-            Write(cmd);
+        if (Stdin != null)
+            WriteLine(cmd);
     }
 
-    public IReadOnlyList<object> GetStackFrames()
+    public override void SetBreakpointBySymbol(string symbol)
     {
-        if (_stdin == null)
-            return [new { id = 1, name = "main", line = 1, column = 1 }];
-        Write("thread backtrace");
-        return
-        [
-            new { id = 1, name = "main", line = 1, column = 1, source = new { path = "main.hla64" } }
-        ];
+        var cmd = $"breakpoint set --name {symbol}";
+        _breakpoints.Add(cmd);
+        if (Stdin != null)
+            WriteLine(cmd);
     }
 
-    public void Continue() => Write("process continue");
-
-    public void Disconnect()
+    public override void SetBreakpointAtAddress(string symbol, int byteOffset)
     {
-        try { Write("quit"); } catch { /* ignore */ }
-        _lldb?.Kill(entireProcessTree: true);
+        var cmd = byteOffset <= 0
+            ? $"breakpoint set --name {symbol}"
+            : $"breakpoint set -a \"({symbol}+{byteOffset})\"";
+        _breakpoints.Add(cmd);
+        if (Stdin != null)
+            WriteLine(cmd);
     }
 
-    private void Write(string cmd)
+    public override void Continue() => WriteLine("process continue");
+
+    public override void StepOver() => WriteLine("thread step-over");
+
+    public override void StepInto() => WriteLine("thread step-in");
+
+    public override void StepOut() => WriteLine("thread step-out");
+
+    public override void Kill() => WriteLine("process kill");
+
+    protected override void HandleEngineLine(string line)
     {
-        _stdin?.WriteLine(cmd);
-        _stdin?.Flush();
+        _lldbLines.Add(line);
+        if (_lldbLines.Count > 512)
+            _lldbLines.RemoveRange(0, 256);
+
+        if (MiOutputParser.TryParseLldbStopped(line, out var info) && info != null)
+        {
+            _cachedFrames = info.Frames;
+            RaiseStopped(info);
+        }
     }
 
-    public void Dispose()
+    protected override IReadOnlyList<DebugStackFrame> QueryStackFrames()
     {
-        Disconnect();
-        _lldb?.Dispose();
+        if (!IsEngineAlive)
+            return _cachedFrames.Count > 0
+                ? _cachedFrames
+                : [new DebugStackFrame(1, "_start", 1, 1, null)];
+
+        if (!TryWriteLine("thread backtrace"))
+            return _cachedFrames.Count > 0
+                ? _cachedFrames
+                : [new DebugStackFrame(1, "_start", 1, 1, null)];
+
+        Thread.Sleep(250);
+        var parsed = MiOutputParser.ParseLldbBacktrace(_lldbLines);
+        if (parsed.Count > 0)
+        {
+            _cachedFrames = parsed;
+            return parsed;
+        }
+
+        return _cachedFrames.Count > 0
+            ? _cachedFrames
+            : [new DebugStackFrame(1, "main", 1, 1, null)];
+    }
+
+    protected override IReadOnlyList<DebugRegister> QueryRegisters()
+    {
+        if (!IsEngineAlive)
+            return _cachedRegisters;
+
+        if (!TryWriteLine("register read rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 rip eflags"))
+            return _cachedRegisters;
+
+        Thread.Sleep(250);
+        var parsed = MiOutputParser.ParseLldbRegisterDump(_lldbLines);
+        if (parsed.Count > 0)
+        {
+            _cachedRegisters = parsed;
+            return parsed;
+        }
+
+        return _cachedRegisters;
     }
 }
