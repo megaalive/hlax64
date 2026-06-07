@@ -29,7 +29,7 @@ tool-name/
 | `linecount` | Counts `\n` bytes in a file (`argv[1]`) | argv runtime, CreateFileA (7 args), ReadFile, while+if |
 | `hexdump` | Offset + hex bytes (`argv[1]`) | argv runtime, hex nibble branches, calls inside loop |
 | `wc` | Lines / words / bytes (`argv[1]`) | argv runtime, byte classifiers, multiple counters |
-| `fnv1a` | FNV-1a 64-bit file hash (`argv[1]`) | argv runtime, xor/imul loop, large constants |
+| `fnv1a` | FNV-1a 64-bit file hash (`argv[1]`) | argv runtime, xor/imul loop, **`stdout.putu`** |
 | `filemagic` | Classify file type from magic bytes (`argv[1]`) | argv runtime, nested if, printable scan |
 | `cmp` | Compare two files (`argv[1]`, `argv[2]`) | argv runtime, dual ReadFile, byte compare loop |
 
@@ -50,7 +50,8 @@ Run from the **repository root** so relative fixture paths resolve.
 
 - **`and` / `xor` / `or` in source**: fixed in IR lowering (were incorrectly emitted as `mov`); real tools include regression coverage.
 - **Calls inside loops**: prefer callee-saved registers (`r14` cursor, `r13` end sentinel) — volatile regs (`r8`–`r11`) are clobbered by Win64 calls.
-- **`stdout.put` integers**: printed as **signed** int64 (FNV and other uint64 hashes may show a negative decimal when the high bit is set — this matches C# `long` / P/Invoke return values).
+- **`stdout.put` integers**: printed as **signed** int64.
+- **`stdout.putu` integers**: printed as **unsigned** decimal (bit pattern; use for FNV hashes and large uint64).
 - **Static names**: avoid identifiers like `inWord` that confuse the NASM backend.
 
 ## Roadmap (from review)
@@ -63,4 +64,4 @@ Run from the **repository root** so relative fixture paths resolve.
 | Done | argv for all nine real-tools |
 | Done | `98-bug-farm/` (9 stress cases) |
 | Done | `99-invalid/` (21 catalog entries mirroring conformance) |
-| Done | Linux `12-real-tools-linux/linecount` + WSL regression |
+| Done | Linux `12-real-tools-linux/` linecount, exists, wc, fnv1a + WSL regression |
