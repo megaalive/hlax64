@@ -1,0 +1,19 @@
+{
+  "name": "hla64",
+  "contributes": {
+    "languages": [
+      {
+        "id": "hla64",
+        "aliases": ["HlaX64", "hla64"],
+        "extensions": [".hla64"]
+      }
+    ],
+    "grammars": [
+      {
+        "language": "hla64",
+        "scopeName": "source.hla64",
+        "path": "./syntaxes/hla64.tmLanguage.json"
+      }
+    ]
+  }
+}

@@ -43,6 +43,140 @@ public sealed class LinkerTool
         string DisplayName,
         string InstallHint);
 
+    private static readonly string[] CommonWindowsToolDirectories =
+    [
+        @"C:\Program Files\LLVM\bin",
+        @"C:\Program Files (x86)\LLVM\bin",
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "LLVM", "bin"),
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "LLVM", "bin"),
+    ];
+
+    /// <summary>
+    /// Resolves a tool executable from PATH or common install locations (e.g. LLVM not added to PATH).
+    /// </summary>
+    public static string? ResolveToolExecutable(string toolName)
+    {
+        if (string.IsNullOrWhiteSpace(toolName))
+            return null;
+
+        if (Path.IsPathRooted(toolName) && File.Exists(toolName))
+            return toolName;
+
+        foreach (var dir in EnumerateToolSearchDirectories())
+        {
+            var candidate = Path.Combine(dir, toolName);
+            if (File.Exists(candidate))
+                return candidate;
+
+            if (OperatingSystem.IsWindows())
+            {
+                var withExe = candidate + ".exe";
+                if (File.Exists(withExe))
+                    return withExe;
+            }
+        }
+
+        return null;
+    }
+
+    public static bool IsWslAvailable()
+    {
+        if (!OperatingSystem.IsWindows())
+            return false;
+
+        try
+        {
+            using var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = "wsl",
+                Arguments = "--status",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            });
+            if (process == null)
+                return false;
+            process.WaitForExit(5000);
+            return process.ExitCode == 0;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static IEnumerable<string> EnumerateToolSearchDirectories()
+    {
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var dir in (Environment.GetEnvironmentVariable("PATH") ?? "")
+                     .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var trimmed = dir.Trim().Trim('"');
+            if (!string.IsNullOrWhiteSpace(trimmed) && seen.Add(trimmed))
+                yield return trimmed;
+        }
+
+        if (OperatingSystem.IsWindows())
+        {
+            foreach (var dir in CommonWindowsToolDirectories)
+            {
+                if (!string.IsNullOrWhiteSpace(dir) && seen.Add(dir))
+                    yield return dir;
+            }
+        }
+    }
+
+    private static bool TryRunVersionProbe(string fileName, string arguments, out string resolvedPath)
+    {
+        resolvedPath = fileName;
+        foreach (var candidatePath in EnumerateCandidateExecutables(fileName))
+        {
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = candidatePath,
+                    Arguments = arguments,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false
+                };
+                using var process = Process.Start(psi);
+                if (process == null)
+                    continue;
+
+                process.WaitForExit(3000);
+                if (process.ExitCode == 0)
+                {
+                    resolvedPath = candidatePath;
+                    return true;
+                }
+            }
+            catch
+            {
+                // Try next candidate
+            }
+        }
+
+        return false;
+    }
+
+    private static IEnumerable<string> EnumerateCandidateExecutables(string toolName)
+    {
+        if (Path.IsPathRooted(toolName))
+        {
+            yield return toolName;
+            yield break;
+        }
+
+        yield return toolName;
+
+        var resolved = ResolveToolExecutable(toolName);
+        if (resolved != null && !string.Equals(resolved, toolName, StringComparison.OrdinalIgnoreCase))
+            yield return resolved;
+    }
+
     /// <summary>
     /// Tries to find a working linker that can produce Linux x64 ELF executables.
     /// </summary>
@@ -50,37 +184,16 @@ public sealed class LinkerTool
     {
         foreach (var candidate in LinkerCandidates)
         {
-            try
-            {
-                string fileName = candidate.Command;
-                string args = string.IsNullOrEmpty(candidate.SubCommand) 
-                    ? candidate.VersionArg 
-                    : $"{candidate.SubCommand} {candidate.VersionArg}";
+            string args = string.IsNullOrEmpty(candidate.SubCommand)
+                ? candidate.VersionArg
+                : $"{candidate.SubCommand} {candidate.VersionArg}";
 
-                var psi = new ProcessStartInfo
-                {
-                    FileName = fileName,
-                    Arguments = args,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false
-                };
-                using var process = Process.Start(psi);
-                if (process != null)
-                {
-                    process.WaitForExit(3000);
-                    if (process.ExitCode == 0)
-                    {
-                        path = fileName;
-                        displayName = candidate.DisplayName;
-                        versionArgs = candidate.SubCommand; // empty for direct gcc, "gcc" for wsl
-                        return true;
-                    }
-                }
-            }
-            catch
+            if (TryRunVersionProbe(candidate.Command, args, out var resolvedPath))
             {
-                // Try next candidate
+                path = resolvedPath;
+                displayName = candidate.DisplayName;
+                versionArgs = candidate.SubCommand;
+                return true;
             }
         }
 
@@ -183,36 +296,16 @@ public sealed class LinkerTool
     {
         foreach (var candidate in WindowsLinkerCandidates)
         {
-            try
-            {
-                string fileName = candidate.Command;
-                string args = string.IsNullOrEmpty(candidate.SubCommand) 
-                    ? candidate.VersionArg 
-                    : $"{candidate.SubCommand} {candidate.VersionArg}";
+            string args = string.IsNullOrEmpty(candidate.SubCommand)
+                ? candidate.VersionArg
+                : $"{candidate.SubCommand} {candidate.VersionArg}";
 
-                var psi = new ProcessStartInfo
-                {
-                    FileName = fileName,
-                    Arguments = args,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false
-                };
-                using var process = Process.Start(psi);
-                if (process != null)
-                {
-                    process.WaitForExit(3000);
-                    if (process.ExitCode == 0)
-                    {
-                        path = fileName;
-                        displayName = candidate.DisplayName;
-                        versionArgs = candidate.SubCommand;
-                        return true;
-                    }
-                }
-            }
-            catch
+            if (TryRunVersionProbe(candidate.Command, args, out var resolvedPath))
             {
+                path = resolvedPath;
+                displayName = candidate.DisplayName;
+                versionArgs = candidate.SubCommand;
+                return true;
             }
         }
 

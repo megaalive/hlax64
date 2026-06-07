@@ -22,7 +22,8 @@ public static class ProofBundleWriter
         string? objFile,
         string outputFile,
         bool includeTestsSummary = false,
-        string? projectDir = null)
+        string? projectDir = null,
+        bool compileOnly = false)
     {
         var bundleDir = Path.Combine(outputDir, "proof-bundle");
         Directory.CreateDirectory(bundleDir);
@@ -69,7 +70,9 @@ public static class ProofBundleWriter
                 File.Copy(testsPath, Path.Combine(bundleDir, "tests.json"), overwrite: true);
         }
 
-        var artifactsList = new List<string> { "binary", "nasm", "ir.json", "hlamap.json", "abi.json", "capabilities.json", "build.json" };
+        var artifactsList = new List<string> { "nasm", "ir.json", "hlamap.json", "abi.json", "capabilities.json", "build.json" };
+        if (File.Exists(Path.Combine(bundleDir, Path.GetFileName(outputFile))))
+            artifactsList.Insert(0, "binary");
         if (includeTestsSummary && File.Exists(Path.Combine(bundleDir, "tests.json")))
             artifactsList.Add("tests.json");
 
@@ -82,6 +85,7 @@ public static class ProofBundleWriter
             target = options.Target.ToString(),
             outputKind = options.OutputKind.ToString().ToLowerInvariant(),
             optimization = options.Optimization.ToString(),
+            compileOnly,
             artifacts = artifactsList
         };
         File.WriteAllText(Path.Combine(bundleDir, "build.json"),

@@ -32,6 +32,14 @@ jobs:
       - name: Build
         run: dotnet build
 
+      - name: Publish Assembly Lab (smoke, Windows)
+        if: runner.os == 'Windows'
+        run: dotnet publish src/HlaX64.AssemblyLab/HlaX64.AssemblyLab.csproj -c Release -r win-x64 --self-contained false -o publish/assembly-lab-smoke
+
+      - name: Publish Assembly Lab (smoke, Linux)
+        if: runner.os == 'Linux'
+        run: dotnet publish src/HlaX64.AssemblyLab/HlaX64.AssemblyLab.csproj -c Release -r linux-x64 --self-contained false -o publish/assembly-lab-smoke
+
       - name: Test
         run: dotnet test
 

@@ -47,6 +47,19 @@ public sealed class AssemblyLabBackend
         "windows-x64-msabi"
     ];
 
+    public static string ResolveDefaultTarget()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            if (LinkerTool.TryFindWindowsLinker(out _, out _, out _))
+                return "windows-x64-msabi";
+            if (LinkerTool.TryFindLinker(out _, out _, out _))
+                return "linux-x64-sysv";
+        }
+
+        return "linux-x64-sysv";
+    }
+
     public LabCompileResult Compile(string sourcePath, string sourceText, string target = "linux-x64-sysv")
     {
         var options = BuildOptions(target, emitSourceMap: true);
@@ -127,8 +140,31 @@ public sealed class AssemblyLabBackend
                 linkSuccess = LinkerTool.TryLink(objFile, outputFile, out linkError, out _,
                     extraLibraries: artifacts.Result.LinkLibraries);
 
+            string? proofDir = null;
+            if (proofBundle)
+            {
+                proofDir = ProofBundleWriter.Write(
+                    sourcePath, sourceText, options, outputDir, artifacts, nasmFile, objFile, outputFile,
+                    compileOnly: !linkSuccess);
+            }
+
             if (!linkSuccess)
+            {
+                if (proofBundle && proofDir != null)
+                {
+                    return new LabBuildResult(
+                        true,
+                        $"Proof bundle exported (compile-only; linking skipped):\n{linkError}",
+                        null,
+                        nasmFile,
+                        File.Exists(mapFile) ? mapFile : null,
+                        proofDir,
+                        artifacts.SourceMap,
+                        artifacts.NasmCode);
+                }
+
                 return new LabBuildResult(false, linkError, null, nasmFile, mapFile, null, artifacts.SourceMap, artifacts.NasmCode);
+            }
 
             if (!isWindows)
             {
@@ -144,16 +180,11 @@ public sealed class AssemblyLabBackend
                 catch { /* optional on non-Unix hosts */ }
             }
 
-            string? proofDir = null;
-            if (proofBundle)
-            {
-                proofDir = ProofBundleWriter.Write(
-                    sourcePath, sourceText, options, outputDir, artifacts, nasmFile, objFile, outputFile);
-            }
-
             return new LabBuildResult(
                 true,
-                $"Build successful: {outputFile}",
+                proofBundle && proofDir != null
+                    ? $"Build and proof bundle successful: {outputFile}"
+                    : $"Build successful: {outputFile}",
                 outputFile,
                 nasmFile,
                 File.Exists(mapFile) ? mapFile : null,
@@ -231,13 +262,8 @@ public sealed class AssemblyLabBackend
         }
     }
 
-    public string ExportProofBundle(string sourcePath, string sourceText, string target, string? outputDir = null)
-    {
-        var build = Build(sourcePath, sourceText, target, outputDir, proofBundle: true);
-        if (!build.Success || build.ProofBundleDir == null)
-            throw new InvalidOperationException(build.Message);
-        return build.ProofBundleDir;
-    }
+    public LabBuildResult ExportProofBundle(string sourcePath, string sourceText, string target, string? outputDir = null)
+        => Build(sourcePath, sourceText, target, outputDir, proofBundle: true);
 
     public CapabilityManifest AnalyzeCapabilities(string sourceText)
     {
@@ -293,6 +319,9 @@ public sealed class AssemblyLabBackend
         }
         return sb.ToString();
     }
+
+    public string GetDisasmText(string? nasmText, SourceMapDocument? map, string? binaryPath = null)
+        => DisasmService.FormatDisasm(nasmText, map, binaryPath);
 
     public IEnumerable<string> FindHla64Files(string folder)
     {

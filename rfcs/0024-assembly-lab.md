@@ -86,12 +86,10 @@ Additive. No language or CLI breaking changes. New solution projects only.
 
 ## Deferred
 
-- AvaloniaEdit syntax highlighting / gutter breakpoints
 - Windows DAP (lldb)
 - Embedded MCP client (`explain` repair loop in UI)
-- `dotnet publish` release artifacts per RID
-- Disasm pane (`hla64 disasm`)
 - Semantic diff / plan approval gate UI
+- Full gdb breakpoint session in-process
 
 ## Unresolved questions
 

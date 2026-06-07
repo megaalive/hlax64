@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:HlaX64.AssemblyLab.ViewModels"
         xmlns:models="using:HlaX64.AssemblyLab.Models"
+        xmlns:avaloniaEdit="using:AvaloniaEdit"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
@@ -58,9 +59,7 @@
 
             <TabControl Grid.Row="0" Grid.Column="1" SelectedIndex="{Binding SelectedTabIndex}">
                 <TabItem Header="Source">
-                    <TextBox AcceptsReturn="True" TextWrapping="Wrap"
-                             FontFamily="Consolas,Courier New,monospace"
-                             Text="{Binding SourceText, Mode=TwoWay}"/>
+                    <avaloniaEdit:TextEditor x:Name="SourceEditor"/>
                 </TabItem>
                 <TabItem Header="IR">
                     <ScrollViewer>
@@ -81,6 +80,13 @@
                         <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
                                  FontFamily="Consolas,Courier New,monospace"
                                  Text="{Binding AbiText}"/>
+                    </ScrollViewer>
+                </TabItem>
+                <TabItem Header="Disasm">
+                    <ScrollViewer>
+                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap"
+                                 FontFamily="Consolas,Courier New,monospace"
+                                 Text="{Binding DisasmText}"/>
                     </ScrollViewer>
                 </TabItem>
             </TabControl>
@@ -105,6 +111,13 @@
                         <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
                                  FontFamily="Consolas,Courier New,monospace"
                                  Text="{Binding CapabilitiesText}"/>
+                    </ScrollViewer>
+                </TabItem>
+                <TabItem Header="Toolchain">
+                    <ScrollViewer>
+                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                                 FontFamily="Consolas,Courier New,monospace"
+                                 Text="{Binding ToolchainText}"/>
                     </ScrollViewer>
                 </TabItem>
             </TabControl>
