@@ -9,7 +9,8 @@
         x:Class="HlaX64.AssemblyLab.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="HlaX64 Assembly Lab"
-        Width="1200" Height="800">
+        Width="1200" Height="800"
+        x:Name="RootWindow">
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>
@@ -19,29 +20,70 @@
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
                 <MenuItem Header="_Open File…" Command="{Binding OpenFileCommand}"/>
-                <MenuItem Header="Open _Folder…" Command="{Binding OpenFolderCommand}"/>
+                <MenuItem Header="Open _Project…" Command="{Binding OpenProjectCommand}"/>
+                <Separator/>
+                <MenuItem Header="_Save" Command="{Binding SaveFileCommand}" InputGesture="Ctrl+S"/>
+                <MenuItem Header="Save _As…" Command="{Binding SaveFileAsCommand}"/>
             </MenuItem>
             <MenuItem Header="_Build" Command="{Binding BuildCommand}"/>
             <MenuItem Header="_Run" Command="{Binding RunCommand}"/>
-            <MenuItem Header="_Debug" Command="{Binding DebugCommand}"/>
+            <MenuItem Header="_Debug" Command="{Binding DebugCommand}"
+                      IsEnabled="{Binding IsDebugFeatureEnabled}"
+                      ToolTip.Tip="{Binding DebugFeatureDisabledHint}"/>
             <MenuItem Header="Export _Proof Bundle" Command="{Binding ExportProofBundleCommand}"/>
         </Menu>
 
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8,4" Spacing="8">
-            <Button Content="Open File" Command="{Binding OpenFileCommand}"/>
-            <Button Content="Open Folder" Command="{Binding OpenFolderCommand}"/>
-            <Button Content="Build" Command="{Binding BuildCommand}"/>
-            <Button Content="Run" Command="{Binding RunCommand}"/>
-            <Button Content="Debug" Command="{Binding DebugCommand}"/>
-            <Button Content="Proof Bundle" Command="{Binding ExportProofBundleCommand}"/>
-            <Button Content="Explain" Command="{Binding ExplainRepairCommand}"/>
-            <CheckBox Content="Plan approved" IsChecked="{Binding PlanApproved}" VerticalAlignment="Center"/>
-            <TextBlock VerticalAlignment="Center" Text="Target:"/>
-            <ComboBox MinWidth="180" ItemsSource="{Binding TargetChoices}" SelectedItem="{Binding SelectedTarget}"/>
-        </StackPanel>
+        <Border DockPanel.Dock="Top" BorderBrush="#333" BorderThickness="0,0,0,1" Padding="8,6">
+            <StackPanel Spacing="6">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Text="File" VerticalAlignment="Center" Opacity="0.65" FontWeight="SemiBold" Margin="0,0,2,0"/>
+                    <Button Content="Open File" Command="{Binding OpenFileCommand}"/>
+                    <Button Content="Open Project" Command="{Binding OpenProjectCommand}"/>
+                    <Button Content="Save" Command="{Binding SaveFileCommand}"/>
+                    <Rectangle Width="1" Fill="#444" Margin="6,2"/>
+                    <TextBlock Text="Build" VerticalAlignment="Center" Opacity="0.65" FontWeight="SemiBold" Margin="0,0,2,0"/>
+                    <Button Content="Build" Command="{Binding BuildCommand}"/>
+                    <Button Content="Run" Command="{Binding RunCommand}"/>
+                    <Button Content="Debug" Command="{Binding DebugCommand}"
+                            ToolTip.Tip="{Binding DebugFeatureDisabledHint}"/>
+                    <Button Content="Continue" Command="{Binding DebugContinueCommand}"/>
+                    <Button Content="Step Over" Command="{Binding DebugStepOverCommand}"/>
+                    <Button Content="Step Into" Command="{Binding DebugStepIntoCommand}"/>
+                    <Button Content="Step Out" Command="{Binding DebugStepOutCommand}"/>
+                    <Button Content="Stop Debug" Command="{Binding DebugStopCommand}"/>
+                    <Button Content="Proof Bundle" Command="{Binding ExportProofBundleCommand}"/>
+                    <Button Content="Open Build Folder" Command="{Binding OpenBuildFolderCommand}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Text="Tools" VerticalAlignment="Center" Opacity="0.65" FontWeight="SemiBold" Margin="0,0,2,0"/>
+                    <Button Content="Explain" Command="{Binding ExplainRepairCommand}"/>
+                    <Button Content="Apply Fix" Command="{Binding ApplySuggestedFixCommand}"/>
+                    <Rectangle Width="1" Fill="#444" Margin="6,2"/>
+                    <TextBlock Text="MCP" VerticalAlignment="Center" Opacity="0.65" FontWeight="SemiBold" Margin="0,0,2,0"/>
+                    <Button Content="Start" Command="{Binding StartMcpCommand}"
+                            IsEnabled="{Binding IsMcpFeatureEnabled}"
+                            ToolTip.Tip="{Binding McpFeatureDisabledHint}"/>
+                    <Button Content="Tools" Command="{Binding ListMcpToolsCommand}"
+                            IsEnabled="{Binding IsMcpFeatureEnabled}"/>
+                    <Button Content="Explain" Command="{Binding McpExplainCommand}"
+                            IsEnabled="{Binding IsMcpFeatureEnabled}"/>
+                    <Rectangle Width="1" Fill="#444" Margin="6,2"/>
+                    <CheckBox Content="Strict plan gate" IsChecked="{Binding StrictPlanGate}" VerticalAlignment="Center"
+                              ToolTip.Tip="When ON, Build/Run/Proof require Plan approved after each edit. Default OFF."/>
+                    <CheckBox Content="Plan approved" IsChecked="{Binding PlanApproved}" VerticalAlignment="Center"
+                              ToolTip.Tip="Required only when Strict plan gate is enabled."/>
+                    <TextBlock VerticalAlignment="Center" Text="Target:" Margin="4,0,0,0"/>
+                    <ComboBox MinWidth="180" ItemsSource="{Binding TargetChoices}" SelectedItem="{Binding SelectedTarget}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
 
         <Border DockPanel.Dock="Bottom" BorderBrush="#444" BorderThickness="0,1,0,0" Padding="8,4">
-            <TextBlock Text="{Binding StatusText}"/>
+            <StackPanel Spacing="2">
+                <TextBlock Text="{Binding OpenModeText}" FontSize="11" Opacity="0.85"/>
+                <TextBlock Text="{Binding StatusText}"/>
+                <TextBlock Text="{Binding BuildOutputDir, StringFormat=Build output: {0}}" FontSize="11" Opacity="0.85"/>
+            </StackPanel>
         </Border>
 
         <Grid ColumnDefinitions="260,*" RowDefinitions="*,180">
@@ -64,32 +106,16 @@
                     <avaloniaEdit:TextEditor x:Name="SourceEditor"/>
                 </TabItem>
                 <TabItem Header="IR">
-                    <ScrollViewer>
-                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
-                                 FontFamily="Consolas,Courier New,monospace"
-                                 Text="{Binding IrText}"/>
-                    </ScrollViewer>
+                    <avaloniaEdit:TextEditor x:Name="IrEditor"/>
                 </TabItem>
                 <TabItem Header="NASM">
-                    <ScrollViewer>
-                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap"
-                                 FontFamily="Consolas,Courier New,monospace"
-                                 Text="{Binding NasmText}"/>
-                    </ScrollViewer>
+                    <avaloniaEdit:TextEditor x:Name="NasmEditor"/>
                 </TabItem>
                 <TabItem Header="ABI">
-                    <ScrollViewer>
-                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
-                                 FontFamily="Consolas,Courier New,monospace"
-                                 Text="{Binding AbiText}"/>
-                    </ScrollViewer>
+                    <avaloniaEdit:TextEditor x:Name="AbiEditor"/>
                 </TabItem>
                 <TabItem Header="Disasm">
-                    <ScrollViewer>
-                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap"
-                                 FontFamily="Consolas,Courier New,monospace"
-                                 Text="{Binding DisasmText}"/>
-                    </ScrollViewer>
+                    <avaloniaEdit:TextEditor x:Name="DisasmEditor"/>
                 </TabItem>
             </TabControl>
 
@@ -127,6 +153,13 @@
                         <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
                                  FontFamily="Consolas,Courier New,monospace"
                                  Text="{Binding AgentText}"/>
+                    </ScrollViewer>
+                </TabItem>
+                <TabItem Header="MCP">
+                    <ScrollViewer>
+                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                                 FontFamily="Consolas,Courier New,monospace"
+                                 Text="{Binding McpText}"/>
                     </ScrollViewer>
                 </TabItem>
                 <TabItem Header="Plan">

@@ -31,7 +31,19 @@
     <ProjectReference Include="..\HlaX64.Backend.Nasm\HlaX64.Backend.Nasm.csproj" />
     <ProjectReference Include="..\HlaX64.Cli\HlaX64.Cli.csproj" />
     <ProjectReference Include="..\HlaX64.DebugAdapter\HlaX64.DebugAdapter.csproj" />
+    <ProjectReference Include="..\HlaX64.McpServer\HlaX64.McpServer.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
+
+  <Target Name="CopyMcpServerToOutput" AfterTargets="Build">
+    <PropertyGroup>
+      <_McpServerDll>$(MSBuildProjectDirectory)\..\HlaX64.McpServer\bin\$(Configuration)\net10.0\HlaX64.McpServer.dll</_McpServerDll>
+      <_McpServerDeps>$(MSBuildProjectDirectory)\..\HlaX64.McpServer\bin\$(Configuration)\net10.0\HlaX64.McpServer.deps.json</_McpServerDeps>
+      <_McpServerRuntime>$(MSBuildProjectDirectory)\..\HlaX64.McpServer\bin\$(Configuration)\net10.0\HlaX64.McpServer.runtimeconfig.json</_McpServerRuntime>
+    </PropertyGroup>
+    <Copy SourceFiles="$(_McpServerDll)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" Condition="Exists('$(_McpServerDll)')" />
+    <Copy SourceFiles="$(_McpServerDeps)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" Condition="Exists('$(_McpServerDeps)')" />
+    <Copy SourceFiles="$(_McpServerRuntime)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" Condition="Exists('$(_McpServerRuntime)')" />
+  </Target>
 
   <ItemGroup>
     <None Include="..\..\editors\vscode\syntaxes\hla64.tmLanguage.json" Link="Assets\syntax\hla64\syntaxes\hla64.tmLanguage.json">

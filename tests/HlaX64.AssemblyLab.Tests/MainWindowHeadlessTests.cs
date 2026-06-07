@@ -15,6 +15,6 @@ public class MainWindowHeadlessTests
 
         Assert.Contains("Toolchain", vm.ToolchainText);
         Assert.Contains("WSL:", vm.ToolchainText);
-        Assert.False(string.IsNullOrWhiteSpace(vm.DisasmText));
+        Assert.True(vm.BuildCommand.CanExecute(null));
     }
 }

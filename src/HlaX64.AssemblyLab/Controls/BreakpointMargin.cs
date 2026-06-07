@@ -19,10 +19,16 @@ public sealed class BreakpointMargin : AbstractMargin
     private readonly IBrush _markerBrush = new ImmutableSolidColorBrush(new Color(255, 195, 81, 92));
     private readonly IPen _markerPen = new ImmutablePen(new ImmutableSolidColorBrush(new Color(255, 240, 92, 104)), 1);
 
+    private readonly IBrush _currentLineBrush = new ImmutableSolidColorBrush(new Color(255, 78, 201, 176));
+    private readonly IPen _currentLinePen = new ImmutablePen(new ImmutableSolidColorBrush(new Color(255, 120, 240, 220)), 1.5);
+
     private readonly HashSet<int> _markedLines = [];
+    private int _currentLine = -1;
     private int _pointerOverLine = -1;
 
     public event Action<int>? BreakpointToggled;
+
+    public DebugCurrentLineHighlighter? CurrentLineHighlighter { get; set; }
 
     public BreakpointMargin()
     {
@@ -35,6 +41,18 @@ public sealed class BreakpointMargin : AbstractMargin
         foreach (var line in lines)
             if (line > 0)
                 _markedLines.Add(line);
+        InvalidateVisual();
+    }
+
+    public void SetCurrentLine(int line)
+    {
+        _currentLine = line > 0 ? line : -1;
+        if (CurrentLineHighlighter != null)
+        {
+            CurrentLineHighlighter.HighlightedLine = _currentLine;
+            TextView?.InvalidateLayer(KnownLayer.Background);
+        }
+
         InvalidateVisual();
     }
 
@@ -59,7 +77,6 @@ public sealed class BreakpointMargin : AbstractMargin
 
     private void OnDocumentChanged(object? sender, DocumentChangedEventArgs e)
     {
-        _markedLines.Clear();
         InvalidateVisual();
     }
 
@@ -120,6 +137,12 @@ public sealed class BreakpointMargin : AbstractMargin
 
             if (_markedLines.Contains(lineNumber))
                 context.DrawEllipse(_markerBrush, _markerPen, new Point(8, y), 6, 6);
+
+            if (_currentLine == lineNumber)
+            {
+                // Ring outside breakpoint dot so execution position stays visible (x64dbg-style).
+                context.DrawEllipse(null, _currentLinePen, new Point(8, y), 9, 9);
+            }
             else if (_pointerOverLine == lineNumber)
                 context.DrawEllipse(_pointerOverBrush, _pointerOverPen, new Point(8, y), 6, 6);
         }

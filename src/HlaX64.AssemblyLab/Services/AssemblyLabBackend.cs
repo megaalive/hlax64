@@ -11,6 +11,7 @@ using HlaX64.Compiler.Analysis;
 using HlaX64.Compiler.Debug;
 using HlaX64.Compiler.Diagnostics;
 using HlaX64.Compiler.Options;
+using HlaX64.DebugAdapter;
 
 namespace HlaX64.AssemblyLab.Services;
 
@@ -128,17 +129,38 @@ public sealed class AssemblyLabBackend
                 return new LabBuildResult(false, "NASM not found. Install NASM (https://nasm.us)", null, nasmFile, null, null, artifacts.SourceMap, artifacts.NasmCode);
 
             var nasmTool = new NasmTool(nasmPath);
-            if (!nasmTool.TryAssemble(nasmFile, objFile, out var nasmError, format: nasmFormat))
+            if (!nasmTool.TryAssemble(nasmFile, objFile, out var nasmError, format: nasmFormat, emitDebugInfo: true))
                 return new LabBuildResult(false, nasmError, null, nasmFile, mapFile, null, artifacts.SourceMap, artifacts.NasmCode);
 
             bool linkSuccess;
             string linkError = "";
+            var linkExtras = artifacts.Result.LinkLibraries.ToList();
             if (isWindows)
+            {
+                if (!RuntimeObjectProvider.TryBuildLinkExtras(
+                        artifacts.Result, isWindows, outputDir, out linkExtras, out var runtimeError))
+                {
+                    return new LabBuildResult(false, runtimeError ?? "Runtime link setup failed",
+                        null, nasmFile, mapFile, null, artifacts.SourceMap, artifacts.NasmCode);
+                }
+            }
+
+            if (isWindows)
+            {
+                if (!DebugProcessCleanup.TryEnsureWritable(outputFile))
+                {
+                    return new LabBuildResult(false,
+                        $"Cannot overwrite '{outputFile}' — a debugger still has it open.\n\n" +
+                        "Click Stop Debug, or run: taskkill /F /IM gdb.exe & taskkill /F /IM gdborig.exe",
+                        null, nasmFile, mapFile, null, artifacts.SourceMap, artifacts.NasmCode);
+                }
+
                 linkSuccess = LinkerTool.TryLinkWindows(objFile, outputFile, out linkError,
-                    extraLibraries: artifacts.Result.LinkLibraries);
+                    extraLibraries: linkExtras, emitDebugInfo: true);
+            }
             else
                 linkSuccess = LinkerTool.TryLink(objFile, outputFile, out linkError, out _,
-                    extraLibraries: artifacts.Result.LinkLibraries);
+                    extraLibraries: linkExtras);
 
             string? proofDir = null;
             if (proofBundle)
@@ -163,7 +185,11 @@ public sealed class AssemblyLabBackend
                         artifacts.NasmCode);
                 }
 
-                return new LabBuildResult(false, linkError, null, nasmFile, mapFile, null, artifacts.SourceMap, artifacts.NasmCode);
+                return new LabBuildResult(false,
+                    linkError + (linkError.Contains("permission denied", StringComparison.OrdinalIgnoreCase)
+                        ? "\n\nHint: stop the debug session (Stop Debug) or close any running hello.exe, then rebuild."
+                        : ""),
+                    null, nasmFile, mapFile, null, artifacts.SourceMap, artifacts.NasmCode);
             }
 
             if (!isWindows)
@@ -237,7 +263,8 @@ public sealed class AssemblyLabBackend
                     FileName = exeFile,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
-                    UseShellExecute = false
+                    UseShellExecute = false,
+                    CreateNoWindow = true
                 };
             }
 
@@ -320,11 +347,33 @@ public sealed class AssemblyLabBackend
         return sb.ToString();
     }
 
-    public string GetDisasmText(string? nasmText, SourceMapDocument? map, string? binaryPath = null)
-        => DisasmService.FormatDisasm(nasmText, map, binaryPath);
+    public string GetDisasmText(string? nasmText, SourceMapDocument? map, string? binaryPath = null,
+        string? sourcePath = null, string? target = null)
+    {
+        binaryPath = ResolveOutputBinary(sourcePath, target, binaryPath);
+        return DisasmService.FormatDisasm(nasmText, map, binaryPath);
+    }
+
+    public static string? ResolveOutputBinary(string? sourcePath, string? target, string? lastBuilt = null)
+    {
+        if (!string.IsNullOrEmpty(lastBuilt) && File.Exists(lastBuilt))
+            return lastBuilt;
+
+        if (string.IsNullOrWhiteSpace(sourcePath) || sourcePath is "(unsaved)")
+            return null;
+
+        var dir = GetBuildOutputDir(sourcePath);
+        var name = Path.GetFileNameWithoutExtension(sourcePath);
+        var isWindows = (target ?? "").Contains("windows", StringComparison.OrdinalIgnoreCase);
+        var path = Path.Combine(dir, name + (isWindows ? ".exe" : ""));
+        return File.Exists(path) ? path : null;
+    }
 
     public string ExplainForAgent(string sourcePath, string sourceText, string target)
         => ExplainAgentService.ExplainForAgentJson(sourcePath, sourceText, target);
+
+    public SuggestFixApplyResult ApplySuggestedFix(string sourceText, string agentJson)
+        => SuggestFixApplier.TryApplyFirstFromAgentJson(sourceText, agentJson);
 
     public string GetPlanText(string sourcePath, string target)
     {
@@ -346,6 +395,15 @@ public sealed class AssemblyLabBackend
 
     public bool HasProjectManifest(string folder)
         => File.Exists(Path.Combine(folder, "hla64.toml"));
+
+    public static string GetBuildOutputDir(string sourcePath)
+    {
+        if (sourcePath is "(unsaved)" or "")
+            return "(save file first)";
+        var sourceName = Path.GetFileNameWithoutExtension(sourcePath);
+        var dir = Path.GetDirectoryName(Path.GetFullPath(sourcePath))!;
+        return Path.Combine(dir, "build", sourceName);
+    }
 
     private static CompilationOptions BuildOptions(string target, bool emitSourceMap)
         => CompilationOptions.Default with
