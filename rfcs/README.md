@@ -33,3 +33,6 @@ HlaX64 uses lightweight RFCs for language design, ABI changes, and major tooling
 | [0011](0011-function-pointers.md) | Function pointers | Implemented (Phase 17 Sprint 3) |
 | [0012](0012-float-abi.md) | Float ABI MVP | Partial (Phase 17 Sprint 4) |
 | [0013](0013-variadic-calls.md) | Variadic + struct by-value | RFC / MVP (Phase 17 Sprint 5) |
+| [0022](0022-proof-bundle.md) | Proof bundle workflow | Implemented (Phase 23) |
+| [0023](0023-dap-mvp.md) | DAP and virtual docs | Partial (Phase 24) |
+| [0024](0024-assembly-lab.md) | AI Assembly Lab desktop | Implemented (Phase 15) |

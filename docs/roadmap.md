@@ -30,7 +30,7 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 | 12 | C ABI & C# interop | ✅ Done | `export procedure`, `--output-kind shared-library`, C header generator, C# P/Invoke generator |
 | 13 | MCP server | ✅ Done | 9 tools via stdio JSON-RPC (compile, build, run, test, explain-abi, dll) |
 | 14 | LSP & editor tooling | ✅ Hardened | + signatureHelp, highlights/references, semanticTokens, format codeAction |
-| 15 | AI Assembly Lab / GUI | 🚧 In progress | Avalonia cross-platform desktop Lab |
+| 15 | AI Assembly Lab / GUI | ✅ Done | Avalonia 11 desktop Lab — see RFC 0024 |
 | **16** | **Language core completion** | ✅ Done | const, expressions, enum, record, static, string model |
 | 17 | ABI and FFI completion | ✅ Done | Sprints 2–5: extern, fn ptr, float ABI, struct param, variadic RFC |
 | 18 | Compiler verification | ✅ Done | definite assignment, CFG, liveness, verify-stack/abi, fuzz |
@@ -41,9 +41,17 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 | 23 | Verified executable workflow | ✅ Hardened | capabilities extern/stdout, diff stack/return, proof-bundle tests |
 | 24 | Debugger and Assembly Lab | ✅ Hardened | DAP setBreakpoint/stackTrace stub, stack clobber doc, MCP abiIssues |
 
-### Phase 15 — Assembly Lab (in progress)
+### Phase 15 — Assembly Lab (done)
 
-Avalonia desktop app `HlaX64.AssemblyLab` — visual pipeline shell (source, IR/NASM, build/run, debug, proof bundle). See RFC 0024 when published.
+Avalonia desktop app `HlaX64.AssemblyLab` — visual pipeline shell (source, IR/NASM/ABI, build/run, source map sync, DAP MVP, proof bundle). See [RFC 0024](../rfcs/0024-assembly-lab.md) and [tutorial 06](tutorials/06-assembly-lab.md).
+
+- **Sprint 15.1 (done):** Avalonia 11 + MVVM shell, `AssemblyLabBackend.Compile`, open file/folder, live debounced diagnostics, CI build
+- **Sprint 15.2 (done):** IR/NASM/ABI tabs, Build/Run, target selector (`linux-x64-sysv` / `windows-x64-msabi`)
+- **Sprint 15.3 (done):** `.hlamap.json` load, diagnostic → NASM line highlight
+- **Sprint 15.4 (done):** Debug button + DAP output panel (MVP; Linux gdb via CLI follow-up)
+- **Sprint 15.5 (done):** Proof bundle export + capabilities panel
+- **Sprint 15.6 (done):** RFC 0024, tutorial, docs
+- **Deferred:** AvaloniaEdit + gutter breakpoints, Windows lldb DAP, embedded MCP explain client, disasm pane, release RID packaging
 
 ---
 
@@ -111,7 +119,7 @@ Avalonia desktop app `HlaX64.AssemblyLab` — visual pipeline shell (source, IR/
 - **Sprint 1 (MVP):** `hla64 debug --stdio` DAP + gdb (Linux); RFC 0023 partial
 - **Sprint 2 (MVP):** LSP virtual IR/NASM/stack; VS Code commands
 - **Sprint 3 (MVP):** MCP `explain` structured `suggestedFix`
-- **Deferred:** Windows DAP/lldb, desktop GUI (Phase 15)
+- **Deferred:** Windows DAP/lldb parity, Lab editor syntax highlight / gutter breakpoints, embedded MCP client
 
 ---
 
