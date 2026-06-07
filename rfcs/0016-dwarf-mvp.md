@@ -7,7 +7,11 @@
 
 ## Summary
 
-When `--debug-info` is set on Linux targets, NASM emits `%line` directives and a `.debug_line` stub section.
+When `--debug-info` is set on Linux targets, NASM emits `%line` directives and a `.debug_line` stub section with a file-table entry and placeholder unit header.
+
+## Hardening addendum
+
+Per-instruction `%line` directives remain best-effort; the stub section now records the source filename for future full DWARF consumers.
 
 ## Windows
 

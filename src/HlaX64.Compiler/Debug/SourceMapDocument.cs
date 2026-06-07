@@ -26,6 +26,25 @@ public sealed class SourceMapDocument
             PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
         });
     }
+
+    public SourceMapEntry? LookupBySource(int line, int? column = null)
+    {
+        SourceMapEntry? best = null;
+        foreach (var e in Entries)
+        {
+            if (e.SourceLine != line) continue;
+            if (column == null || e.SourceColumn == null || e.SourceColumn == column)
+                return e;
+            best ??= e;
+        }
+        return best;
+    }
+
+    public SourceMapEntry? LookupByNasmLine(int nasmLine)
+        => Entries.FirstOrDefault(e => e.NasmLine == nasmLine);
+
+    public SourceMapEntry? LookupByIrId(int irId)
+        => Entries.FirstOrDefault(e => e.IrId == irId);
 }
 
 public static class SourceMapBuilder

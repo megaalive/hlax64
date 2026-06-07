@@ -80,6 +80,38 @@ public sealed class InstructionDatabase
 
     public IEnumerable<string> Mnemonics => _byMnemonic.Keys.OrderBy(x => x, StringComparer.OrdinalIgnoreCase);
 
+    public string? SuggestClosest(string mnemonic)
+    {
+        string? best = null;
+        var bestDist = int.MaxValue;
+        foreach (var known in _byMnemonic.Keys)
+        {
+            var dist = LevenshteinDistance(mnemonic, known);
+            if (dist < bestDist && dist <= 3)
+            {
+                bestDist = dist;
+                best = known;
+            }
+        }
+        return best;
+    }
+
+    private static int LevenshteinDistance(string s, string t)
+    {
+        var d = new int[s.Length + 1, t.Length + 1];
+        for (int i = 0; i <= s.Length; i++) d[i, 0] = i;
+        for (int j = 0; j <= t.Length; j++) d[0, j] = j;
+        for (int i = 1; i <= s.Length; i++)
+        {
+            for (int j = 1; j <= t.Length; j++)
+            {
+                var cost = char.ToLowerInvariant(s[i - 1]) == char.ToLowerInvariant(t[j - 1]) ? 0 : 1;
+                d[i, j] = Math.Min(Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1), d[i - 1, j - 1] + cost);
+            }
+        }
+        return d[s.Length, t.Length];
+    }
+
     private sealed class InstructionDatabaseDocument
     {
         [JsonPropertyName("instructions")]

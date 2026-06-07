@@ -58,7 +58,7 @@ public class SemanticAnalyzerTests
         var diagnostics = analyzer.Analyze(program);
 
         Assert.True(diagnostics.HasErrors);
-        var error = Assert.Single(diagnostics.Diagnostics, d => d.Code == "HLAX0003");
+        var error = Assert.Single(diagnostics.Diagnostics, d => d.Code == "HLAX0071");
         Assert.Contains("moov", error.Message);
     }
 

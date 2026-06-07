@@ -40,12 +40,13 @@ public sealed class DisasmCommand : Command<DisasmCommand.Settings>
             var nasmLines = File.ReadAllLines(settings.Input);
             for (int i = 0; i < nasmLines.Length; i++)
             {
-                var entry = map?.Entries.FirstOrDefault(e => e.NasmLine == i + 1);
+                var entry = map?.LookupByNasmLine(i + 1);
                 lines.Add(new
                 {
                     nasmLine = i + 1,
                     nasm = nasmLines[i],
                     sourceLine = entry?.SourceLine,
+                    sourceColumn = entry?.SourceColumn,
                     irId = entry?.IrId
                 });
             }
@@ -53,16 +54,36 @@ public sealed class DisasmCommand : Command<DisasmCommand.Settings>
         else if (TryObjdump(settings.Input, out var objdumpLines))
         {
             foreach (var line in objdumpLines)
-                lines.Add(new { disasm = line });
+            {
+                var merged = new Dictionary<string, object?> { ["disasm"] = line };
+                if (map != null && TryParseObjdumpAddress(line, out var addr))
+                {
+                    var near = map.Entries.FirstOrDefault(e => e.NasmLine != null);
+                    if (near != null)
+                    {
+                        merged["sourceLine"] = near.SourceLine;
+                        merged["irId"] = near.IrId;
+                    }
+                }
+                lines.Add(merged);
+            }
         }
         else
         {
-            Report(settings, false, error: "Unsupported input (use .nasm or ELF binary with objdump available).");
+            Report(settings, false, error: "Unsupported input (use .nasm or ELF binary with objdump on PATH).");
             return 1;
         }
 
-        Report(settings, true, new { input = settings.Input, lines });
+        Report(settings, true, new { input = settings.Input, sourceMap = settings.SourceMapPath, lines });
         return 0;
+    }
+
+    private static bool TryParseObjdumpAddress(string line, out long address)
+    {
+        address = 0;
+        var parts = line.TrimStart().Split(':', 2);
+        if (parts.Length < 2) return false;
+        return long.TryParse(parts[0], System.Globalization.NumberStyles.HexNumber, null, out address);
     }
 
     private static bool TryObjdump(string binary, out List<string> lines)
@@ -112,15 +133,16 @@ public sealed class DisasmCommand : Command<DisasmCommand.Settings>
             return;
         }
 
-        var payload = result as dynamic;
-        foreach (var line in (IEnumerable<dynamic>)payload!.lines)
+        var json = JsonSerializer.Serialize(result);
+        using var doc = JsonDocument.Parse(json);
+        foreach (var line in doc.RootElement.GetProperty("lines").EnumerateArray())
         {
-            if (line.sourceLine != null)
-                Console.WriteLine($"{line.nasmLine,4} | src:{line.sourceLine,3} | {line.nasm}");
-            else if (line.nasm != null)
-                Console.WriteLine($"{line.nasmLine,4} | {line.nasm}");
+            if (line.TryGetProperty("sourceLine", out var src) && src.ValueKind != JsonValueKind.Null)
+                Console.WriteLine($"{line.GetProperty("nasmLine").GetInt32(),4} | src:{src.GetInt32(),3} | {line.GetProperty("nasm").GetString()}");
+            else if (line.TryGetProperty("nasm", out var nasm))
+                Console.WriteLine($"{line.GetProperty("nasmLine").GetInt32(),4} | {nasm.GetString()}");
             else
-                Console.WriteLine(line.disasm);
+                Console.WriteLine(line.GetProperty("disasm").GetString());
         }
     }
 }

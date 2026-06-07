@@ -18,8 +18,10 @@ hla64 emit-nasm app.hla64 -o app.nasm --source-map
 
 ## Format
 
-JSON with `version`, `source`, `compilerVersion`, `entries[]` (`sourceLine`, `irId`, `irOpcode`, `function`, `nasmLine`, `nasmLabel`).
+JSON with `version`, `source`, `compilerVersion`, `entries[]` (`sourceLine`, `sourceColumn`, `irId`, `irOpcode`, `function`, `nasmLine`, `nasmLabel`).
 
-## Deferred
+## Hardening addendum
+
+`SourceMapDocument` exposes `LookupBySource`, `LookupByNasmLine`, and `LookupByIrId` for round-trip lookup in tests and `hla64 disasm`.
 
 Full bidirectional stepping, column ranges, inline expansion.

@@ -485,28 +485,23 @@ public sealed class SemanticAnalyzer
     {
         var mnemonic = instr.Mnemonic.ToLowerInvariant();
 
-        // Check if mnemonic is known
-        if (!KnownMnemonics.Contains(mnemonic))
+        if (!_instructionDb.TryGet(mnemonic, out var info) || info == null)
         {
-            var suggestion = FindClosestRegisterOrInstruction(mnemonic);
+            var suggestion = _instructionDb.SuggestClosest(mnemonic) ?? FindClosestRegisterOrInstruction(mnemonic);
             _diagnostics.Error(
-                "HLAX0003",
-                $"Unknown instruction '{instr.Mnemonic}'",
+                "HLAX0071",
+                $"Unknown instruction '{instr.Mnemonic}' — see `hla64 list-instructions` or data/instructions.json",
                 instr.Line, instr.Column,
                 suggestion);
             return;
         }
 
-        // Check operand count
-        if (InstructionOperandCounts.TryGetValue(mnemonic, out var spec))
+        if (instr.Operands.Count < info.MinOps || instr.Operands.Count > info.MaxOps)
         {
-            if (instr.Operands.Count < spec.MinOps || instr.Operands.Count > spec.MaxOps)
-            {
-                _diagnostics.Error(
-                    "HLAX0004",
-                    $"Instruction '{instr.Mnemonic}' expects {spec.MinOps}-{spec.MaxOps} operands, but got {instr.Operands.Count}",
-                    instr.Line, instr.Column);
-            }
+            _diagnostics.Error(
+                "HLAX0004",
+                $"Instruction '{instr.Mnemonic}' expects {info.MinOps}-{info.MaxOps} operands, but got {instr.Operands.Count}",
+                instr.Line, instr.Column);
         }
 
         ValidateCpuFeatures(instr, mnemonic);

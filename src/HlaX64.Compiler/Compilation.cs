@@ -126,7 +126,7 @@ public class Compilation
             }
 
             if (Options.Optimization != OptimizationLevel.None)
-                PeepholeOptimizer.OptimizeLowered(result.LoweredFunctions);
+                PeepholeOptimizer.OptimizeLowered(result.LoweredFunctions, Options.Optimization);
 
             result.StringLiterals = abiLowerer.StringLiterals.ToList();
             result.Success = true;

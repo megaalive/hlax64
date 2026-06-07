@@ -236,6 +236,126 @@ public static class LanguageServerEditorServices
         }
     }
 
+    public static object? GetSignatureHelp(string source, int line, int character)
+    {
+        var callSite = FindCallSite(source, line, character);
+        if (callSite == null)
+        {
+            var word = GetWordAt(source, line, character);
+            if (!string.IsNullOrEmpty(word))
+            {
+                var lines = source.Replace("\r\n", "\n").Split('\n');
+                if (line >= 0 && line < lines.Length &&
+                    System.Text.RegularExpressions.Regex.IsMatch(
+                        lines[line], $@"call\s+{System.Text.RegularExpressions.Regex.Escape(word)}\s*\(",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                    callSite = new CallSiteInfo(word, 0);
+            }
+        }
+        if (callSite == null)
+            return null;
+
+        var sig = ResolveProcedureSignature(source, callSite.ProcedureName);
+        if (sig == null)
+            return null;
+
+        var paramLabels = sig.Parameters.Select(p => p.Label).ToArray();
+        var sigInfo = new
+        {
+            label = $"{sig.Name}({string.Join(", ", sig.Parameters.Select(p => p.Name))})",
+            documentation = sig.Kind switch
+            {
+                "extern" => $"extern procedure `{sig.Name}`.",
+                _ => $"procedure `{sig.Name}`."
+            },
+            parameters = sig.Parameters.Select(p => new { label = p.Label, documentation = p.Documentation }).ToArray()
+        };
+
+        return new
+        {
+            signatures = new[] { sigInfo },
+            activeSignature = 0,
+            activeParameter = Math.Min(callSite.ActiveParameter, Math.Max(0, paramLabels.Length - 1))
+        };
+    }
+
+    public static object[] GetDocumentHighlights(string source, int line, int character)
+    {
+        return FindSymbolOccurrences(source, line, character)
+            .Select(r => new { range = r })
+            .Cast<object>()
+            .ToArray();
+    }
+
+    public static object[] GetReferences(string source, int line, int character, string uri)
+    {
+        return FindSymbolOccurrences(source, line, character)
+            .Select(r => new { uri, range = r })
+            .Cast<object>()
+            .ToArray();
+    }
+
+    public static object GetSemanticTokens(string source)
+    {
+        var data = new List<int>();
+        var lines = source.Replace("\r\n", "\n").Split('\n');
+        var prevLine = 0;
+        var prevChar = 0;
+
+        for (int lineIdx = 0; lineIdx < lines.Length; lineIdx++)
+        {
+            var line = lines[lineIdx];
+            foreach (var token in TokenizeSemanticLine(line))
+            {
+                if (token.Length <= 0) continue;
+                var deltaLine = lineIdx - prevLine;
+                var deltaChar = deltaLine == 0 ? token.Start - prevChar : token.Start;
+                data.Add(deltaLine);
+                data.Add(deltaChar);
+                data.Add(token.Length);
+                data.Add(token.Type);
+                data.Add(0);
+                prevLine = lineIdx;
+                prevChar = token.Start + token.Length;
+            }
+        }
+
+        return new { data };
+    }
+
+    public static object GetSemanticTokensLegend() => new
+    {
+        tokenTypes = new[] { "keyword", "type", "register", "string", "number", "function", "variable" },
+        tokenModifiers = Array.Empty<string>()
+    };
+
+    public static object? GetCodeActions(string source, int startLine, int startChar, int endLine, int endChar)
+    {
+        var edits = FormatDocument(source);
+        if (edits == null)
+            return new { actions = Array.Empty<object>() };
+
+        return new
+        {
+            actions = new[]
+            {
+                new
+                {
+                    title = "Format document",
+                    kind = "quickfix",
+                    isPreferred = true,
+                    edit = new
+                    {
+                        changes = new Dictionary<string, object?>
+                        {
+                            ["*"] = edits
+                        }
+                    }
+                }
+            }
+        };
+    }
+
     public static string? GetVirtualDocument(string kind, string source, string? filePath = null)
     {
         var path = filePath ?? "(virtual)";
@@ -255,16 +375,25 @@ public static class LanguageServerEditorServices
         };
     }
 
+    private static readonly string[] CallerSavedRegisters =
+    [
+        "rax", "rcx", "rdx", "rsi", "rdi", "r8", "r9", "r10", "r11"
+    ];
+
     private static string DescribeStackLayout(LoweredFunction fn)
     {
         var lines = new List<string>
         {
             $"procedure {fn.Name}",
+            "ABI: linux-x64-sysv (default)",
             $"  stack frame: {fn.StackFrameSize} bytes",
-            $"  preserved: {string.Join(", ", fn.PreservedRegisters)}"
+            $"  preserved (callee-saved): {(fn.PreservedRegisters.Count > 0 ? string.Join(", ", fn.PreservedRegisters) : "(none)")}",
+            $"  caller-saved (clobbered across call): {string.Join(", ", CallerSavedRegisters)}"
         };
         foreach (var p in fn.Parameters)
             lines.Add($"  param[{p.Index}] {p.Name}");
+        if (fn.RequiredExterns.Count > 0)
+            lines.Add($"  externs: {string.Join(", ", fn.RequiredExterns)}");
         return string.Join('\n', lines);
     }
 
@@ -303,12 +432,30 @@ public static class LanguageServerEditorServices
         return text[start..end];
     }
 
+    private sealed record ProcedureSignature(string Name, string Kind, List<(string Name, string Label, string Documentation)> Parameters);
+
+    private sealed record CallSiteInfo(string ProcedureName, int ActiveParameter);
+
+    private sealed record SemanticTokenSpan(int Start, int Length, int Type);
+
     private static List<SymbolInfo> CollectSymbols(string source)
     {
         try
         {
             var program = new Parser(new Lexer(source).Tokenize()).Parse();
             var symbols = new List<SymbolInfo>();
+
+            foreach (var ext in program.Externs.OfType<ExternProcedureNode>())
+            {
+                symbols.Add(new SymbolInfo(
+                    ext.Name, "extern", ext.Line, ext.Column, ext.Line, ext.Column + ext.Name.Length, null));
+                foreach (var param in ext.Parameters)
+                {
+                    symbols.Add(new SymbolInfo(
+                        param.Name, "parameter", param.Line, param.Column,
+                        param.Line, param.Column + param.Name.Length, ext.Name));
+                }
+            }
 
             foreach (var stmt in program.Statements.OfType<ProcedureNode>())
             {
@@ -336,6 +483,154 @@ public static class LanguageServerEditorServices
         catch (ParseException)
         {
             return [];
+        }
+    }
+
+    private static ProcedureSignature? ResolveProcedureSignature(string source, string name)
+    {
+        try
+        {
+            var program = new Parser(new Lexer(source).Tokenize()).Parse();
+
+            foreach (var ext in program.Externs.OfType<ExternProcedureNode>())
+            {
+                if (!ext.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                var ps = ext.Parameters.Select(p => (p.Name, $"{p.Name}: {p.Type}", $"extern parameter ({p.Type})")).ToList();
+                return new ProcedureSignature(ext.Name, "extern", ps);
+            }
+
+            foreach (var proc in program.Statements.OfType<ProcedureNode>())
+            {
+                if (!proc.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                var ps = proc.Parameters.Select(p => (p.Name, $"{p.Name}: {p.Type}", $"parameter ({p.Type})")).ToList();
+                return new ProcedureSignature(proc.Name, "procedure", ps);
+            }
+        }
+        catch (ParseException)
+        {
+            return null;
+        }
+
+        return null;
+    }
+
+    private static CallSiteInfo? FindCallSite(string source, int line, int character)
+    {
+        var lines = source.Replace("\r\n", "\n").Split('\n');
+        if (line < 0 || line >= lines.Length)
+            return null;
+
+        var text = lines[line];
+        if (character < 0) character = 0;
+        if (character > text.Length) character = text.Length;
+
+        var parenIdx = text.LastIndexOf('(', character - 1);
+        if (parenIdx < 0)
+            return null;
+
+        var before = text[..parenIdx].TrimEnd();
+        var match = System.Text.RegularExpressions.Regex.Match(before, @"(?:call\s+)?(\w+)\s*$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        if (!match.Success)
+            return null;
+
+        var procName = match.Groups[1].Value;
+        if (procName.Equals("call", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        var between = text.Substring(parenIdx + 1, Math.Max(0, character - parenIdx - 1));
+        var active = between.Count(c => c == ',');
+        return new CallSiteInfo(procName, active);
+    }
+
+    private static List<object> FindSymbolOccurrences(string source, int line, int character)
+    {
+        var word = GetWordAt(source, line, character);
+        if (string.IsNullOrEmpty(word))
+            return [];
+
+        var symbols = CollectSymbols(source);
+        var enclosing = FindEnclosingProcedure(symbols, line);
+        var symbol = FindSymbol(symbols, word, enclosing);
+        if (symbol == null && !symbols.Any(s => s.Name.Equals(word, StringComparison.OrdinalIgnoreCase)))
+            return [];
+
+        var scoped = symbol?.Kind is "variable" or "parameter";
+        var container = scoped ? symbol!.ContainerProcedure : null;
+
+        var results = new List<object>();
+        var lines = source.Replace("\r\n", "\n").Split('\n');
+        for (int i = 0; i < lines.Length; i++)
+        {
+            var text = lines[i];
+            var procAtLine = scoped ? FindEnclosingProcedure(symbols, i) : null;
+            if (scoped && container != null && procAtLine != null &&
+                !container.Equals(procAtLine, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var col = 0;
+            while (col < text.Length)
+            {
+                if (col + word.Length <= text.Length &&
+                    text.AsSpan(col, word.Length).Equals(word, StringComparison.OrdinalIgnoreCase) &&
+                    (col == 0 || !IsWordChar(text[col - 1])) &&
+                    (col + word.Length >= text.Length || !IsWordChar(text[col + word.Length])))
+                {
+                    results.Add(ToRange(i, col, i, col + word.Length));
+                }
+                col++;
+            }
+        }
+
+        return results;
+    }
+
+    private static IEnumerable<SemanticTokenSpan> TokenizeSemanticLine(string line)
+    {
+        int i = 0;
+        while (i < line.Length)
+        {
+            if (char.IsWhiteSpace(line[i])) { i++; continue; }
+
+            if (line[i] == '"')
+            {
+                int start = i;
+                i++;
+                while (i < line.Length && line[i] != '"')
+                {
+                    if (line[i] == '\\' && i + 1 < line.Length) i++;
+                    i++;
+                }
+                if (i < line.Length) i++;
+                yield return new SemanticTokenSpan(start, i - start, 3);
+                continue;
+            }
+
+            if (char.IsDigit(line[i]) || (line[i] == '$' && i + 1 < line.Length && char.IsDigit(line[i + 1])))
+            {
+                int start = i;
+                if (line[i] == '$') i++;
+                while (i < line.Length && (char.IsLetterOrDigit(line[i]) || line[i] == '_')) i++;
+                yield return new SemanticTokenSpan(start, i - start, 4);
+                continue;
+            }
+
+            if (IsWordChar(line[i]))
+            {
+                int start = i;
+                while (i < line.Length && IsWordChar(line[i])) i++;
+                var word = line[start..i];
+                int type = 6;
+                if (Keywords.Contains(word, StringComparer.OrdinalIgnoreCase)) type = 0;
+                else if (Types.Contains(word, StringComparer.OrdinalIgnoreCase)) type = 1;
+                else if (Registers.Contains(word, StringComparer.OrdinalIgnoreCase)) type = 2;
+                else if (Mnemonics.Contains(word, StringComparer.OrdinalIgnoreCase)) type = 5;
+                yield return new SemanticTokenSpan(start, i - start, type);
+                continue;
+            }
+
+            i++;
         }
     }
 

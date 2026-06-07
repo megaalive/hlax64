@@ -333,6 +333,7 @@ public class HlaX64Tools
         var triple = TargetTriple.Parse(target ?? "linux-x64-sysv");
         var options = CompilationOptions.Default with { Target = triple };
         var report = HlaX64.Cli.Services.ExplainReport.Create(source, sourceText, options);
+        var verify = HlaX64.Cli.Services.ExplainReport.CollectVerificationWarnings(sourceText, options);
 
         return JsonSerializer.Serialize(new
         {
@@ -350,6 +351,8 @@ public class HlaX64Tools
                 span = new { d.Line, d.Column },
                 suggestedFix = SuggestFix(d)
             }),
+            abiIssues = verify.AbiIssues,
+            clobberWarnings = verify.ClobberWarnings,
             ir = report.Success ? report.IrFunctions.Select(f => f.ToString()).ToArray() : null,
             lowered = report.Success ? report.LoweredFunctions.Select(HlaX64.Cli.Services.ExplainReport.DescribeLowered).ToArray() : null,
             nasm = report.Nasm
@@ -358,7 +361,7 @@ public class HlaX64Tools
 
     private static object? SuggestFix(HlaX64.Compiler.Diagnostics.Diagnostic d)
     {
-        if (d.Code == "HLAX0003")
+        if (d.Code == "HLAX0003" || d.Code == "HLAX0071")
             return new { template = "Check mnemonic spelling or run `hla64 list-instructions`." };
         if (d.Code == "HLAX0070")
             return new { template = "Add `--features +sse2` (or required feature) to build flags." };

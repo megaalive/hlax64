@@ -1,4 +1,7 @@
 using System.ComponentModel;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using HlaX64.Cli.Json;
 using HlaX64.Cli.Project;
 using HlaX64.Compiler;
@@ -26,7 +29,26 @@ public sealed class RestoreCommand : Command<RestoreCommand.Settings>
             return 1;
         }
 
+        var manifestText = File.ReadAllText(path);
         var manifest = ProjectManifest.Load(path);
+        var manifestDir = Path.GetDirectoryName(Path.GetFullPath(path))!;
+        var lockPath = Path.Combine(manifestDir, "hla64.lock");
+        var hash = Sha256Hex(manifestText);
+
+        var lockDoc = new
+        {
+            schemaVersion = 1,
+            name = manifest.Name,
+            version = manifest.Version,
+            manifestHash = hash,
+            manifestPath = Path.GetFileName(path),
+            resolvedAt = DateTime.UtcNow.ToString("o"),
+            sources = manifest.Sources,
+            dependencies = manifest.Dependencies,
+            note = "Lock file records resolved manifest hash; dependency resolution deferred post-MVP"
+        };
+        File.WriteAllText(lockPath, JsonSerializer.Serialize(lockDoc, new JsonSerializerOptions { WriteIndented = true }));
+
         Report(settings, true, new
         {
             manifest = manifest.Name,
@@ -34,7 +56,8 @@ public sealed class RestoreCommand : Command<RestoreCommand.Settings>
             target = manifest.Target,
             sources = manifest.Sources,
             dependencies = manifest.Dependencies,
-            note = "Restore MVP stub — dependency resolution deferred to post-MVP"
+            lockFile = lockPath,
+            manifestHash = hash
         });
         return 0;
     }
@@ -43,6 +66,12 @@ public sealed class RestoreCommand : Command<RestoreCommand.Settings>
     {
         var direct = Path.Combine(dir, "hla64.toml");
         return File.Exists(direct) ? direct : null;
+    }
+
+    private static string Sha256Hex(string text)
+    {
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(text));
+        return Convert.ToHexString(hash).ToLowerInvariant();
     }
 
     private static void Report(Settings settings, bool success, object? result = null, string? error = null)
@@ -66,6 +95,6 @@ public sealed class RestoreCommand : Command<RestoreCommand.Settings>
             return;
         }
 
-        Console.WriteLine("Restore complete (stub — see --json).");
+        Console.WriteLine("Restore complete — wrote hla64.lock (see --json).");
     }
 }

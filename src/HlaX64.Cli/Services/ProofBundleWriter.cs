@@ -20,7 +20,9 @@ public static class ProofBundleWriter
         CompileArtifacts artifacts,
         string nasmFile,
         string? objFile,
-        string outputFile)
+        string outputFile,
+        bool includeTestsSummary = false,
+        string? projectDir = null)
     {
         var bundleDir = Path.Combine(outputDir, "proof-bundle");
         Directory.CreateDirectory(bundleDir);
@@ -40,7 +42,9 @@ public static class ProofBundleWriter
             filesystemAccess = capabilities.FilesystemAccess,
             syscalls = capabilities.Syscalls,
             externalLibraries = capabilities.ExternalLibraries,
-            externProcedures = capabilities.ExternProcedures
+            externProcedures = capabilities.ExternProcedures,
+            hasStdoutPut = capabilities.HasStdoutPut,
+            hasExtern = capabilities.HasExtern
         }, new JsonSerializerOptions { WriteIndented = true }));
 
         var report = ExplainReport.Create(sourceFile, sourceText, options);
@@ -58,6 +62,17 @@ public static class ProofBundleWriter
             }, new JsonSerializerOptions { WriteIndented = true }));
         }
 
+        if (includeTestsSummary)
+        {
+            var testsPath = Path.Combine(projectDir ?? Path.GetDirectoryName(sourceFile)!, "tests.json");
+            if (File.Exists(testsPath))
+                File.Copy(testsPath, Path.Combine(bundleDir, "tests.json"), overwrite: true);
+        }
+
+        var artifactsList = new List<string> { "binary", "nasm", "ir.json", "hlamap.json", "abi.json", "capabilities.json", "build.json" };
+        if (includeTestsSummary && File.Exists(Path.Combine(bundleDir, "tests.json")))
+            artifactsList.Add("tests.json");
+
         var buildMeta = new
         {
             schemaVersion = 1,
@@ -67,7 +82,7 @@ public static class ProofBundleWriter
             target = options.Target.ToString(),
             outputKind = options.OutputKind.ToString().ToLowerInvariant(),
             optimization = options.Optimization.ToString(),
-            artifacts = new[] { "binary", "nasm", "ir.json", "hlamap.json", "abi.json", "capabilities.json", "build.json" }
+            artifacts = artifactsList
         };
         File.WriteAllText(Path.Combine(bundleDir, "build.json"),
             JsonSerializer.Serialize(buildMeta, new JsonSerializerOptions { WriteIndented = true }));

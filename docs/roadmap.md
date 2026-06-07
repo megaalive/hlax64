@@ -29,17 +29,17 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 | 11 | Windows x64 backend | ✅ Done | RCX/RDX/R8/R9, 32-byte shadow space, `ExitProcess`, `WriteConsoleA`, `--target windows-x64-msabi` |
 | 12 | C ABI & C# interop | ✅ Done | `export procedure`, `--output-kind shared-library`, C header generator, C# P/Invoke generator |
 | 13 | MCP server | ✅ Done | 9 tools via stdio JSON-RPC (compile, build, run, test, explain-abi, dll) |
-| 14 | LSP & editor tooling | ✅ MVP | diagnostics, hover, completion, go-to-definition, document symbols, format-on-save; VS Code client |
+| 14 | LSP & editor tooling | ✅ Hardened | + signatureHelp, highlights/references, semanticTokens, format codeAction |
 | 15 | AI Assembly Lab / GUI | ⏳ Pending | eksperimen UI (Avalonia/WPF) |
 | **16** | **Language core completion** | ✅ Done | const, expressions, enum, record, static, string model |
 | 17 | ABI and FFI completion | ✅ Done | Sprints 2–5: extern, fn ptr, float ABI, struct param, variadic RFC |
 | 18 | Compiler verification | ✅ Done | definite assignment, CFG, liveness, verify-stack/abi, fuzz |
-| 19 | Debug and explainability | ✅ MVP | source map, DWARF MVP, disassembly, trace mode |
-| 20 | Optimization | ✅ MVP | const fold O1, DCE/peephole, regalloc RFC |
-| 21 | CPU and SIMD | ✅ MVP | instruction DB, SSE2 gates, intrinsics/atomics RFC stubs |
-| 22 | Modules and packages | ✅ MVP | manifest, restore stub, reproducible verify |
-| 23 | Verified executable workflow | ✅ MVP | proof bundle, capability manifest, semantic diff, plan |
-| 24 | Debugger and Assembly Lab | ✅ MVP | DAP stub, LSP virtual docs, MCP repair contract |
+| 19 | Debug and explainability | ✅ Hardened | source map lookup, DWARF file table, disasm+objdump, `--trace` int3 |
+| 20 | Optimization | ✅ Hardened | O1 fold, O2 propagation + xor-zero peephole |
+| 21 | CPU and SIMD | ✅ Hardened | HLAX0071 + instruction DB (34 mnemonics), AVX2 gates |
+| 22 | Modules and packages | ✅ Hardened | `hla64.lock`, manifest `build` |
+| 23 | Verified executable workflow | ✅ Hardened | capabilities extern/stdout, diff stack/return, proof-bundle tests |
+| 24 | Debugger and Assembly Lab | ✅ Hardened | DAP setBreakpoint/stackTrace stub, stack clobber doc, MCP abiIssues |
 
 ### Phase 16 sprint notes
 
@@ -66,31 +66,32 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 - **Sprint 4 (done):** `hla64 verify-stack`; `StackVerifier.cs`; HLAX0064–68; RFC 0014
 - **Sprint 5 (done):** `hla64 verify-abi`; per-procedure ABI report (params, return, externs)
 - **Sprint 6 (done):** fuzz tests (UTF-8 lexer, formatter round-trip, manifest JSON); `docs/development.md`
-- **Sprint 7 (deferred):** differential testing MVP → Phase 19 (RFC 0014)
+- **Sprint 7 (done):** differential testing for `examples/01-arithmetic/simple.hla64` (curriculum manifest exit code 3)
 
 ### Phase 19 sprint notes
 
 - **Sprint 1 (MVP):** `*.hlamap.json` via `--source-map`; IR id annotations; RFC 0015
 - **Sprint 2 (MVP):** `--debug-info` NASM `%line` + `.debug_line` stub (Linux); RFC 0016
-- **Sprint 3 (MVP):** `hla64 disasm`; `--trace` procedure entry/exit comments
+- **Sprint 3 (MVP):** `hla64 disasm`; `--trace` procedure entry/exit + Linux `int3` breakpoint
+- **Hardening:** `SourceMapDocument.LookupBySource/NasmLine/IrId`; DWARF file table stub; objdump merge when on PATH
 - **Deferred:** full DWARF on Windows, runtime trace sink
 
 ### Phase 20 sprint notes
 
-- **Sprint 1 (MVP):** `--optimize O0|O1`; IR constant folding; RFC 0017
-- **Sprint 2 (MVP):** peephole `mov reg,reg` / `add reg,0`
+- **Sprint 1 (MVP):** `--optimize O0|O1|O2`; IR constant folding + copy propagation (O2); RFC 0017
+- **Sprint 2 (MVP):** peephole `mov reg,reg`, `add reg,0`, `mov reg,0` → `xor reg,reg` (O2)
 - **Deferred:** `--register-mode assisted`, global DCE, propagation
 
 ### Phase 21 sprint notes
 
 - **Sprint 1 (MVP):** `data/instructions.json`; `hla64 list-instructions`; RFC 0018
-- **Sprint 2 (MVP):** `--cpu` / `--features`; HLAX0070; SSE2 mnemonics; `sse2-add.hla64`
+- **Sprint 2 (MVP):** `--cpu` / `--features`; HLAX0070/0071; SSE2 + AVX2 (`vaddpd`, `vmovapd`); 34 mnemonics in DB
 - **Deferred:** AVX2 codegen, intrinsics (RFC 0019), atomics (RFC 0020)
 
 ### Phase 22 sprint notes
 
 - **Sprint 1 (MVP):** `hla64.toml` schema; `hla64 new console`; RFC 0021
-- **Sprint 2 (MVP):** `hla64 restore` stub; import graph via manifest `sources`
+- **Sprint 2 (MVP):** `hla64 restore` writes `hla64.lock`; `hla64 build` reads `hla64.toml` sources
 - **Sprint 3 (MVP):** `hla64 verify-reproducible`; `hla64.lock` schema documented
 
 ### Phase 23 sprint notes
