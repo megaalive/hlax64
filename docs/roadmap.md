@@ -30,7 +30,7 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 | 12 | C ABI & C# interop | ✅ Done | `export procedure`, `--output-kind shared-library`, C header generator, C# P/Invoke generator |
 | 13 | MCP server | ✅ Done | 9 tools via stdio JSON-RPC (compile, build, run, test, explain-abi, dll) |
 | 14 | LSP & editor tooling | ✅ Hardened | + signatureHelp, highlights/references, semanticTokens, format codeAction |
-| 15 | AI Assembly Lab / GUI | ⏳ Planned | [Rencana matang](phase-15-assembly-lab-plan.md) — Avalonia cross-platform |
+| 15 | AI Assembly Lab / GUI | 🚧 In progress | Avalonia cross-platform desktop Lab |
 | **16** | **Language core completion** | ✅ Done | const, expressions, enum, record, static, string model |
 | 17 | ABI and FFI completion | ✅ Done | Sprints 2–5: extern, fn ptr, float ABI, struct param, variadic RFC |
 | 18 | Compiler verification | ✅ Done | definite assignment, CFG, liveness, verify-stack/abi, fuzz |
@@ -41,12 +41,9 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 | 23 | Verified executable workflow | ✅ Hardened | capabilities extern/stdout, diff stack/return, proof-bundle tests |
 | 24 | Debugger and Assembly Lab | ✅ Hardened | DAP setBreakpoint/stackTrace stub, stack clobber doc, MCP abiIssues |
 
-### Phase 15 — Assembly Lab (planned)
+### Phase 15 — Assembly Lab (in progress)
 
-Rencana eksekusi lengkap: **[docs/phase-15-assembly-lab-plan.md](phase-15-assembly-lab-plan.md)** (Avalonia, 6 sprint, Linux/Windows/macOS x64).
-
-- **Belum dimulai** — prasyarat Phase 14/18/19–24 sudah terpenuhi
-- **Bukan** duplikasi VS Code; Lab = shell visual pipeline + agent + proof bundle
+Avalonia desktop app `HlaX64.AssemblyLab` — visual pipeline shell (source, IR/NASM, build/run, debug, proof bundle). See RFC 0024 when published.
 
 ---
 
