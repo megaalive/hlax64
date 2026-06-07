@@ -92,7 +92,8 @@ public sealed class LinkerTool
                 Arguments = "--status",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                UseShellExecute = false
+                UseShellExecute = false,
+                CreateNoWindow = true
             });
             if (process == null)
                 return false;
@@ -140,7 +141,8 @@ public sealed class LinkerTool
                     Arguments = arguments,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
-                    UseShellExecute = false
+                    UseShellExecute = false,
+                    CreateNoWindow = true
                 };
                 using var process = Process.Start(psi);
                 if (process == null)
@@ -256,7 +258,8 @@ public sealed class LinkerTool
                 Arguments = args,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                UseShellExecute = false
+                UseShellExecute = false,
+                CreateNoWindow = true
             };
 
             using var process = Process.Start(psi);
@@ -320,7 +323,7 @@ public sealed class LinkerTool
     /// Uses lld-link or MSVC link.exe.
     /// </summary>
     public static bool TryLinkWindows(string objectFile, string output, out string error, bool shared = false,
-        IEnumerable<string>? extraLibraries = null)
+        IEnumerable<string>? extraLibraries = null, bool emitDebugInfo = false)
     {
         if (!TryFindWindowsLinker(out var linker, out var displayName, out var subCommand))
         {
@@ -335,22 +338,24 @@ public sealed class LinkerTool
 
             string entryFlag = "/ENTRY:_start";
             string subsystemFlag = "/SUBSYSTEM:CONSOLE";
+            string fixedImageFlags = "/DYNAMICBASE:NO /FIXED";
             string kernel32Lib = "kernel32.lib";
 
+            string debugFlag = emitDebugInfo ? "/DEBUG " : "";
             string linkExtras = FormatExtraLibraries(extraLibraries, isWindows: true);
 
             string args;
             if (shared)
             {
                 args = isLld
-                    ? $"/NOLOGO /DLL {entryFlag} {subsystemFlag} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib} {linkExtras}"
-                    : $"/NOLOGO /DLL {entryFlag} {subsystemFlag} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib} {linkExtras}";
+                    ? $"/NOLOGO {debugFlag}/DLL {entryFlag} {subsystemFlag} {fixedImageFlags} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib} {linkExtras}"
+                    : $"/NOLOGO {debugFlag}/DLL {entryFlag} {subsystemFlag} {fixedImageFlags} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib} {linkExtras}";
             }
             else
             {
                 args = isLld
-                    ? $"/NOLOGO {entryFlag} {subsystemFlag} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib} {linkExtras}"
-                    : $"/NOLOGO {entryFlag} {subsystemFlag} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib} {linkExtras}";
+                    ? $"/NOLOGO {debugFlag}{entryFlag} {subsystemFlag} {fixedImageFlags} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib} {linkExtras}"
+                    : $"/NOLOGO {debugFlag}{entryFlag} {subsystemFlag} {fixedImageFlags} /OUT:\"{output}\" \"{objectFile}\" {kernel32Lib} {linkExtras}";
             }
 
             var psi = new ProcessStartInfo
@@ -359,7 +364,8 @@ public sealed class LinkerTool
                 Arguments = args,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                UseShellExecute = false
+                UseShellExecute = false,
+                CreateNoWindow = true
             };
 
             using var process = Process.Start(psi);
@@ -374,7 +380,7 @@ public sealed class LinkerTool
 
             if (process.ExitCode != 0)
             {
-                error = $"Linking failed (using {displayName}):\n{stderr}\n\n{BuildWindowsInstallErrorMessage()}";
+                error = $"Linking failed (using {displayName}):\n{stderr.Trim()}";
                 return false;
             }
 
@@ -416,9 +422,17 @@ Options to fix:
         {
             if (string.IsNullOrWhiteSpace(lib))
                 continue;
-            parts.Add(isWindows && !lib.EndsWith(".lib", StringComparison.OrdinalIgnoreCase)
-                ? lib + ".lib"
-                : lib);
+            if (isWindows &&
+                !lib.EndsWith(".lib", StringComparison.OrdinalIgnoreCase) &&
+                !lib.EndsWith(".obj", StringComparison.OrdinalIgnoreCase) &&
+                !lib.Contains('\\') && !lib.Contains('/'))
+            {
+                parts.Add(lib + ".lib");
+            }
+            else
+            {
+                parts.Add(lib.Contains(' ') ? $"\"{lib}\"" : lib);
+            }
         }
 
         return parts.Count == 0 ? string.Empty : string.Join(' ', parts);

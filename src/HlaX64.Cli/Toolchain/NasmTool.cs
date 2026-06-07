@@ -52,7 +52,8 @@ public sealed class NasmTool
                     Arguments = versionArgs,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
-                    UseShellExecute = false
+                    UseShellExecute = false,
+                    CreateNoWindow = true
                 };
                 using var process = Process.Start(psi);
                 if (process != null)
@@ -90,7 +91,8 @@ public sealed class NasmTool
         return (nasmPath[..idx], nasmPath[(idx + 1)..]);
     }
 
-    public bool TryAssemble(string nasmSource, string objectFile, out string error, string format = "elf64")
+    public bool TryAssemble(string nasmSource, string objectFile, out string error, string format = "elf64",
+        bool emitDebugInfo = false)
     {
         var nasmPath = _nasmPath;
         if (string.IsNullOrEmpty(nasmPath) && !TryFindNasm(out nasmPath))
@@ -108,9 +110,15 @@ public sealed class NasmTool
             var srcArg = isWsl ? LinkerTool.ToWslPath(nasmSource) : nasmSource;
             var objArg = isWsl ? LinkerTool.ToWslPath(objectFile) : objectFile;
 
+            var debugArgs = emitDebugInfo
+                ? format.Equals("win64", StringComparison.OrdinalIgnoreCase)
+                    ? "-g -F cv8 "
+                    : "-g -F dwarf "
+                : "";
+
             var nasmArgs = string.IsNullOrEmpty(prefixArgs)
-                ? $"-f {format} \"{srcArg}\" -o \"{objArg}\""
-                : $"{prefixArgs} -f {format} \"{srcArg}\" -o \"{objArg}\"";
+                ? $"{debugArgs}-f {format} \"{srcArg}\" -o \"{objArg}\""
+                : $"{prefixArgs} {debugArgs}-f {format} \"{srcArg}\" -o \"{objArg}\"";
 
             var psi = new ProcessStartInfo
             {
@@ -118,7 +126,8 @@ public sealed class NasmTool
                 Arguments = nasmArgs,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                UseShellExecute = false
+                UseShellExecute = false,
+                CreateNoWindow = true
             };
 
             using var process = Process.Start(psi);

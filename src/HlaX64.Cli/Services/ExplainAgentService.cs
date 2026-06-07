@@ -46,12 +46,24 @@ public sealed class ExplainAgentService
 
     public static object? SuggestFix(Diagnostic d)
     {
+        if (d.Suggestion != null)
+        {
+            return new
+            {
+                template = $"Replace with '{d.Suggestion}'",
+                replacement = d.Suggestion,
+                line = d.Line,
+                column = d.Column,
+                applyKind = "replaceToken"
+            };
+        }
+
         if (d.Code == "HLAX0003" || d.Code == "HLAX0071")
             return new { template = "Check mnemonic spelling or run `hla64 list-instructions`." };
         if (d.Code == "HLAX0070")
             return new { template = "Add `--features +sse2` (or required feature) to build flags." };
         if (d.Code == "HLAX0060")
             return new { template = "Initialize `{var}` before use or assign in all paths." };
-        return d.Suggestion != null ? new { template = d.Suggestion } : null;
+        return null;
     }
 }
