@@ -36,6 +36,12 @@ internal static class AbiCallLoweringHelper
         List<string> externsOut)
     {
         var target = ParseCallTarget(inst.Immediate);
+        if (target.IsExtern && externs?.TryGet(target.Symbol, out var ext) == true && ext.IsVariadic)
+        {
+            AppendSysVVariadicCall(sb, inst, caller, resolve, externs, procTypes, records, externsOut, target);
+            return;
+        }
+
         if (target.IsExtern)
             externsOut.Add(target.Symbol);
 
@@ -118,6 +124,59 @@ internal static class AbiCallLoweringHelper
         int cleanup = stackArgs.Count * 8 + alignPad;
         sb.Append($"    add rsp, {cleanup}      ; restore stack");
     }
+
+    private static void AppendSysVVariadicCall(StringBuilder sb, IrInstruction inst, IrFunction caller,
+        Func<IrValue?, string> resolve,
+        ExternProcedureRegistry? externs, ProcedureTypeRegistry? procTypes, RecordTypeRegistry? records,
+        List<string> externsOut, CallTargetInfo target)
+    {
+        externsOut.Add(target.Symbol);
+        string[] gprs = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"];
+        int regGpr = 0;
+        int regXmm = 0;
+        var stackArgs = new List<IrValue>();
+
+        for (int i = 0; i < inst.Operands.Count; i++)
+        {
+            if (regGpr < gprs.Length)
+                regGpr++;
+            else
+                stackArgs.Add(inst.Operands[i]);
+        }
+
+        for (int i = stackArgs.Count - 1; i >= 0; i--)
+            sb.AppendLine($"    push {resolve(stackArgs[i])}      ; variadic stack arg");
+
+        regGpr = 0;
+        for (int i = 0; i < inst.Operands.Count; i++)
+        {
+            var val = resolve(inst.Operands[i]);
+            if (regGpr < gprs.Length)
+            {
+                var gpr = gprs[regGpr++];
+                if (IsProcedureRef(inst.Operands[i]))
+                    sb.AppendLine($"    lea {gpr}, [rel {ProcedureRefName(inst.Operands[i])}]");
+                else if (IsStringRef(inst.Operands[i]))
+                    sb.AppendLine($"    lea {gpr}, [{resolve(inst.Operands[i])}]");
+                else
+                    sb.AppendLine($"    mov {gpr}, {val}");
+            }
+        }
+
+        sb.AppendLine($"    mov al, {regXmm}      ; SSE register count for variadic");
+        int alignPad = stackArgs.Count == 0 ? 8 : (stackArgs.Count % 2 == 1 ? 8 : 0);
+        if (alignPad > 0)
+            sb.AppendLine($"    sub rsp, {alignPad}      ; align stack");
+
+        sb.AppendLine($"    call {target.Symbol}");
+
+        int cleanup = stackArgs.Count * 8 + alignPad;
+        sb.Append($"    add rsp, {cleanup}      ; restore stack");
+    }
+
+    private static bool IsStringRef(IrValue arg)
+        => arg.Name?.StartsWith("str:", StringComparison.Ordinal) == true
+           || arg.Name?.StartsWith("addr:", StringComparison.Ordinal) == true;
 
     public static void AppendWindowsCall(StringBuilder sb, IrInstruction inst, IrFunction caller,
         Func<IrValue?, string> resolve,
