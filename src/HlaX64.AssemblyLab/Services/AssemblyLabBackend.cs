@@ -323,6 +323,19 @@ public sealed class AssemblyLabBackend
     public string GetDisasmText(string? nasmText, SourceMapDocument? map, string? binaryPath = null)
         => DisasmService.FormatDisasm(nasmText, map, binaryPath);
 
+    public string ExplainForAgent(string sourcePath, string sourceText, string target)
+        => ExplainAgentService.ExplainForAgentJson(sourcePath, sourceText, target);
+
+    public string GetPlanText(string sourcePath, string target)
+    {
+        if (sourcePath is "(unsaved)" or "")
+            return "Save source to a file to view compilation plan.";
+        return PlanService.FormatPlanText(sourcePath, target);
+    }
+
+    public string GetDiffText(string oldText, string newText)
+        => SemanticDiffService.FormatDiffText(oldText, newText);
+
     public IEnumerable<string> FindHla64Files(string folder)
     {
         if (!Directory.Exists(folder))

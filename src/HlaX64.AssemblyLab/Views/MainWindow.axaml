@@ -34,6 +34,8 @@
             <Button Content="Run" Command="{Binding RunCommand}"/>
             <Button Content="Debug" Command="{Binding DebugCommand}"/>
             <Button Content="Proof Bundle" Command="{Binding ExportProofBundleCommand}"/>
+            <Button Content="Explain" Command="{Binding ExplainRepairCommand}"/>
+            <CheckBox Content="Plan approved" IsChecked="{Binding PlanApproved}" VerticalAlignment="Center"/>
             <TextBlock VerticalAlignment="Center" Text="Target:"/>
             <ComboBox MinWidth="180" ItemsSource="{Binding TargetChoices}" SelectedItem="{Binding SelectedTarget}"/>
         </StackPanel>
@@ -118,6 +120,27 @@
                         <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
                                  FontFamily="Consolas,Courier New,monospace"
                                  Text="{Binding ToolchainText}"/>
+                    </ScrollViewer>
+                </TabItem>
+                <TabItem Header="Agent">
+                    <ScrollViewer>
+                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                                 FontFamily="Consolas,Courier New,monospace"
+                                 Text="{Binding AgentText}"/>
+                    </ScrollViewer>
+                </TabItem>
+                <TabItem Header="Plan">
+                    <ScrollViewer>
+                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                                 FontFamily="Consolas,Courier New,monospace"
+                                 Text="{Binding PlanText}"/>
+                    </ScrollViewer>
+                </TabItem>
+                <TabItem Header="Diff">
+                    <ScrollViewer>
+                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
+                                 FontFamily="Consolas,Courier New,monospace"
+                                 Text="{Binding DiffText}"/>
                     </ScrollViewer>
                 </TabItem>
             </TabControl>

@@ -1,95 +1,22 @@
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Text.Json;
 
 namespace HlaX64.DebugAdapter;
-
-public sealed class GdbBackend : IDisposable
-{
-    private Process? _gdb;
-    private StreamWriter? _stdin;
-    private readonly List<string> _breakpoints = [];
-
-    public bool IsAvailable =>
-        RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && File.Exists("/usr/bin/gdb");
-
-    public void Launch(string executable, string[]? args = null)
-    {
-        if (!IsAvailable)
-            throw new InvalidOperationException("gdb backend requires Linux with gdb installed.");
-
-        _gdb = new Process
-        {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = "gdb",
-                Arguments = "--interpreter=mi2 --quiet",
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false
-            }
-        };
-        _gdb.Start();
-        _stdin = _gdb.StandardInput;
-        Write($"file \"{executable}\"");
-        foreach (var bp in _breakpoints)
-            Write(bp);
-        Write("start");
-    }
-
-    public void SetBreakpoint(string file, int line)
-    {
-        var cmd = $"break \"{file}\":{line}";
-        _breakpoints.Add(cmd);
-        if (_stdin != null)
-            Write(cmd);
-    }
-
-    public IReadOnlyList<object> GetStackFrames()
-    {
-        if (_stdin == null) return [new { id = 1, name = "_start", line = 1, column = 1 }];
-        Write("-stack-list-frames");
-        return
-        [
-            new { id = 1, name = "_start", line = 1, column = 1, source = new { path = "main.hla64" } }
-        ];
-    }
-
-    public void Continue() => Write("exec-continue");
-
-    public void Disconnect()
-    {
-        try { Write("quit"); } catch { /* ignore */ }
-        _gdb?.Kill(entireProcessTree: true);
-    }
-
-    private void Write(string cmd)
-    {
-        _stdin?.WriteLine(cmd);
-        _stdin?.Flush();
-    }
-
-    public void Dispose()
-    {
-        Disconnect();
-        _gdb?.Dispose();
-    }
-}
 
 public sealed class DebugAdapterHost
 {
     private readonly TextReader _input;
     private readonly TextWriter _output;
     private readonly DapResponseBuilder _responses = new();
-    private readonly GdbBackend _gdb = new();
-    private bool _running;
+    private readonly IDebugBackend _backend;
 
-    public DebugAdapterHost(TextReader input, TextWriter output)
+    public DebugAdapterHost(TextReader input, TextWriter output, IDebugBackend? backend = null)
     {
         _input = input;
         _output = output;
+        _backend = backend ?? DebugBackendFactory.CreateDefault();
     }
+
+    public IDebugBackend Backend => _backend;
 
     public static object Capabilities => new
     {
@@ -129,9 +56,8 @@ public sealed class DebugAdapterHost
                 {
                     var program = req.Arguments?.TryGetProperty("program", out var p) == true
                         ? p.GetString() : null;
-                    if (program != null && _gdb.IsAvailable)
-                        _gdb.Launch(program);
-                    _running = true;
+                    if (program != null && _backend.IsAvailable)
+                        _backend.Launch(program);
                     Write(_responses.Success(req.Seq, "launch"));
                 }
                 catch (Exception ex)
@@ -154,7 +80,7 @@ public sealed class DebugAdapterHost
                     foreach (var bp in bpArr.EnumerateArray())
                     {
                         var ln = bp.TryGetProperty("line", out var lnEl) ? lnEl.GetInt32() : 1;
-                        _gdb.SetBreakpoint(file, ln);
+                        _backend.SetBreakpoint(file, ln);
                         bps.Add(new { verified = true, id = ln, line = ln });
                     }
                 }
@@ -171,7 +97,7 @@ public sealed class DebugAdapterHost
             case "stackTrace":
                 Write(_responses.Success(req.Seq, "stackTrace", new
                 {
-                    stackFrames = _gdb.GetStackFrames(),
+                    stackFrames = _backend.GetStackFrames(),
                     totalFrames = 1
                 }));
                 break;
@@ -184,13 +110,13 @@ public sealed class DebugAdapterHost
                 break;
 
             case "continue":
-                _gdb.Continue();
+                _backend.Continue();
                 Write(_responses.Success(req.Seq, "continue", new { allThreadsContinued = true }));
                 Write(_responses.Event("continued", new { threadId = 1 }));
                 break;
 
             case "disconnect":
-                _gdb.Dispose();
+                _backend.Dispose();
                 Write(_responses.Success(req.Seq, "disconnect"));
                 break;
 

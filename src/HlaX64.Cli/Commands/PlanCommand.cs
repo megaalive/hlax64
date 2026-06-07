@@ -1,6 +1,6 @@
 using System.ComponentModel;
 using HlaX64.Cli.Json;
-using HlaX64.Cli.Toolchain;
+using HlaX64.Cli.Services;
 using HlaX64.Compiler;
 using Spectre.Console.Cli;
 
@@ -29,34 +29,15 @@ public sealed class PlanCommand : Command<PlanCommand.Settings>
         }
 
         var sourceFile = Path.GetFullPath(settings.Source);
-        var sourceName = Path.GetFileNameWithoutExtension(sourceFile);
         var target = settings.Target ?? "linux-x64-sysv";
-        var outputDir = Path.Combine(Path.GetDirectoryName(sourceFile)!, "build", sourceName);
-        var nasmFile = Path.Combine(outputDir, $"{sourceName}.nasm");
-        var objFile = Path.Combine(outputDir, $"{sourceName}.o");
-        var exeFile = Path.Combine(outputDir, sourceName);
+        var plan = PlanService.BuildPlan(sourceFile, target);
 
-        var plan = new
-        {
-            target,
-            compilerVersion = Compilation.GetVersion(),
-            source = sourceFile,
-            toolchain = new[]
-            {
-                new { step = "compile", command = $"hla64 emit-nasm \"{sourceFile}\" -o \"{nasmFile}\"" },
-                new { step = "assemble", command = $"nasm -f elf64 \"{nasmFile}\" -o \"{objFile}\"" },
-                new { step = "link", command = $"ld \"{objFile}\" -o \"{exeFile}\"" }
-            },
-            artifacts = new[] { nasmFile, objFile, exeFile },
-            nasmAvailable = NasmTool.TryFindNasm(out _)
-        };
-
-        Report(settings, true, plan, sourceFile, target, nasmFile, objFile, exeFile);
+        Report(settings, true, plan, sourceFile, target);
         return 0;
     }
 
     private static void Report(Settings settings, bool success, object? plan = null, string? sourceFile = null,
-        string? target = null, string? nasmFile = null, string? objFile = null, string? exeFile = null, string? error = null)
+        string? target = null, string? error = null)
     {
         if (settings.Json)
         {
@@ -77,10 +58,6 @@ public sealed class PlanCommand : Command<PlanCommand.Settings>
             return;
         }
 
-        Console.WriteLine($"Compilation plan for {sourceFile}:");
-        Console.WriteLine($"  target: {target}");
-        Console.WriteLine($"  emit-nasm -> {nasmFile}");
-        Console.WriteLine($"  assemble -> {objFile}");
-        Console.WriteLine($"  link -> {exeFile}");
+        Console.WriteLine(PlanService.FormatPlanText(sourceFile!, target));
     }
 }

@@ -52,7 +52,7 @@ Targets: `linux-x64-sysv`, `windows-x64-msabi`.
 
 Source map sync: double-click diagnostic or navigate by line → highlight corresponding NASM line (basic line match via `SourceMapDocument.LookupBySource`).
 
-Debug: **Linux-first** — DAP MVP via `DebugAdapterHost` capabilities display; full gdb session deferred to Phase 24 hardening.
+Debug: DAP via `hla64 debug --stdio` — `IDebugBackend` with **gdb** (Linux) and **lldb** (Windows, PATH or `Program Files/LLVM/bin`). Lab **Debug** builds first, spawns CLI, sends initialize/launch/setBreakpoints/configurationDone.
 
 ## Alternatives considered
 
@@ -84,12 +84,17 @@ Additive. No language or CLI breaking changes. New solution projects only.
 | 15.5 | Proof bundle export + capabilities panel |
 | 15.6 | RFC, tutorial, roadmap, CHANGELOG |
 
+## Batch 3 (done)
+
+- **DAP:** `IDebugBackend`, `GdbBackend`, `LldbBackend`; `DebugSessionHost` JSON-RPC with seq; Debug command builds then spawns `hla64 debug --stdio`
+- **Agent:** In-proc `ExplainAgentService` (MCP-style `suggestedFix`); Agent tab + Explain button
+- **Plan / diff:** `PlanService`, `SemanticDiffService`; Plan and Diff tabs; **Plan approved** checkbox gates Build/Run/Proof bundle until user confirms (refreshes on source/target change)
+
 ## Deferred
 
-- Windows DAP (lldb)
-- Embedded MCP client (`explain` repair loop in UI)
-- Semantic diff / plan approval gate UI
-- Full gdb breakpoint session in-process
+- Apply suggested fix as editor patch (one-click repair)
+- Full MI stack/register parsing in DAP (beyond stub frames)
+- External MCP stdio client spawn from Lab UI
 
 ## Unresolved questions
 

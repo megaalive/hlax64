@@ -332,42 +332,7 @@ public class HlaX64Tools
         var sourceText = File.ReadAllText(source);
         var triple = TargetTriple.Parse(target ?? "linux-x64-sysv");
         var options = CompilationOptions.Default with { Target = triple };
-        var report = HlaX64.Cli.Services.ExplainReport.Create(source, sourceText, options);
-        var verify = HlaX64.Cli.Services.ExplainReport.CollectVerificationWarnings(sourceText, options);
-
-        return JsonSerializer.Serialize(new
-        {
-            schemaVersion = HlaX64.Cli.Json.CliJson.SchemaVersion,
-            success = report.Success,
-            version = Compilation.GetVersion(),
-            source = report.SourcePath,
-            target = target ?? "linux-x64-sysv",
-            diagnostics = report.StructuredDiagnostics.Select(d => new
-            {
-                code = d.Code,
-                message = d.Message,
-                line = d.Line,
-                column = d.Column,
-                span = new { d.Line, d.Column },
-                suggestedFix = SuggestFix(d)
-            }),
-            abiIssues = verify.AbiIssues,
-            clobberWarnings = verify.ClobberWarnings,
-            ir = report.Success ? report.IrFunctions.Select(f => f.ToString()).ToArray() : null,
-            lowered = report.Success ? report.LoweredFunctions.Select(HlaX64.Cli.Services.ExplainReport.DescribeLowered).ToArray() : null,
-            nasm = report.Nasm
-        }, JsonOpts);
-    }
-
-    private static object? SuggestFix(HlaX64.Compiler.Diagnostics.Diagnostic d)
-    {
-        if (d.Code == "HLAX0003" || d.Code == "HLAX0071")
-            return new { template = "Check mnemonic spelling or run `hla64 list-instructions`." };
-        if (d.Code == "HLAX0070")
-            return new { template = "Add `--features +sse2` (or required feature) to build flags." };
-        if (d.Code == "HLAX0060")
-            return new { template = "Initialize `{var}` before use or assign in all paths." };
-        return d.Suggestion != null ? new { template = d.Suggestion } : null;
+        return ExplainAgentService.ExplainForAgentJson(source, sourceText, target);
     }
 
     [McpServerTool, Description("Format a .hla64 source file in place")]

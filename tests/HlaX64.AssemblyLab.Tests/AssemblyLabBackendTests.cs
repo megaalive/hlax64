@@ -2,6 +2,7 @@ using HlaX64.AssemblyLab.Services;
 using HlaX64.AssemblyLab.ViewModels;
 using HlaX64.Cli.Services;
 using HlaX64.Cli.Toolchain;
+using HlaX64.DebugAdapter;
 
 namespace HlaX64.AssemblyLab.Tests;
 
@@ -220,5 +221,104 @@ public class AssemblyLabBackendTests
     {
         Assert.Contains("linux-x64-sysv", AssemblyLabBackend.TargetChoices);
         Assert.Contains("windows-x64-msabi", AssemblyLabBackend.TargetChoices);
+    }
+
+    [Fact]
+    public void ExplainForAgent_returns_json_with_suggested_fix()
+    {
+        const string bad = """
+            program bad;
+            begin bad;
+                movz(1, rax);
+            end bad;
+            """;
+        var backend = new AssemblyLabBackend();
+        var json = backend.ExplainForAgent("(bad)", bad, "linux-x64-sysv");
+        Assert.Contains("suggestedFix", json, StringComparison.Ordinal);
+        Assert.Contains("diagnostics", json, StringComparison.Ordinal);
+        Assert.Contains("movz", json, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void GetPlanText_includes_emit_and_link_steps()
+    {
+        var backend = new AssemblyLabBackend();
+        var plan = backend.GetPlanText(HelloPath, "linux-x64-sysv");
+        Assert.Contains("emit-nasm", plan, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("assemble", plan, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("link", plan, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void GetDiffText_detects_procedure_change()
+    {
+        const string oldSrc = """
+            program t;
+            begin t;
+                mov(1, rax);
+            end t;
+            """;
+        const string newSrc = """
+            program t;
+            begin t;
+                mov(2, rax);
+                add(1, rax);
+            end t;
+            """;
+        var backend = new AssemblyLabBackend();
+        var diff = backend.GetDiffText(oldSrc, newSrc);
+        Assert.Contains("changedProcedures", diff, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SemanticDiffService_reports_added_extern()
+    {
+        const string oldSrc = """
+            program t;
+            begin t;
+                mov(1, rax);
+            end t;
+            """;
+        const string newSrc = """
+            program t;
+            extern procedure puts(msg: cstring): int32 from "libc.so";
+            begin t;
+                mov(1, rax);
+            end t;
+            """;
+        var diff = SemanticDiffService.Compare(oldSrc, newSrc);
+        var json = System.Text.Json.JsonSerializer.Serialize(diff);
+        Assert.Contains("addedExterns", json, StringComparison.Ordinal);
+        Assert.Contains("puts", json, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void ExplainAgentService_SuggestFix_returns_template_for_unknown_mnemonic()
+    {
+        var fix = ExplainAgentService.SuggestFix(new HlaX64.Compiler.Diagnostics.Diagnostic(
+            "HLAX0003", HlaX64.Compiler.Diagnostics.DiagnosticSeverity.Error, "unknown mnemonic", 1, 1));
+        Assert.NotNull(fix);
+        var json = System.Text.Json.JsonSerializer.Serialize(fix);
+        Assert.Contains("list-instructions", json, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void DebugBackendFactory_selects_platform_backend()
+    {
+        var backend = DebugBackendFactory.CreateDefault();
+        if (OperatingSystem.IsLinux())
+            Assert.IsType<GdbBackend>(backend);
+        else if (OperatingSystem.IsWindows())
+            Assert.IsType<LldbBackend>(backend);
+        backend.Dispose();
+    }
+
+    [Fact]
+    public void PlanApproved_gates_build_command()
+    {
+        var vm = new MainWindowViewModel();
+        Assert.False(vm.BuildCommand.CanExecute(null));
+        vm.PlanApproved = true;
+        Assert.True(vm.BuildCommand.CanExecute(null));
     }
 }

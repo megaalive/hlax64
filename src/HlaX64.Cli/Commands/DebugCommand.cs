@@ -20,7 +20,7 @@ public sealed class DebugCommand : Command<DebugCommand.Settings>
         if (!settings.Stdio)
         {
             Console.WriteLine("HlaX64 debug adapter — use --stdio for DAP over stdin/stdout.");
-            Console.WriteLine("Linux: gdb backend. Windows: follow-up (lldb/defer).");
+            Console.WriteLine("Linux: gdb backend. Windows: lldb (PATH or Program Files/LLVM/bin).");
             return 0;
         }
 
