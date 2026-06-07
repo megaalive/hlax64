@@ -380,25 +380,33 @@ Windows ABI lowering (NASM `win64` format + `lld-link`/`link.exe`).
 
 ## Target selection
 
-**Implemented today:** choose the ABI/backend with the CLI flag:
+Choose the ABI/backend with the CLI flag (default: `linux-x64-sysv`):
 
 ```bash
-hla64 run --target linux-x64-sysv   program.hla64   # default
-hla64 run --target windows-x64-msabi program.hla64
+hla64 build --target linux-x64-sysv    program.hla64
+hla64 build --target windows-x64-msabi program.hla64
 ```
 
 The Assembly Lab target selector and MCP `target` parameter use the same
 values. See [Calling Convention](#calling-convention) for register differences.
 
-### `#pragma target` — planned (not implemented)
+## Target Pragma *(Planned — not yet implemented)*
 
-Per-file target pragmas are **reserved but not parsed** in current releases.
-The syntax below is informative only; do not rely on it until marked implemented
-in [roadmap.md](roadmap.md):
+> **Status:** Planned. The parser currently only processes `#include`; `#pragma`
+> directives are **reserved but not parsed**. Do not put `#pragma target` in
+> source — the compiler reports a parse error (`Expected 'Include' but got
+> 'Pragma'`), not a silent no-op. Use the `--target` CLI flag (or Assembly Lab
+> / MCP) to select a target instead:
+>
+> ```bash
+> hla64 build --target windows-x64-msabi file.hla64
+> ```
+
+Reserved syntax (informative only until implemented in [roadmap.md](roadmap.md)):
 
 ```hla
-#pragma target("linux-x64-sysv")
-#pragma target("windows-x64-msabi")
+#pragma target("linux-x64-sysv")    // reserved — not yet active
+#pragma target("windows-x64-msabi") // reserved — not yet active
 ```
 
 ---
