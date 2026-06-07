@@ -65,19 +65,31 @@ public sealed class TestManifest
 
     private static string ResolveDirectory(string directory)
     {
-        if (Path.IsPathRooted(directory) || Directory.Exists(directory))
+        if (Path.IsPathRooted(directory))
             return directory;
 
-        var current = Directory.GetCurrentDirectory();
-        for (var dir = new DirectoryInfo(current); dir != null; dir = dir.Parent)
+        // Anchor repo-relative paths to a stable location. The assembly base
+        // directory is tried first because the process current directory can
+        // be mutated concurrently (e.g. by parallel test execution), which
+        // would otherwise make resolution non-deterministic. Both anchors walk
+        // up to the repo root (marked by HlaX64.slnx).
+        foreach (var start in new[] { AppContext.BaseDirectory, Directory.GetCurrentDirectory() })
         {
-            if (!File.Exists(Path.Combine(dir.FullName, "HlaX64.slnx")))
-                continue;
+            for (var dir = new DirectoryInfo(start); dir != null; dir = dir.Parent)
+            {
+                if (!File.Exists(Path.Combine(dir.FullName, "HlaX64.slnx")))
+                    continue;
 
-            var candidate = Path.Combine(dir.FullName, directory);
-            if (Directory.Exists(candidate))
-                return candidate;
+                var candidate = Path.Combine(dir.FullName, directory);
+                if (Directory.Exists(candidate))
+                    return candidate;
+            }
         }
+
+        // Fall back to a CWD-relative path, snapshotted to absolute so a later
+        // working-directory change cannot affect enumeration.
+        if (Directory.Exists(directory))
+            return Path.GetFullPath(directory);
 
         return directory;
     }
