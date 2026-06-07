@@ -1,10 +1,16 @@
 # wc
 
-Counts lines, words, and bytes in `fixtures/sample-b.txt` (hardcoded path until argv).
+Counts lines, words, and bytes in the file passed as `argv[1]`.
 
 ## Stress
 
-Byte classification, multiple counters, `IsSpace` helper, calls inside loop with callee-saved line/word state.
+Argv runtime, byte classification, multiple counters, `IsSpace` helper, calls inside loop with callee-saved line/word state.
+
+## Usage
+
+```
+wc.exe <file>
+```
 
 ## Expected
 
@@ -12,4 +18,4 @@ Byte classification, multiple counters, `IsSpace` helper, calls inside loop with
 lines=2 words=2 bytes=14
 ```
 
-Exit code `0`.
+(with `fixtures/sample-b.txt`). Exit code `0`.

@@ -2,7 +2,7 @@
 
 Small programs that behave like everyday command-line tools. These examples are intentionally more realistic than arithmetic or ABI samples: they touch OS APIs, buffers, file metadata, loops over external data, integer formatting, and error paths.
 
-Paths are **hardcoded** until argv support lands (planned phase 3).
+Paths are **hardcoded** in directory/metadata tools (`listfiles`, `filesize`, `exists`). File-reading tools use the Windows argv runtime (`hlax_argv_*`) and take the input path as `argv[1]`: `linecount`, `hexdump`, `wc`, `fnv1a`.
 
 ## Tool layout
 
@@ -15,7 +15,8 @@ tool-name/
 ├── hla64.toml
 ├── fixtures/          # per-tool test inputs
 ├── expected.stdout    # native regression expectations
-└── expected.exitcode
+├── expected.exitcode
+└── expected.arguments # optional CLI args for native regression (file tools)
 ```
 
 ## Tools
@@ -25,10 +26,10 @@ tool-name/
 | `listfiles` | Lists fixture files and sizes | FindFirstFileA, struct offsets, nested if/while |
 | `filesize` | Prints one file size | 64-bit size combine, metadata |
 | `exists` | Existence check + exit code | minimal Win32 interop |
-| `linecount` | Counts `\n` bytes in a file | CreateFileA (7 args), ReadFile, while+if |
-| `hexdump` | Offset + hex bytes | hex nibble branches, calls inside loop, pointer walk |
-| `wc` | Lines / words / bytes | byte classifiers, multiple counters |
-| `fnv1a` | FNV-1a 64-bit file hash | xor/imul loop, large constants |
+| `linecount` | Counts `\n` bytes in a file (`argv[1]`) | argv runtime, CreateFileA (7 args), ReadFile, while+if |
+| `hexdump` | Offset + hex bytes (`argv[1]`) | argv runtime, hex nibble branches, calls inside loop |
+| `wc` | Lines / words / bytes (`argv[1]`) | argv runtime, byte classifiers, multiple counters |
+| `fnv1a` | FNV-1a 64-bit file hash (`argv[1]`) | argv runtime, xor/imul loop, large constants |
 
 ## Build
 
@@ -41,7 +42,7 @@ Run from the **repository root** so relative fixture paths resolve.
 ## Regression coverage
 
 1. **Compile-only** — `tests/examples-curriculum/real-*` (via `hla64 test tests/examples-curriculum --filter real- --compile-only`).
-2. **Native Windows** — `RealTool_builds_and_runs_natively_on_windows` reads each tool's `expected.stdout` / `expected.exitcode`.
+2. **Native Windows** — `RealTool_builds_and_runs_natively_on_windows` reads each tool's `expected.stdout` / `expected.exitcode` and optional `expected.arguments`.
 
 ## Known limitations (compiler/runtime)
 
@@ -57,5 +58,6 @@ Run from the **repository root** so relative fixture paths resolve.
 | Done | Standardize tool layout + expected files |
 | Done | Add `hexdump`, `wc`, `fnv1a` |
 | Done | Skeleton `98-bug-farm/`, `99-invalid/` |
-| Next | argv support → argument-driven tools |
+| Done | argv for file tools (`linecount`, `hexdump`, `wc`, `fnv1a`) |
+| Next | argv for `listfiles` / `exists` (directory or path args) |
 | Next | `filemagic`, `cmp`, C# interop folder `11-csharp-interop-real/` |

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using HlaX64.AssemblyLab;
 using HlaX64.AssemblyLab.Services;
 using HlaX64.AssemblyLab.ViewModels;
@@ -509,12 +510,18 @@ public class AssemblyLabBackendTests
             Assert.NotNull(build.OutputFile);
             Assert.True(File.Exists(build.OutputFile!), build.Message);
 
+            var toolDir = Path.Combine(repoRoot, "examples", "10-real-tools", tool);
+            var argumentsPath = Path.Combine(toolDir, "expected.arguments");
+            var arguments = File.Exists(argumentsPath)
+                ? File.ReadAllText(argumentsPath).Trim()
+                : null;
+
             // Run the executable with the repo root as the working directory so
-            // the tool's relative fixture paths resolve, and guard against any
-            // regression hang with an explicit timeout.
-            using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            // relative fixture paths in expected.arguments resolve.
+            using var process = System.Diagnostics.Process.Start(new ProcessStartInfo
             {
                 FileName = build.OutputFile!,
+                Arguments = arguments,
                 WorkingDirectory = repoRoot,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,

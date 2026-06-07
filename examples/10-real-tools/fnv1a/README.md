@@ -1,10 +1,10 @@
 # fnv1a
 
-Computes FNV-1a 64-bit over `fixtures/sample-a.txt`.
+Computes FNV-1a 64-bit over the file passed as `argv[1]`.
 
 ## Stress
 
-`xor` / `imul` hot loop, hex `$` constants, file read.
+Argv runtime, `xor` / `imul` hot loop, hex `$` constants, file read.
 
 ## Expected stdout
 

@@ -36,6 +36,13 @@ nasm/
 # Personal NASM test files
 nasm-test/
 
+# Local agent skills (not for public repo)
+/SKILL*.md
+/SKILL_*.md
+
+# Local editor highlighter bundles (not for public repo)
+/_codeHighlighter/
+
 # Project plan (internal, not for public repo)
 HlaX64_Project_Plan.md
 # Personal review notes

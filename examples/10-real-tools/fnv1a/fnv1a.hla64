@@ -1,11 +1,15 @@
-// fnv1a.hla64 - FNV-1a 64-bit hash of a small fixture file.
+// fnv1a.hla64 - FNV-1a 64-bit hash of a file (argv[1]).
 //
-// Stress: imul/xor in a hot loop, 64-bit constants, file read, integer stdout.
+// Stress: argv runtime, imul/xor in a hot loop, 64-bit constants, file read.
 // Expected hash for fixtures/sample-a.txt verified against a C# baseline.
 
 program fnv1a;
 
 #include("stdlib64.hhf")
+
+extern procedure hlax_argv_init(): int64;
+extern procedure hlax_argv_count(): int64;
+extern procedure hlax_argv_get(index:int64): ptr;
 
 extern procedure CreateFileA(lpFileName: cstring; dwDesiredAccess: uint64; dwShareMode: uint64; lpSecurityAttributes: ptr; dwCreationDisposition: uint64; dwFlagsAndAttributes: uint64; hTemplateFile: uint64): int64 from "kernel32.dll";
 extern procedure ReadFile(hFile: int64; lpBuffer: ptr; nNumberOfBytesToRead: uint64; lpNumberOfBytesRead: ptr; lpOverlapped: ptr): int32 from "kernel32.dll";
@@ -41,25 +45,35 @@ begin HashBuffer;
 end HashBuffer;
 
 begin fnv1a;
-    call CreateFileA(&"examples\\10-real-tools\\fnv1a\\fixtures\\sample-a.txt", 2147483648, 1, 0, 3, 128, 0);
+    call hlax_argv_init();
+    call hlax_argv_count();
 
-    if(rax = -1) then
-        stdout.put("open failed", nl);
-        mov(1, rax);
+    if(rax < 2) then
+        stdout.put("usage: fnv1a <file>", nl);
+        mov(1, rbx);
     else
-        mov(rax, r15);
-        call ReadFile(r15, &buffer, 256, &bytesRead, 0);
-        if(rax = 0) then
-            stdout.put("read failed", nl);
-            call CloseHandle(r15);
-            mov(1, rax);
+        call hlax_argv_get(1);
+        mov(rax, r12);
+        call CreateFileA(r12, 2147483648, 1, 0, 3, 128, 0);
+
+        if(rax = -1) then
+            stdout.put("open failed", nl);
+            mov(1, rbx);
         else
-            mov(bytesRead, r10);
-            call HashBuffer(r10);
-            mov(rax, r12);
-            stdout.put("fnv1a=", r12, nl);
-            call CloseHandle(r15);
-            mov(0, rax);
+            mov(rax, r15);
+            call ReadFile(r15, &buffer, 256, &bytesRead, 0);
+            if(rax = 0) then
+                stdout.put("read failed", nl);
+                call CloseHandle(r15);
+                mov(1, rbx);
+            else
+                mov(bytesRead, r10);
+                call HashBuffer(r10);
+                mov(rax, r12);
+                stdout.put("fnv1a=", r12, nl);
+                call CloseHandle(r15);
+                mov(0, rbx);
+            endif;
         endif;
     endif;
 end fnv1a;

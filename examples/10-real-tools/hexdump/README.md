@@ -1,14 +1,25 @@
 # hexdump
 
-Prints `00000000` plus space-separated hex bytes for `fixtures/sample-a.txt`.
+Prints `00000000` plus space-separated hex bytes for the file passed as `argv[1]`.
 
 ## Stress
 
-CreateFileA/ReadFile, pointer end-sentinel loop, hex nibble formatting via branch tree, nested calls inside loop (callee-saved cursor in `r14`, end in `r13`).
+Argv runtime, CreateFileA/ReadFile, pointer end-sentinel loop, hex nibble formatting via branch tree, nested calls inside loop (callee-saved cursor in `r14`, end in `r13`).
+
+## Usage
+
+```
+hexdump.exe <file>
+```
 
 ## Run
 
-From repo root after building for `windows-x64-msabi`.
+From repo root after building for `windows-x64-msabi`:
+
+```powershell
+hla64 build examples/10-real-tools/hexdump/hexdump.hla64 --target windows-x64-msabi -o build/real-hexdump
+build\real-hexdump\hexdump.exe examples\10-real-tools\hexdump\fixtures\sample-a.txt
+```
 
 ## Expected
 

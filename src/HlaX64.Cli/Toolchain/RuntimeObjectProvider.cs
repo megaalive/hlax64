@@ -15,6 +15,11 @@ public static class RuntimeObjectProvider
         "stdout_put_int", "int_to_str"
     }.ToFrozenSet();
 
+    private static readonly FrozenSet<string> ArgvSymbols = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "hlax_argv_init", "hlax_argv_count", "hlax_argv_get"
+    }.ToFrozenSet();
+
     public static bool TryGetLinuxRuntimeObjects(
         IEnumerable<string> requiredExterns,
         string cacheDirectory,
@@ -27,9 +32,10 @@ public static class RuntimeObjectProvider
         var externs = requiredExterns.ToHashSet(StringComparer.OrdinalIgnoreCase);
         bool needStdout = externs.Any(StdoutSymbols.Contains);
         bool needConversion = externs.Any(ConversionSymbols.Contains);
+        bool needArgv = externs.Any(ArgvSymbols.Contains);
         if (needStdout)
             needConversion = true;
-        if (!needStdout && !needConversion)
+        if (!needStdout && !needConversion && !needArgv)
             return true;
 
         var runtimeDir = FindRuntimeDirectory();
@@ -58,6 +64,14 @@ public static class RuntimeObjectProvider
             objects.Add(stdoutObj);
         }
 
+        if (needArgv)
+        {
+            var nasm = Path.Combine(runtimeDir, "linux-x64", "argv.nasm");
+            if (!TryAssembleRuntime(nasm, cacheDirectory, "hlax64-runtime-argv", "elf64", out var argvObj, out error))
+                return false;
+            objects.Add(argvObj);
+        }
+
         objectFiles = objects;
         return true;
     }
@@ -74,10 +88,11 @@ public static class RuntimeObjectProvider
         var externs = requiredExterns.ToHashSet(StringComparer.OrdinalIgnoreCase);
         bool needStdout = externs.Any(StdoutSymbols.Contains);
         bool needConversion = externs.Any(ConversionSymbols.Contains);
+        bool needArgv = externs.Any(ArgvSymbols.Contains);
         // stdout.nasm references int_to_str for stdout_put_int — assemble conversion too.
         if (needStdout)
             needConversion = true;
-        if (!needStdout && !needConversion)
+        if (!needStdout && !needConversion && !needArgv)
             return true;
 
         var runtimeDir = FindRuntimeDirectory();
@@ -104,6 +119,14 @@ public static class RuntimeObjectProvider
             if (!TryAssembleRuntime(nasm, cacheDirectory, "hlax64-runtime-stdout", "win64", out var stdoutObj, out error))
                 return false;
             objects.Add(stdoutObj);
+        }
+
+        if (needArgv)
+        {
+            var nasm = Path.Combine(runtimeDir, "windows-x64", "argv.nasm");
+            if (!TryAssembleRuntime(nasm, cacheDirectory, "hlax64-runtime-argv", "win64", out var argvObj, out error))
+                return false;
+            objects.Add(argvObj);
         }
 
         objectFiles = objects;
