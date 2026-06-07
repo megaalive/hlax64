@@ -85,11 +85,12 @@ Opcodes include `Move`, `Add`, `Subtract`, `Multiply`, `Divide`, `Compare`, `Bra
 | LSP virtual documents | IR/NASM/stack via executeCommand — read-only, no live debug session |
 | Source maps / DWARF | Sidecar JSON with lookup; Linux `%line` + file table stub; Windows PDB deferred |
 | O2 optimizer | Copy propagation + xor-zero peephole; no global DCE or assisted regalloc |
-| CPU feature gates | SSE2 + AVX2 semantic gates (34 mnemonics in DB); intrinsics/atomics RFC-only |
+| CPU / SIMD | AVX2 YMM lowering; `simd.*` + `atomic.*` intrinsics MVP (RFC 0019/0020 partial) |
+| Packages | Path deps + lock enforcement; git deps when git on PATH |
+| DAP | Linux gdb backend via `HlaX64.DebugAdapter`; Windows/lldb deferred |
+| Variadic | SysV `printf` integer+cstring; float variadic still HLAX0055 |
 | Proof bundle | Static capability manifest + optional tests.json; not formal verification |
-| DAP | `hla64 debug --stdio` with setBreakpoint/stackTrace stubs; not a full adapter |
 | Bounds warnings | Literal / const indices only |
-| Packages | `hla64.toml` + `hla64.lock` hash; no dependency resolver |
 | Windows backend | CI smoke tests; fewer native run manifests than Linux |
 
 ---
