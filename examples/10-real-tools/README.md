@@ -2,7 +2,7 @@
 
 Small programs that behave like everyday command-line tools. These examples are intentionally more realistic than arithmetic or ABI samples: they touch OS APIs, buffers, file metadata, loops over external data, integer formatting, and error paths.
 
-Paths are **hardcoded** in directory/metadata tools (`listfiles`, `filesize`, `exists`). File-reading tools use the Windows argv runtime (`hlax_argv_*`) and take the input path as `argv[1]`: `linecount`, `hexdump`, `wc`, `fnv1a`.
+All seven tools use the Windows argv runtime (`hlax_argv_*`). File readers take a path as `argv[1]`; `listfiles` takes a glob (e.g. `fixtures\\*`).
 
 ## Tool layout
 
@@ -23,9 +23,9 @@ tool-name/
 
 | Tool | What it does | Stress points |
 |------|--------------|---------------|
-| `listfiles` | Lists fixture files and sizes | FindFirstFileA, struct offsets, nested if/while |
-| `filesize` | Prints one file size | 64-bit size combine, metadata |
-| `exists` | Existence check + exit code | minimal Win32 interop |
+| `listfiles` | Lists files matching `argv[1]` glob | argv runtime, FindFirstFileA, struct offsets, nested if/while |
+| `filesize` | Prints one file size (`argv[1]`) | argv runtime, 64-bit size combine, metadata |
+| `exists` | Existence check + exit code (`argv[1]`) | argv runtime, minimal Win32 interop |
 | `linecount` | Counts `\n` bytes in a file (`argv[1]`) | argv runtime, CreateFileA (7 args), ReadFile, while+if |
 | `hexdump` | Offset + hex bytes (`argv[1]`) | argv runtime, hex nibble branches, calls inside loop |
 | `wc` | Lines / words / bytes (`argv[1]`) | argv runtime, byte classifiers, multiple counters |
@@ -58,6 +58,5 @@ Run from the **repository root** so relative fixture paths resolve.
 | Done | Standardize tool layout + expected files |
 | Done | Add `hexdump`, `wc`, `fnv1a` |
 | Done | Skeleton `98-bug-farm/`, `99-invalid/` |
-| Done | argv for file tools (`linecount`, `hexdump`, `wc`, `fnv1a`) |
-| Next | argv for `listfiles` / `exists` (directory or path args) |
+| Done | argv for all seven real-tools |
 | Next | `filemagic`, `cmp`, C# interop folder `11-csharp-interop-real/` |

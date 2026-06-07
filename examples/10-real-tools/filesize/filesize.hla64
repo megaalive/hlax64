@@ -1,9 +1,13 @@
-// filesize.hla64 - print the size of one known fixture file.
+// filesize.hla64 - print the size of the file at argv[1].
 // Uses FindFirstFileA as a compact GetFileAttributesEx-style probe.
 
 program filesize;
 
 #include("stdlib64.hhf")
+
+extern procedure hlax_argv_init(): int64;
+extern procedure hlax_argv_count(): int64;
+extern procedure hlax_argv_get(index:int64): ptr;
 
 extern procedure FindFirstFileA(lpFileName: cstring; lpFindFileData: ptr): int64 from "kernel32.dll";
 extern procedure FindClose(hFindFile: int64): int32 from "kernel32.dll";
@@ -13,21 +17,31 @@ static
 endstatic;
 
 begin filesize;
-    call FindFirstFileA(&"examples\\10-real-tools\\filesize\\fixtures\\sample-a.txt", &findData);
+    call hlax_argv_init();
+    call hlax_argv_count();
 
-    if(rax = -1) then
-        stdout.put("missing", nl);
-        mov(1, rax);
+    if(rax < 2) then
+        stdout.put("usage: filesize <file>", nl);
+        mov(1, rbx);
     else
+        call hlax_argv_get(1);
         mov(rax, r12);
-        mov(&findData, rcx);
-        mov([rcx + 32].dword, r8d);
-        mov([rcx + 28].dword, r9d);
-        mov(r9, r10);
-        shl(32, r10);
-        add(r8, r10);
-        stdout.put("sample-a.txt bytes: ", r10, nl);
-        call FindClose(r12);
-        mov(0, rax);
+        call FindFirstFileA(r12, &findData);
+
+        if(rax = -1) then
+            stdout.put("missing", nl);
+            mov(1, rbx);
+        else
+            mov(rax, r15);
+            mov(&findData, rcx);
+            mov([rcx + 32].dword, r8d);
+            mov([rcx + 28].dword, r9d);
+            mov(r9, r10);
+            shl(32, r10);
+            add(r8, r10);
+            stdout.put("bytes: ", r10, nl);
+            call FindClose(r15);
+            mov(0, rbx);
+        endif;
     endif;
 end filesize;
