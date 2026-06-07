@@ -18,7 +18,9 @@
 | [`06-abi/`](../examples/06-abi/) | stack-alignment, callee-saved, … | ABI edge cases |
 | [`07-interop/`](../examples/07-interop/) | `export-lib` | Shared library export |
 | [`08-ai-agent/`](../examples/08-ai-agent/) | `smoke-test` | Agent workflow |
-| [`10-real-tools/`](../examples/10-real-tools/) | `listfiles`, `filesize`, `exists`, `linecount` | Small daily-use tools that stress OS interop and I/O; native Windows execution regression |
+| [`10-real-tools/`](../examples/10-real-tools/) | `listfiles`, `filesize`, `exists`, `linecount`, `hexdump`, `wc`, `fnv1a` | Daily-use Win32 tools; each tool has `fixtures/`, `expected.stdout`, native Windows regression |
+| [`98-bug-farm/`](../examples/98-bug-farm/) | (planned) | Compiler stress cases |
+| [`99-invalid/`](../examples/99-invalid/) | (planned) | Negative examples with expected diagnostics |
 
 Tutorial for memory: [tutorials/05-memory.md](tutorials/05-memory.md).
 
@@ -40,7 +42,7 @@ Includes Level 3: `pointer_load_store`, `stack_array`, `string_length`, `array_s
 
 ## 2b. Curriculum manifests (`tests/examples-curriculum/`)
 
-33 manifests reference structured programs under `examples/`:
+36 manifests reference structured programs under `examples/`:
 
 ```bash
 hla64 test tests/examples-curriculum/

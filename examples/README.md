@@ -1,4 +1,4 @@
-# Structured example programs (31 clean-room `.hla64` files).
+# Structured example programs (34 clean-room `.hla64` files in curriculum + 7 real-tools).
 
 | Folder | Programs |
 |--------|----------|
@@ -12,7 +12,9 @@
 | [07-interop/](07-interop/) | export-lib |
 | [08-ai-agent/](08-ai-agent/) | smoke-test |
 | [09-benchmarks/](09-benchmarks/) | README → `benchmarks/count.json` |
-| [10-real-tools/](10-real-tools/) | listfiles, filesize, exists, linecount |
+| [10-real-tools/](10-real-tools/) | listfiles, filesize, exists, linecount, hexdump, wc, fnv1a |
+| [98-bug-farm/](98-bug-farm/) | planned compiler stress cases |
+| [99-invalid/](99-invalid/) | planned negative examples |
 
 ```bash
 hla64 explain examples/08-ai-agent/smoke-test.hla64 --json
