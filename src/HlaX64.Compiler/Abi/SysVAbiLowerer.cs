@@ -122,6 +122,14 @@ public sealed class SysVAbiLowerer : IAbiLowerer
             // Emit entry point prologue (_start)
             if (isEntry)
             {
+                if (FunctionUsesArgvRuntime(function))
+                {
+                    loweredBlock.Instructions.Add(new LoweredInstruction("    mov rdi, rsp    ; kernel argc/argv block"));
+                    loweredBlock.Instructions.Add(new LoweredInstruction("    call hlax_argv_save_from_stack"));
+                    if (!_externs.Contains("hlax_argv_save_from_stack", StringComparer.OrdinalIgnoreCase))
+                        _externs.Add("hlax_argv_save_from_stack");
+                }
+
                 loweredBlock.Instructions.Add(new LoweredInstruction("    xor ebx, ebx    ; default exit code = 0 (callee-saved)"));
                 loweredBlock.Instructions.Add(new LoweredInstruction("    push rbp"));
                 loweredBlock.Instructions.Add(new LoweredInstruction("    mov rbp, rsp"));
@@ -721,6 +729,25 @@ public sealed class SysVAbiLowerer : IAbiLowerer
     private string NewStringLabel()
     {
         return $"str_{_stringLabelCounter++}";
+    }
+
+    private static bool FunctionUsesArgvRuntime(IrFunction function)
+    {
+        foreach (var block in function.Blocks)
+        {
+            foreach (var inst in block.Instructions)
+            {
+                if (inst.Opcode != IrOpcode.Call)
+                    continue;
+                if (inst.Immediate is not string name)
+                    continue;
+                if (name.StartsWith("hlax_argv_", StringComparison.OrdinalIgnoreCase) ||
+                    name.StartsWith("extern:hlax_argv_", StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+        }
+
+        return false;
     }
 
 }

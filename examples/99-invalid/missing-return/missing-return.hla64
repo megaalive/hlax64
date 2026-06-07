@@ -1,0 +1,10 @@
+// missing-return.hla64 - MUST NOT compile cleanly with verification (HLAX0062).
+program missing_return;
+
+procedure P; @returns("rax");
+begin P;
+    mov(0, rbx);
+end P;
+
+begin missing_return;
+end missing_return;

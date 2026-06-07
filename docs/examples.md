@@ -43,7 +43,7 @@ Includes Level 3: `pointer_load_store`, `stack_array`, `string_length`, `array_s
 
 ## 2b. Curriculum manifests (`tests/examples-curriculum/`)
 
-41 manifests reference structured programs under `examples/`:
+42 manifests reference structured programs under `examples/`:
 
 ```bash
 hla64 test tests/examples-curriculum/

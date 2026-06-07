@@ -61,4 +61,4 @@ Run from the **repository root** so relative fixture paths resolve.
 | Done | Add `hexdump`, `wc`, `fnv1a` |
 | Done | Skeleton `98-bug-farm/`, `99-invalid/` |
 | Done | argv for all nine real-tools |
-| Next | Linux argv parser; `98-bug-farm/` / `99-invalid/` cases |
+| Next | `98-bug-farm/` / `99-invalid/` (in progress) |

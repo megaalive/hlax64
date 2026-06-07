@@ -37,6 +37,7 @@ public sealed class ExamplesCompileTests
             if (Directory.Exists(examples))
             {
                 return Directory.GetFiles(examples, "*.hla64", SearchOption.AllDirectories)
+                    .Where(p => !p.Contains($"{Path.DirectorySeparatorChar}99-invalid{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
                     .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
                     .ToList();
             }

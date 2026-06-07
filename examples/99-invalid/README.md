@@ -21,12 +21,12 @@ bad-example-name/
 
 ## Status
 
-Skeleton only. Start by mirroring high-value cases from `tests/conformance/invalid/`:
+| Example | Code | Notes |
+|---------|------|-------|
+| `address-of-register` | HLAX0023 | `mov(&rax, …)` |
+| `missing-return` | HLAX0062 | verification warning on empty `@returns` body |
 
-- `missing-return`
-- `unknown-instruction`
-- `address-of-register`
-- `bad-winapi-arg-count` (future)
+Automated: `ExamplesInvalidTests` reads each folder's `manifest.json` + `expected-codes.txt`.
 
 Run conformance invalid tests today:
 

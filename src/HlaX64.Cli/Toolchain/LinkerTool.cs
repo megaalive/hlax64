@@ -235,6 +235,12 @@ public sealed class LinkerTool
                 requiresWslRun = !shared;
                 string wslObjectFile = ToWslPath(objectFile);
                 string wslOutput = ToWslPath(output);
+                var wslExtras = extraLibraries?.Select(lib =>
+                    lib.EndsWith(".obj", StringComparison.OrdinalIgnoreCase) ||
+                    lib.EndsWith(".o", StringComparison.OrdinalIgnoreCase)
+                        ? ToWslPath(lib)
+                        : lib);
+                linkExtras = FormatExtraLibraries(wslExtras, isWindows: false);
 
                 args = shared
                     ? $"gcc -nostdlib {linkFlag} -o \"{wslOutput}\" \"{wslObjectFile}\" {linkExtras}"

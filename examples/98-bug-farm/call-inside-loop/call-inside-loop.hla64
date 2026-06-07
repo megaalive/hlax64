@@ -1,0 +1,24 @@
+// call-inside-loop.hla64 - minimal repro for calls inside while loops.
+//
+// Stress: Win64/Linux volatile vs callee-saved across call boundaries.
+// Real tools keep cursors in r14/r13; this uses r8/r10 only (safe pattern).
+
+program call_inside_loop;
+
+procedure Bump(n: int64); @returns("rax");
+begin Bump;
+    mov(n, rax);
+    add(rax, 1);
+end Bump;
+
+begin call_inside_loop;
+    mov(0, r8);
+    mov(16, r10);
+
+    while(r8 < r10) do
+        call Bump(r8);
+        add(1, r8);
+    endwhile;
+
+    mov(0, rbx);
+end call_inside_loop;

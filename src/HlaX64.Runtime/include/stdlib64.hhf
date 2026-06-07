@@ -48,7 +48,7 @@ procedure stdout_put_int(value:int64); @returns("void");
 // Command-line argv (Windows: GetCommandLineA parser in windows-x64/argv.nasm)
 // =====================================================================
 
-// Parse argc/argv once (idempotent). Linux stub returns argc=0 until SysV parser lands.
+// Parse argc/argv once (idempotent). Linux: captured from kernel stack at _start via hlax_argv_save_from_stack.
 procedure hlax_argv_init(); @returns("rax");
 
 // Return argument count (includes argv[0] program name).
@@ -56,7 +56,7 @@ procedure hlax_argv_count(); @returns("rax");
 
 // Return argv[index] pointer, or 0 when out of range.
 // Windows: ANSI cstring from GetCommandLineA (use CreateFileA for argv[1] paths).
-// Linux (future): UTF-8 cstring.
+// Linux: UTF-8 cstring pointers from the kernel stack (valid for process lifetime).
 procedure hlax_argv_get(index:int64); @returns("rax");
 
 // =====================================================================

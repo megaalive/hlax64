@@ -1,0 +1,5 @@
+// address-of-register.hla64 - MUST NOT compile (HLAX0023).
+program address_of_register;
+begin address_of_register;
+    mov(&rax, rcx);
+end address_of_register;

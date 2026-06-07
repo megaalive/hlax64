@@ -18,7 +18,13 @@ Stress cases whose primary job is to **surface compiler, ABI, and runtime bugs**
 
 ## Status
 
-Skeleton only. Add one case per compiler fix so each regression has a minimal repro outside the full real-tool binaries.
+First cases landed:
+
+| Case | Path |
+|------|------|
+| `call-inside-loop` | `call-inside-loop/` — compile-only manifest `bugfarm-call-inside-loop` |
+
+Add one case per compiler fix so each regression has a minimal repro outside the full real-tool binaries.
 
 ## Running
 

@@ -1,0 +1,5 @@
+{
+  "expectCodes": ["HLAX0062"],
+  "expectWarningsOnly": true,
+  "enableVerificationWarnings": true
+}

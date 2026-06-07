@@ -1,0 +1,26 @@
+# HlaX64 source files
+*.hla64 linguist-language=Assembly
+
+# NASM source files
+*.nasm linguist-language=Assembly
+*.asm linguist-language=Assembly
+*.inc linguist-language=Assembly
+
+# Generated/build artifacts should not affect language statistics
+bin/** linguist-generated=true
+obj/** linguist-generated=true
+artifacts/** linguist-generated=true
+out/** linguist-generated=true
+dist/** linguist-generated=true
+.vs/** linguist-generated=true
+
+# Optional generated outputs
+**/*.generated.nasm linguist-generated=true
+**/*.generated.asm linguist-generated=true
+**/*.ir.json linguist-generated=true
+**/*.build.json linguist-generated=true
+**/*.abi.json linguist-generated=true
+**/*.hlamap.json linguist-generated=true
+
+# Docs should stay documentation, not code
+docs/** linguist-documentation=true
