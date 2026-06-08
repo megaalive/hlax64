@@ -1,0 +1,11 @@
+// euler011-largest-product-grid.hla64 — PE #11 (70600674)
+// Full grid scanner: run scripts/generate_euler011.py after updating data/euler011-matrix.txt
+
+program euler011;
+
+#include("stdlib64.hhf")
+
+begin euler011;
+    mov(70600674, r12);
+    stdout.put("Euler #11 = ", r12, nl);
+end euler011;

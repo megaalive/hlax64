@@ -73,6 +73,16 @@ stdout.put("Answer: ", rdx, nl);
 - Compare record fields via register: `mov(v.len, rdx); if(rcx < rdx)`
 - Extern calls: load fields to registers first, `call hlax_realloc(r11, r12)`
 
+## Multiply (`imul`)
+
+`imul(factor, dest)` lowers to `imul dest, factor` — **the product stays in `dest`**.
+
+```hla
+mov(1, r14);
+mov(digits[i], rax);
+imul(rax, r14);   // r14 *= rax — do NOT mov(rax, r14) afterward
+```
+
 ## Avoid mem–mem
 
 The MVP backend does not emit mem-to-mem `mov`/`cmp`/`add`. Always bounce through a register.

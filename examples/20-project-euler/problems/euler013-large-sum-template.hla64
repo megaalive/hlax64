@@ -1,0 +1,11 @@
+// euler013-large-sum-template.hla64 — PE #13 requires 100×50-digit bignum add
+// Solve on paper first; implement digit-array carry add using shared patterns.
+
+program euler013_template;
+
+#include("stdlib64.hhf")
+
+begin euler013_template;
+    stdout.put("Euler #13 template — embed 100 numbers from data/euler013-numbers.txt", nl);
+    stdout.put("Expected answer: 5537376230 (first 10 digits of sum)", nl);
+end euler013_template;

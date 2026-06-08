@@ -1,0 +1,55 @@
+// euler007-10001st-prime.hla64 — PE #7 (104743)
+
+program euler007;
+
+#include("stdlib64.hhf")
+
+static
+    composite: int64[120000];
+endstatic;
+
+begin euler007;
+    mov(0, r12);
+    mov(120000, r13);
+
+    while(r12 < r13) do
+        mov(0, rax);
+        mov(r12, r11);
+        mov(rax, composite[r11]);
+        add(1, r12);
+    endwhile;
+
+    mov(0, r12);
+    mov(2, r13);
+    mov(120000, rbx);
+
+    while(r13 < rbx) do
+        mov(r13, r11);
+        mov(composite[r11], r14);
+
+        if(r14 = 0) then
+            add(1, r12);
+
+            if(r12 = 10001) then
+                stdout.put("Euler #7 = ", r13, nl);
+                mov(rbx, r13);
+            else
+                mov(r13, r11);
+                imul(r13, r11);
+                mov(r11, r15);
+
+                while(r15 < rbx) do
+                    mov(1, rax);
+                    mov(r15, r10);
+                    mov(rax, composite[r10]);
+                    mov(r13, r11);
+                    add(r11, r15);
+                endwhile;
+
+                add(1, r13);
+            endif;
+        else
+            add(1, r13);
+        endif;
+    endwhile;
+end euler007;

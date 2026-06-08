@@ -1,0 +1,72 @@
+// euler021-amicable-numbers.hla64 — PE #21 (31626)
+
+program euler021;
+
+#include("stdlib64.hhf")
+
+procedure DivisorSum(n: uint64); @returns("rax");
+var
+    d: uint64;
+    total: uint64;
+begin DivisorSum;
+    mov(0, total);
+    mov(1, d);
+    mov(n, rbx);
+
+    while(d < rbx) do
+        mov(d, r11);
+        imul(r11, r11);
+        if(r11 > rbx) then
+            mov(rbx, d);
+        else
+            mov(n, rax);
+            mov(d, r10);
+            mod(r10, rax);
+            if(rax = 0) then
+                mov(d, r11);
+                mov(total, rax);
+                add(r11, rax);
+                mov(rax, total);
+                mov(d, r11);
+                imul(r11, r11);
+                mov(n, r10);
+                if(r11 < r10) then
+                    mov(n, rax);
+                    mov(d, r10);
+                    idiv(r10, rax);
+                    mov(total, r11);
+                    add(rax, r11);
+                    mov(r11, total);
+                endif;
+            endif;
+            add(1, d);
+        endif;
+    endwhile;
+
+    mov(total, rax);
+end DivisorSum;
+
+begin euler021;
+    mov(0, r12);
+    mov(2, r13);
+    mov(10000, rbx);
+
+    while(r13 < rbx) do
+        call DivisorSum(r13);
+        mov(rax, r14);
+        if(r14 > r13) then
+            if(r14 < rbx) then
+                call DivisorSum(r14);
+                if(rax = r13) then
+                    mov(r12, r11);
+                    add(r13, r11);
+                    add(r14, r11);
+                    mov(r11, r12);
+                endif;
+            endif;
+        endif;
+        add(1, r13);
+    endwhile;
+
+    stdout.put("Euler #21 = ", r12, nl);
+end euler021;

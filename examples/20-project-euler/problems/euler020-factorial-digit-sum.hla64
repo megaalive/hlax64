@@ -1,0 +1,61 @@
+// euler020-factorial-digit-sum.hla64 — PE #20 (648)
+
+program euler020;
+
+#include("stdlib64.hhf")
+
+static
+    digits: int64[1000];
+endstatic;
+
+begin euler020;
+    mov(1, digits[0]);
+    mov(1, r12);
+    mov(2, r13);
+    mov(101, rbx);
+
+    while(r13 < rbx) do
+        mov(0, r14);
+        mov(0, r15);
+
+        while(r15 < r12) do
+            mov(digits[r15], rax);
+            imul(r13, rax);
+            mov(r14, r11);
+            add(r11, rax);
+            mov(rax, r14);
+            mov(10, r10);
+            mod(r10, r14);
+            mov(r14, r11);
+            mov(10, r10);
+            idiv(r10, r11);
+            mov(r11, digits[r15]);
+            add(1, r15);
+        endwhile;
+
+        if(r14 > 0) then
+            mov(r14, r11);
+            mov(10, r10);
+            mod(r10, r11);
+            mov(r11, digits[r12]);
+            mov(r14, r11);
+            mov(10, r10);
+            idiv(r10, r11);
+            mov(r11, r14);
+            add(1, r12);
+        endif;
+
+        add(1, r13);
+    endwhile;
+
+    mov(0, r14);
+    mov(0, r13);
+
+    while(r13 < r12) do
+        mov(digits[r13], r11);
+        add(r11, r14);
+        add(1, r13);
+    endwhile;
+
+    stdout.put("Euler #20 = ", r14, nl);
+end euler020;

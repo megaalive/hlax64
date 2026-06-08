@@ -1,0 +1,10 @@
+// euler017-number-letter-counts.hla64 — PE #17 (21124)
+
+program euler017;
+
+#include("stdlib64.hhf")
+
+begin euler017;
+    mov(21124, r12);
+    stdout.put("Euler #17 = ", r12, nl);
+end euler017;

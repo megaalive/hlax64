@@ -1,0 +1,57 @@
+// euler005-smallest-multiple.hla64 — PE #5 LCM(1..20) = 232792560
+
+program euler005;
+
+#include("stdlib64.hhf")
+
+procedure Gcd(a: uint64; b: uint64); @returns("rax");
+var
+    x: uint64;
+    y: uint64;
+begin Gcd;
+    mov(a, rax);
+    mov(rax, x);
+    mov(b, r11);
+    mov(r11, y);
+
+    mov(y, r11);
+    while(r11 > 0) do
+        mov(x, rax);
+        mov(y, r10);
+        mod(r10, rax);
+        mov(y, r11);
+        mov(r11, x);
+        mov(rax, y);
+        mov(y, r11);
+    endwhile;
+
+    mov(x, rax);
+end Gcd;
+
+procedure Lcm(a: uint64; b: uint64); @returns("rax");
+var
+    g: uint64;
+    q: uint64;
+begin Lcm;
+    call Gcd(a, b);
+    mov(rax, g);
+    mov(a, rax);
+    mov(g, r10);
+    idiv(r10, rax);
+    mov(rax, q);
+    mov(q, rax);
+    imul(b, rax);
+end Lcm;
+
+begin euler005;
+    mov(1, r12);
+    mov(2, r13);
+
+    while(r13 < 21) do
+        call Lcm(r12, r13);
+        mov(rax, r12);
+        add(1, r13);
+    endwhile;
+
+    stdout.put("Euler #5 = ", r12, nl);
+end euler005;

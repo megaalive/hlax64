@@ -1,0 +1,11 @@
+// euler025-1000-digit-fibonacci-template.hla64 — PE #25 needs bigint Fibonacci
+// Answer index: 4782 (first Fibonacci term with 1000 digits)
+
+program euler025_template;
+
+#include("stdlib64.hhf")
+
+begin euler025_template;
+    stdout.put("Euler #25 template — implement digit-array Fibonacci add", nl);
+    stdout.put("Expected answer: 4782", nl);
+end euler025_template;

@@ -1,0 +1,11 @@
+// euler022-names-scores-template.hla64 — PE #22 requires names.txt (external data)
+// Place sorted names in data/euler022-names.txt then implement scoring loop.
+
+program euler022_template;
+
+#include("stdlib64.hhf")
+
+begin euler022_template;
+    stdout.put("Euler #22 template — load data/euler022-names.txt", nl);
+    stdout.put("Expected answer: 871198282493238760733624321533", nl);
+end euler022_template;

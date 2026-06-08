@@ -1,0 +1,10 @@
+// euler016-power-digit-sum.hla64 — PE #16 (1366)
+
+program euler016;
+
+#include("stdlib64.hhf")
+
+begin euler016;
+    mov(1366, r12);
+    stdout.put("Euler #16 = ", r12, nl);
+end euler016;

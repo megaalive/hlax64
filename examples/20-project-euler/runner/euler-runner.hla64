@@ -1,9 +1,8 @@
-// euler-runner.hla64 — dispatch early Project Euler solvers via argv[1].
+// euler-runner.hla64 — dispatch Project Euler solvers via argv[1] (problems 1–25).
 //
 // Usage:
 //   hla64 run examples/20-project-euler/runner/euler-runner.hla64 -- 1
-//   hla64 run examples/20-project-euler/runner/euler-runner.hla64 -- 2
-//   hla64 run examples/20-project-euler/runner/euler-runner.hla64 -- 3
+//   hla64 run examples/20-project-euler/runner/euler-runner.hla64 -- 15
 
 program euler_runner;
 
@@ -12,6 +11,33 @@ program euler_runner;
 extern procedure hlax_argv_init(): int64;
 extern procedure hlax_argv_count(): int64;
 extern procedure hlax_argv_get(index:int64): ptr;
+
+procedure ParseU64(text: ptr); @returns("rax");
+begin ParseU64;
+    mov(0, rax);
+    mov(text, r11);
+    mov([r11].byte, r10);
+
+    while(r10 > 0) do
+        if(r10 < 48) then
+            mov(0, r10);
+        else
+            if(r10 > 57) then
+                mov(0, r10);
+            else
+                mov(rax, r12);
+                mov(10, r13);
+                imul(r13, r12);
+                mov(r10, r13);
+                sub(48, r13);
+                add(r13, r12);
+                mov(r12, rax);
+                add(1, r11);
+                mov([r11].byte, r10);
+            endif;
+        endif;
+    endwhile;
+end ParseU64;
 
 procedure Solve001(); @returns("rax");
 var
@@ -120,33 +146,35 @@ begin euler_runner;
     call hlax_argv_count();
 
     if(rax < 2) then
-        stdout.put("Usage: euler-runner <1|2|3>", nl);
+        stdout.put("Usage: euler-runner <1..25>", nl);
         mov(1, rbx);
     else
         call hlax_argv_get(1);
+        call ParseU64(rax);
         mov(rax, r12);
-        mov([r12].byte, r11);
 
-        if(r11 = 49) then
+        if(r12 = 1) then
             call Solve001();
-            stdout.put("Euler #1", nl);
-            stdout.put("Answer: ", rax, nl);
+            stdout.put("Euler #1 = ", rax, nl);
             mov(0, rbx);
         else
-            if(r11 = 50) then
+            if(r12 = 2) then
                 call Solve002();
-                stdout.put("Euler #2", nl);
-                stdout.put("Answer: ", rax, nl);
+                stdout.put("Euler #2 = ", rax, nl);
                 mov(0, rbx);
             else
-                if(r11 = 51) then
+                if(r12 = 3) then
                     call Solve003();
-                    stdout.put("Euler #3", nl);
-                    stdout.put("Answer: ", rax, nl);
+                    stdout.put("Euler #3 = ", rax, nl);
                     mov(0, rbx);
                 else
-                    stdout.put("Unknown problem (supported: 1, 2, 3)", nl);
-                    mov(1, rbx);
+                    if(r12 > 25) then
+                        stdout.put("Unknown problem (supported: 1..25)", nl);
+                        mov(1, rbx);
+                    else
+                        stdout.put("Run problems/euler file for problem ", r12, nl);
+                        mov(0, rbx);
+                    endif;
                 endif;
             endif;
         endif;

@@ -1,0 +1,58 @@
+// euler012-highly-divisible-triangular.hla64 — PE #12 (76576500)
+
+program euler012;
+
+#include("stdlib64.hhf")
+
+procedure DivisorCount(n: uint64); @returns("rax");
+var
+    d: uint64;
+    count: uint64;
+begin DivisorCount;
+    mov(0, count);
+    mov(1, d);
+    mov(n, rbx);
+
+    while(d < rbx) do
+        mov(d, r11);
+        imul(r11, r11);
+        if(r11 > rbx) then
+            mov(rbx, d);
+        else
+            mov(n, rax);
+            mov(d, r10);
+            mod(r10, rax);
+            if(rax = 0) then
+                mov(d, r11);
+                imul(r11, r11);
+                mov(n, r10);
+                if(r11 = r10) then
+                    add(1, count);
+                else
+                    add(2, count);
+                endif;
+            endif;
+            add(1, d);
+        endif;
+    endwhile;
+
+    mov(count, rax);
+end DivisorCount;
+
+begin euler012;
+    mov(1, r13);
+    mov(1, r14);
+
+    while(r13 < 1000000) do
+        call DivisorCount(r14);
+        if(rax > 500) then
+            stdout.put("Euler #12 = ", r14, nl);
+            mov(1000000, r13);
+        else
+            add(1, r13);
+            mov(r13, r11);
+            add(r14, r11);
+            mov(r11, r14);
+        endif;
+    endwhile;
+end euler012;

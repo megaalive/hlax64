@@ -1,0 +1,24 @@
+// euler015-lattice-paths.hla64 — PE #15 (137846528820)
+
+program euler015;
+
+#include("stdlib64.hhf")
+
+begin euler015;
+    mov(1, r12);
+    mov(1, r13);
+    mov(21, rbx);
+
+    while(r13 < rbx) do
+        mov(20, r10);
+        add(r13, r10);
+        mov(r12, rax);
+        imul(r10, rax);
+        mov(r13, r10);
+        idiv(r10, rax);
+        mov(rax, r12);
+        add(1, r13);
+    endwhile;
+
+    stdout.put("Euler #15 = ", r12, nl);
+end euler015;

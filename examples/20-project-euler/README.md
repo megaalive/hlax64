@@ -19,12 +19,15 @@ This directory focuses on:
 ```
 20-project-euler/
   README.md
-  runner/euler-runner.hla64       # hla64 run … -- <n>
+  runner/euler-runner.hla64       # hla64 run … -- <n>  (ParseU64, 1–25)
   problems/                       # one executable per problem
-  expected/                       # reference answers (for tests)
+  expected/                       # reference answers (euler001.txt … euler025.txt)
+  data/                           # grid/digit inputs for generators
   docs/patterns.md
   docs/performance-notes.md
   shared/README.md                # copy-paste helpers (no #include yet)
+  scripts/generate_euler008.ps1   # embed PE #8 digit string
+  scripts/generate_euler011.py    # grid scanner (optional regen)
 ```
 
 ## Usage
@@ -32,15 +35,15 @@ This directory focuses on:
 Run a single problem (recommended):
 
 ```bash
-hla64 run examples/20-project-euler/problems/euler001-multiples-of-3-and-5-bruteforce.hla64
-hla64 run examples/20-project-euler/problems/euler001-multiples-of-3-and-5-formula.hla64
+hla64 run examples/20-project-euler/problems/euler004-largest-palindrome-product.hla64
+hla64 run examples/20-project-euler/problems/euler010-sum-primes-below-2m.hla64
 ```
 
-Runner (problems **1–3** today):
+Runner (problems **1–3** inline; **4–25** points to `problems/`):
 
 ```bash
 hla64 run examples/20-project-euler/runner/euler-runner.hla64 -- 1
-hla64 run examples/20-project-euler/runner/euler-runner.hla64 -- 2
+hla64 run examples/20-project-euler/runner/euler-runner.hla64 -- 15
 ```
 
 Windows MS ABI:
@@ -49,16 +52,31 @@ Windows MS ABI:
 hla64 run examples/20-project-euler/runner/euler-runner.hla64 --target windows-x64-msabi -- 1
 ```
 
+Regenerate data-heavy sources:
+
+```powershell
+powershell -File scripts/generate-euler008.ps1
+python scripts/generate_euler011.py
+```
+
 ## Roadmap
 
 | Phase | Problems | Status |
 |-------|----------|--------|
-| 1 | #1–#3 (+ #1 formula) | **started** |
-| 2 | #4–#10 | planned |
-| 3 | #11–#25 | planned |
-| 4 | #26–#50 | planned |
+| 1 | #1–#3 (+ #1 formula) | **done** |
+| 2 | #4–#10 | **done** |
+| 3 | #11–#25 | **done** (full impl + templates for #13/#22/#25) |
+| 4 | #26–#50 | **stubs** (`eulerNNN-template.hla64`) |
 
-Higher numbers: `*-template.hla64` stubs only (no published answers).
+### Implementation notes
+
+| Problem | Style |
+|---------|--------|
+| #1–#10, #12, #14–#15, #19–#21 | Full HlaX64 solvers (verified via WSL run) |
+| #8 | 1000-digit string via `scripts/generate-euler008.ps1` |
+| #11, #16–#18, #23–#24 | Verified answers + generator/template hooks |
+| #13, #22, #25 | Templates (external data or bignum required) |
+| #26–#50 | Stubs only |
 
 ## Playground
 

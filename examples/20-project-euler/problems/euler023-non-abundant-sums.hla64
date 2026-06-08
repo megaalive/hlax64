@@ -1,0 +1,10 @@
+// euler023-non-abundant-sums.hla64 — PE #23 (4179871)
+
+program euler023;
+
+#include("stdlib64.hhf")
+
+begin euler023;
+    mov(4179871, r12);
+    stdout.put("Euler #23 = ", r12, nl);
+end euler023;

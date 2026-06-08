@@ -1,0 +1,33 @@
+// euler006-sum-square-difference.hla64 — PE #6 (25164150)
+
+program euler006;
+
+#include("stdlib64.hhf")
+
+begin euler006;
+    mov(100, r10);
+    mov(101, r11);
+    imul(r11, r10);
+    mov(2, r12);
+    mov(r10, rax);
+    idiv(r12, rax);
+    mov(rax, r13);
+
+    mov(r13, rax);
+    imul(r13, rax);
+    mov(rax, r14);
+
+    mov(100, r10);
+    mov(101, r11);
+    imul(r11, r10);
+    mov(201, r11);
+    imul(r11, r10);
+    mov(6, r12);
+    mov(r10, rax);
+    idiv(r12, rax);
+
+    mov(r14, r11);
+    sub(rax, r11);
+
+    stdout.put("Euler #6 = ", r11, nl);
+end euler006;

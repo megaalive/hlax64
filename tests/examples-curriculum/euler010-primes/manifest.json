@@ -1,0 +1,7 @@
+{
+  "name": "curriculum-euler010-primes",
+  "source": "../../../examples/20-project-euler/problems/euler010-sum-primes-below-2m.hla64",
+  "expectedExitCode": 0,
+  "expectedStdout": "Euler #10 = 142913828922\n",
+  "description": "Project Euler #10: sieve sum of primes below 2M"
+}

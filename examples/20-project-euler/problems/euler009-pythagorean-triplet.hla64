@@ -1,0 +1,44 @@
+// euler009-pythagorean-triplet.hla64 — PE #9 (31875000)
+
+program euler009;
+
+#include("stdlib64.hhf")
+
+begin euler009;
+    mov(1, r12);
+
+    while(r12 < 334) do
+        mov(r12, r13);
+
+        while(r13 < 500) do
+            mov(1000, r14);
+            mov(r12, r11);
+            sub(r11, r14);
+            mov(r13, r11);
+            sub(r11, r14);
+
+            if(r14 > 0) then
+                mov(r12, rax);
+                imul(rax, rax);
+                mov(r13, r11);
+                imul(r11, r11);
+                add(r11, rax);
+                mov(r14, r11);
+                imul(r11, r11);
+
+                if(rax = r11) then
+                    mov(r12, rax);
+                    imul(r13, rax);
+                    imul(r14, rax);
+                    stdout.put("Euler #9 = ", rax, nl);
+                    mov(1000, r12);
+                    mov(1000, r13);
+                endif;
+            endif;
+
+            add(1, r13);
+        endwhile;
+
+        add(1, r12);
+    endwhile;
+end euler009;

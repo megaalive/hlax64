@@ -1,0 +1,8 @@
+﻿// euler043-template.hla64 — PE #43 stub (solve first, then implement)
+program euler043_template;
+
+#include("stdlib64.hhf")
+
+begin euler043_template;
+    stdout.put("Euler #43 template — implement after solving on projecteuler.net", nl);
+end euler043_template;

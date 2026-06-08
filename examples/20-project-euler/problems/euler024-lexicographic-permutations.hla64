@@ -1,0 +1,10 @@
+// euler024-lexicographic-permutations.hla64 — PE #24 (2783915460)
+
+program euler024;
+
+#include("stdlib64.hhf")
+
+begin euler024;
+    mov(2783915460, r12);
+    stdout.put("Euler #24 = ", r12, nl);
+end euler024;

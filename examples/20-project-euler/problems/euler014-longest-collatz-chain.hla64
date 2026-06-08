@@ -1,0 +1,45 @@
+// euler014-longest-collatz-chain.hla64 — PE #14 (837799)
+
+program euler014;
+
+#include("stdlib64.hhf")
+
+begin euler014;
+    mov(0, r12);
+    mov(0, r14);
+    mov(1, r13);
+    mov(1000000, rbx);
+
+    while(r13 < rbx) do
+        mov(r13, r15);
+        mov(0, r11);
+
+        while(r15 > 1) do
+            add(1, r11);
+            mov(r15, rax);
+            mov(2, r10);
+            mod(r10, rax);
+            if(rax = 0) then
+                mov(r15, rax);
+                mov(2, r10);
+                idiv(r10, rax);
+                mov(rax, r15);
+            else
+                mov(r15, rax);
+                mov(3, r10);
+                imul(r10, rax);
+                add(1, rax);
+                mov(rax, r15);
+            endif;
+        endwhile;
+
+        if(r11 > r12) then
+            mov(r11, r12);
+            mov(r13, r14);
+        endif;
+
+        add(1, r13);
+    endwhile;
+
+    stdout.put("Euler #14 = ", r14, nl);
+end euler014;

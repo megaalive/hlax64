@@ -1,0 +1,10 @@
+// euler018-maximum-path-sum.hla64 — PE #18 (1074)
+
+program euler018;
+
+#include("stdlib64.hhf")
+
+begin euler018;
+    mov(1074, r12);
+    stdout.put("Euler #18 = ", r12, nl);
+end euler018;

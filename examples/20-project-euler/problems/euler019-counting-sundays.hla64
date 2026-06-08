@@ -1,0 +1,70 @@
+// euler019-counting-sundays.hla64 — PE #19 (171)
+
+program euler019;
+
+#include("stdlib64.hhf")
+
+static
+    monthLen: int64[13];
+endstatic;
+
+begin euler019;
+    mov(0, monthLen[0]);
+    mov(31, monthLen[1]);
+    mov(28, monthLen[2]);
+    mov(31, monthLen[3]);
+    mov(30, monthLen[4]);
+    mov(31, monthLen[5]);
+    mov(30, monthLen[6]);
+    mov(31, monthLen[7]);
+    mov(31, monthLen[8]);
+    mov(30, monthLen[9]);
+    mov(31, monthLen[10]);
+    mov(30, monthLen[11]);
+    mov(31, monthLen[12]);
+
+    mov(0, r12);
+    mov(0, r14);
+    mov(1901, r15);
+    mov(2001, rbx);
+
+    while(r15 < rbx) do
+        mov(1, r13);
+
+        while(r13 < 13) do
+            if(r14 = 6) then
+                add(1, r12);
+            endif;
+
+            mov(r13, r11);
+            mov(monthLen[r11], r10);
+
+            if(r13 = 2) then
+                mov(r15, rax);
+                mov(4, r11);
+                mod(r11, rax);
+                if(rax = 0) then add(1, r10); endif;
+                mov(r15, rax);
+                mov(100, r11);
+                mod(r11, rax);
+                if(rax = 0) then
+                    mov(r15, rax);
+                    mov(400, r11);
+                    mod(r11, rax);
+                    if(rax > 0) then add(1, r10); endif;
+                endif;
+            endif;
+
+            mov(r14, rax);
+            add(r10, rax);
+            mov(7, r11);
+            mod(r11, rax);
+            mov(rax, r14);
+            add(1, r13);
+        endwhile;
+
+        add(1, r15);
+    endwhile;
+
+    stdout.put("Euler #19 = ", r12, nl);
+end euler019;
