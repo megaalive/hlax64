@@ -163,20 +163,17 @@ internal static class AbiCallLoweringHelper
         sb.Append($"    add rsp, {cleanup}      ; restore stack");
     }
 
-    private static bool IsStringRef(IrValue arg)
-        => arg.Name?.StartsWith("str:", StringComparison.Ordinal) == true
-           || arg.Name?.StartsWith("addr:", StringComparison.Ordinal) == true;
-
-    private static bool NeedsAddressLoad(IrValue arg)
+    internal static bool NeedsAddressLoadForCall(IrValue arg)
         => IsProcedureRef(arg)
            || AddressRefEncoding.IsStringRef(arg)
+           || arg.Name?.StartsWith("str:", StringComparison.Ordinal) == true
            || arg.Name?.StartsWith("addr:", StringComparison.Ordinal) == true;
 
     private static void AppendSysVGprArg(StringBuilder sb, string gpr, IrValue arg, Func<IrValue?, string> resolve)
     {
         if (IsProcedureRef(arg))
             sb.AppendLine($"    lea {gpr}, [rel {ProcedureRefName(arg)}]");
-        else if (NeedsAddressLoad(arg))
+        else if (NeedsAddressLoadForCall(arg))
             sb.AppendLine($"    lea {gpr}, [{resolve(arg)}]");
         else
             sb.AppendLine($"    mov {gpr}, {resolve(arg)}");
@@ -184,13 +181,34 @@ internal static class AbiCallLoweringHelper
 
     private static void AppendSysVStackArg(StringBuilder sb, IrValue arg, Func<IrValue?, string> resolve)
     {
-        if (NeedsAddressLoad(arg))
+        if (NeedsAddressLoadForCall(arg))
         {
             AppendSysVGprArg(sb, "rax", arg, resolve);
             sb.AppendLine("    push rax      ; stack arg");
         }
         else
             sb.AppendLine($"    push {resolve(arg)}      ; stack arg");
+    }
+
+    private static void AppendWindowsGprArg(StringBuilder sb, string gpr, IrValue arg, string val)
+    {
+        if (IsProcedureRef(arg))
+            sb.AppendLine($"    lea {gpr}, [rel {ProcedureRefName(arg)}]");
+        else if (NeedsAddressLoadForCall(arg))
+            sb.AppendLine($"    lea {gpr}, [{val}]");
+        else
+            sb.AppendLine($"    mov {gpr}, {val}");
+    }
+
+    private static void AppendWindowsStackArg(StringBuilder sb, int stackIdx, IrValue arg, string val)
+    {
+        if (NeedsAddressLoadForCall(arg))
+        {
+            sb.AppendLine($"    lea rax, [{val}]");
+            sb.AppendLine($"    mov qword [{stackIdx} + rsp + 32], rax");
+        }
+        else
+            sb.AppendLine($"    mov qword [{stackIdx} + rsp + 32], {val}");
     }
 
     public static void AppendWindowsCall(StringBuilder sb, IrInstruction inst, IrFunction caller,
@@ -264,16 +282,11 @@ internal static class AbiCallLoweringHelper
             else if (regGpr < gprs.Length)
             {
                 var gpr = gprs[regGpr++];
-                if (IsProcedureRef(arg))
-                    sb.AppendLine($"    lea {gpr}, [rel {ProcedureRefName(arg)}]");
-                else if (AddressRefEncoding.IsStringRef(arg) || arg.Name?.StartsWith("addr:", StringComparison.Ordinal) == true)
-                    sb.AppendLine($"    lea {gpr}, [{val}]");
-                else
-                    sb.AppendLine($"    mov {gpr}, {val}");
+                AppendWindowsGprArg(sb, gpr, arg, val);
             }
             else
             {
-                sb.AppendLine($"    mov qword [{stackIdx} + rsp + 32], {val}");
+                AppendWindowsStackArg(sb, stackIdx, arg, val);
                 stackIdx += 8;
             }
         }

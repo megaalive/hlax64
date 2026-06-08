@@ -5,11 +5,12 @@
         xmlns:avaloniaEdit="using:AvaloniaEdit"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+        mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="840"
         x:Class="HlaX64.AssemblyLab.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="HlaX64 Assembly Lab"
-        Width="1200" Height="800"
+        Width="1280" Height="840"
+        Background="#1e1e1e"
         x:Name="RootWindow">
 
     <Design.DataContext>
@@ -17,166 +18,262 @@
     </Design.DataContext>
 
     <DockPanel>
-        <Menu DockPanel.Dock="Top">
+
+        <!-- MENU BAR -->
+        <Menu DockPanel.Dock="Top" Background="#3c3c3c">
             <MenuItem Header="_File">
-                <MenuItem Header="_Open File…" Command="{Binding OpenFileCommand}"/>
-                <MenuItem Header="Open _Project…" Command="{Binding OpenProjectCommand}"/>
+                <MenuItem Header="Open File..."    Command="{Binding OpenFileCommand}"/>
+                <MenuItem Header="Open Project..." Command="{Binding OpenProjectCommand}"/>
                 <Separator/>
-                <MenuItem Header="_Save" Command="{Binding SaveFileCommand}" InputGesture="Ctrl+S"/>
-                <MenuItem Header="Save _As…" Command="{Binding SaveFileAsCommand}"/>
+                <MenuItem Header="Save"            Command="{Binding SaveFileCommand}" InputGesture="Ctrl+S"/>
+                <MenuItem Header="Save As..."      Command="{Binding SaveFileAsCommand}"/>
             </MenuItem>
             <MenuItem Header="_Build" Command="{Binding BuildCommand}"/>
-            <MenuItem Header="_Run" Command="{Binding RunCommand}"/>
+            <MenuItem Header="_Run"   Command="{Binding RunCommand}"/>
             <MenuItem Header="_Debug" Command="{Binding DebugCommand}"
                       IsEnabled="{Binding IsDebugFeatureEnabled}"
                       ToolTip.Tip="{Binding DebugFeatureDisabledHint}"/>
             <MenuItem Header="Export _Proof Bundle" Command="{Binding ExportProofBundleCommand}"/>
         </Menu>
 
-        <Border DockPanel.Dock="Top" BorderBrush="#333" BorderThickness="0,0,0,1" Padding="8,6">
-            <StackPanel Spacing="6">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                    <TextBlock Text="File" VerticalAlignment="Center" Opacity="0.65" FontWeight="SemiBold" Margin="0,0,2,0"/>
-                    <Button Content="Open File" Command="{Binding OpenFileCommand}"/>
-                    <Button Content="Open Project" Command="{Binding OpenProjectCommand}"/>
-                    <Button Content="Save" Command="{Binding SaveFileCommand}"/>
-                    <Rectangle Width="1" Fill="#444" Margin="6,2"/>
-                    <TextBlock Text="Build" VerticalAlignment="Center" Opacity="0.65" FontWeight="SemiBold" Margin="0,0,2,0"/>
-                    <Button Content="Build" Command="{Binding BuildCommand}"/>
-                    <Button Content="Run" Command="{Binding RunCommand}"/>
-                    <Button Content="Debug" Command="{Binding DebugCommand}"
+        <!-- TOOLBAR -->
+        <Border DockPanel.Dock="Top"
+                Background="#252526"
+                BorderBrush="#1a1a1a"
+                BorderThickness="0,0,0,1"
+                Padding="6,3">
+            <StackPanel Spacing="3">
+
+                <!-- Row 1: File · Build · Run/Debug · Export -->
+                <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+
+                    <TextBlock Classes="toolbar-group-label" Text="FILE"/>
+                    <Button Classes="toolbar-btn" Content="Open File"    Command="{Binding OpenFileCommand}"       ToolTip.Tip="Open File"/>
+                    <Button Classes="toolbar-btn" Content="Open Project" Command="{Binding OpenProjectCommand}"    ToolTip.Tip="Open Project"/>
+                    <Button Classes="toolbar-btn" Content="Save"         Command="{Binding SaveFileCommand}"       ToolTip.Tip="Save  Ctrl+S"/>
+                    <Button Classes="toolbar-btn" Content="Build Folder" Command="{Binding OpenBuildFolderCommand}" ToolTip.Tip="Open build output folder"/>
+
+                    <Rectangle Classes="v-sep"/>
+
+                    <TextBlock Classes="toolbar-group-label" Text="BUILD"/>
+                    <Button Classes="toolbar-accent" Content="Build" Command="{Binding BuildCommand}" ToolTip.Tip="Build"/>
+
+                    <Rectangle Classes="v-sep"/>
+
+                    <TextBlock Classes="toolbar-group-label" Text="RUN"/>
+                    <Button Classes="toolbar-accent" Content="Run"   Command="{Binding RunCommand}"   ToolTip.Tip="Run"/>
+                    <Button Classes="toolbar-accent" Content="Debug" Command="{Binding DebugCommand}"
+                            IsEnabled="{Binding IsDebugFeatureEnabled}"
                             ToolTip.Tip="{Binding DebugFeatureDisabledHint}"/>
-                    <Button Content="Continue" Command="{Binding DebugContinueCommand}"/>
-                    <Button Content="Step Over" Command="{Binding DebugStepOverCommand}"/>
-                    <Button Content="Step Into" Command="{Binding DebugStepIntoCommand}"/>
-                    <Button Content="Step Out" Command="{Binding DebugStepOutCommand}"/>
-                    <Button Content="Stop Debug" Command="{Binding DebugStopCommand}"/>
-                    <Button Content="Proof Bundle" Command="{Binding ExportProofBundleCommand}"/>
-                    <Button Content="Open Build Folder" Command="{Binding OpenBuildFolderCommand}"/>
+
+                    <Rectangle Classes="v-sep"/>
+
+                    <TextBlock Classes="toolbar-group-label" Text="DEBUG"/>
+                    <Button Classes="toolbar-btn"    Content="Continue"  Command="{Binding DebugContinueCommand}" ToolTip.Tip="Continue  F5"/>
+                    <Button Classes="toolbar-btn"    Content="Step Over" Command="{Binding DebugStepOverCommand}" ToolTip.Tip="Step Over  F10"/>
+                    <Button Classes="toolbar-btn"    Content="Step Into" Command="{Binding DebugStepIntoCommand}" ToolTip.Tip="Step Into  F11"/>
+                    <Button Classes="toolbar-btn"    Content="Step Out"  Command="{Binding DebugStepOutCommand}"  ToolTip.Tip="Step Out  Shift+F11"/>
+                    <Button Classes="toolbar-danger" Content="Stop"      Command="{Binding DebugStopCommand}"     ToolTip.Tip="Stop debugging"/>
+
+                    <Rectangle Classes="v-sep"/>
+
+                    <Button Classes="toolbar-btn" Content="Proof Bundle" Command="{Binding ExportProofBundleCommand}" ToolTip.Tip="Export proof bundle"/>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                    <TextBlock Text="Tools" VerticalAlignment="Center" Opacity="0.65" FontWeight="SemiBold" Margin="0,0,2,0"/>
-                    <Button Content="Explain" Command="{Binding ExplainRepairCommand}"/>
-                    <Button Content="Apply Fix" Command="{Binding ApplySuggestedFixCommand}"/>
-                    <Rectangle Width="1" Fill="#444" Margin="6,2"/>
-                    <TextBlock Text="MCP" VerticalAlignment="Center" Opacity="0.65" FontWeight="SemiBold" Margin="0,0,2,0"/>
-                    <Button Content="Start" Command="{Binding StartMcpCommand}"
+
+                <!-- Row 2: Tools · MCP · Options · Target -->
+                <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+
+                    <TextBlock Classes="toolbar-group-label" Text="AI"/>
+                    <Button Classes="toolbar-btn" Content="Explain"   Command="{Binding ExplainRepairCommand}"    ToolTip.Tip="Explain and suggest repair"/>
+                    <Button Classes="toolbar-btn" Content="Apply Fix" Command="{Binding ApplySuggestedFixCommand}" ToolTip.Tip="Apply suggested fix"/>
+
+                    <Rectangle Classes="v-sep"/>
+
+                    <TextBlock Classes="toolbar-group-label" Text="MCP"/>
+                    <Button Classes="toolbar-btn" Content="Start"
+                            Command="{Binding StartMcpCommand}"
                             IsEnabled="{Binding IsMcpFeatureEnabled}"
                             ToolTip.Tip="{Binding McpFeatureDisabledHint}"/>
-                    <Button Content="Tools" Command="{Binding ListMcpToolsCommand}"
-                            IsEnabled="{Binding IsMcpFeatureEnabled}"/>
-                    <Button Content="Explain" Command="{Binding McpExplainCommand}"
-                            IsEnabled="{Binding IsMcpFeatureEnabled}"/>
-                    <Rectangle Width="1" Fill="#444" Margin="6,2"/>
-                    <CheckBox Content="Strict plan gate" IsChecked="{Binding StrictPlanGate}" VerticalAlignment="Center"
-                              ToolTip.Tip="When ON, Build/Run/Proof require Plan approved after each edit. Default OFF."/>
-                    <CheckBox Content="Plan approved" IsChecked="{Binding PlanApproved}" VerticalAlignment="Center"
+                    <Button Classes="toolbar-btn" Content="Tools"
+                            Command="{Binding ListMcpToolsCommand}"
+                            IsEnabled="{Binding IsMcpFeatureEnabled}"
+                            ToolTip.Tip="List MCP tools"/>
+                    <Button Classes="toolbar-btn" Content="Explain"
+                            Command="{Binding McpExplainCommand}"
+                            IsEnabled="{Binding IsMcpFeatureEnabled}"
+                            ToolTip.Tip="MCP explain"/>
+
+                    <Rectangle Classes="v-sep"/>
+
+                    <TextBlock Classes="toolbar-group-label" Text="OPTIONS"/>
+                    <CheckBox Content="Strict plan gate"
+                              IsChecked="{Binding StrictPlanGate}"
+                              VerticalAlignment="Center"
+                              ToolTip.Tip="When ON, Build/Run/Proof require Plan approved after each edit."/>
+                    <CheckBox Content="Plan approved"
+                              IsChecked="{Binding PlanApproved}"
+                              VerticalAlignment="Center"
                               ToolTip.Tip="Required only when Strict plan gate is enabled."/>
-                    <TextBlock VerticalAlignment="Center" Text="Target:" Margin="4,0,0,0"/>
-                    <ComboBox MinWidth="180" ItemsSource="{Binding TargetChoices}" SelectedItem="{Binding SelectedTarget}"/>
+
+                    <Rectangle Classes="v-sep"/>
+
+                    <TextBlock Classes="toolbar-group-label" Text="TARGET"/>
+                    <ComboBox MinWidth="180"
+                              VerticalAlignment="Center"
+                              ItemsSource="{Binding TargetChoices}"
+                              SelectedItem="{Binding SelectedTarget}"/>
                 </StackPanel>
+
             </StackPanel>
         </Border>
 
-        <Border DockPanel.Dock="Bottom" BorderBrush="#444" BorderThickness="0,1,0,0" Padding="8,4">
-            <StackPanel Spacing="2">
-                <TextBlock Text="{Binding OpenModeText}" FontSize="11" Opacity="0.85"/>
-                <TextBlock Text="{Binding StatusText}"/>
-                <TextBlock Text="{Binding BuildOutputDir, StringFormat=Build output: {0}}" FontSize="11" Opacity="0.85"/>
-            </StackPanel>
+        <!-- STATUS BAR -->
+        <Border DockPanel.Dock="Bottom"
+                Background="#007acc"
+                Height="22"
+                Padding="10,0">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="{Binding OpenModeText}"
+                           Foreground="White"
+                           FontSize="12"
+                           VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1"
+                           Text="{Binding StatusText}"
+                           Foreground="White"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="2"
+                           Text="{Binding BuildOutputDir}"
+                           Foreground="#c8e6fa"
+                           FontSize="11"
+                           VerticalAlignment="Center"
+                           Opacity="0.9"/>
+            </Grid>
         </Border>
 
-        <Grid ColumnDefinitions="260,*" RowDefinitions="*,180">
-            <Border Grid.Row="0" Grid.Column="0" BorderBrush="#444" BorderThickness="0,0,1,0" Padding="4">
+        <!-- MAIN AREA -->
+        <Grid ColumnDefinitions="240,4,*" RowDefinitions="*,4,180">
+
+            <!-- Sidebar: Diagnostics -->
+            <Border Grid.Row="0" Grid.Column="0"
+                    Background="#252526"
+                    BorderBrush="#1a1a1a"
+                    BorderThickness="0,0,1,0">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" FontWeight="Bold" Text="Diagnostics" Margin="0,0,0,4"/>
-                    <ListBox x:Name="diagList" ItemsSource="{Binding Diagnostics}"
-                             DoubleTapped="Diagnostics_DoubleTapped">
+                    <Border DockPanel.Dock="Top"
+                            Background="#252526"
+                            BorderBrush="#333"
+                            BorderThickness="0,0,0,1"
+                            Padding="8,5">
+                        <TextBlock Text="DIAGNOSTICS" Classes="section-header" Margin="0"/>
+                    </Border>
+                    <ListBox x:Name="diagList"
+                             ItemsSource="{Binding Diagnostics}"
+                             DoubleTapped="Diagnostics_DoubleTapped"
+                             Background="#252526">
                         <ListBox.ItemTemplate>
                             <DataTemplate DataType="models:LabDiagnosticItem">
-                                <TextBlock Text="{Binding Display}" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding Display}"
+                                           TextWrapping="Wrap"
+                                           FontFamily="Cascadia Code,Consolas,monospace"
+                                           FontSize="11"
+                                           Foreground="#d4d4d4"/>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
                 </DockPanel>
             </Border>
 
-            <TabControl Grid.Row="0" Grid.Column="1" SelectedIndex="{Binding SelectedTabIndex}">
+            <!-- Vertical splitter -->
+            <GridSplitter Grid.Row="0" Grid.Column="1"
+                          Background="#1a1a1a"
+                          ResizeDirection="Columns"/>
+
+            <!-- Editor tabs -->
+            <TabControl Grid.Row="0" Grid.Column="2"
+                        SelectedIndex="{Binding SelectedTabIndex}"
+                        Background="#1e1e1e"
+                        Padding="0">
                 <TabItem Header="Source">
-                    <avaloniaEdit:TextEditor x:Name="SourceEditor"/>
+                    <avaloniaEdit:TextEditor x:Name="SourceEditor" Background="#1e1e1e"/>
                 </TabItem>
                 <TabItem Header="IR">
-                    <avaloniaEdit:TextEditor x:Name="IrEditor"/>
+                    <avaloniaEdit:TextEditor x:Name="IrEditor" Background="#1e1e1e"/>
                 </TabItem>
                 <TabItem Header="NASM">
-                    <avaloniaEdit:TextEditor x:Name="NasmEditor"/>
+                    <avaloniaEdit:TextEditor x:Name="NasmEditor" Background="#1e1e1e"/>
                 </TabItem>
                 <TabItem Header="ABI">
-                    <avaloniaEdit:TextEditor x:Name="AbiEditor"/>
+                    <avaloniaEdit:TextEditor x:Name="AbiEditor" Background="#1e1e1e"/>
                 </TabItem>
                 <TabItem Header="Disasm">
-                    <avaloniaEdit:TextEditor x:Name="DisasmEditor"/>
+                    <avaloniaEdit:TextEditor x:Name="DisasmEditor" Background="#1e1e1e"/>
                 </TabItem>
             </TabControl>
 
-            <TabControl Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,4,0,0">
+            <!-- Horizontal splitter -->
+            <GridSplitter Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                          Background="#1a1a1a"
+                          ResizeDirection="Rows"/>
+
+            <!-- Bottom panel: output tabs -->
+            <TabControl Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+                        Background="#1e1e1e"
+                        Padding="0">
                 <TabItem Header="Output">
-                    <ScrollViewer>
-                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
-                                 FontFamily="Consolas,Courier New,monospace"
-                                 Text="{Binding OutputText}"/>
+                    <ScrollViewer Background="#1e1e1e">
+                        <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
+                                 TextWrapping="Wrap" Text="{Binding OutputText}"/>
                     </ScrollViewer>
                 </TabItem>
                 <TabItem Header="DAP">
-                    <ScrollViewer>
-                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
-                                 FontFamily="Consolas,Courier New,monospace"
-                                 Text="{Binding DapText}"/>
+                    <ScrollViewer Background="#1e1e1e">
+                        <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
+                                 TextWrapping="Wrap" Text="{Binding DapText}"/>
                     </ScrollViewer>
                 </TabItem>
                 <TabItem Header="Capabilities">
-                    <ScrollViewer>
-                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
-                                 FontFamily="Consolas,Courier New,monospace"
-                                 Text="{Binding CapabilitiesText}"/>
+                    <ScrollViewer Background="#1e1e1e">
+                        <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
+                                 TextWrapping="Wrap" Text="{Binding CapabilitiesText}"/>
                     </ScrollViewer>
                 </TabItem>
                 <TabItem Header="Toolchain">
-                    <ScrollViewer>
-                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
-                                 FontFamily="Consolas,Courier New,monospace"
-                                 Text="{Binding ToolchainText}"/>
+                    <ScrollViewer Background="#1e1e1e">
+                        <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
+                                 TextWrapping="Wrap" Text="{Binding ToolchainText}"/>
                     </ScrollViewer>
                 </TabItem>
                 <TabItem Header="Agent">
-                    <ScrollViewer>
-                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
-                                 FontFamily="Consolas,Courier New,monospace"
-                                 Text="{Binding AgentText}"/>
+                    <ScrollViewer Background="#1e1e1e">
+                        <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
+                                 TextWrapping="Wrap" Text="{Binding AgentText}"/>
                     </ScrollViewer>
                 </TabItem>
                 <TabItem Header="MCP">
-                    <ScrollViewer>
-                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
-                                 FontFamily="Consolas,Courier New,monospace"
-                                 Text="{Binding McpText}"/>
+                    <ScrollViewer Background="#1e1e1e">
+                        <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
+                                 TextWrapping="Wrap" Text="{Binding McpText}"/>
                     </ScrollViewer>
                 </TabItem>
                 <TabItem Header="Plan">
-                    <ScrollViewer>
-                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
-                                 FontFamily="Consolas,Courier New,monospace"
-                                 Text="{Binding PlanText}"/>
+                    <ScrollViewer Background="#1e1e1e">
+                        <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
+                                 TextWrapping="Wrap" Text="{Binding PlanText}"/>
                     </ScrollViewer>
                 </TabItem>
                 <TabItem Header="Diff">
-                    <ScrollViewer>
-                        <TextBox IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap"
-                                 FontFamily="Consolas,Courier New,monospace"
-                                 Text="{Binding DiffText}"/>
+                    <ScrollViewer Background="#1e1e1e">
+                        <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
+                                 TextWrapping="Wrap" Text="{Binding DiffText}"/>
                     </ScrollViewer>
                 </TabItem>
             </TabControl>
+
         </Grid>
+
     </DockPanel>
 </Window>

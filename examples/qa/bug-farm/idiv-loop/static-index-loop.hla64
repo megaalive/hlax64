@@ -1,0 +1,15 @@
+// static-index-loop.hla64 — store index i at facts[i] for i=1..9, read facts[9].
+program static_index_loop;
+
+static
+    facts: int64[10];
+endstatic;
+
+begin static_index_loop;
+    mov(1, r10);
+    while(r10 < 10) do
+        mov(r10, facts[r10]);
+        add(1, r10);
+    endwhile;
+    mov(facts[9], rbx);
+end static_index_loop;

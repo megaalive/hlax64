@@ -20,6 +20,9 @@ public sealed class DebugCurrentLineHighlighter : IBackgroundRenderer
         if (HighlightedLine <= 0 || textView.Document == null)
             return;
 
+        if (!textView.VisualLinesValid)
+            return;
+
         if (HighlightedLine > textView.Document.LineCount)
             return;
 

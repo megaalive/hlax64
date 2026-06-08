@@ -1,0 +1,18 @@
+// idiv-loop.hla64 — regression: idiv/mod in a tight loop (Lehmer-style chain).
+// Expected exit code 60 = 10 iterations × (32319 / 5040 = 6).
+
+program idiv_loop;
+
+begin idiv_loop;
+    mov(0, r10);
+    mov(0, rbx);
+    mov(10, r9);
+
+    while(r10 < r9) do
+        mov(32319, rax);
+        mov(5040, r11);
+        idiv(r11, rax);
+        add(rax, rbx);
+        add(1, r10);
+    endwhile;
+end idiv_loop;

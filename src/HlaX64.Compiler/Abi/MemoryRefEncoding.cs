@@ -38,7 +38,7 @@ internal static class MemoryRefEncoding
             8 => $"movzx {destination}, byte [{addr}]",
             16 => $"movzx {destination}, word [{addr}]",
             32 => $"mov {RegisterForBits(destination, 32)}, dword [{addr}]",
-            _ => $"mov {destination}, [{addr}]",
+            _ => $"mov {destination}, qword [{addr}]",
         };
     }
 
@@ -50,7 +50,7 @@ internal static class MemoryRefEncoding
             8 => $"mov byte [{addr}], {source}",
             16 => $"mov word [{addr}], {source}",
             32 => $"mov dword [{addr}], {RegisterForBits(source, 32)}",
-            _ => $"mov [{addr}], {source}",
+            _ => $"mov qword [{addr}], {source}",
         };
     }
 

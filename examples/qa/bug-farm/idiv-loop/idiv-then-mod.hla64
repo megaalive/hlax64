@@ -1,0 +1,13 @@
+// idiv-then-mod.hla64 — idiv clobbers rdx; mod must still work on fresh dividend.
+program idiv_then_mod;
+
+begin idiv_then_mod;
+    mov(100, rax);
+    mov(7, r11);
+    idiv(r11, rax);
+
+    mov(32319, rax);
+    mov(5040, r11);
+    mod(r11, rax);
+    mov(rax, rbx);
+end idiv_then_mod;

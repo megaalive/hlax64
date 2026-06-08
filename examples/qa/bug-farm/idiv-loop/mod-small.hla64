@@ -1,0 +1,9 @@
+// mod-small.hla64 — 23 % 5 = 3
+program mod_small;
+
+begin mod_small;
+    mov(23, rax);
+    mov(5, r11);
+    mod(r11, rax);
+    mov(rax, rbx);
+end mod_small;

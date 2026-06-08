@@ -10,6 +10,8 @@
 
 HlaX64 is an HLA-inspired x64 assembly language designed for AI coding agents and humans. It provides a higher-level syntax over raw NASM/MASM while remaining close to the metal.
 
+**Practical guide:** [patterns.md](patterns.md) — operand order, exit codes, division, static arrays, and troubleshooting build failures.
+
 ## File Extension
 
 `.hla64` — This extension distinguishes HlaX64 source from classic HLA `.hla` files.

@@ -1,5 +1,7 @@
 # HlaX64 patterns for Project Euler
 
+> **General patterns (operand order, exit codes, build errors):** see **[docs/patterns.md](../../docs/patterns.md)** at repo root.
+
 Reusable idioms used across `problems/`. Operand order for `mov`/`add`/`sub`: **`mov(source, destination)`** (second operand is written).
 
 ## Modulo (`mod`)
@@ -133,23 +135,19 @@ Total fits in `int64` for the official `p022_names.txt` (5163 names → `8711982
 
 ## Lehmer permutations (PE #24)
 
-Keep the factorial divisor in **`r11`** (not `r10`) when chaining `idiv` / `mod` with `idx` in `r10`. A `mod(f, r10)` before `idiv` can clobber the divisor register and corrupt the quotient on the next iteration.
+Keep the factorial divisor in **`r15`** (not `r10`) when chaining `idiv` / `mod` with the pool index in `r10`. Save **`idx[pos]` to `r12`** before the used-digit inner loop — array base `lea` clobbers `r10`.
 
 When picking a digit, save the pool index to **`r8`** before any `imul(10, …)` — then `used[i]=1` via `mov(rax, used[r8])`, not `used[r15]` after `r15` becomes `10`.
 
 Save **`idx` in `r15`** before updating `k` with `imul(f, idx)` — the product overwrites the index register if you reuse it for multiply.
 
-**Workaround in `euler024`:** Lehmer indices for `k=999999` are embedded in `idxs[]` (same values as repeated `k / pos!`); the used-digit scan and accumulate are full runtime logic.
+**Workaround in `euler024`:** none required after qword static-array fix (2026-06) — Lehmer indices are computed at runtime.
 
-### Compiler/runtime follow-up (do not forget)
+### Fixed (2026-06): static `int64[]` stores used byte-sized NASM
 
-`idiv` in a **multi-iteration loop** with `mov(rdx, k)` (or equivalent remainder handoff) still produced wrong quotients/remainders in PE #24, even when:
+Symptoms looked like broken `idiv`/`mod` in loops (wrong PE #24 digits, crashes in `euler020`), but root cause was **missing `qword` size on global/static array memory operands**. NASM defaulted to `movb` for small immediates, truncating large values (e.g. `362880 → 128`) and corrupting bignum tables.
 
-- isolated `idiv` smoke tests passed (e.g. `32319 / 5040 → 6`);
-- generated NASM looked correct;
-- factorial lived in `r11`, idx in `r10`, and `mod`/`idiv` were not mixed on the same divisor register.
-
-Symptoms: wrong permutation digits (e.g. `2789154360` / nine-digit variants vs expected `2783915460`). Precomputed `idxs[]` fixes the answer; root cause is **kandidat perbaikan compiler/runtime terpisah** — worth a minimal repro outside Project Euler before changing `euler024` again.
+Fix: emit explicit `qword` in `GlobalDataEncoding`, `ArrayIndexEncoding`, and `MemoryRefEncoding` for 64-bit accesses. Regression: `examples/qa/bug-farm/idiv-loop/`.
 
 ## Procedure calls in long loops
 

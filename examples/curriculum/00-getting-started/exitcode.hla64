@@ -1,4 +1,5 @@
 program exitcode;
 begin exitcode;
-    mov(42, rax);
+    mov(42, rbx);
+    mov(rbx, rax);
 end exitcode;

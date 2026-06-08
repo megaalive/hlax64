@@ -13,9 +13,9 @@ internal static class GlobalDataEncoding
 
     internal static string FormatMem(string name, int sizeBits = 64) => sizeBits switch
     {
-        8 => $"byte [{name}]",
-        16 => $"word [{name}]",
-        32 => $"dword [{name}]",
-        _ => $"[{name}]"
+        8 => $"byte [rel {name}]",
+        16 => $"word [rel {name}]",
+        32 => $"dword [rel {name}]",
+        _ => $"qword [rel {name}]"
     };
 }

@@ -24,9 +24,8 @@ internal static class ArrayLoweringHelper
 
             var sb = new System.Text.StringBuilder();
             var indexReg = PrepareIndexRegister(sb, parsed, resolveOperand);
-            var memReg = ArrayIndexEncoding.FormatGlobalMem(parsed.ArrayName, parsed, elemSize, indexReg);
-            sb.Append($"    {ArrayIndexEncoding.EmitLoad(destination, memReg, elemSize)}");
-            return new LoweredInstruction(sb.ToString());
+            AppendGlobalIndexedLoad(sb, parsed.ArrayName, indexReg, elemSize, destination);
+            return new LoweredInstruction(sb.ToString().TrimEnd());
         }
 
         if (!stack.TryGetSlot(parsed.ArrayName, out var slot) || !stack.TryGetLayout(parsed.ArrayName, out var layout))
@@ -65,9 +64,8 @@ internal static class ArrayLoweringHelper
 
             var sb = new System.Text.StringBuilder();
             var indexReg = PrepareIndexRegister(sb, parsed, resolveOperand);
-            var memReg = ArrayIndexEncoding.FormatGlobalMem(parsed.ArrayName, parsed, elemSize, indexReg);
-            sb.Append($"    {ArrayIndexEncoding.EmitStore(memReg, source, elemSize)}");
-            return new LoweredInstruction(sb.ToString());
+            AppendGlobalIndexedStore(sb, parsed.ArrayName, indexReg, elemSize, source);
+            return new LoweredInstruction(sb.ToString().TrimEnd());
         }
 
         if (!stack.TryGetSlot(parsed.ArrayName, out var slot) || !stack.TryGetLayout(parsed.ArrayName, out var layout))
@@ -103,5 +101,43 @@ internal static class ArrayLoweringHelper
         }
 
         return "r10";
+    }
+
+    private static void AppendGlobalIndexedLoad(
+        System.Text.StringBuilder sb,
+        string label,
+        string indexReg,
+        int elemSize,
+        string destination)
+    {
+        var baseReg = PickScratchRegister(indexReg, destination);
+        sb.AppendLine($"    lea {baseReg}, [rel {label}]");
+        var mem = elemSize == 1 ? $"[{baseReg} + {indexReg}]" : $"[{baseReg} + {indexReg}*{elemSize}]";
+        sb.Append($"    {ArrayIndexEncoding.EmitLoad(destination, mem, elemSize)}");
+    }
+
+    private static void AppendGlobalIndexedStore(
+        System.Text.StringBuilder sb,
+        string label,
+        string indexReg,
+        int elemSize,
+        string source)
+    {
+        var baseReg = PickScratchRegister(indexReg, source);
+        sb.AppendLine($"    lea {baseReg}, [rel {label}]");
+        var mem = elemSize == 1 ? $"[{baseReg} + {indexReg}]" : $"[{baseReg} + {indexReg}*{elemSize}]";
+        sb.Append($"    {ArrayIndexEncoding.EmitStore(mem, source, elemSize)}");
+    }
+
+    private static string PickScratchRegister(params string[] reserved)
+    {
+        // Avoid r9 — commonly used as a loop bound in examples (e.g. PE #20).
+        foreach (var candidate in new[] { "r11", "r10", "r8", "rax" })
+        {
+            if (reserved.All(r => !string.Equals(r, candidate, StringComparison.OrdinalIgnoreCase)))
+                return candidate;
+        }
+
+        return "r11";
     }
 }

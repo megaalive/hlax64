@@ -46,7 +46,17 @@ Use `--json` for agent-friendly output.
 
 ## 4. Exit codes
 
-Programs return the value in `rax` when they finish:
+| Target | Put your result in |
+|--------|---------------------|
+| Linux (default) | `rax` (or `rbx` if you use it) |
+| Windows | **`rbx`** (not `rax`) |
+
+Cross-platform:
+
+```hla64
+mov(42, rbx);
+mov(rbx, rax);
+```
 
 ```bash
 hla64 run examples/curriculum/00-getting-started/exitcode.hla64
@@ -55,7 +65,13 @@ echo $?    # Linux: 42
 
 Source: `examples/curriculum/00-getting-started/exitcode.hla64`.
 
-## 5. Arithmetic
+Full details: [patterns.md](../patterns.md#2-process-exit-code).
+
+## 5. Patterns you will need next
+
+Before writing Win32 tools or numeric loops, skim **[patterns.md](../patterns.md)** (5–10 minutes). It covers the mistakes that cause most first-week build failures.
+
+## 6. Arithmetic
 
 Work through `examples/curriculum/01-arithmetic/`:
 
@@ -74,7 +90,7 @@ hla64 build examples/curriculum/01-arithmetic/simple.hla64 -o build/simple
 echo $?   # 3
 ```
 
-## 6. Run curriculum tests
+## 7. Run curriculum tests
 
 Manifests under `tests/examples-curriculum/` point at these examples:
 
@@ -85,6 +101,7 @@ hla64 test tests/examples-curriculum
 
 ## Next steps
 
+- **[Patterns & cookbook](../patterns.md)** — read this when builds fail
 - [Tutorial 2 — Native routines](02-native-routines.md)
 - [examples/README.md](../../examples/README.md)
 - [language-spec.md](../language-spec.md)

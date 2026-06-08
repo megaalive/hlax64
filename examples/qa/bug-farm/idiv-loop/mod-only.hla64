@@ -1,0 +1,9 @@
+// mod-only.hla64 — 32319 % 5040 = 879
+program mod_only;
+
+begin mod_only;
+    mov(32319, rax);
+    mov(5040, r11);
+    mod(r11, rax);
+    mov(rax, rbx);
+end mod_only;

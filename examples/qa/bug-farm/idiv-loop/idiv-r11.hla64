@@ -1,0 +1,9 @@
+// idiv-r11.hla64 — same test with r11 divisor (control).
+program idiv_r11;
+
+begin idiv_r11;
+    mov(32319, rax);
+    mov(10, r11);
+    mod(r11, rax);
+    mov(rax, rbx);
+end idiv_r11;

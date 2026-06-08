@@ -76,7 +76,7 @@ python scripts/generate_euler022.py
 |---------|--------|
 | #1–#10, #12–#25 | Full HlaX64 solvers (verified via WSL run) |
 | #11, #13, #16–#18, #20, #22 | Grid scanner, bignum sum/add, name scores, DP |
-| #24 | Lehmer used-digit scan; `idxs[]` precomputed for `k=999999` (see `patterns.md` — runtime `idiv` loop bug) |
+| #24 | Lehmer used-digit scan; runtime `idiv`/`mod` decomposition (see `patterns.md`) |
 | #8 | 1000-digit string via `scripts/generate-euler008.ps1` |
 | #13 | 100×50-digit bignum add → first 10 digits; `scripts/generate_euler013.py` |
 | #22 | Sorted name letter scores × rank; `scripts/generate_euler022.py` embeds `data/euler022-names.txt` |

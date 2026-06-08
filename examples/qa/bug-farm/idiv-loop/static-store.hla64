@@ -1,0 +1,12 @@
+// static-store.hla64 — static array store/load smoke test.
+program static_store;
+
+static
+    facts: int64[10];
+endstatic;
+
+begin static_store;
+    mov(1, facts[0]);
+    mov(362880, facts[9]);
+    mov(facts[9], rbx);
+end static_store;

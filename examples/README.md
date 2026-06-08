@@ -30,4 +30,4 @@ hla64 run examples/project-euler/problems/euler013-large-sum.hla64
 
 **Playground:** [docs/playground/index.html](../docs/playground/index.html) — sidebar grouped by category; cache under `docs/playground/cache/<category>/`.
 
-See [docs/examples.md](../docs/examples.md).
+See [docs/examples.md](../docs/examples.md). **Patterns & build troubleshooting:** [docs/patterns.md](../docs/patterns.md).

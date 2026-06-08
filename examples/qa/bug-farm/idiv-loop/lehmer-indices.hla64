@@ -1,0 +1,51 @@
+// lehmer-indices.hla64 — compute Lehmer indices for k=999999 (0-based millionth perm).
+// Sum of idx[pos] for pos=9..0 must be 26 → exit code 26.
+// Expected idx[] = {0,1,1,2,1,5,2,6,6,2}.
+
+program lehmer_indices;
+
+static
+    idx: int64[10];
+    facts: int64[10];
+endstatic;
+
+begin lehmer_indices;
+    mov(1, facts[0]);
+    mov(1, r11);
+    mov(1, r10);
+
+    while(r10 < 10) do
+        mov(r11, facts[r10]);
+        mov(r10, rax);
+        add(1, rax);
+        imul(rax, r11);
+        add(1, r10);
+    endwhile;
+
+    mov(999999, r12);
+    mov(9, r14);
+    mov(0, rbx);
+
+    while(r14 > -1) do
+        mov(r14, r11);
+        mov(facts[r11], r11);
+
+        mov(r12, rax);
+        idiv(r11, rax);
+        mov(rax, r10);
+
+        mov(r12, rax);
+        mod(r11, rax);
+        mov(rax, r12);
+
+        mov(r14, r11);
+        mov(r10, idx[r11]);
+        add(r10, rbx);
+
+        if(r14 = 0) then
+            mov(-1, r14);
+        else
+            sub(1, r14);
+        endif;
+    endwhile;
+end lehmer_indices;

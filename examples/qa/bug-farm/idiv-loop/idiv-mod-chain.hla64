@@ -1,0 +1,16 @@
+// idiv-mod-chain.hla64 — Lehmer step: k / f then k %= f.
+// 32319 / 5040 = 6, 32319 % 5040 = 2079 → exit code 2079.
+
+program idiv_mod_chain;
+
+begin idiv_mod_chain;
+    mov(32319, r12);
+    mov(5040, r11);
+
+    mov(r12, rax);
+    idiv(r11, rax);
+
+    mov(r12, rax);
+    mod(r11, rax);
+    mov(rax, rbx);
+end idiv_mod_chain;

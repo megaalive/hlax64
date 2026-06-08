@@ -41,7 +41,9 @@ hla64 explain examples/tools/10-windows/exists/exists.hla64 --json
 
 Pre-built archives, global tool, or clone — see **[docs/install.md](docs/install.md)**.
 
-Tutorials: [Getting started](docs/tutorials/01-getting-started.md) · [Native routines](docs/tutorials/02-native-routines.md) · [Memory & pointers](docs/tutorials/05-memory.md) · [C# interop](docs/tutorials/03-csharp-interop.md) · [MCP agents](docs/tutorials/04-mcp-agent.md) · [Assembly Lab](docs/tutorials/06-assembly-lab.md)
+Tutorials: [Getting started](docs/tutorials/01-getting-started.md) · [**Patterns & cookbook**](docs/patterns.md) · [Native routines](docs/tutorials/02-native-routines.md) · [Memory & pointers](docs/tutorials/05-memory.md) · [C# interop](docs/tutorials/03-csharp-interop.md) · [MCP agents](docs/tutorials/04-mcp-agent.md) · [Assembly Lab](docs/tutorials/06-assembly-lab.md)
+
+> **Build failing or wrong results?** Read **[docs/patterns.md](docs/patterns.md)** — operand order, exit codes (`rbx` on Windows), `idiv`/`mod`, static arrays, and common NASM/link errors.
 
 ---
 

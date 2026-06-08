@@ -1,0 +1,22 @@
+// facts-table.hla64 — build factorial table; facts[9] must be 362880.
+program facts_table;
+
+static
+    facts: int64[10];
+endstatic;
+
+begin facts_table;
+    mov(1, facts[0]);
+    mov(1, r11);
+    mov(1, r10);
+
+    while(r10 < 10) do
+        mov(r11, facts[r10]);
+        mov(r10, rax);
+        add(1, rax);
+        imul(rax, r11);
+        add(1, r10);
+    endwhile;
+
+    mov(facts[9], rbx);
+end facts_table;

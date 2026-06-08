@@ -93,4 +93,4 @@ See [development.md](development.md) for tests, LSP, and MCP setup.
 | Windows link errors | Install LLVM (`lld-link`) or Visual Studio Build Tools |
 | WSL from Windows host | Run `hla64 doctor` — CLI detects WSL when appropriate |
 
-More: [diagnostics.md](diagnostics.md), [compatibility.md](compatibility.md).
+More: [patterns.md](patterns.md) (common idioms & build failures), [diagnostics.md](diagnostics.md), [compatibility.md](compatibility.md).

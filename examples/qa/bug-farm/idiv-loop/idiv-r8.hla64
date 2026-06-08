@@ -1,0 +1,9 @@
+// idiv-r8.hla64 — 32319 % 10 must be 9 (tests partial register divisor).
+program idiv_r8;
+
+begin idiv_r8;
+    mov(32319, rax);
+    mov(10, r8);
+    mod(r8, rax);
+    mov(rax, rbx);
+end idiv_r8;

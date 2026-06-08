@@ -2,6 +2,8 @@
 
 Stable diagnostic codes help agents, IDE tooling, and contributors reference errors consistently.
 
+> **Many “mysterious” build or runtime issues are pattern mistakes**, not compiler bugs. See **[patterns.md](patterns.md)** for operand order, Windows exit code in `rbx`, `idiv`/`mod`, static arrays, and string `call` arguments.
+
 ## Code categories
 
 | Range | Category |

@@ -300,8 +300,8 @@ public sealed class SysVAbiLowerer : IAbiLowerer
             if (_globalData.ContainsKey(varName))
             {
                 if (dst.StartsWith('['))
-                    return new LoweredInstruction($"    lea rax, [{varName}]\n    mov {dst}, rax");
-                return new LoweredInstruction($"    lea {dst}, [{varName}]");
+                    return new LoweredInstruction($"    lea rax, [rel {varName}]\n    mov {dst}, rax");
+                return new LoweredInstruction($"    lea {dst}, [rel {varName}]");
             }
             if (_valueMap.TryGetValue(varName, out var slot))
             {
@@ -693,6 +693,9 @@ public sealed class SysVAbiLowerer : IAbiLowerer
 
         if (AddressRefEncoding.IsStringRef(value))
             return $"rel {EnsureStringLabel(AddressRefEncoding.DecodeString(value))}";
+
+        if (name.StartsWith("str:", StringComparison.Ordinal))
+            return $"rel {EnsureStringLabel(name[4..])}";
 
         if (name.StartsWith("addr:", StringComparison.Ordinal))
         {

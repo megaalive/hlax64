@@ -47,7 +47,7 @@ internal static class ArrayIndexEncoding
         if (idx.IndexKind == "lit" && long.TryParse(idx.IndexValue, out var lit))
         {
             var byteOff = lit * elemSize;
-            return byteOff == 0 ? $"[{label}]" : $"[{label}+{byteOff}]";
+            return byteOff == 0 ? $"[rel {label}]" : $"[rel {label}+{byteOff}]";
         }
 
         var reg = idx.IndexKind switch
@@ -56,7 +56,7 @@ internal static class ArrayIndexEncoding
             "ident" => indexRegOverride ?? idx.IndexValue,
             _ => idx.IndexValue
         };
-        return elemSize == 1 ? $"[{label}+{reg}]" : $"[{label}+{reg}*{elemSize}]";
+        return elemSize == 1 ? $"[rel {label} + {reg}]" : $"[rel {label} + {reg}*{elemSize}]";
     }
 
     internal static string EmitLoad(string destination, string mem, int elemSizeBytes)
@@ -65,7 +65,7 @@ internal static class ArrayIndexEncoding
             1 => $"movzx {destination}, byte {mem}",
             2 => $"movzx {destination}, word {mem}",
             4 => $"mov {destination}, dword {mem}",
-            _ => $"mov {destination}, {mem}",
+            _ => $"mov {destination}, qword {mem}",
         };
 
     internal static string EmitStore(string mem, string source, int elemSizeBytes)
@@ -74,7 +74,7 @@ internal static class ArrayIndexEncoding
             1 => $"mov byte {mem}, {source}",
             2 => $"mov word {mem}, {source}",
             4 => $"mov dword {mem}, {source}",
-            _ => $"mov {mem}, {source}",
+            _ => $"mov qword {mem}, {source}",
         };
 
     internal static string EmitLoad(string destination, Parsed idx, string rbpSlot, int elemSize, string indexOperand)

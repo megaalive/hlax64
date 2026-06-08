@@ -71,8 +71,8 @@ public sealed class GlobalDataTests
         Assert.Contains("section .bss", nasm);
         Assert.Contains("buffer resb 4", nasm, StringComparison.Ordinal);
         Assert.Contains("counter dq 1", nasm, StringComparison.Ordinal);
-        Assert.Contains("mov [counter]", nasm, StringComparison.Ordinal);
-        Assert.Contains("lea rax, [counter]", nasm, StringComparison.Ordinal);
+        Assert.Contains("mov qword [rel counter]", nasm, StringComparison.Ordinal);
+        Assert.Contains("lea rax, [rel counter]", nasm, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -97,7 +97,7 @@ public sealed class GlobalDataTests
         Assert.True(result.Success, string.Join("; ", result.Diagnostics));
         var nasm = new HlaX64.Backend.Nasm.Emitters.NasmEmitter()
             .Emit(result.LoweredFunctions, result.StringLiterals, result.GlobalData);
-        Assert.Contains("cmp rcx, [len]", nasm, StringComparison.Ordinal);
+        Assert.Contains("cmp rcx, qword [rel len]", nasm, StringComparison.Ordinal);
         Assert.DoesNotContain("global:len", nasm, StringComparison.Ordinal);
     }
 
