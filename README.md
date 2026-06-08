@@ -4,7 +4,7 @@
 > Write low-level x64 with a cleaner HLA-inspired syntax. Compile to NASM,
 > assemble, link, and run — all from a single `hla64` CLI.
 
-[![Status](https://img.shields.io/badge/HlaX64%200.1%20Alpha-green)](./docs/roadmap.md)
+[![Status](https://img.shields.io/badge/HlaX64%200.2%20Alpha-green)](./docs/roadmap.md)
 [![Tests](https://img.shields.io/badge/tests-CI%20verified-2ea44f)](https://github.com/megaalive/hlax64/actions)
 [![Target](https://img.shields.io/badge/target-linux--x64--sysv%20|%20windows--x64--msabi-1f6feb)](#targets)
 [![Language](https://img.shields.io/badge/language-v0.1%20Draft-blueviolet)](#language-reference)
@@ -45,9 +45,9 @@ Tutorials: [Getting started](docs/tutorials/01-getting-started.md) · [Native ro
 
 ---
 
-## Current Capabilities — HlaX64 0.1 Alpha
+## Current Capabilities — HlaX64 0.2 Alpha
 
-HlaX64 is an **early multi-platform x64 language toolchain** — not a single-target MVP. Release [`v0.1.0-alpha`](https://github.com/megaalive/hlax64/releases) ships pre-built CLI binaries; CI verifies every push.
+HlaX64 is an **early multi-platform x64 language toolchain** — not a single-target MVP. Release [`v0.2.0-alpha`](https://github.com/megaalive/hlax64/releases/tag/v0.2.0-alpha) ships pre-built CLI and Assembly Lab archives; CI verifies every push.
 
 ### Language
 

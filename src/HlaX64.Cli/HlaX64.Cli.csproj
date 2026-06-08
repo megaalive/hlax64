@@ -18,7 +18,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>hla64</ToolCommandName>
     <PackageId>HlaX64.Cli</PackageId>
-    <Version>0.1.0-alpha</Version>
+    <Version>0.2.0-alpha</Version>
     <Authors>megaalive</Authors>
     <Description>AI-friendly HLA-inspired x64 compiler CLI for verified native code.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

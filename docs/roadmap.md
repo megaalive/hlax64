@@ -131,14 +131,14 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 
 | Item | Status | Catatan |
 |------|--------|---------|
-| Playground example picker (12 contoh kurikulum + real-tools) | 🔜 In progress | `docs/playground/index.html`, `?example=wc` |
-| Generated NASM pane (cached `explain --json`) | 🔜 In progress | `docs/playground/cache/`, `scripts/generate-playground-cache.ps1` |
-| Explain-this-line (heuristic tutor) | 🔜 In progress | Klik baris + tab penjelasan |
-| Copy AI Debug / Explain / Optimize prompt | 🔜 In progress | Playground tab AI |
+| Playground example picker (12 contoh kurikulum + real-tools) | ✅ Done | `docs/playground/index.html`, `?example=wc` |
+| Generated NASM pane (cached `explain --json`) | ✅ Done | `docs/playground/cache/`, `scripts/generate-playground-cache.ps1` |
+| Explain-this-line (heuristic tutor) | ✅ Done | Klik baris + tab penjelasan |
+| Copy AI Debug / Explain / Optimize prompt | ✅ Done | Playground tab AI |
 | Live explain API (edit source → fresh NASM) | 🔜 Planned | `playground-design.md` Phase 2 |
 | Monaco + syntax highlighting | 🔜 Planned | Reuse `hla64.tmLanguage.json` |
-| Gallery deep links dari README | 🔜 In progress | `/playground?example=hexdump`, dll. |
-| GitHub Pages sebagai “produk” (Home / Playground / Course / …) | 🔜 In progress | `docs/index.html` nav |
+| Gallery deep links dari README | ✅ Done | `/playground?example=hexdump`, dll. |
+| GitHub Pages sebagai “produk” (Home / Playground / Course / …) | ✅ Done | `docs/index.html` nav |
 | Contoh `cat`, `strings`, `printf` di kurikulum | 🔜 Planned | `wc`/`hexdump`/`filemagic` sudah ada |
 | Tutorial argv + file I/O path | 🔜 Planned | Perluas tutorials / course doc |
 | Assembly Lab parity di browser (build/run) | 🔜 Deferred | Lab desktop tetap surface penuh |

@@ -6,64 +6,40 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
-### Added
+## [0.2.0-alpha] - 2026-06-08
 
-- **Phase 15 — Assembly Lab:** Avalonia 11 desktop app `HlaX64.AssemblyLab` with live compile diagnostics, IR/NASM/ABI tabs, build/run, source map sync, DAP MVP panel, proof bundle export; `AssemblyLabBackend`; 6 backend tests (314 total); RFC 0024; tutorial `docs/tutorials/06-assembly-lab.md` AVX2 YMM lowering (`vaddpd`, `vmovapd`, `vxorpd`); `simd.*` intrinsics + `atomic.*` MVP; path/git dependency resolver + lock verification on `build`; DAP server (`HlaX64.DebugAdapter`, Linux gdb); source map columns; semantic token modifiers; partial-parse signature help; SysV variadic `printf` (int + cstring); `hla64 test-differential` + CI; HLAX0072–0073; 308 tests
-- **Hardening sprint (Phases 14, 19–24):** LSP signatureHelp, documentHighlight/references, semanticTokens, format codeAction; source map round-trip lookup; DWARF file-table stub; disasm objdump merge; `--trace` Linux `int3`; `--optimize O2` constant propagation + xor-zero peephole; HLAX0071 instruction DB (34 mnemonics) + AVX2; `hla64.lock` on restore; manifest-aware `build`; diff return-register/stack deltas; proof-bundle `tests.json` option; DAP setBreakpoint/stackTrace stub; stack virtual doc clobber list; MCP `abiIssues`/`clobberWarnings`; differential test for `simple.hla64`; 293 tests
-- **Phase 18 (Sprints 1–6):** definite assignment HLAX0060, unreachable/missing-return HLAX0061/62, register liveness HLAX0063, `hla64 verify-stack` / `hla64 verify-abi`, `-Wdefinite`/`-Wunreachable`/`-Wliveness`/`-Wverify`, RFC 0014; 258 tests
-- **Phase 17 Sprints 2–5:** `extern procedure` with optional `from "lib"` link hints; function pointer type aliases (`type Fn := procedure(...): T`) and indirect `call`; float32/float64 parameter/return MVP (xmm ABI); record parameters as hidden pointers; variadic extern diagnostic HLAX0055; RFCs 0010–0013; examples `extern-puts.hla64`, `indirect-call.hla64`, `float-return.hla64`, `record-param.hla64`; HLAX0050–HLAX0055; 242 tests
-- **Phase 17 Sprint 1:** stack arguments beyond register limit (SysV 7+, Windows 5+); callee prologue loads from caller stack; call sites push/allocate per ABI; RFC 0009; example `examples/06-abi/stack-args-sysv.hla64`; sample `procedure_8args`; conformance `stack-args`
-- **Phase 16 Sprint 5:** program-scope `static`/`endstatic` (`.data`/`.bss` globals); `cstring` type alias; built-in `utf8slice` record; HLAX0045–49; RFC 0007/0008; examples `global-counter.hla64`, `cstring-walk.hla64`
-- **Phase 16 Sprint 5+:** `packed record`; procedure-scoped `enum`/`record`; enum auto-increment members (`Red := 1; Green; Blue;`)
-- LSP grammar: `static`, `endstatic`, `cstring`, `utf8slice`, `packed`; formatter support
-- **Phase 16 Sprint 3:** program-level `enum`/`endenum` with typed backing (`uint32`/`int32`/`uint64`/`int64`); qualified `Enum.Member` immediates; HLAX0039–41; RFC 0005; example `examples/02-types/color-enum.hla64`; conformance `color-enum`, `enum-duplicate-member`, `enum-undefined-member`
-- **Phase 16 Sprint 4:** program-level `record`/`endrecord` with natural alignment; `var header: RecordType` stack blobs; dot field access; compile-time `sizeof`/`offsetof`; HLAX0042–44; RFC 0006; example `examples/02-types/patient-header.hla64`; conformance `patient-header`, `record-unknown-field`
-- LSP grammar: `enum`, `endenum`, `record`, `endrecord`, `sizeof`, `offsetof`; `AstFormatter` support for enums and records
-- **Phase 16 Sprint 2:** runtime `:=` assignment for int64 scalar locals and 64-bit registers; operators `+ - * / % & | ^ ~ << >>` and comparisons `== != < <= > >=`; IR + SysV/Win64 NASM lowering; HLAX0035–HLAX0038; example `examples/01-arithmetic/expr-assign.hla64`; conformance `expr-assign`, `expr-invalid-target`, `expr-divide-by-zero`
-- Expression evaluation uses **`rax`/`rbx` as scratch** (documented in RFC 0004 and language spec)
-- LSP grammar: `const`, `endconst`, `:=`, hex `$..`; formatter support for `:=` statements
+**Useful Assembly Tools & Onboarding** — GitHub Pages playground, real-tool examples, Phases 15–24, 400+ tests.
+
+### Highlights
+
+- **[Playground](https://megaalive.github.io/hlax64/playground/)** — 12 curated examples, cached generated NASM, explain-this-line tutor, AI debug/explain/optimize prompts, `?example=wc` deep links, Run locally panel
+- **Real tools** — `wc`, `hexdump`, `filemagic`, `linecount`, `exists`, `fnv1a`, … (Windows + Linux ports); argv runtime (`hlax_argv_*`)
+- **Assembly Lab** — Avalonia desktop app: live IR/NASM/ABI, build/run, DAP, Explain/Agent, proof bundle ([RFC 0024](rfcs/0024-assembly-lab.md))
+- **Language core (Phase 16)** — `const`, runtime `:=`, `enum`, `record`/`struct`, `static`, `cstring`/`utf8slice`, `idiv`/`div`/`jmp`
+- **ABI & FFI (Phase 17)** — stack args, `extern`, indirect calls, float/record params, variadic extern
+- **Verification (Phase 18)** — HLAX0060–63, `verify-stack` / `verify-abi`, `-Wverify`
+- **Runtime I/O** — `stdout.putu`, `stdout_put_uint`, `uint_to_str`
+- **Docs** — `language-spec.md` (stdlib, UB, `#pragma target` planned), roadmap cleanup, README playground hero
 
 ### Added
 
-- **Phase 16 Sprint 1:** compile-time `const` / `endconst` blocks with `:=` assignments and int64 expression evaluation (`+ - * / % & | ^ ~ << >>`, hex `$FF`); use in immediates and `type[ConstName]` array sizes (RFC 0004)
-- Diagnostics HLAX0031–HLAX0034 for const errors; example `examples/05-memory/const-buffer-size.hla64`; conformance cases `const-expressions`, `const-divide-by-zero`
-- `docs/memory-model.md` (cstring / utf8slice concepts, implemented vs planned); Phases 16–24 in `docs/roadmap.md`
-- RFC [0004](rfcs/0004-expressions-and-constants.md) (const + runtime `:=` expressions implemented)
+- Phases 15–24: Assembly Lab, debug/explain (`--source-map`, `disasm`, `--trace`), `--optimize O1/O2`, instruction DB + AVX2 intrinsics, `hla64.toml`/restore, proof bundle, DAP server, MCP explain + `suggestedFix`
+- LSP hardening: signature help, semantic tokens, format-on-save, go-to-definition, document symbols
+- `examples/10-real-tools/` and `examples/12-real-tools-linux/` with curriculum regression
+- `examples/98-bug-farm/`, `examples/99-invalid/` catalogs
+- C# interop examples: `native_count_lines`, `native_fnv1a`, `native_sum_bytes`
+- `scripts/generate-playground-cache.ps1`; `docs/playground/cache/` explain JSON
+- Diagnostics HLAX0030–0073 (bounds, const, enum, record, static, verification, SIMD, atomics)
 
 ### Changed
 
-- README: **Current Capabilities — HlaX64 0.1 Alpha** (replaces MVP Linux-only framing); CI-focused test badge; simplified project layout
-- `docs/compiler-architecture.md`: Implemented / Experimental / Planned sections for compiler 0.1.x
-
-### Added (prior unreleased)
-
-- `-Wbounds` / `--warn-bounds` static array index warnings (HLAX0030); enabled in LSP diagnostics by default
-- LSP go-to-definition, document symbols, and document formatting (`AstFormatter`); VS Code format-on-save for `.hla64`
-- Packed stack arrays: `byte[N]`, `word[N]`, `dword[N]` with correct element stride and sized NASM loads/stores
-- Example `array-byte-last.hla64`, conformance `array-byte-packed`, curriculum manifest (29 total)
-
-### Added (prior unreleased)
-- Four array examples (`array-sum`, `array-fill`, `array-max`, `array-literal-index`) plus native samples
-- LSP Phase 14 MVP: hover, completion, parse-error positions; VS Code extension language client
-- GitHub Pages landing page (`docs/index.html`) with links to playground, install, and tutorials
-- Level 3 memory curriculum: `[reg+offset]`, sized `.byte`/`.word`/`.dword`, `&"string"`, four new examples
-- Tutorial [docs/tutorials/05-memory.md](docs/tutorials/05-memory.md) and [docs/memory-and-bounds.md](docs/memory-and-bounds.md)
-- Native samples `stack_array`, `string_length`; four new curriculum manifests (24 total)
-- Minimal pointer ops per RFC 0002: `&var`, `[reg]` load/store; HLAX0022/HLAX0023 diagnostics
-- Example `examples/05-memory/pointer-load-store.hla64` with sample, curriculum, and conformance tests
-- Windows CI smoke: run built `.exe` (exit code) and build `export_lib` shared `.dll`
-- GitHub issue backlog script (`scripts/create-issue-backlog.ps1`); 20 curated issues (#1–#20)
-- Native sample `comparison_uint64_boundary` (uint64 high-bit vs 1); fixes #2
-- `scripts/setup-toolchain-path.ps1` for Windows NASM/MinGW PATH setup
+- README leads with **Try it now** playground CTA; clarifies cached compile vs live CLI
+- Release archives include **Assembly Lab** bundles (`assembly-lab-linux-x64.tar.gz`, `assembly-lab-win-x64.zip`)
 
 ### Fixed
 
-- Parser accepts `int64` minimum literal (`-9223372036854775808`)
-- SysV exit epilogue uses `rbx` when `mov` targets `rbx` (restores exit-code path)
-
-### Changed
-
-- Docs sync: roadmap Fase 14, tutorial 05 (packed arrays, `-Wbounds`), examples catalog, development guide, GitHub Pages LSP section
+- Linux SysV: extern `addr:` operands, `hlax_argv_get` register, `stdout.put` multi-register save order
+- Parser: `int64` minimum literal; SysV exit epilogue when `mov` targets `rbx`
 
 ## [0.1.0-alpha] - 2026-06-06
 
@@ -93,5 +69,6 @@ First public alpha: compiler toolchain, MCP server, structured examples, CI, and
 - README and docs aligned with Linux + Windows targets, MCP, and feature status
 - `DoctorCommand` and explain/format services shared between CLI and MCP
 
-[Unreleased]: https://github.com/megaalive/hlax64/compare/v0.1.0-alpha...HEAD
+[Unreleased]: https://github.com/megaalive/hlax64/compare/v0.2.0-alpha...HEAD
+[0.2.0-alpha]: https://github.com/megaalive/hlax64/releases/tag/v0.2.0-alpha
 [0.1.0-alpha]: https://github.com/megaalive/hlax64/releases/tag/v0.1.0-alpha
