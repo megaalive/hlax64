@@ -21,5 +21,5 @@ git clone https://github.com/megaalive/hlax64.git
 cd hlax64
 dotnet build
 dotnet test
-dotnet run --project src/HlaX64.Cli -- run examples/00-getting-started/hello.hla64
+dotnet run --project src/HlaX64.Cli -- run examples/curriculum/00-getting-started/hello.hla64
 ```

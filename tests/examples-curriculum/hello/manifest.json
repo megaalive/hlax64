@@ -1,6 +1,6 @@
 {
   "name": "curriculum-hello",
-  "source": "../../../examples/00-getting-started/hello.hla64",
+  "source": "../../../examples/curriculum/00-getting-started/hello.hla64",
   "expectedStdout": "Hello from HlaX64\n",
   "description": "Curriculum: hello world"
 }

@@ -1,6 +1,6 @@
 {
   "name": "curriculum-euler001-bruteforce",
-  "source": "../../../examples/20-project-euler/problems/euler001-multiples-of-3-and-5-bruteforce.hla64",
+  "source": "../../../examples/project-euler/problems/euler001-multiples-of-3-and-5-bruteforce.hla64",
   "expectedExitCode": 0,
   "expectedStdout": "Euler #1 = 233168\n",
   "description": "Project Euler #1 bruteforce: mod/add loop below 1000"

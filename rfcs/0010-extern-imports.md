@@ -38,4 +38,4 @@ extern procedure GetTickCount(): uint32 from "kernel32.dll";
 
 ## Example
 
-`examples/07-interop/extern-puts.hla64`
+`examples/interop/07-interop/extern-puts.hla64`

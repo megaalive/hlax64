@@ -1,7 +1,7 @@
 # Generate euler008 with embedded 1000-digit PE string
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
-$dataFile = Join-Path $root 'examples/20-project-euler/data/euler008-digits.txt'
+$dataFile = Join-Path $root 'examples/project-euler/data/euler008-digits.txt'
 $digits = (Get-Content -Raw $dataFile).Trim() -replace '\s',''
 
 if ($digits.Length -ne 1000) { throw "Expected 1000 digits, got $($digits.Length)" }
@@ -53,6 +53,6 @@ for ($i = 0; $i -lt 1000; $i++) {
 [void]$sb.AppendLine('end euler008;')
 [void]$sb.AppendLine('')
 
-$out = Join-Path $root 'examples/20-project-euler/problems/euler008-largest-product-series.hla64'
+$out = Join-Path $root 'examples/project-euler/problems/euler008-largest-product-series.hla64'
 Set-Content -Path $out -Value $sb.ToString() -Encoding utf8
 Write-Host "Wrote $out"

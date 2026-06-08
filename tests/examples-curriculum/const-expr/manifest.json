@@ -1,6 +1,6 @@
 {
   "name": "curriculum-const-expr",
-  "source": "../../../examples/01-arithmetic/const-expr.hla64",
+  "source": "../../../examples/curriculum/01-arithmetic/const-expr.hla64",
   "expectedExitCode": 24,
   "description": "Curriculum: compile-time const expressions"
 }

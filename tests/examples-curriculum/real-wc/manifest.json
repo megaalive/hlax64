@@ -1,6 +1,6 @@
 {
   "name": "real-wc",
-  "source": "../../../examples/10-real-tools/wc/wc.hla64",
+  "source": "../../../examples/tools/10-windows/wc/wc.hla64",
   "expectedExitCode": 0,
   "description": "Real tool: count lines, words, and bytes (compile-only; native run via AssemblyLab.Tests)"
 }

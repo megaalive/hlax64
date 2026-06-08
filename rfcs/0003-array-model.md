@@ -43,4 +43,4 @@ end P;
 
 ## Examples
 
-See `examples/05-memory/array-*.hla64`.
+See `examples/curriculum/05-memory/array-*.hla64`.

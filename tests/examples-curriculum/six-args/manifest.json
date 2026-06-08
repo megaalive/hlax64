@@ -1,6 +1,6 @@
 {
   "name": "curriculum-six-args",
-  "source": "../../../examples/04-procedures/six-args.hla64",
+  "source": "../../../examples/curriculum/04-procedures/six-args.hla64",
   "expectedStdout": "1+2+3+4+5+6 = 21\n",
   "description": "Curriculum: six register arguments"
 }

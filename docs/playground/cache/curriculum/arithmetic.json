@@ -1,0 +1,15 @@
+﻿{
+  "schemaVersion": 1,
+  "success": true,
+  "version": "0.1.0-alpha",
+  "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\curriculum\\01-arithmetic\\simple.hla64",
+  "target": "linux-x64-sysv",
+  "diagnostics": [],
+  "ir": [
+    "function _start:\n  entry:\n    v0 = Move v1\n    v0 = Add v2"
+  ],
+  "lowered": [
+    "function _start:\n  entry: True, export: False\n  stack frame: 8 bytes\n  entry:\n        xor ebx, ebx    ; default exit code = 0 (callee-saved)\n        push rbp\n        mov rbp, rsp\n        sub rsp, 8      ; align stack to 16 bytes\n        mov rax, 1\n        add rax, 2\n        mov rdi, rax    ; exit code\n        mov rax, 60     ; sys_exit\n        syscall"
+  ],
+  "nasm": "bits 64\r\nsection .text\r\nglobal _start\r\n\r\n_start:\r\n    xor ebx, ebx    ; default exit code = 0 (callee-saved)\r\n    push rbp\r\n    mov rbp, rsp\r\n    sub rsp, 8      ; align stack to 16 bytes\r\n    mov rax, 1\r\n    add rax, 2\r\n    mov rdi, rax    ; exit code\r\n    mov rax, 60     ; sys_exit\r\n    syscall\r\n\r\nsection .data\r\nnewline db 0x0A\r\n"
+}

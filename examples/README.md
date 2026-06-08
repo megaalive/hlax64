@@ -1,27 +1,33 @@
-# Structured example programs (34 clean-room `.hla64` files in curriculum + 9 real-tools + C# interop).
+# Structured example programs
 
-| Folder | Programs |
-|--------|----------|
-| [00-getting-started/](00-getting-started/) | hello, exitcode |
-| [01-arithmetic/](01-arithmetic/) | simple, move-values, subtract, inc-dec |
-| [02-types/](02-types/) | signed-compare, unsigned-compare |
-| [03-control-flow/](03-control-flow/) | count, if-else |
-| [04-procedures/](04-procedures/) | add-two, no-args, six-args, factorial-iter |
-| [05-memory/](05-memory/) | pointers, arrays (RFC 0002/0003), string walk, stack-array |
-| [06-abi/](06-abi/) | stack-alignment, callee-saved, windows-exitcode |
-| [07-interop/](07-interop/) | export-lib |
-| [08-ai-agent/](08-ai-agent/) | smoke-test |
-| [09-benchmarks/](09-benchmarks/) | README → `benchmarks/count.json` |
-| [10-real-tools/](10-real-tools/) | listfiles, filesize, exists, linecount, hexdump, wc, fnv1a, filemagic, cmp |
-| [11-csharp-interop-real/](11-csharp-interop-real/) | native_count_lines, native_fnv1a, native_sum_bytes (DLL + C# caller) |
-| [12-real-tools-linux/](12-real-tools-linux/) | linecount, exists, wc, fnv1a (libc + Linux argv) |
-| [98-bug-farm/](98-bug-farm/) | 9 compile-only stress cases (CFG, locals, externs, stdout.put, …) |
-| [99-invalid/](99-invalid/) | 21 must-not-compile catalog entries (mirrors conformance invalid) |
+Examples are grouped by **category** at the top level. Each category keeps the numbered curriculum folders from the original layout.
+
+```
+examples/
+  curriculum/          # Language learning path (00–08)
+  interop/             # FFI, export-lib, C# P/Invoke
+  tools/               # Real CLI tools (Windows + Linux)
+  project-euler/       # PE #1–#50 suite
+  benchmarks/          # → benchmarks/count.json
+  qa/                  # bug-farm + invalid compile catalog
+```
+
+| Category | Folders | Programs |
+|----------|---------|----------|
+| [curriculum/](curriculum/) | `00-getting-started` … `06-abi`, `08-ai-agent` | hello, arithmetic, control flow, procedures, memory, ABI |
+| [interop/](interop/) | `07-interop`, `11-csharp-interop-real` | extern puts, native DLL + C# callers |
+| [tools/](tools/) | `10-windows`, `12-linux` | listfiles, wc, hexdump, fnv1a, … |
+| [project-euler/](project-euler/) | problems, runner, data, expected | PE #1–#25 verified, #26–#50 stubs |
+| [benchmarks/](benchmarks/) | README | Links to `benchmarks/count.json` |
+| [qa/](qa/) | `bug-farm`, `invalid` | Stress cases + must-not-compile catalog |
 
 ```bash
-hla64 explain examples/08-ai-agent/smoke-test.hla64 --json
-hla64 build examples/06-abi/windows-exitcode.hla64 --target windows-x64-msabi -o build/win-exit
+hla64 explain examples/curriculum/08-ai-agent/smoke-test.hla64 --json
+hla64 build examples/curriculum/06-abi/windows-exitcode.hla64 --target windows-x64-msabi -o build/win-exit
 hla64 test tests/examples-curriculum --filter real- --compile-only
+hla64 run examples/project-euler/problems/euler013-large-sum.hla64
 ```
+
+**Playground:** [docs/playground/index.html](../docs/playground/index.html) — sidebar grouped by category; cache under `docs/playground/cache/<category>/`.
 
 See [docs/examples.md](../docs/examples.md).

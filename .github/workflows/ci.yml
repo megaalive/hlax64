@@ -48,13 +48,13 @@ jobs:
 
       - name: Verify stack and ABI (smoke)
         run: |
-          dotnet run --project src/HlaX64.Cli -- verify-stack examples/06-abi/stack-args-sysv.hla64
-          dotnet run --project src/HlaX64.Cli -- verify-abi examples/06-abi/stack-args-sysv.hla64 --json
+          dotnet run --project src/HlaX64.Cli -- verify-stack examples/curriculum/06-abi/stack-args-sysv.hla64
+          dotnet run --project src/HlaX64.Cli -- verify-abi examples/curriculum/06-abi/stack-args-sysv.hla64 --json
 
       - name: CLI smoke (plan, diff, list-instructions)
         run: |
-          dotnet run --project src/HlaX64.Cli -- plan examples/00-getting-started/hello.hla64 --json
-          dotnet run --project src/HlaX64.Cli -- diff examples/00-getting-started/hello.hla64 examples/00-getting-started/exitcode.hla64 --json
+          dotnet run --project src/HlaX64.Cli -- plan examples/curriculum/00-getting-started/hello.hla64 --json
+          dotnet run --project src/HlaX64.Cli -- diff examples/curriculum/00-getting-started/hello.hla64 examples/curriculum/00-getting-started/exitcode.hla64 --json
           dotnet run --project src/HlaX64.Cli -- list-instructions
 
       - name: Native integration test (Linux)
@@ -62,7 +62,7 @@ jobs:
         run: |
           dotnet run --project src/HlaX64.Cli -- test tests/samples/
           dotnet run --project src/HlaX64.Cli -- test tests/examples-curriculum/
-          dotnet run --project src/HlaX64.Cli -- run examples/00-getting-started/hello.hla64
+          dotnet run --project src/HlaX64.Cli -- run examples/curriculum/00-getting-started/hello.hla64
 
       - name: Differential tests (Linux full run)
         if: runner.os == 'Linux'
@@ -76,7 +76,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          dotnet run --project src/HlaX64.Cli -- build examples/00-getting-started/exitcode.hla64 --target windows-x64-msabi -o build/win-exitcode --json
+          dotnet run --project src/HlaX64.Cli -- build examples/curriculum/00-getting-started/exitcode.hla64 --target windows-x64-msabi -o build/win-exitcode --json
           $proc = Start-Process -FilePath "build/win-exitcode/exitcode.exe" -Wait -PassThru -NoNewWindow
           if ($proc.ExitCode -ne 42) { throw "exitcode.exe returned $($proc.ExitCode), expected 42" }
           dotnet run --project src/HlaX64.Cli -- build tests/samples/export_lib/export_lib.hla64 --target windows-x64-msabi --output-kind shared-library -o build/win-lib --json

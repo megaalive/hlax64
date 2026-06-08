@@ -87,7 +87,7 @@ public sealed class ExamplesInvalidTests
             if (parent == null) break;
             dir = parent.FullName;
         }
-        throw new DirectoryNotFoundException("Could not locate examples/99-invalid");
+        throw new DirectoryNotFoundException("Could not locate examples/qa/invalid");
     }
 
     private static InvalidExampleManifest LoadManifest(string exampleDir)

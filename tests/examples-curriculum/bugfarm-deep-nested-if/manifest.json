@@ -1,6 +1,6 @@
 {
   "name": "bugfarm-deep-nested-if",
-  "source": "../../../examples/98-bug-farm/deep-nested-if/deep-nested-if.hla64",
+  "source": "../../../examples/qa/bug-farm/deep-nested-if/deep-nested-if.hla64",
   "expectedExitCode": 0,
   "description": "Bug farm: deep nested if/else CFG stress"
 }

@@ -1,6 +1,6 @@
 {
   "name": "curriculum-inc-dec",
-  "source": "../../../examples/01-arithmetic/inc-dec.hla64",
+  "source": "../../../examples/curriculum/01-arithmetic/inc-dec.hla64",
   "expectedExitCode": 6,
   "description": "Curriculum: inc and dec"
 }

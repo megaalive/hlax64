@@ -1,6 +1,6 @@
 {
   "name": "curriculum-idiv-jmp",
-  "source": "../../../examples/03-control-flow/idiv-jmp.hla64",
+  "source": "../../../examples/curriculum/03-control-flow/idiv-jmp.hla64",
   "expectedExitCode": 4,
   "description": "Curriculum: idiv and jmp with local labels"
 }

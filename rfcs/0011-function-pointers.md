@@ -29,4 +29,4 @@ call compare(a, b);
 
 ## Example
 
-`examples/07-interop/indirect-call.hla64`
+`examples/interop/07-interop/indirect-call.hla64`

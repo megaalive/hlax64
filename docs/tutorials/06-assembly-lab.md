@@ -20,7 +20,7 @@ On Windows, ensure NASM is on PATH (`scripts/setup-toolchain-path.ps1`).
 
 ## Quick start — `hello.hla64` (step by step)
 
-This walkthrough matches opening `examples/00-getting-started/hello.hla64`.
+This walkthrough matches opening `examples/curriculum/00-getting-started/hello.hla64`.
 
 ### Step 1 — Open the file
 
@@ -62,7 +62,7 @@ Optional **Strict plan gate** (checkbox, default **OFF**):
 **Where is `hello.exe`?**
 
 ```
-examples/00-getting-started/build/hello/
+examples/curriculum/00-getting-started/build/hello/
   hello.nasm
   hello.obj          ← always after successful assemble
   hello.hlamap.json

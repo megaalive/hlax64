@@ -1,6 +1,6 @@
 {
   "name": "curriculum-move-values",
-  "source": "../../../examples/01-arithmetic/move-values.hla64",
+  "source": "../../../examples/curriculum/01-arithmetic/move-values.hla64",
   "expectedExitCode": 15,
   "description": "Curriculum: register moves"
 }

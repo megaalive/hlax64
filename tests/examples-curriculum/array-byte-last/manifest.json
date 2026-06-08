@@ -1,6 +1,6 @@
 {
   "name": "curriculum-array-byte-last",
-  "source": "../../../examples/05-memory/array-byte-last.hla64",
+  "source": "../../../examples/curriculum/05-memory/array-byte-last.hla64",
   "expectedExitCode": 40,
   "description": "Curriculum: byte[4] packed array with literal index store/load"
 }

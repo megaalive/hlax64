@@ -1,7 +1,7 @@
 # Generate euler011 from data/euler011-matrix.txt
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
-$dataFile = Join-Path $root 'examples/20-project-euler/data/euler011-matrix.txt'
+$dataFile = Join-Path $root 'examples/project-euler/data/euler011-matrix.txt'
 $lines = Get-Content $dataFile | Where-Object { $_.Trim() -ne '' }
 $values = @()
 foreach ($line in $lines) {
@@ -78,6 +78,6 @@ for ($i = 0; $i -lt 400; $i++) {
 [void]$sb.AppendLine('end euler011;')
 [void]$sb.AppendLine('')
 
-$out = Join-Path $root 'examples/20-project-euler/problems/euler011-largest-product-grid.hla64'
+$out = Join-Path $root 'examples/project-euler/problems/euler011-largest-product-grid.hla64'
 Set-Content -Path $out -Value $sb.ToString() -Encoding utf8
 Write-Host "Wrote $out"

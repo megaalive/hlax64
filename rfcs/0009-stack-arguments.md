@@ -49,7 +49,7 @@ All parameters still receive `[rbp-N]` home slots via `ProcedureStackMap`. On en
 
 ## Examples
 
-- `examples/06-abi/stack-args-sysv.hla64` — eight-arg sum (Linux SysV)
+- `examples/curriculum/06-abi/stack-args-sysv.hla64` — eight-arg sum (Linux SysV)
 - Windows: use `--target windows-x64-msabi` with five-or-more-arg procedures
 
 ## References

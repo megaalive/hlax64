@@ -3,8 +3,8 @@
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
-data = root / "examples/20-project-euler/data/euler018-triangle.txt"
-out = root / "examples/20-project-euler/problems/euler018-maximum-path-sum.hla64"
+data = root / "examples/project-euler/data/euler018-triangle.txt"
+out = root / "examples/project-euler/problems/euler018-maximum-path-sum.hla64"
 
 vals: list[int] = []
 for line in data.read_text().splitlines():

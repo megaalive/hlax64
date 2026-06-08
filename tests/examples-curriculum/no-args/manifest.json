@@ -1,6 +1,6 @@
 {
   "name": "curriculum-no-args",
-  "source": "../../../examples/04-procedures/no-args.hla64",
+  "source": "../../../examples/curriculum/04-procedures/no-args.hla64",
   "expectedStdout": "Answer is 42\n",
   "description": "Curriculum: zero-arg procedure"
 }

@@ -27,4 +27,4 @@ Arguments classified in source order:
 
 ## Example
 
-`examples/06-abi/float-return.hla64`
+`examples/curriculum/06-abi/float-return.hla64`

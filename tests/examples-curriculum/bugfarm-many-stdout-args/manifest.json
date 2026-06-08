@@ -1,6 +1,6 @@
 {
   "name": "bugfarm-many-stdout-args",
-  "source": "../../../examples/98-bug-farm/many-stdout-args/many-stdout-args.hla64",
+  "source": "../../../examples/qa/bug-farm/many-stdout-args/many-stdout-args.hla64",
   "expectedExitCode": 0,
   "description": "Bug farm: many stdout.put arguments"
 }

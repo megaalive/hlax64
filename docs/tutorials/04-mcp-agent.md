@@ -27,11 +27,11 @@ doctor → explain → test → build/run
 
 ## 3. Example: smoke test
 
-Curriculum program `examples/08-ai-agent/smoke-test.hla64`:
+Curriculum program `examples/curriculum/08-ai-agent/smoke-test.hla64`:
 
 ```bash
 # CLI equivalent
-hla64 run examples/08-ai-agent/smoke-test.hla64
+hla64 run examples/curriculum/08-ai-agent/smoke-test.hla64
 ```
 
 Via MCP, call `run` with `sourcePath` pointing at that file. Expect stdout containing `verified routine ok`.

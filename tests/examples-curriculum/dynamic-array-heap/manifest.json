@@ -1,6 +1,12 @@
-{
-  "name": "curriculum-dynamic-array-heap",
-  "source": "../../../examples/05-memory/dynamic-array-heap.hla64",
-  "expectedExitCode": 0,
-  "description": "Curriculum: heap-backed VecI64 with hlax_malloc/realloc/free"
-}
+{
+
+  "name": "curriculum-dynamic-array-heap",
+
+  "source": "../../../examples/curriculum/05-memory/dynamic-array-heap.hla64",
+
+  "expectedExitCode": 0,
+
+  "description": "Curriculum: heap-backed VecI64 with hlax_malloc/realloc/free"
+
+}
+

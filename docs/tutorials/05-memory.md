@@ -16,7 +16,7 @@ mov(&slot, rcx);    // lea rcx, [rbp-N]
 mov([rcx], rax);    // load 64-bit value through rcx
 ```
 
-See [pointer-load-store.hla64](../../examples/05-memory/pointer-load-store.hla64).
+See [pointer-load-store.hla64](../../examples/curriculum/05-memory/pointer-load-store.hla64).
 
 ---
 
@@ -28,7 +28,7 @@ Operand order is HLA-style: `mov(source, destination)`.
 mov(99, [rcx]);     // store immediate into memory at rcx
 ```
 
-See [pointer-store.hla64](../../examples/05-memory/pointer-store.hla64).
+See [pointer-store.hla64](../../examples/curriculum/05-memory/pointer-store.hla64).
 
 ---
 
@@ -43,7 +43,7 @@ mov(1, idx);
 mov(data[idx], rax);
 ```
 
-See [array-sum.hla64](../../examples/05-memory/array-sum.hla64), [array-max.hla64](../../examples/05-memory/array-max.hla64), [rfcs/0003-array-model.md](../../rfcs/0003-array-model.md).
+See [array-sum.hla64](../../examples/curriculum/05-memory/array-sum.hla64), [array-max.hla64](../../examples/curriculum/05-memory/array-max.hla64), [rfcs/0003-array-model.md](../../rfcs/0003-array-model.md).
 
 ### Packed element types
 
@@ -55,7 +55,7 @@ mov(10, buf[0]);
 mov(40, buf[3]);    // last byte — exit code in array-byte-last.hla64
 ```
 
-See [array-byte-last.hla64](../../examples/05-memory/array-byte-last.hla64).
+See [array-byte-last.hla64](../../examples/curriculum/05-memory/array-byte-last.hla64).
 
 ---
 
@@ -71,7 +71,7 @@ mov([rcx], rax);        // elem0
 mov([rcx + 8], rbx);    // elem1 (next 8-byte slot)
 ```
 
-See [stack-array.hla64](../../examples/05-memory/stack-array.hla64) — sums three elements (exit 60).
+See [stack-array.hla64](../../examples/curriculum/05-memory/stack-array.hla64) — sums three elements (exit 60).
 
 ---
 
@@ -86,7 +86,7 @@ mov([rcx + 4].dword, rbx);  // mov ebx, dword [rcx+4]
 
 Aliases match [language-spec.md](../language-spec.md): `byte` (8-bit), `word` (16), `dword` (32), `qword` (64, default).
 
-See [typed-byte.hla64](../../examples/05-memory/typed-byte.hla64).
+See [typed-byte.hla64](../../examples/curriculum/05-memory/typed-byte.hla64).
 
 ---
 
@@ -109,7 +109,7 @@ while(ch > 0) do
 endwhile;
 ```
 
-See [string-length.hla64](../../examples/05-memory/string-length.hla64) — exit code 5.
+See [string-length.hla64](../../examples/curriculum/05-memory/string-length.hla64) — exit code 5.
 
 ---
 
@@ -120,7 +120,7 @@ Read [memory-and-bounds.md](../memory-and-bounds.md). HlaX64 **does not** enforc
 Optional **static** warnings for **literal** indices:
 
 ```bash
-hla64 build examples/05-memory/array-sum.hla64 -Wbounds
+hla64 build examples/curriculum/05-memory/array-sum.hla64 -Wbounds
 ```
 
 Emits **HLAX0030** when a literal index is `< 0` or `>=` array length. Register/variable indices are not analyzed. The language server enables bounds warnings in diagnostics by default.
@@ -129,7 +129,7 @@ Emits **HLAX0030** when a literal index is `< 0` or `>=` array length. Register/
 
 ## 8. Next steps
 
-- Level 4 ABI: [06-abi examples](../../examples/06-abi/)
+- Level 4 ABI: [06-abi examples](../../examples/curriculum/06-abi/)
 - Interop: [03-csharp-interop.md](03-csharp-interop.md)
 - RFC: [0002-pointer-model.md](../../rfcs/0002-pointer-model.md)
 

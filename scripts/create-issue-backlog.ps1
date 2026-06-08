@@ -138,7 +138,7 @@ Add a native manifest covering unsigned compare at ``0x8000000000000000`` vs ``1
 
 ## Files
 - ``tests/samples/`` or ``tests/examples-curriculum/``
-- Optional source under ``examples/02-types/``
+- Optional source under ``examples/curriculum/02-types/``
 
 ## Acceptance criteria
 - [ ] Manifest runs in ``hla64 test`` on Linux CI
@@ -220,7 +220,7 @@ Add docs/contributing-walkthrough.md: fork, branch, test, PR template example fo
         Labels = @("good first issue", "testing")
         Body = @"
 ## Summary
-Add conformance case with ``expectNasmContains`` substrings for ``examples/00-getting-started/hello.hla64``.
+Add conformance case with ``expectNasmContains`` substrings for ``examples/curriculum/00-getting-started/hello.hla64``.
 
 ## Files
 - ``tests/conformance/valid/hello-snapshot/``
@@ -231,7 +231,7 @@ Add conformance case with ``expectNasmContains`` substrings for ``examples/00-ge
 "@
     }
     @{
-        Title = "docs: expand examples/09-benchmarks README with bench workflow"
+        Title = "docs: expand examples/benchmarks README with bench workflow"
         Labels = @("good first issue", "documentation")
         Body = @"
 ## Summary
@@ -258,7 +258,7 @@ Add ``[*.hla64]`` section: indent, charset, final newline.
         Labels = @("help wanted", "enhancement")
         Body = @"
 ## Summary
-Add ``examples/07-interop/rust-ffi/`` showing ``libloading`` or ``extern ""C""`` against ``export-lib`` output.
+Add ``examples/interop/07-interop/rust-ffi/`` showing ``libloading`` or ``extern ""C""`` against ``export-lib`` output.
 
 ## Acceptance criteria
 - [ ] README with build steps on Linux

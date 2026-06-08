@@ -39,7 +39,7 @@ Non-register inside `[..]` is a **parse error** in current releases.
 
 **Safe patterns today:**
 
-1. Keep index ranges in loop conditions (see [string-length.hla64](../examples/05-memory/string-length.hla64)).
+1. Keep index ranges in loop conditions (see [string-length.hla64](../examples/curriculum/05-memory/string-length.hla64)).
 2. Prefer fixed-size manual arrays with known element count.
 3. Run `hla64 test` on examples before shipping generated code.
 

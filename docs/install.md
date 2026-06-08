@@ -29,7 +29,7 @@ hla64 doctor
 tar xzf hla64-linux-x64.tar.gz
 export PATH="$PWD:$PATH"
 hla64 --version
-hla64 run examples/00-getting-started/hello.hla64
+hla64 run examples/curriculum/00-getting-started/hello.hla64
 ```
 
 **Windows (PowerShell):**
@@ -73,7 +73,7 @@ git clone https://github.com/megaalive/hlax64.git
 cd hlax64
 dotnet build
 dotnet run --project src/HlaX64.Cli -- --version
-dotnet run --project src/HlaX64.Cli -- run examples/00-getting-started/hello.hla64
+dotnet run --project src/HlaX64.Cli -- run examples/curriculum/00-getting-started/hello.hla64
 ```
 
 See [development.md](development.md) for tests, LSP, and MCP setup.

@@ -1,6 +1,6 @@
 {
   "name": "bugfarm-many-externs",
-  "source": "../../../examples/98-bug-farm/many-externs/many-externs.hla64",
+  "source": "../../../examples/qa/bug-farm/many-externs/many-externs.hla64",
   "expectedExitCode": 0,
   "description": "Bug farm: many extern imports and calls"
 }

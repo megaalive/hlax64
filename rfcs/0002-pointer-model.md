@@ -18,7 +18,7 @@ Pointer types, address-of, dereference, indexed addressing, and sized memory ops
 | `[reg + offset]` | `mov([rcx + 8], rbx)` |
 | Sized access `.byte`/`.word`/`.dword`/`.qword` | `mov([rcx].byte, rax)` |
 
-Examples under `examples/05-memory/`. Tutorial: `docs/tutorials/05-memory.md`.
+Examples under `examples/curriculum/05-memory/`. Tutorial: `docs/tutorials/05-memory.md`.
 
 ## Not yet implemented
 

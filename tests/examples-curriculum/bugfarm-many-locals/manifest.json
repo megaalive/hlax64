@@ -1,6 +1,6 @@
 {
   "name": "bugfarm-many-locals",
-  "source": "../../../examples/98-bug-farm/many-locals/many-locals.hla64",
+  "source": "../../../examples/qa/bug-farm/many-locals/many-locals.hla64",
   "expectedExitCode": 0,
   "description": "Bug farm: many stack locals in one procedure"
 }

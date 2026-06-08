@@ -1,6 +1,6 @@
 {
   "name": "real-linecount",
-  "source": "../../../examples/10-real-tools/linecount/linecount.hla64",
+  "source": "../../../examples/tools/10-windows/linecount/linecount.hla64",
   "expectedExitCode": 0,
   "description": "Real tool: read a fixture file and count newline bytes (compile-only until Windows manifest execution lands)"
 }

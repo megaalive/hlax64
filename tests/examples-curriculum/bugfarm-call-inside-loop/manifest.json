@@ -1,6 +1,6 @@
 {
   "name": "bugfarm-call-inside-loop",
-  "source": "../../../examples/98-bug-farm/call-inside-loop/call-inside-loop.hla64",
+  "source": "../../../examples/qa/bug-farm/call-inside-loop/call-inside-loop.hla64",
   "expectedExitCode": 0,
   "description": "Bug farm: call inside while loop (compile-only stress case)"
 }

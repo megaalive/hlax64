@@ -1,6 +1,6 @@
 {
   "name": "bugfarm-large-static-buffer",
-  "source": "../../../examples/98-bug-farm/large-static-buffer/large-static-buffer.hla64",
+  "source": "../../../examples/qa/bug-farm/large-static-buffer/large-static-buffer.hla64",
   "expectedExitCode": 0,
   "description": "Bug farm: large static BSS buffer indexing"
 }

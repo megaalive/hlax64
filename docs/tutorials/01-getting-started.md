@@ -13,7 +13,7 @@ hla64 --version
 
 ## 2. Hello world
 
-Open `examples/00-getting-started/hello.hla64`:
+Open `examples/curriculum/00-getting-started/hello.hla64`:
 
 ```hla
 program hello;
@@ -28,7 +28,7 @@ end hello;
 Run:
 
 ```bash
-hla64 run examples/00-getting-started/hello.hla64
+hla64 run examples/curriculum/00-getting-started/hello.hla64
 ```
 
 Expected stdout: `Hello from HlaX64`
@@ -38,8 +38,8 @@ Expected stdout: `Hello from HlaX64`
 See IR and NASM without running:
 
 ```bash
-hla64 explain examples/00-getting-started/hello.hla64
-hla64 emit-nasm examples/00-getting-started/hello.hla64 -o build/hello.nasm
+hla64 explain examples/curriculum/00-getting-started/hello.hla64
+hla64 emit-nasm examples/curriculum/00-getting-started/hello.hla64 -o build/hello.nasm
 ```
 
 Use `--json` for agent-friendly output.
@@ -49,15 +49,15 @@ Use `--json` for agent-friendly output.
 Programs return the value in `rax` when they finish:
 
 ```bash
-hla64 run examples/00-getting-started/exitcode.hla64
+hla64 run examples/curriculum/00-getting-started/exitcode.hla64
 echo $?    # Linux: 42
 ```
 
-Source: `examples/00-getting-started/exitcode.hla64`.
+Source: `examples/curriculum/00-getting-started/exitcode.hla64`.
 
 ## 5. Arithmetic
 
-Work through `examples/01-arithmetic/`:
+Work through `examples/curriculum/01-arithmetic/`:
 
 | File | Lesson |
 |------|--------|
@@ -69,7 +69,7 @@ Work through `examples/01-arithmetic/`:
 Build one explicitly:
 
 ```bash
-hla64 build examples/01-arithmetic/simple.hla64 -o build/simple
+hla64 build examples/curriculum/01-arithmetic/simple.hla64 -o build/simple
 ./build/simple
 echo $?   # 3
 ```

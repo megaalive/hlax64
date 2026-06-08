@@ -1,0 +1,128 @@
+{
+  "categories": [
+    {
+      "id": "curriculum",
+      "label": "Curriculum",
+      "examples": [
+        {
+          "id": "hello",
+          "label": "Hello world",
+          "path": "examples/curriculum/00-getting-started/hello.hla64",
+          "run": "hla64 run examples/curriculum/00-getting-started/hello.hla64",
+          "expected": "stdout:\n  Hello from HlaX64\nexit code: 0"
+        },
+        {
+          "id": "exitcode",
+          "label": "Exit code",
+          "path": "examples/curriculum/00-getting-started/exitcode.hla64",
+          "run": "hla64 run examples/curriculum/00-getting-started/exitcode.hla64",
+          "expected": "(no stdout)\nexit code: 42"
+        },
+        {
+          "id": "arithmetic",
+          "label": "Arithmetic",
+          "path": "examples/curriculum/01-arithmetic/simple.hla64",
+          "run": "hla64 run examples/curriculum/01-arithmetic/simple.hla64",
+          "expected": "(no stdout)\nexit code: 30  (10 + 20 in rax)"
+        },
+        {
+          "id": "if-while",
+          "label": "If / while",
+          "path": "examples/curriculum/03-control-flow/count.hla64",
+          "run": "hla64 run examples/curriculum/03-control-flow/count.hla64",
+          "expected": "stdout:\n  count = 5\nexit code: 0"
+        },
+        {
+          "id": "procedure",
+          "label": "Procedure call",
+          "path": "examples/curriculum/04-procedures/add-two.hla64",
+          "run": "hla64 run examples/curriculum/04-procedures/add-two.hla64",
+          "expected": "(no stdout)\nexit code: 30  (AddTwo(10, 20))"
+        },
+        {
+          "id": "stack-local",
+          "label": "Stack local",
+          "path": "examples/curriculum/05-memory/stack-array.hla64",
+          "run": "hla64 run examples/curriculum/05-memory/stack-array.hla64",
+          "expected": "(no stdout)\nexit code: 42  (stack array demo)"
+        },
+        {
+          "id": "extern-puts",
+          "label": "Call libc puts",
+          "path": "examples/interop/07-interop/extern-puts.hla64",
+          "run": "hla64 run examples/interop/07-interop/extern-puts.hla64",
+          "expected": "stdout:\n  Hello from puts\nexit code: (puts return in rbx)",
+          "note": "C interop via extern; printf sample planned for v0.2."
+        }
+      ]
+    },
+    {
+      "id": "tools",
+      "label": "Real tools",
+      "examples": [
+        {
+          "id": "linecount",
+          "label": "File read",
+          "path": "examples/tools/10-windows/linecount/linecount.hla64",
+          "run": "hla64 run examples/tools/10-windows/linecount/linecount.hla64 -- README.md",
+          "expected": "stdout:\n  lines: <n>\nUses argv[1] as the file path to read."
+        },
+        {
+          "id": "argv",
+          "label": "argv",
+          "path": "examples/tools/10-windows/exists/exists.hla64",
+          "run": "hla64 run examples/tools/10-windows/exists/exists.hla64 -- .",
+          "expected": "About argc / argv:\n  hlax_argv_count() → argc (argv[0] program name + user args)\n  hlax_argv_get(1)  → argv[1] (first user argument)\n\nRun with a path that exists:\n  hla64 run examples/tools/10-windows/exists/exists.hla64 -- .\n\nstdout:\n  exists\nexit code: 0\n\nRun with a missing path:\n  hla64 run examples/tools/10-windows/exists/exists.hla64 -- __missing__\n\nstdout:\n  missing\nexit code: 1"
+        },
+        {
+          "id": "wc",
+          "label": "wc",
+          "path": "examples/tools/10-windows/wc/wc.hla64",
+          "run": "hla64 run examples/tools/10-windows/wc/wc.hla64 -- README.md",
+          "expected": "stdout (example):\n  lines: …  words: …  bytes: …\nargv[1] = file to count."
+        },
+        {
+          "id": "hexdump",
+          "label": "hexdump",
+          "path": "examples/tools/10-windows/hexdump/hexdump.hla64",
+          "run": "hla64 run examples/tools/10-windows/hexdump/hexdump.hla64 -- README.md",
+          "expected": "stdout: hex + ASCII columns for argv[1] file bytes."
+        },
+        {
+          "id": "filemagic",
+          "label": "filemagic",
+          "path": "examples/tools/10-windows/filemagic/filemagic.hla64",
+          "run": "hla64 run examples/tools/10-windows/filemagic/filemagic.hla64 -- README.md",
+          "expected": "stdout: detected type from magic bytes (e.g. text, PE, ELF)."
+        }
+      ]
+    },
+    {
+      "id": "project-euler",
+      "label": "Project Euler",
+      "examples": [
+        {
+          "id": "euler001",
+          "label": "Euler #1 brute",
+          "path": "examples/project-euler/problems/euler001-multiples-of-3-and-5-bruteforce.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler001-multiples-of-3-and-5-bruteforce.hla64",
+          "expected": "stdout:\n  Euler #1 = 233168\nSolve yourself first — compare with formula variant."
+        },
+        {
+          "id": "euler001-formula",
+          "label": "Euler #1 formula",
+          "path": "examples/project-euler/problems/euler001-multiples-of-3-and-5-formula.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler001-multiples-of-3-and-5-formula.hla64",
+          "expected": "stdout:\n  Euler #1 (formula) = 233168\nO(1) vs loop — inspect NASM diff in Explain tab."
+        },
+        {
+          "id": "euler002",
+          "label": "Euler #2 Fib",
+          "path": "examples/project-euler/problems/euler002-even-fibonacci.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler002-even-fibonacci.hla64",
+          "expected": "stdout:\n  Euler #2 = 4613732\nEven Fibonacci terms below 4_000_000."
+        }
+      ]
+    }
+  ]
+}

@@ -86,8 +86,8 @@ Optional CLI warnings on `build`, `emit-nasm`, `run`, `explain`:
 Verification CLI (Phase 18):
 
 ```bash
-dotnet run --project src/HlaX64.Cli -- verify-stack examples/01-arithmetic/add-two.hla64
-dotnet run --project src/HlaX64.Cli -- verify-abi examples/06-abi/stack-args-sysv.hla64 --json
+dotnet run --project src/HlaX64.Cli -- verify-stack examples/curriculum/01-arithmetic/add-two.hla64
+dotnet run --project src/HlaX64.Cli -- verify-abi examples/curriculum/06-abi/stack-args-sysv.hla64 --json
 ```
 
 ### Fuzz / robustness tests (Phase 18)
@@ -108,7 +108,7 @@ On Windows, use `.\scripts\build.ps1` for a scripted restore + build.
 
 ```bash
 dotnet run --project src/HlaX64.Cli -- --version
-dotnet run --project src/HlaX64.Cli -- run examples/00-getting-started/hello.hla64
+dotnet run --project src/HlaX64.Cli -- run examples/curriculum/00-getting-started/hello.hla64
 dotnet run --project src/HlaX64.Cli -- test tests/samples
 ```
 

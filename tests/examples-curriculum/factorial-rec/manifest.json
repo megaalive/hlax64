@@ -1,6 +1,6 @@
 {
   "name": "curriculum-factorial-rec",
-  "source": "../../../examples/04-procedures/factorial-rec.hla64",
+  "source": "../../../examples/curriculum/04-procedures/factorial-rec.hla64",
   "expectedExitCode": 120,
   "description": "Curriculum: recursive factorial (5!)"
 }

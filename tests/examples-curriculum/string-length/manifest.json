@@ -1,6 +1,6 @@
 {
   "name": "curriculum-string-length",
-  "source": "../../../examples/05-memory/string-length.hla64",
+  "source": "../../../examples/curriculum/05-memory/string-length.hla64",
   "expectedExitCode": 5,
   "description": "Curriculum: string byte traversal"
 }

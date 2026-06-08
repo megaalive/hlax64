@@ -1,6 +1,6 @@
 {
   "name": "interop-native-fnv1a",
-  "source": "../../../examples/11-csharp-interop-real/native_fnv1a/native_fnv1a.hla64",
+  "source": "../../../examples/interop/11-csharp-interop-real/native_fnv1a/native_fnv1a.hla64",
   "expectedExitCode": 0,
   "description": "Shared library export Fnv1a64 for C# P/Invoke (compile-only; native caller test in AssemblyLab.Tests)"
 }

@@ -159,8 +159,8 @@ examples), these procedures are provided per target under
 | `hlax_argv_init`, `hlax_argv_count`, `hlax_argv_get` | Command-line `argc`/`argv` access |
 | `int_to_str`, `uint_to_str` | Integer → decimal C string in a caller buffer |
 
-See [examples/10-real-tools](../examples/10-real-tools/) and
-[examples/12-real-tools-linux](../examples/12-real-tools-linux/) for argv and
+See [examples/tools/10-windows](../examples/tools/10-windows/) and
+[examples/tools/12-linux](../examples/tools/12-linux/) for argv and
 `stdout.putu` usage (e.g. FNV-1a hash output).
 
 ### Escape sequences in string literals

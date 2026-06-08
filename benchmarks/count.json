@@ -2,28 +2,28 @@
   "benchmarks": [
     {
       "name": "count",
-      "source": "examples/03-control-flow/count.hla64",
+      "source": "examples/curriculum/03-control-flow/count.hla64",
       "warmup": 2,
       "iterations": 5,
       "expectedExitCode": 0
     },
     {
       "name": "hello",
-      "source": "examples/00-getting-started/hello.hla64",
+      "source": "examples/curriculum/00-getting-started/hello.hla64",
       "warmup": 3,
       "iterations": 10,
       "expectedExitCode": 0
     },
     {
       "name": "simple",
-      "source": "examples/01-arithmetic/simple.hla64",
+      "source": "examples/curriculum/01-arithmetic/simple.hla64",
       "warmup": 3,
       "iterations": 10,
       "expectedExitCode": 0
     },
     {
       "name": "add-two",
-      "source": "examples/04-procedures/add-two.hla64",
+      "source": "examples/curriculum/04-procedures/add-two.hla64",
       "warmup": 3,
       "iterations": 10,
       "expectedExitCode": 0

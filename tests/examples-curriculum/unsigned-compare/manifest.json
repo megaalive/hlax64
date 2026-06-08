@@ -1,6 +1,6 @@
 {
   "name": "curriculum-unsigned-compare",
-  "source": "../../../examples/02-types/unsigned-compare.hla64",
+  "source": "../../../examples/curriculum/02-types/unsigned-compare.hla64",
   "expectedStdout": "unsigned: greater\n",
   "description": "Curriculum: unsigned comparison"
 }

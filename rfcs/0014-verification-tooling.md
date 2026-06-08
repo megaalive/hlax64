@@ -31,8 +31,8 @@ LSP enables HLAX0060–63 by default (warnings).
 ## Commands
 
 ```bash
-hla64 verify-stack examples/01-arithmetic/add-two.hla64 [--target linux-x64-sysv] [--json]
-hla64 verify-abi examples/06-abi/stack-args-sysv.hla64 [--json]
+hla64 verify-stack examples/curriculum/01-arithmetic/add-two.hla64 [--target linux-x64-sysv] [--json]
+hla64 verify-abi examples/curriculum/06-abi/stack-args-sysv.hla64 [--json]
 ```
 
 ## Stack verifier (HLAX0064–68)

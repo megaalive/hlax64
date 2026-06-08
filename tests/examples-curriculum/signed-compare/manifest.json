@@ -1,6 +1,6 @@
 {
   "name": "curriculum-signed-compare",
-  "source": "../../../examples/02-types/signed-compare.hla64",
+  "source": "../../../examples/curriculum/02-types/signed-compare.hla64",
   "expectedStdout": "negative is less (signed correct)\n",
   "description": "Curriculum: signed comparison"
 }

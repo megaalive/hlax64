@@ -4,12 +4,12 @@ Export HlaX64 procedures from a shared library and call them from C# via P/Invok
 
 ## 1. Export a library
 
-Example: `examples/07-interop/export-lib.hla64` defines exported procedures for a `.so` / `.dll`.
+Example: `examples/interop/07-interop/export-lib.hla64` defines exported procedures for a `.so` / `.dll`.
 
 Build a shared library (Linux):
 
 ```bash
-hla64 build examples/07-interop/export-lib.hla64 \
+hla64 build examples/interop/07-interop/export-lib.hla64 \
   --output-kind shared-library \
   -o build/libexport.so
 ```
@@ -17,13 +17,13 @@ hla64 build examples/07-interop/export-lib.hla64 \
 Inspect exports:
 
 ```bash
-hla64 explain examples/07-interop/export-lib.hla64
+hla64 explain examples/interop/07-interop/export-lib.hla64
 ```
 
 ## 2. Generate a C header
 
 ```bash
-hla64 generate-header examples/07-interop/export-lib.hla64 -o build/export_lib.h
+hla64 generate-header examples/interop/07-interop/export-lib.hla64 -o build/export_lib.h
 ```
 
 Use the header from C/C++ if you prefer raw `dlopen` / `LoadLibrary`.
@@ -31,7 +31,7 @@ Use the header from C/C++ if you prefer raw `dlopen` / `LoadLibrary`.
 ## 3. Generate C# P/Invoke
 
 ```bash
-hla64 generate-pinvoke examples/07-interop/export-lib.hla64 -o build/ExportLib.cs
+hla64 generate-pinvoke examples/interop/07-interop/export-lib.hla64 -o build/ExportLib.cs
 ```
 
 The generator emits `[DllImport]` attributes with calling convention and entry point names matching the NASM export labels.

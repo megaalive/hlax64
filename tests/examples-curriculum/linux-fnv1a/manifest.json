@@ -1,6 +1,6 @@
 {
   "name": "linux-fnv1a",
-  "source": "../../../examples/12-real-tools-linux/fnv1a/fnv1a.hla64",
+  "source": "../../../examples/tools/12-linux/fnv1a/fnv1a.hla64",
   "expectedExitCode": 0,
   "description": "Linux real tool: FNV-1a hash with stdout.putu"
 }

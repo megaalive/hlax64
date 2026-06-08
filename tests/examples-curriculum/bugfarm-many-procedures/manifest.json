@@ -1,6 +1,6 @@
 {
   "name": "bugfarm-many-procedures",
-  "source": "../../../examples/98-bug-farm/many-procedures/many-procedures.hla64",
+  "source": "../../../examples/qa/bug-farm/many-procedures/many-procedures.hla64",
   "expectedExitCode": 0,
   "description": "Bug farm: many small procedures in one program"
 }

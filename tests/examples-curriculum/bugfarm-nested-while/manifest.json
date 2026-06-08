@@ -1,6 +1,6 @@
 {
   "name": "bugfarm-nested-while",
-  "source": "../../../examples/98-bug-farm/nested-while/nested-while.hla64",
+  "source": "../../../examples/qa/bug-farm/nested-while/nested-while.hla64",
   "expectedExitCode": 0,
   "description": "Bug farm: nested while loops (compile-only stress case)"
 }

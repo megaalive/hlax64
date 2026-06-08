@@ -31,8 +31,8 @@ For **live compilation**, assembly, link, and run:
 
 ```bash
 hla64 doctor
-hla64 run examples/00-getting-started/hello.hla64
-hla64 explain examples/10-real-tools/exists/exists.hla64 --json
+hla64 run examples/curriculum/00-getting-started/hello.hla64
+hla64 explain examples/tools/10-windows/exists/exists.hla64 --json
 ```
 
 ---
@@ -136,13 +136,13 @@ dotnet build
 dotnet test
 
 # 3. Compile a .hla64 file to NASM
-dotnet run --project src/HlaX64.Cli -- emit-nasm examples/00-getting-started/hello.hla64
+dotnet run --project src/HlaX64.Cli -- emit-nasm examples/curriculum/00-getting-started/hello.hla64
 
 # 4. Build a .hla64 file into a Linux ELF executable
-dotnet run --project src/HlaX64.Cli -- build examples/00-getting-started/exitcode.hla64 -o build/exitcode
+dotnet run --project src/HlaX64.Cli -- build examples/curriculum/00-getting-started/exitcode.hla64 -o build/exitcode
 
 # 5. Compile and run
-dotnet run --project src/HlaX64.Cli -- run examples/00-getting-started/hello.hla64
+dotnet run --project src/HlaX64.Cli -- run examples/curriculum/00-getting-started/hello.hla64
 
 # 6. Launch Assembly Lab (Phase 15)
 dotnet run --project src/HlaX64.AssemblyLab

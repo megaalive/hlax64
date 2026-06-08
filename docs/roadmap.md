@@ -212,8 +212,8 @@ Satu-satunya pekerjaan yang **belum** di roadmap aktif:
 ### Language / memory (lintas-fase, lihat `docs/memory-model.md`)
 
 - `ptr<T>`, `slice<T>`, checked indexing
-- **Runtime heap helpers (shipped):** `hlax_malloc`, `hlax_realloc`, `hlax_free` — [`dynamic-array-heap.hla64`](../examples/05-memory/dynamic-array-heap.hla64); static-backed [`dynamic-array.hla64`](../examples/05-memory/dynamic-array.hla64) for fixed-capacity vectors
-- **Project Euler suite:** [`examples/20-project-euler/`](../examples/20-project-euler/) — #1–#25 (+ stubs #26–#50), argv runner with `ParseU64`, curriculum tests for #1/#4/#10
+- **Runtime heap helpers (shipped):** `hlax_malloc`, `hlax_realloc`, `hlax_free` — [`dynamic-array-heap.hla64`](../examples/curriculum/05-memory/dynamic-array-heap.hla64); static-backed [`dynamic-array.hla64`](../examples/curriculum/05-memory/dynamic-array.hla64) for fixed-capacity vectors
+- **Project Euler suite:** [`examples/project-euler/`](../examples/project-euler/) — #1–#25 (+ stubs #26–#50), argv runner with `ParseU64`, curriculum tests for #1/#4/#10
 - Macro system, LLVM backend, self-hosting (P3)
 
 ---

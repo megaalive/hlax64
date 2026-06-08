@@ -1,6 +1,6 @@
 {
   "name": "bugfarm-register-pressure",
-  "source": "../../../examples/98-bug-farm/register-pressure/register-pressure.hla64",
+  "source": "../../../examples/qa/bug-farm/register-pressure/register-pressure.hla64",
   "expectedExitCode": 0,
   "description": "Bug farm: callee-saved register pressure across calls in a loop"
 }

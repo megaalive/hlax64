@@ -1,6 +1,6 @@
 {
   "name": "real-listfiles",
-  "source": "../../../examples/10-real-tools/listfiles/listfiles.hla64",
+  "source": "../../../examples/tools/10-windows/listfiles/listfiles.hla64",
   "expectedExitCode": 0,
   "description": "Real tool: list fixture files and byte sizes (compile-only until Windows manifest execution lands)"
 }

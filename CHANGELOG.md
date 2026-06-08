@@ -25,8 +25,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 - Phases 15–24: Assembly Lab, debug/explain (`--source-map`, `disasm`, `--trace`), `--optimize O1/O2`, instruction DB + AVX2 intrinsics, `hla64.toml`/restore, proof bundle, DAP server, MCP explain + `suggestedFix`
 - LSP hardening: signature help, semantic tokens, format-on-save, go-to-definition, document symbols
-- `examples/10-real-tools/` and `examples/12-real-tools-linux/` with curriculum regression
-- `examples/98-bug-farm/`, `examples/99-invalid/` catalogs
+- `examples/tools/10-windows/` and `examples/tools/12-linux/` with curriculum regression
+- `examples/qa/bug-farm/`, `examples/qa/invalid/` catalogs
 - C# interop examples: `native_count_lines`, `native_fnv1a`, `native_sum_bytes`
 - `scripts/generate-playground-cache.ps1`; `docs/playground/cache/` explain JSON
 - Diagnostics HLAX0030–0073 (bounds, const, enum, record, static, verification, SIMD, atomics)

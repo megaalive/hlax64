@@ -1,6 +1,6 @@
 {
   "name": "real-filemagic",
-  "source": "../../../examples/10-real-tools/filemagic/filemagic.hla64",
+  "source": "../../../examples/tools/10-windows/filemagic/filemagic.hla64",
   "expectedExitCode": 0,
   "description": "Real tool: classify file magic bytes (compile-only; native run via AssemblyLab.Tests)"
 }

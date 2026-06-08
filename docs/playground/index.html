@@ -176,9 +176,7 @@
   </header>
 
   <div class="layout">
-    <nav id="nav">
-      <h2>Examples</h2>
-    </nav>
+    <nav id="nav"></nav>
 
     <div class="workspace">
       <div class="panes">
@@ -249,100 +247,21 @@
     const BRANCH = 'main';
     const rawUrl = (path) => `https://raw.githubusercontent.com/${REPO}/${BRANCH}/${path}`;
 
-    const EXAMPLES = [
-      {
-        id: 'hello', label: '00 Hello world', path: 'examples/00-getting-started/hello.hla64',
-        run: 'hla64 run examples/00-getting-started/hello.hla64',
-        expected: 'stdout:\n  Hello from HlaX64\nexit code: 0'
-      },
-      {
-        id: 'exitcode', label: '01 Exit code', path: 'examples/00-getting-started/exitcode.hla64',
-        run: 'hla64 run examples/00-getting-started/exitcode.hla64',
-        expected: '(no stdout)\nexit code: 42'
-      },
-      {
-        id: 'arithmetic', label: '02 Arithmetic', path: 'examples/01-arithmetic/simple.hla64',
-        run: 'hla64 run examples/01-arithmetic/simple.hla64',
-        expected: '(no stdout)\nexit code: 30  (10 + 20 in rax)'
-      },
-      {
-        id: 'if-while', label: '03 If / while', path: 'examples/03-control-flow/count.hla64',
-        run: 'hla64 run examples/03-control-flow/count.hla64',
-        expected: 'stdout:\n  count = 5\nexit code: 0'
-      },
-      {
-        id: 'procedure', label: '04 Procedure call', path: 'examples/04-procedures/add-two.hla64',
-        run: 'hla64 run examples/04-procedures/add-two.hla64',
-        expected: '(no stdout)\nexit code: 30  (AddTwo(10, 20))'
-      },
-      {
-        id: 'stack-local', label: '05 Stack local', path: 'examples/05-memory/stack-array.hla64',
-        run: 'hla64 run examples/05-memory/stack-array.hla64',
-        expected: '(no stdout)\nexit code: 42  (stack array demo)'
-      },
-      {
-        id: 'extern-puts', label: '06 Call libc puts', path: 'examples/07-interop/extern-puts.hla64',
-        run: 'hla64 run examples/07-interop/extern-puts.hla64',
-        expected: 'stdout:\n  Hello from puts\nexit code: (puts return in rbx)',
-        note: 'C interop via extern; printf sample planned for v0.2.'
-      },
-      {
-        id: 'linecount', label: '07 File read', path: 'examples/10-real-tools/linecount/linecount.hla64',
-        run: 'hla64 run examples/10-real-tools/linecount/linecount.hla64 -- README.md',
-        expected: 'stdout:\n  lines: <n>\nUses argv[1] as the file path to read.'
-      },
-      {
-        id: 'argv', label: '08 argv', path: 'examples/10-real-tools/exists/exists.hla64',
-        run: 'hla64 run examples/10-real-tools/exists/exists.hla64 -- .',
-        expected: `About argc / argv:
-  hlax_argv_count() → argc (argv[0] program name + user args)
-  hlax_argv_get(1)  → argv[1] (first user argument)
+    let EXAMPLES = [];
+    let exampleById = new Map();
 
-Run with a path that exists:
-  hla64 run examples/10-real-tools/exists/exists.hla64 -- .
-
-stdout:
-  exists
-exit code: 0
-
-Run with a missing path:
-  hla64 run examples/10-real-tools/exists/exists.hla64 -- __missing__
-
-stdout:
-  missing
-exit code: 1`
-      },
-      {
-        id: 'wc', label: '09 wc', path: 'examples/10-real-tools/wc/wc.hla64',
-        run: 'hla64 run examples/10-real-tools/wc/wc.hla64 -- README.md',
-        expected: 'stdout (example):\n  lines: …  words: …  bytes: …\nargv[1] = file to count.'
-      },
-      {
-        id: 'hexdump', label: '10 hexdump', path: 'examples/10-real-tools/hexdump/hexdump.hla64',
-        run: 'hla64 run examples/10-real-tools/hexdump/hexdump.hla64 -- README.md',
-        expected: 'stdout: hex + ASCII columns for argv[1] file bytes.'
-      },
-      {
-        id: 'filemagic', label: '11 filemagic', path: 'examples/10-real-tools/filemagic/filemagic.hla64',
-        run: 'hla64 run examples/10-real-tools/filemagic/filemagic.hla64 -- README.md',
-        expected: 'stdout: detected type from magic bytes (e.g. text, PE, ELF).'
-      },
-      {
-        id: 'euler001', label: '20 Euler #1 brute', path: 'examples/20-project-euler/problems/euler001-multiples-of-3-and-5-bruteforce.hla64',
-        run: 'hla64 run examples/20-project-euler/problems/euler001-multiples-of-3-and-5-bruteforce.hla64',
-        expected: 'stdout:\n  Euler #1 = 233168\nSolve yourself first — compare with formula variant.'
-      },
-      {
-        id: 'euler001-formula', label: '21 Euler #1 formula', path: 'examples/20-project-euler/problems/euler001-multiples-of-3-and-5-formula.hla64',
-        run: 'hla64 run examples/20-project-euler/problems/euler001-multiples-of-3-and-5-formula.hla64',
-        expected: 'stdout:\n  Euler #1 (formula) = 233168\nO(1) vs loop — inspect NASM diff in Explain tab.'
-      },
-      {
-        id: 'euler002', label: '22 Euler #2 Fib', path: 'examples/20-project-euler/problems/euler002-even-fibonacci.hla64',
-        run: 'hla64 run examples/20-project-euler/problems/euler002-even-fibonacci.hla64',
-        expected: 'stdout:\n  Euler #2 = 4613732\nEven Fibonacci terms below 4_000_000.'
+    function flattenManifest(manifest) {
+      const flat = [];
+      exampleById.clear();
+      for (const cat of manifest.categories) {
+        for (const ex of cat.examples) {
+          const entry = { ...ex, category: cat.id };
+          flat.push(entry);
+          exampleById.set(entry.id, entry);
+        }
       }
-    ];
+      return flat;
+    }
 
     function cloneRunCmd(hla64Run) {
       return `dotnet run --project src/HlaX64.Cli -- ${hla64Run.replace(/^hla64\s+/, '')}`;
@@ -368,16 +287,22 @@ exit code: 1`
       setTimeout(() => t.classList.remove('show'), 1800);
     }
 
-    function buildNav() {
+    function buildNav(manifest) {
       const nav = $('nav');
-      EXAMPLES.forEach((ex) => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.textContent = ex.label;
-        b.dataset.id = ex.id;
-        b.onclick = () => loadExample(ex.id, true);
-        nav.appendChild(b);
-      });
+      nav.innerHTML = '';
+      for (const cat of manifest.categories) {
+        const h = document.createElement('h2');
+        h.textContent = cat.label;
+        nav.appendChild(h);
+        for (const ex of cat.examples) {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.textContent = ex.label;
+          b.dataset.id = ex.id;
+          b.onclick = () => loadExample(ex.id, true);
+          nav.appendChild(b);
+        }
+      }
     }
 
     function setActiveNav(id) {
@@ -391,7 +316,8 @@ exit code: 1`
     }
 
     async function loadExample(id, pushUrl) {
-      const ex = EXAMPLES.find((e) => e.id === id) || EXAMPLES[0];
+      const ex = exampleById.get(id) || EXAMPLES[0];
+      if (!ex) return;
       current = ex;
       sourceDirty = false;
       setActiveNav(ex.id);
@@ -405,7 +331,7 @@ exit code: 1`
       }
 
       try {
-        const cacheJson = await fetchText(`cache/${ex.id}.json`);
+        const cacheJson = await fetchText(`cache/${ex.category}/${ex.id}.json`);
         explainCache = JSON.parse(cacheJson);
         $('nasm').textContent = explainCache.nasm || '(no NASM in cache)';
         $('ir').textContent = (explainCache.ir || []).join('\n\n');
@@ -607,10 +533,22 @@ Suggest concrete HlaX64 source changes and note any --optimize O1/O2 effects.`;
       toast('Copied dotnet run command');
     };
 
-    buildNav();
-    const param = new URLSearchParams(location.search).get('example');
-    const initial = EXAMPLES.some((e) => e.id === param) ? param : 'hello';
-    loadExample(initial, false);
+    async function init() {
+      try {
+        const r = await fetch('manifest.json');
+        const manifest = await r.json();
+        EXAMPLES = flattenManifest(manifest);
+        buildNav(manifest);
+        const param = new URLSearchParams(location.search).get('example');
+        const initial = exampleById.has(param) ? param : 'hello';
+        await loadExample(initial, false);
+      } catch (err) {
+        $('source').value = `// Failed to load playground manifest: ${err.message}`;
+        $('nasm').textContent = 'Run scripts/generate-playground-cache.ps1 and serve docs/playground locally.';
+      }
+    }
+
+    init();
   </script>
 </body>
 </html>
