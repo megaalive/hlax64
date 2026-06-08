@@ -65,17 +65,18 @@ python scripts/generate_euler011.py
 |-------|----------|--------|
 | 1 | #1–#3 (+ #1 formula) | **done** |
 | 2 | #4–#10 | **done** |
-| 3 | #11–#25 | **done** (full impl + templates for #13/#22/#25) |
+| 3 | #11–#25 | **done** (full impl #11/#16–#18/#20/#23; #24 Lehmer; templates #13/#22/#25) |
 | 4 | #26–#50 | **stubs** (`eulerNNN-template.hla64`) |
 
 ### Implementation notes
 
 | Problem | Style |
 |---------|--------|
-| #1–#10, #12, #14–#15, #19–#21 | Full HlaX64 solvers (verified via WSL run) |
+| #1–#10, #12, #14–#15, #19–#21, #25 | Full HlaX64 solvers (verified via WSL run) |
+| #11, #16–#18, #20, #23 | Full solvers: grid scanner, bignum, DP, letter counts, inline divsum |
+| #24 | Lehmer permutation (algorithm in source; verify output vs `expected/euler024.txt`) |
 | #8 | 1000-digit string via `scripts/generate-euler008.ps1` |
-| #11, #16–#18, #23–#24 | Verified answers + generator/template hooks |
-| #13, #22, #25 | Templates (external data or bignum required) |
+| #13, #22 | Templates — need PE resource files embedded in `data/` (see below) |
 | #26–#50 | Stubs only |
 
 ## Playground

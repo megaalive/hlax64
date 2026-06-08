@@ -1,11 +1,173 @@
 // euler011-largest-product-grid.hla64 — PE #11 (70600674)
-// Full grid scanner: run scripts/generate_euler011.py after updating data/euler011-matrix.txt
 
 program euler011;
 
 #include("stdlib64.hhf")
 
+static
+    grid: int64[400];
+endstatic;
+
 begin euler011;
-    mov(70600674, r12);
+    mov(8, grid[0]); mov(2, grid[1]); mov(22, grid[2]); mov(97, grid[3]); mov(38, grid[4]);
+    mov(15, grid[5]); mov(0, grid[6]); mov(40, grid[7]); mov(0, grid[8]); mov(75, grid[9]);
+    mov(4, grid[10]); mov(5, grid[11]); mov(7, grid[12]); mov(78, grid[13]); mov(52, grid[14]);
+    mov(12, grid[15]); mov(50, grid[16]); mov(77, grid[17]); mov(91, grid[18]); mov(8, grid[19]);
+    mov(49, grid[20]); mov(49, grid[21]); mov(99, grid[22]); mov(40, grid[23]); mov(17, grid[24]);
+    mov(81, grid[25]); mov(18, grid[26]); mov(57, grid[27]); mov(60, grid[28]); mov(87, grid[29]);
+    mov(17, grid[30]); mov(40, grid[31]); mov(98, grid[32]); mov(43, grid[33]); mov(69, grid[34]);
+    mov(48, grid[35]); mov(4, grid[36]); mov(56, grid[37]); mov(62, grid[38]); mov(0, grid[39]);
+    mov(81, grid[40]); mov(49, grid[41]); mov(31, grid[42]); mov(73, grid[43]); mov(55, grid[44]);
+    mov(79, grid[45]); mov(14, grid[46]); mov(29, grid[47]); mov(93, grid[48]); mov(71, grid[49]);
+    mov(40, grid[50]); mov(67, grid[51]); mov(53, grid[52]); mov(88, grid[53]); mov(30, grid[54]);
+    mov(3, grid[55]); mov(49, grid[56]); mov(13, grid[57]); mov(36, grid[58]); mov(65, grid[59]);
+    mov(52, grid[60]); mov(70, grid[61]); mov(95, grid[62]); mov(23, grid[63]); mov(4, grid[64]);
+    mov(60, grid[65]); mov(11, grid[66]); mov(42, grid[67]); mov(69, grid[68]); mov(24, grid[69]);
+    mov(68, grid[70]); mov(56, grid[71]); mov(1, grid[72]); mov(32, grid[73]); mov(56, grid[74]);
+    mov(71, grid[75]); mov(37, grid[76]); mov(2, grid[77]); mov(36, grid[78]); mov(91, grid[79]);
+    mov(22, grid[80]); mov(31, grid[81]); mov(16, grid[82]); mov(71, grid[83]); mov(51, grid[84]);
+    mov(67, grid[85]); mov(63, grid[86]); mov(89, grid[87]); mov(41, grid[88]); mov(92, grid[89]);
+    mov(36, grid[90]); mov(54, grid[91]); mov(22, grid[92]); mov(40, grid[93]); mov(40, grid[94]);
+    mov(28, grid[95]); mov(66, grid[96]); mov(33, grid[97]); mov(13, grid[98]); mov(80, grid[99]);
+    mov(24, grid[100]); mov(47, grid[101]); mov(32, grid[102]); mov(60, grid[103]); mov(99, grid[104]);
+    mov(3, grid[105]); mov(45, grid[106]); mov(2, grid[107]); mov(44, grid[108]); mov(75, grid[109]);
+    mov(33, grid[110]); mov(53, grid[111]); mov(78, grid[112]); mov(36, grid[113]); mov(84, grid[114]);
+    mov(20, grid[115]); mov(35, grid[116]); mov(17, grid[117]); mov(12, grid[118]); mov(50, grid[119]);
+    mov(32, grid[120]); mov(98, grid[121]); mov(81, grid[122]); mov(28, grid[123]); mov(64, grid[124]);
+    mov(23, grid[125]); mov(67, grid[126]); mov(10, grid[127]); mov(26, grid[128]); mov(38, grid[129]);
+    mov(40, grid[130]); mov(67, grid[131]); mov(59, grid[132]); mov(54, grid[133]); mov(70, grid[134]);
+    mov(66, grid[135]); mov(18, grid[136]); mov(38, grid[137]); mov(64, grid[138]); mov(70, grid[139]);
+    mov(67, grid[140]); mov(26, grid[141]); mov(20, grid[142]); mov(68, grid[143]); mov(2, grid[144]);
+    mov(62, grid[145]); mov(12, grid[146]); mov(20, grid[147]); mov(95, grid[148]); mov(63, grid[149]);
+    mov(94, grid[150]); mov(39, grid[151]); mov(63, grid[152]); mov(8, grid[153]); mov(40, grid[154]);
+    mov(91, grid[155]); mov(66, grid[156]); mov(49, grid[157]); mov(94, grid[158]); mov(21, grid[159]);
+    mov(24, grid[160]); mov(55, grid[161]); mov(58, grid[162]); mov(5, grid[163]); mov(66, grid[164]);
+    mov(73, grid[165]); mov(99, grid[166]); mov(26, grid[167]); mov(97, grid[168]); mov(17, grid[169]);
+    mov(78, grid[170]); mov(78, grid[171]); mov(96, grid[172]); mov(83, grid[173]); mov(14, grid[174]);
+    mov(88, grid[175]); mov(34, grid[176]); mov(89, grid[177]); mov(63, grid[178]); mov(72, grid[179]);
+    mov(21, grid[180]); mov(36, grid[181]); mov(23, grid[182]); mov(9, grid[183]); mov(75, grid[184]);
+    mov(0, grid[185]); mov(76, grid[186]); mov(44, grid[187]); mov(20, grid[188]); mov(45, grid[189]);
+    mov(35, grid[190]); mov(14, grid[191]); mov(0, grid[192]); mov(61, grid[193]); mov(33, grid[194]);
+    mov(97, grid[195]); mov(34, grid[196]); mov(31, grid[197]); mov(33, grid[198]); mov(95, grid[199]);
+    mov(78, grid[200]); mov(17, grid[201]); mov(53, grid[202]); mov(28, grid[203]); mov(22, grid[204]);
+    mov(75, grid[205]); mov(31, grid[206]); mov(67, grid[207]); mov(15, grid[208]); mov(94, grid[209]);
+    mov(3, grid[210]); mov(80, grid[211]); mov(4, grid[212]); mov(62, grid[213]); mov(16, grid[214]);
+    mov(14, grid[215]); mov(9, grid[216]); mov(53, grid[217]); mov(56, grid[218]); mov(92, grid[219]);
+    mov(16, grid[220]); mov(39, grid[221]); mov(5, grid[222]); mov(42, grid[223]); mov(96, grid[224]);
+    mov(35, grid[225]); mov(31, grid[226]); mov(47, grid[227]); mov(55, grid[228]); mov(58, grid[229]);
+    mov(88, grid[230]); mov(24, grid[231]); mov(0, grid[232]); mov(17, grid[233]); mov(54, grid[234]);
+    mov(24, grid[235]); mov(36, grid[236]); mov(29, grid[237]); mov(85, grid[238]); mov(57, grid[239]);
+    mov(86, grid[240]); mov(56, grid[241]); mov(0, grid[242]); mov(48, grid[243]); mov(35, grid[244]);
+    mov(71, grid[245]); mov(89, grid[246]); mov(7, grid[247]); mov(5, grid[248]); mov(44, grid[249]);
+    mov(44, grid[250]); mov(37, grid[251]); mov(44, grid[252]); mov(60, grid[253]); mov(21, grid[254]);
+    mov(58, grid[255]); mov(51, grid[256]); mov(54, grid[257]); mov(17, grid[258]); mov(58, grid[259]);
+    mov(19, grid[260]); mov(80, grid[261]); mov(81, grid[262]); mov(68, grid[263]); mov(5, grid[264]);
+    mov(94, grid[265]); mov(47, grid[266]); mov(69, grid[267]); mov(28, grid[268]); mov(73, grid[269]);
+    mov(92, grid[270]); mov(13, grid[271]); mov(86, grid[272]); mov(52, grid[273]); mov(17, grid[274]);
+    mov(77, grid[275]); mov(4, grid[276]); mov(89, grid[277]); mov(55, grid[278]); mov(40, grid[279]);
+    mov(4, grid[280]); mov(52, grid[281]); mov(8, grid[282]); mov(83, grid[283]); mov(97, grid[284]);
+    mov(35, grid[285]); mov(99, grid[286]); mov(16, grid[287]); mov(7, grid[288]); mov(97, grid[289]);
+    mov(57, grid[290]); mov(32, grid[291]); mov(16, grid[292]); mov(26, grid[293]); mov(26, grid[294]);
+    mov(79, grid[295]); mov(33, grid[296]); mov(27, grid[297]); mov(98, grid[298]); mov(66, grid[299]);
+    mov(88, grid[300]); mov(36, grid[301]); mov(68, grid[302]); mov(87, grid[303]); mov(57, grid[304]);
+    mov(62, grid[305]); mov(20, grid[306]); mov(72, grid[307]); mov(3, grid[308]); mov(46, grid[309]);
+    mov(33, grid[310]); mov(67, grid[311]); mov(46, grid[312]); mov(55, grid[313]); mov(12, grid[314]);
+    mov(32, grid[315]); mov(63, grid[316]); mov(93, grid[317]); mov(53, grid[318]); mov(69, grid[319]);
+    mov(4, grid[320]); mov(42, grid[321]); mov(16, grid[322]); mov(73, grid[323]); mov(38, grid[324]);
+    mov(25, grid[325]); mov(39, grid[326]); mov(11, grid[327]); mov(24, grid[328]); mov(94, grid[329]);
+    mov(72, grid[330]); mov(18, grid[331]); mov(8, grid[332]); mov(46, grid[333]); mov(29, grid[334]);
+    mov(32, grid[335]); mov(40, grid[336]); mov(62, grid[337]); mov(76, grid[338]); mov(36, grid[339]);
+    mov(20, grid[340]); mov(69, grid[341]); mov(36, grid[342]); mov(41, grid[343]); mov(72, grid[344]);
+    mov(30, grid[345]); mov(23, grid[346]); mov(88, grid[347]); mov(34, grid[348]); mov(62, grid[349]);
+    mov(99, grid[350]); mov(69, grid[351]); mov(82, grid[352]); mov(67, grid[353]); mov(59, grid[354]);
+    mov(85, grid[355]); mov(74, grid[356]); mov(4, grid[357]); mov(36, grid[358]); mov(16, grid[359]);
+    mov(20, grid[360]); mov(73, grid[361]); mov(35, grid[362]); mov(29, grid[363]); mov(78, grid[364]);
+    mov(31, grid[365]); mov(90, grid[366]); mov(1, grid[367]); mov(74, grid[368]); mov(31, grid[369]);
+    mov(49, grid[370]); mov(71, grid[371]); mov(48, grid[372]); mov(86, grid[373]); mov(81, grid[374]);
+    mov(16, grid[375]); mov(23, grid[376]); mov(57, grid[377]); mov(5, grid[378]); mov(54, grid[379]);
+    mov(1, grid[380]); mov(70, grid[381]); mov(54, grid[382]); mov(71, grid[383]); mov(83, grid[384]);
+    mov(51, grid[385]); mov(54, grid[386]); mov(69, grid[387]); mov(16, grid[388]); mov(92, grid[389]);
+    mov(33, grid[390]); mov(48, grid[391]); mov(61, grid[392]); mov(43, grid[393]); mov(52, grid[394]);
+    mov(1, grid[395]); mov(89, grid[396]); mov(19, grid[397]); mov(67, grid[398]); mov(48, grid[399]);
+
+    mov(0, r12);
+    mov(0, r13);
+
+    while(r13 < 20) do
+        mov(0, r14);
+
+        while(r14 < 20) do
+            mov(0, r10);
+
+            while(r10 < 4) do
+                mov(1, r15);
+                mov(1, r11);
+
+                while(r11 < 5) do
+                    mov(r14, r8);
+                    mov(r13, r9);
+                    mov(r11, rax);
+                    sub(1, rax);
+
+                    if(r10 = 0) then
+                        add(rax, r8);
+                    else
+                        if(r10 = 1) then
+                            add(rax, r9);
+                        else
+                            if(r10 = 2) then
+                                add(rax, r8);
+                                add(rax, r9);
+                            else
+                                add(rax, r8);
+                                mov(r13, r9);
+                                mov(r11, rax);
+                                sub(1, rax);
+                                sub(rax, r9);
+                            endif;
+                        endif;
+                    endif;
+
+                    if(r8 < 0) then
+                        mov(100, r11);
+                    else
+                        if(r8 > 19) then
+                            mov(100, r11);
+                        else
+                            if(r9 < 0) then
+                                mov(100, r11);
+                            else
+                                if(r9 > 19) then
+                                    mov(100, r11);
+                                else
+                                    mov(r9, rax);
+                                    mov(20, r10);
+                                    imul(r10, rax);
+                                    add(r8, rax);
+                                    mov(rax, r10);
+                                    mov(grid[r10], rax);
+                                    imul(rax, r15);
+                                    add(1, r11);
+                                endif;
+                            endif;
+                        endif;
+                    endif;
+                endwhile;
+
+                if(r11 = 5) then
+                    if(r15 > r12) then
+                        mov(r15, r12);
+                    endif;
+                endif;
+
+                add(1, r10);
+            endwhile;
+
+            add(1, r14);
+        endwhile;
+
+        add(1, r13);
+    endwhile;
+
     stdout.put("Euler #11 = ", r12, nl);
 end euler011;

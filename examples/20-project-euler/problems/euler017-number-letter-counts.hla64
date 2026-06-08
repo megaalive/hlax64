@@ -4,7 +4,96 @@ program euler017;
 
 #include("stdlib64.hhf")
 
+static
+    units: int64[20];
+    tens: int64[10];
+endstatic;
+
 begin euler017;
-    mov(21124, r12);
+    mov(0, units[0]);
+    mov(3, units[1]);
+    mov(3, units[2]);
+    mov(5, units[3]);
+    mov(4, units[4]);
+    mov(4, units[5]);
+    mov(3, units[6]);
+    mov(5, units[7]);
+    mov(5, units[8]);
+    mov(4, units[9]);
+    mov(3, units[10]);
+    mov(6, units[11]);
+    mov(6, units[12]);
+    mov(8, units[13]);
+    mov(8, units[14]);
+    mov(7, units[15]);
+    mov(7, units[16]);
+    mov(9, units[17]);
+    mov(8, units[18]);
+    mov(8, units[19]);
+
+    mov(0, tens[0]);
+    mov(0, tens[1]);
+    mov(6, tens[2]);
+    mov(6, tens[3]);
+    mov(5, tens[4]);
+    mov(5, tens[5]);
+    mov(5, tens[6]);
+    mov(7, tens[7]);
+    mov(6, tens[8]);
+    mov(6, tens[9]);
+
+    mov(0, r12);
+    mov(1, r13);
+    mov(1001, rbx);
+
+    while(r13 < rbx) do
+        if(r13 = 1000) then
+            add(11, r12);
+        else
+            mov(r13, rax);
+            mov(100, r10);
+            idiv(r10, rax);
+            mov(rax, r14);
+            mov(r13, rax);
+            mov(100, r10);
+            mod(r10, rax);
+            mov(rax, r15);
+
+            if(r14 > 0) then
+                mov(r14, r11);
+                mov(units[r11], r10);
+                add(r10, r12);
+                add(7, r12);
+                if(r15 > 0) then
+                    add(3, r12);
+                endif;
+            endif;
+
+            if(r15 < 20) then
+                if(r15 > 0) then
+                    mov(r15, r11);
+                    mov(units[r11], r10);
+                    add(r10, r12);
+                endif;
+            else
+                mov(r15, rax);
+                mov(10, r10);
+                idiv(r10, rax);
+                mov(rax, r11);
+                mov(tens[r11], r10);
+                add(r10, r12);
+                mov(r15, rax);
+                mov(10, r10);
+                mod(r10, rax);
+                if(rax > 0) then
+                    mov(rax, r11);
+                    mov(units[r11], r10);
+                    add(r10, r12);
+                endif;
+            endif;
+        endif;
+        add(1, r13);
+    endwhile;
+
     stdout.put("Euler #17 = ", r12, nl);
 end euler017;

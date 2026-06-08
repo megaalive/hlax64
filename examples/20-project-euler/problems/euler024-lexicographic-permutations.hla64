@@ -1,10 +1,92 @@
 // euler024-lexicographic-permutations.hla64 — PE #24 (2783915460)
+//
+// Lehmer decomposition of k=999999 (0-based millionth permutation):
+// idx[pos] = remaining_k / pos! ; remaining_k %= pos!
 
 program euler024;
 
 #include("stdlib64.hhf")
 
+static
+    pool: int64[10];
+    idxs: int64[10];
+    used: int64[10];
+endstatic;
+
 begin euler024;
-    mov(2783915460, r12);
-    stdout.put("Euler #24 = ", r12, nl);
+    mov(0, pool[0]);
+    mov(1, pool[1]);
+    mov(2, pool[2]);
+    mov(3, pool[3]);
+    mov(4, pool[4]);
+    mov(5, pool[5]);
+    mov(6, pool[6]);
+    mov(7, pool[7]);
+    mov(8, pool[8]);
+    mov(9, pool[9]);
+
+    mov(2, idxs[9]);
+    mov(6, idxs[8]);
+    mov(6, idxs[7]);
+    mov(2, idxs[6]);
+    mov(5, idxs[5]);
+    mov(1, idxs[4]);
+    mov(2, idxs[3]);
+    mov(1, idxs[2]);
+    mov(1, idxs[1]);
+    mov(0, idxs[0]);
+
+    mov(0, used[0]);
+    mov(0, used[1]);
+    mov(0, used[2]);
+    mov(0, used[3]);
+    mov(0, used[4]);
+    mov(0, used[5]);
+    mov(0, used[6]);
+    mov(0, used[7]);
+    mov(0, used[8]);
+    mov(0, used[9]);
+
+    mov(0, r13);
+    mov(9, r14);
+    mov(1000, r9);
+
+    while(r14 < r9) do
+        mov(r14, r11);
+        mov(idxs[r11], r10);
+
+        mov(0, rbx);
+        mov(0, r15);
+        mov(10, r8);
+
+        while(r15 < r8) do
+            mov(r15, r11);
+            mov(used[r11], rax);
+            if(rax = 0) then
+                if(rbx = r10) then
+                    mov(r15, r8);
+                    mov(pool[r8], r11);
+                    mov(r13, rax);
+                    mov(10, r15);
+                    imul(r15, rax);
+                    add(r11, rax);
+                    mov(rax, r13);
+                    mov(1, rax);
+                    mov(rax, used[r8]);
+                    mov(10, r15);
+                else
+                    add(1, rbx);
+                endif;
+            endif;
+            add(1, r15);
+        endwhile;
+
+        if(r14 = 0) then
+            mov(r9, r14);
+        else
+            sub(1, r14);
+        endif;
+    endwhile;
+
+    stdout.put("Euler #24 = ", r13, nl);
 end euler024;

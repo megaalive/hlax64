@@ -12,37 +12,41 @@ begin euler020;
     mov(1, digits[0]);
     mov(1, r12);
     mov(2, r13);
-    mov(101, rbx);
+    mov(101, r9);
 
-    while(r13 < rbx) do
+    while(r13 < r9) do
         mov(0, r14);
         mov(0, r15);
 
         while(r15 < r12) do
             mov(digits[r15], rax);
             imul(r13, rax);
-            mov(r14, r11);
-            add(r11, rax);
+            add(r14, rax);
+            mov(rax, r10);
+            mov(10, r8);
+            mod(r8, rax);
+            mov(rax, digits[r15]);
+            mov(r10, rax);
+            mov(10, r8);
+            idiv(r8, rax);
             mov(rax, r14);
-            mov(10, r10);
-            mod(r10, r14);
-            mov(r14, r11);
-            mov(10, r10);
-            idiv(r10, r11);
-            mov(r11, digits[r15]);
             add(1, r15);
         endwhile;
 
         if(r14 > 0) then
-            mov(r14, r11);
-            mov(10, r10);
-            mod(r10, r11);
-            mov(r11, digits[r12]);
-            mov(r14, r11);
-            mov(10, r10);
-            idiv(r10, r11);
-            mov(r11, r14);
-            add(1, r12);
+            while(r14 > 0) do
+                mov(r14, r10);
+                mov(r10, rax);
+                mov(10, r8);
+                mod(r8, rax);
+                mov(rax, digits[r12]);
+                mov(r14, r10);
+                mov(r10, rax);
+                mov(10, r8);
+                idiv(r8, rax);
+                mov(rax, r14);
+                add(1, r12);
+            endwhile;
         endif;
 
         add(1, r13);

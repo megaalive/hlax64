@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Generate euler011-largest-product-grid.hla64 with embedded 20x20 grid."""
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
@@ -10,6 +11,7 @@ for line in data.read_text().splitlines():
     line = line.strip()
     if line:
         vals.extend(int(x) for x in line.split())
+assert len(vals) == 400
 
 lines = [
     "// euler011-largest-product-grid.hla64 — PE #11 (70600674)",

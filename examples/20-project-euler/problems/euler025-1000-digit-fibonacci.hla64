@@ -1,0 +1,93 @@
+// euler025-1000-digit-fibonacci.hla64 — PE #25 (4782)
+
+program euler025;
+
+#include("stdlib64.hhf")
+
+static
+    a: int64[1000];
+    b: int64[1000];
+    c: int64[1000];
+endstatic;
+
+begin euler025;
+    mov(1, a[0]);
+    mov(1, b[0]);
+    mov(1, r13);
+    mov(1, r14);
+    mov(2, r12);
+    mov(1000, rbx);
+
+    while(r14 < rbx) do
+        mov(r13, r10);
+        if(r14 > r10) then
+            mov(r14, r10);
+        endif;
+
+        mov(0, r8);
+        mov(0, r9);
+
+        while(r9 < r10) do
+            mov(0, r11);
+            mov(r9, r15);
+            if(r15 < r13) then
+                mov(a[r15], r11);
+            endif;
+            mov(r9, r15);
+            if(r15 < r14) then
+                mov(b[r15], r15);
+                add(r15, r11);
+            endif;
+            add(r8, r11);
+            mov(r11, rax);
+            mov(10, r15);
+            mod(r15, rax);
+            mov(rax, c[r9]);
+            mov(r11, rax);
+            mov(10, r15);
+            idiv(r15, rax);
+            mov(rax, r8);
+            add(1, r9);
+        endwhile;
+
+        if(r8 > 0) then
+            while(r8 > 0) do
+                mov(r8, r11);
+                mov(r11, rax);
+                mov(10, r15);
+                mod(r15, rax);
+                mov(rax, c[r9]);
+                mov(r8, r11);
+                mov(r11, rax);
+                mov(10, r15);
+                idiv(r15, rax);
+                mov(rax, r8);
+                add(1, r9);
+            endwhile;
+        endif;
+
+        mov(r9, r11);
+
+        mov(0, r9);
+        while(r9 < r14) do
+            mov(r9, r15);
+            mov(b[r15], r10);
+            mov(r10, a[r15]);
+            add(1, r9);
+        endwhile;
+        mov(r14, r13);
+
+        mov(0, r9);
+        while(r9 < r11) do
+            mov(r9, r15);
+            mov(c[r15], r10);
+            mov(r10, b[r15]);
+            add(1, r9);
+        endwhile;
+        mov(r11, r14);
+
+        add(1, r12);
+    endwhile;
+
+    stdout.put("Euler #25 = ", r12, nl);
+end euler025;
