@@ -11,30 +11,37 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](#license)
 [![Pages](https://img.shields.io/badge/docs-GitHub%20Pages-2ea44f)](https://megaalive.github.io/hlax64/)
 
+## Try it now
+
+👉 **[Open HlaX64 Playground](https://megaalive.github.io/hlax64/playground/index.html?example=argv)**
+
+Inspect HlaX64 source, **generated NASM**, line notes, IR summary, and **AI debug / explain / optimize** prompts — no install required.
+
+The browser playground uses **cached compile artifacts** for each example (pre-generated with `hla64 explain --json`). Editing source in the browser does not recompile; use the **Run locally** command in the playground or the CLI below for live builds.
+
+### Try examples in browser
+
+- [argv](https://megaalive.github.io/hlax64/playground/index.html?example=argv) — command-line arguments (`hlax_argv_*`)
+- [filemagic](https://megaalive.github.io/hlax64/playground/index.html?example=filemagic) — sniff file type from magic bytes
+- [wc](https://megaalive.github.io/hlax64/playground/index.html?example=wc) — lines, words, bytes
+- [hexdump](https://megaalive.github.io/hlax64/playground/index.html?example=hexdump) — hex + ASCII dump
+- [hello](https://megaalive.github.io/hlax64/playground/index.html?example=hello) · [linecount](https://megaalive.github.io/hlax64/playground/index.html?example=linecount) · [All examples in playground](https://megaalive.github.io/hlax64/playground/)
+
+For **live compilation**, assembly, link, and run:
+
+```bash
+hla64 doctor
+hla64 run examples/00-getting-started/hello.hla64
+hla64 explain examples/10-real-tools/exists/exists.hla64 --json
+```
+
 ---
 
 ## Install
 
 Pre-built archives, global tool, or clone — see **[docs/install.md](docs/install.md)**.
 
-```bash
-hla64 doctor
-hla64 run examples/00-getting-started/hello.hla64
-```
-
 Tutorials: [Getting started](docs/tutorials/01-getting-started.md) · [Native routines](docs/tutorials/02-native-routines.md) · [Memory & pointers](docs/tutorials/05-memory.md) · [C# interop](docs/tutorials/03-csharp-interop.md) · [MCP agents](docs/tutorials/04-mcp-agent.md) · [Assembly Lab](docs/tutorials/06-assembly-lab.md)
-
-### Try in the browser (no install)
-
-**[Open playground](https://megaalive.github.io/hlax64/playground/)** — pick an example, view generated NASM, explain a line, copy AI prompts.
-
-Real tools in HlaX64:
-
-| Example | Playground |
-|---------|------------|
-| [wc](examples/10-real-tools/wc/wc.hla64) | [Try wc](https://megaalive.github.io/hlax64/playground/?example=wc) |
-| [hexdump](examples/10-real-tools/hexdump/hexdump.hla64) | [Try hexdump](https://megaalive.github.io/hlax64/playground/?example=hexdump) |
-| [filemagic](examples/10-real-tools/filemagic/filemagic.hla64) | [Try filemagic](https://megaalive.github.io/hlax64/playground/?example=filemagic) |
 
 ---
 

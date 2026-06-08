@@ -94,8 +94,27 @@
       background: var(--bg); white-space: pre-wrap; word-break: break-word;
     }
     #nasm { flex: 1; min-height: 0; overflow-y: auto; margin: 0; }
+    .run-panel {
+      flex: 0 0 auto; flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      background: #12171c; padding: 0.5rem 0.75rem;
+      max-height: 11rem; overflow: auto;
+    }
+    .run-panel-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
+    }
+    .run-label {
+      font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.04em; color: var(--muted); margin-bottom: 0.25rem;
+    }
+    .run-cmd, .run-expected {
+      margin: 0; padding: 0.5rem 0.6rem; font-size: 11px; line-height: 1.35;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+      font-family: ui-monospace, Consolas, monospace; white-space: pre-wrap;
+    }
+    .run-toolbar { padding: 0.35rem 0 0; border: none; }
     .bottom {
-      flex: 1 1 auto; min-height: 12rem;
+      flex: 1 1 auto; min-height: 10rem;
       display: flex; flex-direction: column;
       background: var(--panel); overflow: hidden;
     }
@@ -143,14 +162,16 @@
       .panes { grid-template-columns: 1fr; max-height: none; }
       .pane { max-height: 24vh; }
       .pane + .pane { border-left: none; border-top: 1px solid var(--border); }
-      .bottom { min-height: 10rem; }
+      .bottom { min-height: 8rem; }
+      .run-panel-grid { grid-template-columns: 1fr; }
+      .run-panel { max-height: 9rem; }
     }
   </style>
 </head>
 <body>
   <header>
     <h1><a href="../index.html">HlaX64</a> Playground</h1>
-    <p>HlaX64 source → generated NASM → line notes. Cached compile output; edit source and copy AI prompts for local CLI.</p>
+    <p><strong>Cached compile output</strong> from <code>hla64 explain --json</code> — not live compilation in the browser. Edit source, copy AI prompts, then use <strong>Run locally</strong> below.</p>
     <a class="btn" href="../index.html" style="padding:0.35rem 0.65rem;background:#21262d;border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:0.8rem;">Docs home</a>
   </header>
 
@@ -171,6 +192,23 @@
           <div class="pane-head">Generated NASM <span class="badge" id="nasm-meta"></span></div>
           <div class="pane-body">
             <pre class="out" id="nasm"></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="run-panel" id="run-panel">
+        <div class="run-panel-grid">
+          <div>
+            <div class="run-label">Run locally</div>
+            <pre class="run-cmd" id="run-cmd"></pre>
+            <div class="toolbar run-toolbar">
+              <button type="button" id="copy-run">Copy hla64 command</button>
+              <button type="button" id="copy-clone">Copy clone (dotnet run)</button>
+            </div>
+          </div>
+          <div>
+            <div class="run-label">Expected output</div>
+            <pre class="run-expected" id="run-expected"></pre>
           </div>
         </div>
       </div>
@@ -212,19 +250,95 @@
     const rawUrl = (path) => `https://raw.githubusercontent.com/${REPO}/${BRANCH}/${path}`;
 
     const EXAMPLES = [
-      { id: 'hello',       label: '00 Hello world',     path: 'examples/00-getting-started/hello.hla64' },
-      { id: 'exitcode',    label: '01 Exit code',       path: 'examples/00-getting-started/exitcode.hla64' },
-      { id: 'arithmetic',  label: '02 Arithmetic',      path: 'examples/01-arithmetic/simple.hla64' },
-      { id: 'if-while',    label: '03 If / while',      path: 'examples/03-control-flow/count.hla64' },
-      { id: 'procedure',   label: '04 Procedure call',  path: 'examples/04-procedures/add-two.hla64' },
-      { id: 'stack-local', label: '05 Stack local',     path: 'examples/05-memory/stack-array.hla64' },
-      { id: 'extern-puts', label: '06 Call libc puts',  path: 'examples/07-interop/extern-puts.hla64', note: 'C interop via extern; printf sample planned for v0.2.' },
-      { id: 'linecount',   label: '07 File read',       path: 'examples/10-real-tools/linecount/linecount.hla64' },
-      { id: 'argv',        label: '08 argv',            path: 'examples/10-real-tools/exists/exists.hla64' },
-      { id: 'wc',          label: '09 wc',              path: 'examples/10-real-tools/wc/wc.hla64' },
-      { id: 'hexdump',     label: '10 hexdump',         path: 'examples/10-real-tools/hexdump/hexdump.hla64' },
-      { id: 'filemagic',   label: '11 filemagic',       path: 'examples/10-real-tools/filemagic/filemagic.hla64' }
+      {
+        id: 'hello', label: '00 Hello world', path: 'examples/00-getting-started/hello.hla64',
+        run: 'hla64 run examples/00-getting-started/hello.hla64',
+        expected: 'stdout:\n  Hello from HlaX64\nexit code: 0'
+      },
+      {
+        id: 'exitcode', label: '01 Exit code', path: 'examples/00-getting-started/exitcode.hla64',
+        run: 'hla64 run examples/00-getting-started/exitcode.hla64',
+        expected: '(no stdout)\nexit code: 42'
+      },
+      {
+        id: 'arithmetic', label: '02 Arithmetic', path: 'examples/01-arithmetic/simple.hla64',
+        run: 'hla64 run examples/01-arithmetic/simple.hla64',
+        expected: '(no stdout)\nexit code: 30  (10 + 20 in rax)'
+      },
+      {
+        id: 'if-while', label: '03 If / while', path: 'examples/03-control-flow/count.hla64',
+        run: 'hla64 run examples/03-control-flow/count.hla64',
+        expected: 'stdout:\n  count = 5\nexit code: 0'
+      },
+      {
+        id: 'procedure', label: '04 Procedure call', path: 'examples/04-procedures/add-two.hla64',
+        run: 'hla64 run examples/04-procedures/add-two.hla64',
+        expected: '(no stdout)\nexit code: 30  (AddTwo(10, 20))'
+      },
+      {
+        id: 'stack-local', label: '05 Stack local', path: 'examples/05-memory/stack-array.hla64',
+        run: 'hla64 run examples/05-memory/stack-array.hla64',
+        expected: '(no stdout)\nexit code: 42  (stack array demo)'
+      },
+      {
+        id: 'extern-puts', label: '06 Call libc puts', path: 'examples/07-interop/extern-puts.hla64',
+        run: 'hla64 run examples/07-interop/extern-puts.hla64',
+        expected: 'stdout:\n  Hello from puts\nexit code: (puts return in rbx)',
+        note: 'C interop via extern; printf sample planned for v0.2.'
+      },
+      {
+        id: 'linecount', label: '07 File read', path: 'examples/10-real-tools/linecount/linecount.hla64',
+        run: 'hla64 run examples/10-real-tools/linecount/linecount.hla64 -- README.md',
+        expected: 'stdout:\n  lines: <n>\nUses argv[1] as the file path to read.'
+      },
+      {
+        id: 'argv', label: '08 argv', path: 'examples/10-real-tools/exists/exists.hla64',
+        run: 'hla64 run examples/10-real-tools/exists/exists.hla64 -- .',
+        expected: `About argc / argv:
+  hlax_argv_count() → argc (argv[0] program name + user args)
+  hlax_argv_get(1)  → argv[1] (first user argument)
+
+Run with a path that exists:
+  hla64 run examples/10-real-tools/exists/exists.hla64 -- .
+
+stdout:
+  exists
+exit code: 0
+
+Run with a missing path:
+  hla64 run examples/10-real-tools/exists/exists.hla64 -- __missing__
+
+stdout:
+  missing
+exit code: 1`
+      },
+      {
+        id: 'wc', label: '09 wc', path: 'examples/10-real-tools/wc/wc.hla64',
+        run: 'hla64 run examples/10-real-tools/wc/wc.hla64 -- README.md',
+        expected: 'stdout (example):\n  lines: …  words: …  bytes: …\nargv[1] = file to count.'
+      },
+      {
+        id: 'hexdump', label: '10 hexdump', path: 'examples/10-real-tools/hexdump/hexdump.hla64',
+        run: 'hla64 run examples/10-real-tools/hexdump/hexdump.hla64 -- README.md',
+        expected: 'stdout: hex + ASCII columns for argv[1] file bytes.'
+      },
+      {
+        id: 'filemagic', label: '11 filemagic', path: 'examples/10-real-tools/filemagic/filemagic.hla64',
+        run: 'hla64 run examples/10-real-tools/filemagic/filemagic.hla64 -- README.md',
+        expected: 'stdout: detected type from magic bytes (e.g. text, PE, ELF).'
+      }
     ];
+
+    function cloneRunCmd(hla64Run) {
+      return `dotnet run --project src/HlaX64.Cli -- ${hla64Run.replace(/^hla64\s+/, '')}`;
+    }
+
+    function updateRunPanel(ex) {
+      $('run-cmd').textContent = ex.run || `hla64 run ${ex.path}`;
+      $('run-expected').textContent = ex.expected || '(see source and run locally)';
+      $('copy-run').dataset.cmd = ex.run || `hla64 run ${ex.path}`;
+      $('copy-clone').dataset.cmd = cloneRunCmd(ex.run || `hla64 run ${ex.path}`);
+    }
 
     let current = null;
     let explainCache = null;
@@ -296,6 +410,7 @@
       }
 
       $('line-explain').textContent = ex.note || 'Select a source line and click Explain selected line.';
+      updateRunPanel(ex);
       updateAiPreview('debug');
     }
 
@@ -467,6 +582,15 @@ Suggest concrete HlaX64 source changes and note any --optimize O1/O2 effects.`;
     document.querySelectorAll('[data-prompt]').forEach((btn) => {
       btn.onclick = () => copyPrompt(btn.dataset.prompt);
     });
+
+    $('copy-run').onclick = async (e) => {
+      await navigator.clipboard.writeText(e.target.dataset.cmd || '');
+      toast('Copied hla64 command');
+    };
+    $('copy-clone').onclick = async (e) => {
+      await navigator.clipboard.writeText(e.target.dataset.cmd || '');
+      toast('Copied dotnet run command');
+    };
 
     buildNav();
     const param = new URLSearchParams(location.search).get('example');
