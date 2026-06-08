@@ -113,14 +113,175 @@
           "label": "Euler #1 formula",
           "path": "examples/project-euler/problems/euler001-multiples-of-3-and-5-formula.hla64",
           "run": "hla64 run examples/project-euler/problems/euler001-multiples-of-3-and-5-formula.hla64",
-          "expected": "stdout:\n  Euler #1 (formula) = 233168\nO(1) vs loop — inspect NASM diff in Explain tab."
+          "expected": "stdout:\n  Euler #1 = 233168\nO(1) vs loop — inspect NASM diff in Explain tab."
         },
         {
           "id": "euler002",
           "label": "Euler #2 Fib",
           "path": "examples/project-euler/problems/euler002-even-fibonacci.hla64",
           "run": "hla64 run examples/project-euler/problems/euler002-even-fibonacci.hla64",
-          "expected": "stdout:\n  Euler #2 = 4613732\nEven Fibonacci terms below 4_000_000."
+          "expected": "stdout:\n  Euler #2 = 4613732"
+        },
+        {
+          "id": "euler003",
+          "label": "Euler #3 prime factor",
+          "path": "examples/project-euler/problems/euler003-largest-prime-factor.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler003-largest-prime-factor.hla64",
+          "expected": "stdout:\n  Euler #3 = 6857"
+        },
+        {
+          "id": "euler004",
+          "label": "Euler #4 palindrome",
+          "path": "examples/project-euler/problems/euler004-largest-palindrome-product.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler004-largest-palindrome-product.hla64",
+          "expected": "stdout:\n  Euler #4 = 906609"
+        },
+        {
+          "id": "euler005",
+          "label": "Euler #5 LCM",
+          "path": "examples/project-euler/problems/euler005-smallest-multiple.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler005-smallest-multiple.hla64",
+          "expected": "stdout:\n  Euler #5 = 232792560"
+        },
+        {
+          "id": "euler006",
+          "label": "Euler #6 sum-square diff",
+          "path": "examples/project-euler/problems/euler006-sum-square-difference.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler006-sum-square-difference.hla64",
+          "expected": "stdout:\n  Euler #6 = 25164150"
+        },
+        {
+          "id": "euler007",
+          "label": "Euler #7 10001st prime",
+          "path": "examples/project-euler/problems/euler007-10001st-prime.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler007-10001st-prime.hla64",
+          "expected": "stdout:\n  Euler #7 = 104743"
+        },
+        {
+          "id": "euler008",
+          "label": "Euler #8 product series",
+          "path": "examples/project-euler/problems/euler008-largest-product-series.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler008-largest-product-series.hla64",
+          "expected": "stdout:\n  Euler #8 = 23514624000"
+        },
+        {
+          "id": "euler009",
+          "label": "Euler #9 pythagorean",
+          "path": "examples/project-euler/problems/euler009-pythagorean-triplet.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler009-pythagorean-triplet.hla64",
+          "expected": "stdout:\n  Euler #9 = 31875000"
+        },
+        {
+          "id": "euler010",
+          "label": "Euler #10 sum primes",
+          "path": "examples/project-euler/problems/euler010-sum-primes-below-2m.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler010-sum-primes-below-2m.hla64",
+          "expected": "stdout:\n  Euler #10 = 142913828922"
+        },
+        {
+          "id": "euler011",
+          "label": "Euler #11 grid product",
+          "path": "examples/project-euler/problems/euler011-largest-product-grid.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler011-largest-product-grid.hla64",
+          "expected": "stdout:\n  Euler #11 = 70600674"
+        },
+        {
+          "id": "euler012",
+          "label": "Euler #12 triangular",
+          "path": "examples/project-euler/problems/euler012-highly-divisible-triangular.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler012-highly-divisible-triangular.hla64",
+          "expected": "stdout:\n  Euler #12 = 76576500"
+        },
+        {
+          "id": "euler013",
+          "label": "Euler #13 large sum",
+          "path": "examples/project-euler/problems/euler013-large-sum.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler013-large-sum.hla64",
+          "expected": "stdout:\n  Euler #13 = 5537376230"
+        },
+        {
+          "id": "euler014",
+          "label": "Euler #14 Collatz",
+          "path": "examples/project-euler/problems/euler014-longest-collatz-chain.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler014-longest-collatz-chain.hla64",
+          "expected": "stdout:\n  Euler #14 = 837799"
+        },
+        {
+          "id": "euler015",
+          "label": "Euler #15 lattice paths",
+          "path": "examples/project-euler/problems/euler015-lattice-paths.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler015-lattice-paths.hla64",
+          "expected": "stdout:\n  Euler #15 = 137846528820"
+        },
+        {
+          "id": "euler016",
+          "label": "Euler #16 power digit sum",
+          "path": "examples/project-euler/problems/euler016-power-digit-sum.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler016-power-digit-sum.hla64",
+          "expected": "stdout:\n  Euler #16 = 1366"
+        },
+        {
+          "id": "euler017",
+          "label": "Euler #17 letter counts",
+          "path": "examples/project-euler/problems/euler017-number-letter-counts.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler017-number-letter-counts.hla64",
+          "expected": "stdout:\n  Euler #17 = 21124"
+        },
+        {
+          "id": "euler018",
+          "label": "Euler #18 path sum",
+          "path": "examples/project-euler/problems/euler018-maximum-path-sum.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler018-maximum-path-sum.hla64",
+          "expected": "stdout:\n  Euler #18 = 1074"
+        },
+        {
+          "id": "euler019",
+          "label": "Euler #19 Sundays",
+          "path": "examples/project-euler/problems/euler019-counting-sundays.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler019-counting-sundays.hla64",
+          "expected": "stdout:\n  Euler #19 = 171"
+        },
+        {
+          "id": "euler020",
+          "label": "Euler #20 factorial digits",
+          "path": "examples/project-euler/problems/euler020-factorial-digit-sum.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler020-factorial-digit-sum.hla64",
+          "expected": "stdout:\n  Euler #20 = 648"
+        },
+        {
+          "id": "euler021",
+          "label": "Euler #21 amicable",
+          "path": "examples/project-euler/problems/euler021-amicable-numbers.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler021-amicable-numbers.hla64",
+          "expected": "stdout:\n  Euler #21 = 31626"
+        },
+        {
+          "id": "euler022",
+          "label": "Euler #22 names scores",
+          "path": "examples/project-euler/problems/euler022-names-scores.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler022-names-scores.hla64",
+          "expected": "stdout:\n  Euler #22 = 871198282"
+        },
+        {
+          "id": "euler023",
+          "label": "Euler #23 abundant sums",
+          "path": "examples/project-euler/problems/euler023-non-abundant-sums.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler023-non-abundant-sums.hla64",
+          "expected": "stdout:\n  Euler #23 = 4179871"
+        },
+        {
+          "id": "euler024",
+          "label": "Euler #24 permutations",
+          "path": "examples/project-euler/problems/euler024-lexicographic-permutations.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler024-lexicographic-permutations.hla64",
+          "expected": "stdout:\n  Euler #24 = 2783915460"
+        },
+        {
+          "id": "euler025",
+          "label": "Euler #25 Fibonacci index",
+          "path": "examples/project-euler/problems/euler025-1000-digit-fibonacci.hla64",
+          "run": "hla64 run examples/project-euler/problems/euler025-1000-digit-fibonacci.hla64",
+          "expected": "stdout:\n  Euler #25 = 4782"
         }
       ]
     }
