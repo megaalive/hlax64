@@ -1,0 +1,6 @@
+{
+  "name": "curriculum-dynamic-array",
+  "source": "../../../examples/05-memory/dynamic-array.hla64",
+  "expectedExitCode": 0,
+  "description": "Curriculum: static-backed Vec push/get/print with bounds checks"
+}

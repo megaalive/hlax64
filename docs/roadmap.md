@@ -115,7 +115,7 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 | Area | Status |
 |------|--------|
 | Fase compiler 0–24 | ✅ Done / Hardened (lihat §1) |
-| Kurikulum contoh | 57 manifest di `tests/examples-curriculum/` + real-tools / bug-farm / invalid |
+| Kurikulum contoh | 58 manifest di `tests/examples-curriculum/` + real-tools / bug-farm / invalid |
 | Tes otomatis | 400+ (`dotnet test` — compiler + AssemblyLab) |
 | Target build | Linux SysV + Windows MS ABI |
 | Dokumentasi produk | `docs/language-spec.md`, tutorials, RFC 0001–0024 |
@@ -144,7 +144,7 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 | Assembly Lab parity di browser (build/run) | 🔜 Deferred | Lab desktop tetap surface penuh |
 
 **Sudah ada (jangan duplikasi):** Assembly Lab (IR/NASM live, Explain, Agent, DAP), MCP
-`explain`, 57 manifest kurikulum, real-tools Windows + Linux ports.
+`explain`, 58 manifest kurikulum, real-tools Windows + Linux ports.
 
 **Non-goals v0.2:** macro, LLVM, `ptr<T>`, per-file `#pragma target` — tetap §6.
 
@@ -212,6 +212,7 @@ Satu-satunya pekerjaan yang **belum** di roadmap aktif:
 ### Language / memory (lintas-fase, lihat `docs/memory-model.md`)
 
 - `ptr<T>`, `slice<T>`, checked indexing
+- **Runtime heap helpers (planned):** `hlax_malloc`, `hlax_realloc`, `hlax_free` — example `examples/05-memory/dynamic-array-heap.hla64` after helpers land; static-backed [`dynamic-array.hla64`](../examples/05-memory/dynamic-array.hla64) ships today
 - Macro system, LLVM backend, self-hosting (P3)
 
 ---

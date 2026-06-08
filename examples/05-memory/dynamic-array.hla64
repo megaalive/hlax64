@@ -1,0 +1,85 @@
+// dynamic-array.hla64 — static-backed Vec<int64> (push / get / len / cap).
+//
+// Backing store is a fixed static buffer (not heap). True growable heap vectors
+// need future runtime helpers: hlax_malloc / hlax_realloc / hlax_free.
+//
+// Stress: static globals, array index with register, if/while, procedure calls,
+// multi-arg stdout.put.
+
+program dynarray_demo;
+
+#include("stdlib64.hhf")
+
+const
+    VecMaxCapacity := 16;
+endconst;
+
+static
+    vecData: int64[16];
+    vecLen:  uint64 := 0;
+    vecCap:  uint64 := VecMaxCapacity;
+endstatic;
+
+procedure Vec_Clear();
+begin Vec_Clear;
+    mov(0, vecLen);
+end Vec_Clear;
+
+procedure Vec_Push(value:int64); @returns("rax");
+begin Vec_Push;
+    mov(vecLen, rcx);
+
+    if(rcx < vecCap) then
+        mov(rdi, vecData[rcx]);
+        add(1, rcx);
+        mov(rcx, vecLen);
+        mov(1, rax);
+    else
+        mov(0, rax);
+    endif;
+end Vec_Push;
+
+procedure Vec_Get(index:uint64); @returns("rax");
+begin Vec_Get;
+    mov(index, rcx);
+
+    if(rcx < vecLen) then
+        mov(vecData[rcx], rax);
+    else
+        mov(0, rax);
+    endif;
+end Vec_Get;
+
+procedure Vec_Print();
+var
+    i: uint64;
+begin Vec_Print;
+    mov(0, i);
+
+    stdout.put("Vec len = ", vecLen, ", cap = ", vecCap, nl);
+
+    mov(vecLen, rdx);
+    while(i < rdx) do
+        mov(i, rcx);
+        mov(vecData[rcx], rax);
+        stdout.put("  [", i, "] = ", rax, nl);
+        add(1, i);
+    endwhile;
+end Vec_Print;
+
+begin dynarray_demo;
+    call Vec_Clear();
+
+    call Vec_Push(10);
+    call Vec_Push(20);
+    call Vec_Push(30);
+    call Vec_Push(40);
+
+    call Vec_Print();
+
+    call Vec_Get(2);
+    stdout.put("Vec_Get(2) = ", rax, nl);
+
+    call Vec_Get(99);
+    stdout.put("Vec_Get(99) = ", rax, " ; out of range returns 0", nl);
+end dynarray_demo;

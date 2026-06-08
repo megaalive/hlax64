@@ -584,6 +584,13 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
         if (_valueMap.TryGetValue(name, out var offset))
             return offset;
 
+        if (GlobalDataEncoding.IsGlobalRef(value))
+        {
+            var gname = GlobalDataEncoding.DecodeName(value);
+            var bits = _globalData.TryGetValue(gname, out var sym) ? sym.Type.BitWidth : 64;
+            return GlobalDataEncoding.FormatMem(gname, bits);
+        }
+
         return name;
     }
 

@@ -76,6 +76,32 @@ public sealed class GlobalDataTests
     }
 
     [Fact]
+    public void Compile_CompareStaticGlobal_EmitsMemoryOperandInCmp()
+    {
+        const string source = """
+            program p;
+            static
+                len: uint64 := 0;
+            endstatic;
+            begin p;
+                mov(0, rcx);
+                if(rcx < len) then
+                    mov(1, rax);
+                else
+                    mov(0, rax);
+                endif;
+            end p;
+            """;
+
+        var result = new Compilation("(test)", source).Process();
+        Assert.True(result.Success, string.Join("; ", result.Diagnostics));
+        var nasm = new HlaX64.Backend.Nasm.Emitters.NasmEmitter()
+            .Emit(result.LoweredFunctions, result.StringLiterals, result.GlobalData);
+        Assert.Contains("cmp rcx, [len]", nasm, StringComparison.Ordinal);
+        Assert.DoesNotContain("global:len", nasm, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Semantic_DuplicateStatic_ReportsHlax0045()
     {
         const string source = """
