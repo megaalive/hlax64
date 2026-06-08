@@ -1,0 +1,52 @@
+name: Normalize release flags
+
+# Ensures alpha/beta tags stay pre-release; v0.2.0-alpha is "Latest" over v0.1.0-alpha.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/normalize-releases.yml
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const { data: releases } = await github.rest.repos.listReleases({
+              owner,
+              repo,
+              per_page: 30,
+            });
+
+            const updates = [
+              { tag: 'v0.1.0-alpha', prerelease: true, make_latest: 'false' },
+              { tag: 'v0.2.0-alpha', prerelease: true, make_latest: 'true' },
+            ];
+
+            for (const u of updates) {
+              const release = releases.find((r) => r.tag_name === u.tag);
+              if (!release) {
+                core.info(`Skip ${u.tag}: release not found`);
+                continue;
+              }
+              if (release.prerelease === u.prerelease && u.tag !== 'v0.2.0-alpha') {
+                core.info(`${u.tag}: already prerelease=${u.prerelease}`);
+                continue;
+              }
+              await github.rest.repos.updateRelease({
+                owner,
+                repo,
+                release_id: release.id,
+                prerelease: u.prerelease,
+                make_latest: u.make_latest,
+              });
+              core.info(`Updated ${u.tag}: prerelease=${u.prerelease}, make_latest=${u.make_latest}`);
+            }

@@ -21,12 +21,16 @@ See [architecture.md](architecture.md) for the Mermaid pipeline diagram (renders
 
 ## Release announcement checklist
 
-When tagging `v0.1.0-alpha`:
+Current tags: **`v0.2.0-alpha`** (latest pre-release), **`v0.1.0-alpha`** (pre-release, superseded).
 
-- [ ] Verify Linux + Windows archives and checksums on Releases
-- [ ] Update README install link to [install.md](install.md)
-- [ ] Post short summary: compiler + MCP + 20 examples + `hla64 doctor`
-- [ ] Tag issues with `good first issue` as they are created — see [open issues](https://github.com/megaalive/hlax64/issues?q=is%3Aissue+is%3Aopen)
+When tagging a new **`v*.*.*-alpha`** release:
+
+- [ ] Update [CHANGELOG.md](../CHANGELOG.md) and [RELEASE_NOTES.md](../RELEASE_NOTES.md)
+- [ ] Bump `<Version>` in `src/HlaX64.Cli/HlaX64.Cli.csproj`
+- [ ] Push annotated tag `vX.Y.Z-alpha` (triggers [.github/workflows/release.yml](../.github/workflows/release.yml))
+- [ ] Verify Linux + Windows CLI + Assembly Lab archives and `checksums.txt` on [Releases](https://github.com/megaalive/hlax64/releases)
+- [ ] Confirm both alpha tags show **Pre-release**; newest alpha is **Latest** ([normalize-releases.yml](../.github/workflows/normalize-releases.yml) runs on `main`)
+- [ ] Update README playground / install links if needed
 
 ## Repository metadata (GitHub UI)
 
