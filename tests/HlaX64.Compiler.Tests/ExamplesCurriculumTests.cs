@@ -8,7 +8,7 @@ public sealed class ExamplesCurriculumTests
     public void CurriculumManifest_LoadAll_HasExpectedPrograms()
     {
         var manifests = TestManifest.LoadAll("tests/examples-curriculum");
-        Assert.Equal(58, manifests.Count);
+        Assert.Equal(59, manifests.Count);
         Assert.Contains(manifests, m => m.Name == "curriculum-hello");
         Assert.Contains(manifests, m => m.Name == "real-listfiles");
         Assert.Contains(manifests, m => m.Name == "real-filesize");
@@ -38,6 +38,7 @@ public sealed class ExamplesCurriculumTests
         Assert.Contains(manifests, m => m.Name == "curriculum-const-expr");
         Assert.Contains(manifests, m => m.Name == "curriculum-idiv-jmp");
         Assert.Contains(manifests, m => m.Name == "curriculum-dynamic-array");
+        Assert.Contains(manifests, m => m.Name == "curriculum-dynamic-array-heap");
         Assert.All(manifests, m => Assert.Contains("examples/", m.Source.Replace('\\', '/')));
     }
 }

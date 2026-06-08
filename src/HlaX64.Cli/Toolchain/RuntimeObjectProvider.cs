@@ -20,6 +20,11 @@ public static class RuntimeObjectProvider
         "hlax_argv_init", "hlax_argv_count", "hlax_argv_get"
     }.ToFrozenSet();
 
+    private static readonly FrozenSet<string> HeapSymbols = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "hlax_malloc", "hlax_realloc", "hlax_free"
+    }.ToFrozenSet();
+
     public static bool TryGetLinuxRuntimeObjects(
         IEnumerable<string> requiredExterns,
         string cacheDirectory,
@@ -33,9 +38,10 @@ public static class RuntimeObjectProvider
         bool needStdout = externs.Any(StdoutSymbols.Contains);
         bool needConversion = externs.Any(ConversionSymbols.Contains);
         bool needArgv = externs.Any(ArgvSymbols.Contains);
+        bool needHeap = externs.Any(HeapSymbols.Contains);
         if (needStdout)
             needConversion = true;
-        if (!needStdout && !needConversion && !needArgv)
+        if (!needStdout && !needConversion && !needArgv && !needHeap)
             return true;
 
         var runtimeDir = FindRuntimeDirectory();
@@ -72,6 +78,14 @@ public static class RuntimeObjectProvider
             objects.Add(argvObj);
         }
 
+        if (needHeap)
+        {
+            var nasm = Path.Combine(runtimeDir, "linux-x64", "heap.nasm");
+            if (!TryAssembleRuntime(nasm, cacheDirectory, "hlax64-runtime-heap", "elf64", out var heapObj, out error))
+                return false;
+            objects.Add(heapObj);
+        }
+
         objectFiles = objects;
         return true;
     }
@@ -89,10 +103,11 @@ public static class RuntimeObjectProvider
         bool needStdout = externs.Any(StdoutSymbols.Contains);
         bool needConversion = externs.Any(ConversionSymbols.Contains);
         bool needArgv = externs.Any(ArgvSymbols.Contains);
+        bool needHeap = externs.Any(HeapSymbols.Contains);
         // stdout.nasm references int_to_str for stdout_put_int — assemble conversion too.
         if (needStdout)
             needConversion = true;
-        if (!needStdout && !needConversion && !needArgv)
+        if (!needStdout && !needConversion && !needArgv && !needHeap)
             return true;
 
         var runtimeDir = FindRuntimeDirectory();
@@ -129,6 +144,14 @@ public static class RuntimeObjectProvider
             objects.Add(argvObj);
         }
 
+        if (needHeap)
+        {
+            var nasm = Path.Combine(runtimeDir, "windows-x64", "heap.nasm");
+            if (!TryAssembleRuntime(nasm, cacheDirectory, "hlax64-runtime-heap", "win64", out var heapObj, out error))
+                return false;
+            objects.Add(heapObj);
+        }
+
         objectFiles = objects;
         return true;
     }
@@ -147,6 +170,7 @@ public static class RuntimeObjectProvider
     {
         linkExtras = result.LinkLibraries.ToList();
         var externs = CollectRequiredExterns(result.LoweredFunctions);
+        bool needHeap = externs.Any(HeapSymbols.Contains);
         if (isWindows)
         {
             if (!TryGetWindowsRuntimeObjects(externs, cacheDirectory, out var runtimeObjs, out error))
@@ -164,6 +188,8 @@ public static class RuntimeObjectProvider
             if (!TryGetLinuxRuntimeObjects(externs, cacheDirectory, out var runtimeObjs, out error))
                 return false;
             linkExtras.AddRange(runtimeObjs);
+            if (needHeap && !linkExtras.Contains("-lc", StringComparer.OrdinalIgnoreCase))
+                linkExtras.Add("-lc");
         }
 
         error = null;

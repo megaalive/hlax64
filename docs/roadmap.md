@@ -212,7 +212,7 @@ Satu-satunya pekerjaan yang **belum** di roadmap aktif:
 ### Language / memory (lintas-fase, lihat `docs/memory-model.md`)
 
 - `ptr<T>`, `slice<T>`, checked indexing
-- **Runtime heap helpers (planned):** `hlax_malloc`, `hlax_realloc`, `hlax_free` — example `examples/05-memory/dynamic-array-heap.hla64` after helpers land; static-backed [`dynamic-array.hla64`](../examples/05-memory/dynamic-array.hla64) ships today
+- **Runtime heap helpers (shipped):** `hlax_malloc`, `hlax_realloc`, `hlax_free` — [`dynamic-array-heap.hla64`](../examples/05-memory/dynamic-array-heap.hla64); static-backed [`dynamic-array.hla64`](../examples/05-memory/dynamic-array.hla64) for fixed-capacity vectors
 - Macro system, LLVM backend, self-hosting (P3)
 
 ---

@@ -1,0 +1,172 @@
+// dynamic-array-heap.hla64 — heap-backed VecI64 via hlax_malloc / hlax_realloc / hlax_free.
+//
+// Growth: cap 0 → 4 elements, then double. Stress: record param, pointer arithmetic,
+// extern runtime calls, stdout.put.
+
+program dynarray_heap;
+
+#include("stdlib64.hhf")
+
+extern procedure hlax_realloc(ptr:ptr; size:uint64): ptr;
+extern procedure hlax_free(ptr:ptr): void;
+
+record VecI64
+    data: ptr;
+    len: uint64;
+    cap: uint64;
+endrecord;
+
+procedure Vec_Init(v: VecI64);
+begin Vec_Init;
+    mov(0, v.data);
+    mov(0, v.len);
+    mov(0, v.cap);
+end Vec_Init;
+
+procedure Vec_Reserve(v: VecI64; newCap: uint64); @returns("rax");
+var
+    byteCount: uint64;
+begin Vec_Reserve;
+    mov(newCap, rcx);
+    shl(3, rcx);
+    mov(rcx, byteCount);
+
+    mov(v.data, r11);
+    mov(byteCount, r12);
+    call hlax_realloc(r11, r12);
+
+    if(rax = 0) then
+        mov(0, rax);
+    else
+        mov(rax, r11);
+        mov(r11, v.data);
+        mov(newCap, r8);
+        mov(r8, v.cap);
+        mov(1, rax);
+    endif;
+end Vec_Reserve;
+
+procedure Vec_Push(v: VecI64; value: int64); @returns("rax");
+var
+    idx: uint64;
+    newCap: uint64;
+begin Vec_Push;
+    mov(v.len, rcx);
+    mov(v.cap, r9);
+
+    if(rcx < r9) then
+        mov(1, rdx);
+    else
+        mov(v.cap, r8);
+        if(r8 = 0) then
+            mov(4, newCap);
+        else
+            mov(r8, newCap);
+            mov(newCap, r12);
+            add(r12, r12);
+            mov(r12, newCap);
+        endif;
+        call Vec_Reserve(v, newCap);
+        if(rax = 0) then
+            mov(0, rdx);
+        else
+            mov(1, rdx);
+        endif;
+    endif;
+
+    if(rdx = 0) then
+        mov(0, rax);
+    else
+        mov(v.len, r12);
+        mov(r12, idx);
+        mov(v.data, r11);
+        mov(idx, r10);
+        shl(3, r10);
+        add(r11, r10);
+        mov(value, r12);
+        mov(r12, [r10]);
+        mov(v.len, rcx);
+        add(1, rcx);
+        mov(rcx, v.len);
+        mov(1, rax);
+    endif;
+end Vec_Push;
+
+procedure Vec_Get(v: VecI64; index: uint64); @returns("rax");
+begin Vec_Get;
+    mov(index, rcx);
+    mov(v.len, r9);
+
+    if(rcx < r9) then
+        mov(v.data, r11);
+        mov(index, r10);
+        shl(3, r10);
+        add(r11, r10);
+        mov([r10], rax);
+    else
+        mov(0, rax);
+    endif;
+end Vec_Get;
+
+procedure Vec_Print(v: VecI64);
+var
+    i: uint64;
+begin Vec_Print;
+    mov(0, i);
+
+    mov(v.len, rdx);
+    mov(v.cap, r8);
+    stdout.put("Vec len = ", rdx, ", cap = ", r8, nl);
+
+    mov(v.len, rdx);
+    while(i < rdx) do
+        mov(i, r15);
+        call Vec_Get(v, r15);
+        stdout.put("  [", r15, "] = ", rax, nl);
+        add(1, i);
+        mov(v.len, rdx);
+    endwhile;
+end Vec_Print;
+
+procedure Vec_Free(v: VecI64);
+begin Vec_Free;
+    mov(v.data, r11);
+
+    if(r11 = 0) then
+        mov(0, r11);
+    else
+        call hlax_free(r11);
+    endif;
+
+    mov(0, v.data);
+    mov(0, v.len);
+    mov(0, v.cap);
+end Vec_Free;
+
+procedure RunDemo; @returns("rax");
+var
+    vec: VecI64;
+begin RunDemo;
+    call Vec_Init(&vec);
+
+    call Vec_Push(&vec, 10);
+    call Vec_Push(&vec, 20);
+    call Vec_Push(&vec, 30);
+    call Vec_Push(&vec, 40);
+    call Vec_Push(&vec, 50);
+
+    call Vec_Print(&vec);
+
+    call Vec_Get(&vec, 2);
+    stdout.put("Vec_Get(2) = ", rax, nl);
+
+    call Vec_Get(&vec, 99);
+    stdout.put("Vec_Get(99) = ", rax, " ; out of range returns 0", nl);
+
+    call Vec_Free(&vec);
+    mov(0, rax);
+end RunDemo;
+
+begin dynarray_heap;
+    call RunDemo();
+end dynarray_heap;

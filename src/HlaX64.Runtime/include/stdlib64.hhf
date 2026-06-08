@@ -66,6 +66,19 @@ procedure hlax_argv_count(); @returns("rax");
 procedure hlax_argv_get(index:int64); @returns("rax");
 
 // =====================================================================
+// Heap (linux-x64/heap.nasm wraps libc; windows-x64/heap.nasm uses HeapAlloc)
+// =====================================================================
+
+// Allocate size bytes (zero-filled on Windows). Returns 0 on failure.
+procedure hlax_malloc(size:uint64); @returns("rax");
+
+// Resize block at ptr to size bytes (ptr may be 0). Returns 0 on failure.
+procedure hlax_realloc(ptr:ptr; size:uint64); @returns("rax");
+
+// Free block at ptr (no-op when ptr is 0).
+procedure hlax_free(ptr:ptr): void;
+
+// =====================================================================
 // Conversion (defined in linux-x64/conversion.nasm)
 // =====================================================================
 

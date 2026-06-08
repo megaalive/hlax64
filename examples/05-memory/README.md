@@ -16,6 +16,7 @@ Stack locals, pointers, manual arrays, and string byte-walk (Level 3 curriculum)
 | [array-literal-index.hla64](array-literal-index.hla64) | 20 | Literal index `arr[1]` |
 | [array-byte-last.hla64](array-byte-last.hla64) | 40 | Packed `byte[4]` with 1-byte stride |
 | [dynamic-array.hla64](dynamic-array.hla64) | 0 | Static-backed `Vec` push/get (fixed capacity) |
+| [dynamic-array-heap.hla64](dynamic-array-heap.hla64) | 0 | Heap-backed `VecI64` via `hlax_malloc` / `hlax_realloc` / `hlax_free` |
 
 Tutorial: [docs/tutorials/05-memory.md](../../docs/tutorials/05-memory.md) · Bounds: [docs/memory-and-bounds.md](../../docs/memory-and-bounds.md)
 
