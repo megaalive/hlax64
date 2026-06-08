@@ -18,7 +18,7 @@ public sealed class VerificationAnalyzer
     private static readonly HashSet<string> DestWriteMnemonics = new(StringComparer.OrdinalIgnoreCase)
     {
         "mov", "movsd", "movss", "movd", "movq", "add", "sub", "imul", "xor", "and", "or",
-        "lea", "pop", "inc", "dec", "neg", "not", "shl", "shr", "sar"
+        "lea", "pop", "inc", "dec", "neg", "not", "shl", "shr", "sar", "mod", "idiv", "div"
     };
 
     private readonly CompilerWarnings _warnings;

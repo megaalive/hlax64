@@ -1,0 +1,45 @@
+// euler003-largest-prime-factor.hla64
+// Project Euler #3 — largest prime factor of 600_851_475_143 (trial division).
+
+program euler003_largest_prime_factor;
+
+#include("stdlib64.hhf")
+
+static
+    n: uint64 := 600851475143;
+    factor: uint64 := 2;
+    largest: uint64 := 1;
+endstatic;
+
+begin euler003_largest_prime_factor;
+    mov(600851475143, n);
+    mov(2, factor);
+    mov(1, largest);
+
+    mov(1000000, rbx);
+    while(factor < rbx) do
+        mov(n, r14);
+
+        if(r14 = 1) then
+            mov(rbx, factor);
+        else
+            mov(n, rax);
+            mov(factor, r10);
+            mod(r10, rax);
+
+            if(rax = 0) then
+                mov(factor, r10);
+                mov(r10, largest);
+                mov(n, rax);
+                mov(factor, r10);
+                idiv(r10, rax);
+                mov(rax, n);
+            else
+                add(1, factor);
+            endif;
+        endif;
+    endwhile;
+
+    mov(largest, rdx);
+    stdout.put("Euler #3 = ", rdx, nl);
+end euler003_largest_prime_factor;

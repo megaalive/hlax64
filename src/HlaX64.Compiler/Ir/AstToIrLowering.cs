@@ -289,6 +289,14 @@ public sealed class AstToIrLowering
             return;
         }
 
+        if (mnemonic == "mod" && instr.Operands.Count == 2)
+        {
+            var divisor = ResolveOperand(instr.Operands[0]);
+            var dest = ResolveOperand(instr.Operands[1]);
+            block.Add(WithSource(new IrInstruction(IrOpcode.Modulo, dest, new List<IrValue> { divisor }), instr));
+            return;
+        }
+
         if (mnemonic is "idiv" or "div" && instr.Operands.Count == 1)
         {
             var divisor = FormatAsmOperand(instr.Operands[0]);

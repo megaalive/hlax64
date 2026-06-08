@@ -1,0 +1,42 @@
+// euler001-multiples-of-3-and-5-bruteforce.hla64
+// Project Euler #1 — sum multiples of 3 or 5 below 1000 (naive loop).
+
+program euler001_bruteforce;
+
+#include("stdlib64.hhf")
+
+static
+    i: uint64 := 0;
+    total: uint64 := 0;
+endstatic;
+
+begin euler001_bruteforce;
+    mov(0, i);
+    mov(0, total);
+    mov(1000, rbx);
+
+    while(i < rbx) do
+        mov(i, rax);
+        mov(3, r10);
+        mod(r10, rax);
+
+        if(rax = 0) then
+            mov(i, r11);
+            add(r11, total);
+        else
+            mov(i, rax);
+            mov(5, r10);
+            mod(r10, rax);
+
+            if(rax = 0) then
+                mov(i, r11);
+                add(r11, total);
+            endif;
+        endif;
+
+        add(1, i);
+    endwhile;
+
+    mov(total, rdx);
+    stdout.put("Euler #1 = ", rdx, nl);
+end euler001_bruteforce;

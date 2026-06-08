@@ -66,6 +66,7 @@ public sealed class SemanticAnalyzer
         "movsd", "movss", "movd", "movq", "addsd", "subsd", "ucomisd",
         "lea", "push", "pop", "inc", "dec", "neg", "not",
         "shl", "shr", "sar", "rol", "ror",
+        "idiv", "div", "mod",
         "jmp", "call", "ret", "syscall",
         "nop", "int3", "hlt",
     };
@@ -97,6 +98,9 @@ public sealed class SemanticAnalyzer
         ["shl"] = (2, 2),
         ["shr"] = (2, 2),
         ["sar"] = (2, 2),
+        ["idiv"] = (2, 2),
+        ["div"] = (2, 2),
+        ["mod"] = (2, 2),
         ["jmp"] = (1, 1),
         ["call"] = (1, 1),
         ["ret"] = (0, 0),

@@ -19,7 +19,10 @@ $examples = @(
     @{ id = 'argv';        path = 'examples/10-real-tools/exists/exists.hla64' },
     @{ id = 'wc';          path = 'examples/10-real-tools/wc/wc.hla64' },
     @{ id = 'hexdump';     path = 'examples/10-real-tools/hexdump/hexdump.hla64' },
-    @{ id = 'filemagic';   path = 'examples/10-real-tools/filemagic/filemagic.hla64' }
+    @{ id = 'filemagic';   path = 'examples/10-real-tools/filemagic/filemagic.hla64' },
+    @{ id = 'euler001';    path = 'examples/20-project-euler/problems/euler001-multiples-of-3-and-5-bruteforce.hla64' },
+    @{ id = 'euler001-formula'; path = 'examples/20-project-euler/problems/euler001-multiples-of-3-and-5-formula.hla64' },
+    @{ id = 'euler002';    path = 'examples/20-project-euler/problems/euler002-even-fibonacci.hla64' }
 )
 
 Push-Location $root

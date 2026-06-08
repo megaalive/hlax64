@@ -1,0 +1,40 @@
+// euler001-multiples-of-3-and-5-formula.hla64
+// Project Euler #1 — inclusion–exclusion: sum3 + sum5 - sum15.
+
+program euler001_formula;
+
+#include("stdlib64.hhf")
+
+procedure SumMultiplesBelow(k: uint64; limit: uint64); @returns("rax");
+var
+    m: uint64;
+    t: uint64;
+begin SumMultiplesBelow;
+    mov(limit, rax);
+    sub(1, rax);
+    mov(k, r10);
+    idiv(r10, rax);
+    mov(rax, m);
+    mov(m, rax);
+    add(1, rax);
+    mov(rax, t);
+    mov(m, rax);
+    mov(t, r11);
+    imul(r11, rax);
+    mov(k, r11);
+    imul(r11, rax);
+    mov(2, r10);
+    idiv(r10, rax);
+end SumMultiplesBelow;
+
+begin euler001_formula;
+    call SumMultiplesBelow(3, 1000);
+    mov(rax, r12);
+    call SumMultiplesBelow(5, 1000);
+    add(r12, rax);
+    mov(rax, r12);
+    call SumMultiplesBelow(15, 1000);
+    sub(rax, r12);
+
+    stdout.put("Euler #1 (formula) = ", r12, nl);
+end euler001_formula;

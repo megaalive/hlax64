@@ -326,6 +326,21 @@ exit code: 1`
         id: 'filemagic', label: '11 filemagic', path: 'examples/10-real-tools/filemagic/filemagic.hla64',
         run: 'hla64 run examples/10-real-tools/filemagic/filemagic.hla64 -- README.md',
         expected: 'stdout: detected type from magic bytes (e.g. text, PE, ELF).'
+      },
+      {
+        id: 'euler001', label: '20 Euler #1 brute', path: 'examples/20-project-euler/problems/euler001-multiples-of-3-and-5-bruteforce.hla64',
+        run: 'hla64 run examples/20-project-euler/problems/euler001-multiples-of-3-and-5-bruteforce.hla64',
+        expected: 'stdout:\n  Euler #1 = 233168\nSolve yourself first — compare with formula variant.'
+      },
+      {
+        id: 'euler001-formula', label: '21 Euler #1 formula', path: 'examples/20-project-euler/problems/euler001-multiples-of-3-and-5-formula.hla64',
+        run: 'hla64 run examples/20-project-euler/problems/euler001-multiples-of-3-and-5-formula.hla64',
+        expected: 'stdout:\n  Euler #1 (formula) = 233168\nO(1) vs loop — inspect NASM diff in Explain tab.'
+      },
+      {
+        id: 'euler002', label: '22 Euler #2 Fib', path: 'examples/20-project-euler/problems/euler002-even-fibonacci.hla64',
+        run: 'hla64 run examples/20-project-euler/problems/euler002-even-fibonacci.hla64',
+        expected: 'stdout:\n  Euler #2 = 4613732\nEven Fibonacci terms below 4_000_000.'
       }
     ];
 

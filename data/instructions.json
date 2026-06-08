@@ -7,6 +7,7 @@
     { "mnemonic": "imul", "category": "arith", "minOps": 1, "maxOps": 3, "features": [] },
     { "mnemonic": "idiv", "category": "arith", "minOps": 1, "maxOps": 2, "features": [] },
     { "mnemonic": "div", "category": "arith", "minOps": 1, "maxOps": 2, "features": [] },
+    { "mnemonic": "mod", "category": "arith", "minOps": 2, "maxOps": 2, "features": [] },
     { "mnemonic": "inc", "category": "arith", "minOps": 1, "maxOps": 1, "features": [] },
     { "mnemonic": "dec", "category": "arith", "minOps": 1, "maxOps": 1, "features": [] },
     { "mnemonic": "neg", "category": "arith", "minOps": 1, "maxOps": 1, "features": [] },

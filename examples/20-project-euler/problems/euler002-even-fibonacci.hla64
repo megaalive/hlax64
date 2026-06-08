@@ -1,0 +1,39 @@
+// euler002-even-fibonacci.hla64
+// Project Euler #2 — sum even Fibonacci terms not exceeding 4_000_000.
+
+program euler002_even_fibonacci;
+
+#include("stdlib64.hhf")
+
+static
+    a: uint64 := 1;
+    b: uint64 := 2;
+    total: uint64 := 0;
+endstatic;
+
+begin euler002_even_fibonacci;
+    mov(1, a);
+    mov(2, b);
+    mov(0, total);
+
+    mov(4000001, rbx);
+    while(b < rbx) do
+        mov(b, rax);
+        mov(2, r10);
+        mod(r10, rax);
+
+        if(rax = 0) then
+            mov(b, r11);
+            add(r11, total);
+        endif;
+
+        mov(a, r11);
+        mov(b, r12);
+        add(r12, r11);
+        mov(r12, a);
+        mov(r11, b);
+    endwhile;
+
+    mov(total, rdx);
+    stdout.put("Euler #2 = ", rdx, nl);
+end euler002_even_fibonacci;

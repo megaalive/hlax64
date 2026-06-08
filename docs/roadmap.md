@@ -213,6 +213,7 @@ Satu-satunya pekerjaan yang **belum** di roadmap aktif:
 
 - `ptr<T>`, `slice<T>`, checked indexing
 - **Runtime heap helpers (shipped):** `hlax_malloc`, `hlax_realloc`, `hlax_free` — [`dynamic-array-heap.hla64`](../examples/05-memory/dynamic-array-heap.hla64); static-backed [`dynamic-array.hla64`](../examples/05-memory/dynamic-array.hla64) for fixed-capacity vectors
+- **Project Euler suite (started):** [`examples/20-project-euler/`](../examples/20-project-euler/) — #1–#3, bruteforce + formula for #1, argv runner; expand toward #25
 - Macro system, LLVM backend, self-hosting (P3)
 
 ---
