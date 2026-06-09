@@ -1,0 +1,10 @@
+// hello-snapshot.hla64 — Conformance test for hello world NASM output
+// Tests that the compiler generates expected NASM instructions for basic stdout.put
+
+program hello;
+
+#include("stdlib64.hhf")
+
+begin hello;
+    stdout.put("Hello from HlaX64", nl);
+end hello;
