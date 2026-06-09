@@ -231,8 +231,9 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
             var mem = MemoryRefEncoding.Parse(srcVal!);
             if (StackMemOperandHelper.IsBareMemory(dst))
             {
-                var load = MemoryRefEncoding.EmitLoad("rax", mem);
-                return new LoweredInstruction($"    {load}\n    {StackMemOperandHelper.EmitMove(dst, "rax")}");
+                const string scratch = "r11";
+                var load = MemoryRefEncoding.EmitLoad(scratch, mem);
+                return new LoweredInstruction($"    {load}\n    {StackMemOperandHelper.EmitMove(dst, scratch)}");
             }
             return new LoweredInstruction($"    {MemoryRefEncoding.EmitLoad(dst, mem)}");
         }
