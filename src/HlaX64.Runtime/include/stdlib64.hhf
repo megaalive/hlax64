@@ -23,6 +23,19 @@
 #define stdout_fd       1
 #define stderr_fd       2
 
+// Standard result codes for hlax_* runtime helpers.
+#define HLAX_OK                 0
+#define HLAX_ERR                -1
+#define HLAX_ERR_TIMEOUT        -2
+#define HLAX_ERR_UNSUPPORTED    -3
+#define HLAX_ERR_NAME_NOT_FOUND -4
+
+// Tool exit codes (convention for examples/tools).
+#define HLAX_EXIT_OK            0
+#define HLAX_EXIT_USAGE         1
+#define HLAX_EXIT_OS            2
+#define HLAX_EXIT_NET           3
+
 // Linux x64 syscall numbers (subset)
 #define SYS_READ        0
 #define SYS_WRITE       1
@@ -121,6 +134,87 @@ procedure hlax_is_space(ch: uint64): int64;
 
 // Return 1 for ASCII printable (0x20..0x7E), else 0.
 procedure hlax_is_printable(ch: uint64): int64;
+
+// =====================================================================
+// System / machine (linux-x64/sys.nasm, windows-x64/sys.nasm)
+// =====================================================================
+
+// Return current process id.
+procedure hlax_getpid(): int64;
+
+// Write hostname into buffer (NUL-terminated). Returns byte length or -1.
+procedure hlax_hostname(buffer: ptr; capacity: uint64): int64;
+
+// Seconds since boot (Windows: tick-based via GetTickCount64).
+procedure hlax_uptime_secs(): int64;
+
+// Total physical memory in bytes, or -1 on failure.
+procedure hlax_mem_total(): int64;
+
+// Available physical memory in bytes, or -1 on failure.
+procedure hlax_mem_avail(): int64;
+
+// File size in bytes for path, or -1 on failure.
+procedure hlax_file_size(path: cstring): int64;
+
+// Last OS error (Linux: errno, Windows: GetLastError()).
+procedure hlax_os_last_error(): int64;
+
+// Online CPU count, or -1 on failure.
+procedure hlax_cpu_count(): int64;
+
+// Total disk bytes for path mount, or -1 on failure.
+procedure hlax_disk_total_bytes(path: cstring): int64;
+
+// Available disk bytes for path mount, or -1 on failure.
+procedure hlax_disk_avail_bytes(path: cstring): int64;
+
+// Resident set size for current process in bytes, or -1 on failure.
+procedure hlax_self_rss_bytes(): int64;
+
+// One-minute load average in milli-units (Linux only), or -1 / HLAX_ERR_UNSUPPORTED.
+procedure hlax_load_avg_milli(): int64;
+
+// =====================================================================
+// Network (linux-x64/net.nasm, windows-x64/net.nasm)
+// IPv4 literal and DNS hostname connect; timeouts and reliable write.
+// =====================================================================
+
+// Initialize networking (WSAStartup on Windows; no-op on Linux). Returns 0 or -1.
+procedure hlax_net_init(): int64;
+
+// Last network error (Linux: errno, Windows: WSAGetLastError()).
+procedure hlax_net_last_error(): int64;
+
+// Resolve host to dotted IPv4 string in out_buf. Returns length or -1.
+procedure hlax_dns_resolve_v4(host: cstring; out_buf: ptr; capacity: uint64): int64;
+
+// Connect TCP to host:port (IPv4 literal). Returns socket handle/fd or -1.
+procedure hlax_tcp_connect(host: cstring; port: uint64): int64;
+
+// Connect TCP using DNS (IPv4). Returns socket handle/fd or -1.
+procedure hlax_tcp_connect_name(host: cstring; port: uint64): int64;
+
+// Connect with timeout in milliseconds. Returns socket or -1.
+procedure hlax_tcp_connect_timeout(host: cstring; port: uint64; timeout_ms: uint64): int64;
+
+// Set socket recv/send timeouts in milliseconds. Returns 0 or -1.
+procedure hlax_tcp_set_timeouts_ms(socket: int64; recv_ms: uint64; send_ms: uint64): int64;
+
+// Write up to count bytes. Returns bytes sent or -1.
+procedure hlax_tcp_write(socket: int64; buffer: ptr; count: uint64): int64;
+
+// Write all count bytes (handles partial send). Returns count or -1.
+procedure hlax_tcp_write_all(socket: int64; buffer: ptr; count: uint64): int64;
+
+// Read up to count bytes. Returns bytes read or -1.
+procedure hlax_tcp_read(socket: int64; buffer: ptr; count: uint64): int64;
+
+// Read up to count bytes (explicit alias). Returns bytes read or -1.
+procedure hlax_tcp_read_once(socket: int64; buffer: ptr; count: uint64): int64;
+
+// Close socket. Returns 0 or -1.
+procedure hlax_tcp_close(socket: int64): int64;
 
 // =====================================================================
 // Conversion (defined in linux-x64/conversion.nasm)

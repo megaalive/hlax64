@@ -36,6 +36,22 @@ public static class RuntimeObjectProvider
         "hlax_strlen", "hlax_memcpy", "hlax_memset", "hlax_is_space", "hlax_is_printable"
     }.ToFrozenSet();
 
+    private static readonly FrozenSet<string> SysSymbols = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "hlax_getpid", "hlax_hostname", "hlax_uptime_secs",
+        "hlax_mem_total", "hlax_mem_avail", "hlax_file_size",
+        "hlax_os_last_error", "hlax_cpu_count", "hlax_disk_total_bytes",
+        "hlax_disk_avail_bytes", "hlax_self_rss_bytes", "hlax_load_avg_milli"
+    }.ToFrozenSet();
+
+    private static readonly FrozenSet<string> NetSymbols = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "hlax_net_init", "hlax_net_last_error", "hlax_dns_resolve_v4",
+        "hlax_tcp_connect", "hlax_tcp_connect_name", "hlax_tcp_connect_timeout",
+        "hlax_tcp_set_timeouts_ms", "hlax_tcp_write", "hlax_tcp_write_all",
+        "hlax_tcp_read", "hlax_tcp_read_once", "hlax_tcp_close"
+    }.ToFrozenSet();
+
     public static bool TryGetLinuxRuntimeObjects(
         IEnumerable<string> requiredExterns,
         string cacheDirectory,
@@ -52,9 +68,11 @@ public static class RuntimeObjectProvider
         bool needHeap = externs.Any(HeapSymbols.Contains);
         bool needFile = externs.Any(FileSymbols.Contains);
         bool needMem = externs.Any(MemSymbols.Contains);
+        bool needSys = externs.Any(SysSymbols.Contains);
+        bool needNet = externs.Any(NetSymbols.Contains);
         if (needStdout)
             needConversion = true;
-        if (!needStdout && !needConversion && !needArgv && !needHeap && !needFile && !needMem)
+        if (!needStdout && !needConversion && !needArgv && !needHeap && !needFile && !needMem && !needSys && !needNet)
             return true;
 
         var runtimeDir = FindRuntimeDirectory();
@@ -115,6 +133,22 @@ public static class RuntimeObjectProvider
             objects.Add(memObj);
         }
 
+        if (needSys)
+        {
+            var nasm = Path.Combine(runtimeDir, "linux-x64", "sys.nasm");
+            if (!TryAssembleRuntime(nasm, cacheDirectory, "hlax64-runtime-sys", "elf64", out var sysObj, out error))
+                return false;
+            objects.Add(sysObj);
+        }
+
+        if (needNet)
+        {
+            var nasm = Path.Combine(runtimeDir, "linux-x64", "net.nasm");
+            if (!TryAssembleRuntime(nasm, cacheDirectory, "hlax64-runtime-net", "elf64", out var netObj, out error))
+                return false;
+            objects.Add(netObj);
+        }
+
         objectFiles = objects;
         return true;
     }
@@ -135,10 +169,12 @@ public static class RuntimeObjectProvider
         bool needHeap = externs.Any(HeapSymbols.Contains);
         bool needFile = externs.Any(FileSymbols.Contains);
         bool needMem = externs.Any(MemSymbols.Contains);
+        bool needSys = externs.Any(SysSymbols.Contains);
+        bool needNet = externs.Any(NetSymbols.Contains);
         // stdout.nasm references int_to_str for stdout_put_int — assemble conversion too.
         if (needStdout)
             needConversion = true;
-        if (!needStdout && !needConversion && !needArgv && !needHeap && !needFile && !needMem)
+        if (!needStdout && !needConversion && !needArgv && !needHeap && !needFile && !needMem && !needSys && !needNet)
             return true;
 
         var runtimeDir = FindRuntimeDirectory();
@@ -199,6 +235,22 @@ public static class RuntimeObjectProvider
             objects.Add(memObj);
         }
 
+        if (needSys)
+        {
+            var nasm = Path.Combine(runtimeDir, "windows-x64", "sys.nasm");
+            if (!TryAssembleRuntime(nasm, cacheDirectory, "hlax64-runtime-sys", "win64", out var sysObj, out error))
+                return false;
+            objects.Add(sysObj);
+        }
+
+        if (needNet)
+        {
+            var nasm = Path.Combine(runtimeDir, "windows-x64", "net.nasm");
+            if (!TryAssembleRuntime(nasm, cacheDirectory, "hlax64-runtime-net", "win64", out var netObj, out error))
+                return false;
+            objects.Add(netObj);
+        }
+
         objectFiles = objects;
         return true;
     }
@@ -219,11 +271,17 @@ public static class RuntimeObjectProvider
         var externs = CollectRequiredExterns(result.LoweredFunctions);
         bool needHeap = externs.Any(HeapSymbols.Contains);
         bool needFile = externs.Any(FileSymbols.Contains);
+        bool needSys = externs.Any(SysSymbols.Contains);
+        bool needNet = externs.Any(NetSymbols.Contains);
         if (isWindows)
         {
             if (!TryGetWindowsRuntimeObjects(externs, cacheDirectory, out var runtimeObjs, out error))
                 return false;
             linkExtras.AddRange(runtimeObjs);
+            if (needNet && !linkExtras.Contains("ws2_32.lib", StringComparer.OrdinalIgnoreCase))
+                linkExtras.Add("ws2_32.lib");
+            if (needSys && !linkExtras.Contains("psapi.lib", StringComparer.OrdinalIgnoreCase))
+                linkExtras.Add("psapi.lib");
             if (isSharedLibrary)
             {
                 if (!TryAssembleRuntimeDllMain(cacheDirectory, out var dllMainObj, out error) ||
@@ -237,7 +295,7 @@ public static class RuntimeObjectProvider
             if (!TryGetLinuxRuntimeObjects(externs, cacheDirectory, out var runtimeObjs, out error))
                 return false;
             linkExtras.AddRange(runtimeObjs);
-            if ((needHeap || needFile) && !linkExtras.Contains("-lc", StringComparer.OrdinalIgnoreCase))
+            if ((needHeap || needFile || needSys || needNet) && !linkExtras.Contains("-lc", StringComparer.OrdinalIgnoreCase))
                 linkExtras.Add("-lc");
         }
 

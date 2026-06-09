@@ -13,6 +13,8 @@ default rel
 %define INVALID_FILE_ATTRIBUTES 0xFFFFFFFF
 %define STD_INPUT_HANDLE        -10
 %define STD_OUTPUT_HANDLE       -11
+%define ERROR_HANDLE_EOF        38
+%define ERROR_BROKEN_PIPE       109
 
 extern GetFileAttributesA
 extern CreateFileA
@@ -20,6 +22,7 @@ extern ReadFile
 extern WriteFile
 extern CloseHandle
 extern GetStdHandle
+extern GetLastError
 
 section .text
 
@@ -47,7 +50,7 @@ hlax_path_exists:
 
 ; rcx = path -> rax = handle or -1
 hlax_file_open_read:
-    sub rsp, 64
+    sub rsp, 56
     mov r8d, FILE_SHARE_READ
     mov edx, GENERIC_READ
     xor r9d, r9d
@@ -55,7 +58,7 @@ hlax_file_open_read:
     mov qword [rsp+40], FILE_ATTRIBUTE_NORMAL
     mov qword [rsp+48], 0
     call CreateFileA
-    add rsp, 64
+    add rsp, 56
     ret
 
 ; rcx = handle (0 = stdin), rdx = buffer, r8 = count -> rax = bytes read or -1
@@ -64,7 +67,9 @@ hlax_file_read:
     test rcx, rcx
     jnz .have_handle
     mov ecx, STD_INPUT_HANDLE
+    sub rsp, 32
     call GetStdHandle
+    add rsp, 32
     mov rcx, rax
 .have_handle:
     sub rsp, 48
@@ -79,14 +84,24 @@ hlax_file_read:
     pop rbx
     ret
 .fail:
+    call GetLastError
+    cmp eax, ERROR_HANDLE_EOF
+    je .eof
+    cmp eax, ERROR_BROKEN_PIPE
+    je .eof
     mov rax, -1
+    add rsp, 48
+    pop rbx
+    ret
+.eof:
+    xor eax, eax
     add rsp, 48
     pop rbx
     ret
 
 ; rcx = path -> rax = handle or -1
 hlax_file_open_write:
-    sub rsp, 64
+    sub rsp, 56
     mov r8d, 0
     mov edx, GENERIC_WRITE
     xor r9d, r9d
@@ -94,12 +109,12 @@ hlax_file_open_write:
     mov qword [rsp+40], FILE_ATTRIBUTE_NORMAL
     mov qword [rsp+48], 0
     call CreateFileA
-    add rsp, 64
+    add rsp, 56
     ret
 
 ; rcx = handle, rdx = buffer, r8 = count -> rax = bytes written or -1
 hlax_file_write:
-    sub rsp, 48
+    sub rsp, 56
     mov qword [rsp+40], 0
     lea r9, [rsp+40]
     mov qword [rsp+32], 0
@@ -107,11 +122,11 @@ hlax_file_write:
     test eax, eax
     jz .fail
     mov rax, [rsp+40]
-    add rsp, 48
+    add rsp, 56
     ret
 .fail:
     mov rax, -1
-    add rsp, 48
+    add rsp, 56
     ret
 
 ; rcx = buffer, rdx = count -> rax = bytes written to stdout or -1
@@ -122,7 +137,9 @@ hlax_stdout_write:
     mov rsi, rcx
     mov rdi, rdx
     mov ecx, STD_OUTPUT_HANDLE
+    sub rsp, 32
     call GetStdHandle
+    add rsp, 32
     mov rcx, rax
     mov rdx, rsi
     mov r8, rdi
