@@ -61,6 +61,15 @@ Cross-platform Avalonia desktop app for visual pipeline exploration:
 dotnet run --project src/HlaX64.AssemblyLab
 ```
 
+Features include pipeline tabs (IR/NASM/ABI), build/run/proof bundle, **Settings** for toolchain paths, and an **embedded PTY terminal** (`Controls/LabTerminalControl`, `Services/InteractivePtySession`, `Porta.Pty` + `AvaloniaTerminal`). The terminal uses an overlay caret (`TerminalTypingCaret`) because Windows `cmd.exe` often omits ANSI cursor positioning after commands like `dir`.
+
+Publish a release bundle:
+
+```powershell
+.\scripts\publish-assembly-lab.ps1 -Rids win-x64,linux-x64
+.\scripts\smoke-assembly-lab-bundle.ps1 -BundleDir publish\assembly-lab\win-x64
+```
+
 See [docs/tutorials/06-assembly-lab.md](tutorials/06-assembly-lab.md) and [RFC 0024](../rfcs/0024-assembly-lab.md).
 
 ### Language Server (Phase 14 MVP)

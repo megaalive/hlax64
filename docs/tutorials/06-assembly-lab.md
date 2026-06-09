@@ -85,6 +85,8 @@ If you see `.obj` but **no `.exe`**, linking failed. Common on Windows:
 
 | Tab | Purpose |
 |-----|---------|
+| **Terminal** | Interactive PTY shell (`pwsh`/`powershell`/`cmd` on Windows; `bash`/`zsh` on Linux). Toolbar **Build**, **Run**, and **Doctor** inject commands into the shell. **Restart** / **Stop** manage the session. Scrollback, copy/paste (right-click), and mouse-wheel scroll behave like a normal terminal. |
+| **Settings** | Toolchain paths (`hla64`, runtime, NASM, linkers). **Auto Detect**, **Test**, **Browse**, and **Reset** persist to `%AppData%\\HlaX64\\AssemblyLab\\settings.json` (Windows) or `~/.config/hlax64/assemblylab/settings.json` (Linux). Same resolution order as `hla64 doctor`. |
 | **Plan** | Steps the compiler will take (emit → assemble → link) |
 | **Diff** | Semantic diff vs file content when opened |
 | **Agent** | **Explain** → diagnostics + `suggestedFix`; **Apply Fix** patches source |
@@ -172,6 +174,8 @@ Same as `hla64 build --proof-bundle`. Exports under `build/<name>/proof-bundle/`
 | Empty NASM tab | Fix diagnostics first; check target triple |
 | No source map highlight | Run **Build** (source map emitted on build) |
 | MCP hang | Rebuild Lab; MCP uses single stdout reader (see development.md) |
+| Terminal caret misaligned after `dir` | Known cmd.exe + xterm cursor desync; Lab uses a prompt-tracking overlay caret that follows scroll. Scroll away from live output to hide it; scroll back to the prompt to resume typing. |
+| `hla64` not recognized in terminal | Use bundled wrappers in the Assembly Lab output folder, or set **Settings → hla64 path**; toolbar inject uses resolved CLI path |
 
 ---
 

@@ -39,7 +39,7 @@ hla64 explain examples/tools/10-windows/exists/exists.hla64 --json
 
 ## Install
 
-Pre-built archives, global tool, or clone — see **[docs/install.md](docs/install.md)**.
+New users should start with the **Assembly Lab** bundle: desktop UI, embedded terminal, CLI, runtime files, examples, and toolchain Settings in one package. CLI-only archives, global tool, or clone workflows are also documented in **[docs/install.md](docs/install.md)**.
 
 Tutorials: [Getting started](docs/tutorials/01-getting-started.md) · [**Patterns & cookbook**](docs/patterns.md) · [Native routines](docs/tutorials/02-native-routines.md) · [Memory & pointers](docs/tutorials/05-memory.md) · [C# interop](docs/tutorials/03-csharp-interop.md) · [MCP agents](docs/tutorials/04-mcp-agent.md) · [Assembly Lab](docs/tutorials/06-assembly-lab.md)
 
@@ -99,7 +99,7 @@ HlaX64 is an **early multi-platform x64 language toolchain** — not a single-ta
 | Area | Status |
 |------|--------|
 | CLI (`build`, `run`, `test`, `bench`, `explain`, `doctor`, `disasm`, `diff`, `plan`, …) | ✅ |
-| **Assembly Lab** (Avalonia desktop — source, IR/NASM/ABI, build/run, proof bundle) | ✅ |
+| **Assembly Lab** (Avalonia desktop — source, IR/NASM/ABI, build/run, proof bundle, **embedded PTY terminal**, toolchain **Settings**) | ✅ |
 | Source maps / proof bundle / `--optimize O0-O2` / CPU+AVX2 / `simd.*`+`atomic.*` / dependency restore / DAP debug / `test-differential` | ✅ |
 | MCP server (12 tools, stdio JSON-RPC) | ✅ |
 | Benchmark runner + JSON manifests | ✅ |
@@ -330,7 +330,7 @@ See [`docs/language-spec.md`](./docs/language-spec.md) for full details.
 ## 🤝 Community
 
 - [Contributing Guide](docs/rules/CONTRIBUTING.md) — how to build, test, and submit changes
-- [Install Guide](docs/install.md) — release archives and global tool
+- [Install Guide](docs/install.md) — Assembly Lab bundle, CLI archives, and global tool
 - [Development Guide](docs/development.md) — local setup and CI parity
 - [Governance](docs/rules/GOVERNANCE.md) — decision process and labels
 - [Code of Conduct](docs/rules/CODE_OF_CONDUCT.md) — our community standards

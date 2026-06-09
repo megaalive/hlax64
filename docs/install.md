@@ -1,27 +1,91 @@
 # Install HlaX64
 
-Download a pre-built release or install from source. HlaX64 targets **linux-x64-sysv** (default) and **windows-x64-msabi**.
+The recommended path is **Assembly Lab**. It bundles the desktop app, `hla64` CLI, MCP server, runtime files, docs, examples, and app-local wrapper scripts so users can install, open a `.hla64` file, and build/run without manually wiring project paths.
 
-## Prerequisites
+HlaX64 targets **windows-x64-msabi** and **linux-x64-sysv**.
 
-| Tool | Linux | Windows |
-|------|-------|---------|
-| [.NET 10 runtime](https://dotnet.microsoft.com/download/dotnet/10.0) | Required to run `hla64` | Required |
-| [NASM](https://nasm.us) | `apt install nasm` | Installer or `choco install nasm` |
-| Linker | `gcc` or `ld` | `lld-link` (LLVM) or MSVC `link.exe` |
+## Option 1 — Assembly Lab (recommended)
 
-Verify with:
+1. Open [Releases](https://github.com/megaalive/hlax64/releases).
+2. Download:
+   - `assembly-lab-win-x64.zip` on Windows
+   - `assembly-lab-linux-x64.tar.gz` on Linux
+3. Extract it.
+4. Run Assembly Lab:
+
+**Windows (PowerShell):**
+
+```powershell
+Expand-Archive assembly-lab-win-x64.zip -DestinationPath HlaX64
+.\HlaX64\HlaX64.AssemblyLab.exe
+```
+
+Or install to the user profile and create a Start Menu shortcut:
+
+```powershell
+.\HlaX64\install.ps1
+```
+
+**Linux:**
+
+```bash
+mkdir -p HlaX64
+tar xzf assembly-lab-linux-x64.tar.gz -C HlaX64
+./HlaX64/HlaX64.AssemblyLab
+```
+
+Or install to `~/.local/share/hlax64/assembly-lab` and create a desktop entry:
+
+```bash
+sh ./HlaX64/install.sh
+```
+
+Inside Assembly Lab, open the **Settings** tab and press **Test** or **Auto Detect**. The embedded terminal can run:
 
 ```bash
 hla64 doctor
+hla64 build examples/curriculum/00-getting-started/hello.hla64
 ```
 
-## Option 1 — Release archive (recommended)
+The Assembly Lab bundle contains:
+
+- `HlaX64.AssemblyLab`
+- `cli/` with `HlaX64.Cli`
+- `mcp/` with `HlaX64.McpServer`
+- `runtime/` with HlaX64 runtime NASM files
+- `examples/` and `docs/`
+- `hla64.cmd` / `hla64.sh` wrapper scripts
+- `bundle-manifest.json`
+
+No global `PATH` change is required for basic Assembly Lab usage.
+
+## Toolchain Status
+
+Assembly Lab and `hla64 doctor` check the same toolchain:
+
+| Tool | Why it is needed | Windows | Linux |
+|------|------------------|---------|-------|
+| [.NET 10 runtime](https://dotnet.microsoft.com/download/dotnet/10.0) | Runs framework-dependent releases | Required unless using future self-contained installer | Required unless using future self-contained package |
+| [NASM](https://nasm.us) | Assembles generated NASM | Bundled if available, else install with `winget install -e --id NASM.NASM` | Bundled if available, else `sudo apt install nasm` |
+| Linker | Produces executable | `lld-link`/LLVM preferred, MSVC `link.exe` also supported | `gcc` or `ld` |
+| WSL | Optional Linux target from Windows | Optional for `linux-x64-sysv` from Windows | Not applicable |
+
+Resolution order is:
+
+1. Assembly Lab Settings paths
+2. App-local bundled tools
+3. Environment variables (`HLA64`, `HLAX64_RUNTIME_DIR`, `NASM`, `LLD_LINK`, `HLAX64_LINUX_LINKER`)
+4. `PATH`
+5. Common OS locations and WSL probes
+
+## Option 2 — CLI archive (advanced)
+
+Use this if you only want the command line tools.
 
 1. Open [Releases](https://github.com/megaalive/hlax64/releases) and download:
    - `hla64-linux-x64.tar.gz` or `hla64-win-x64.zip`
-2. Verify checksum against `checksums.txt` in the same release.
-3. Extract and add the folder to your `PATH`.
+2. Verify checksum against `checksums.txt`.
+3. Extract and run the wrapper or add the folder to `PATH`.
 
 **Linux:**
 
@@ -29,20 +93,21 @@ hla64 doctor
 tar xzf hla64-linux-x64.tar.gz
 export PATH="$PWD:$PATH"
 hla64 --version
-hla64 run examples/curriculum/00-getting-started/hello.hla64
+hla64 doctor
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-Expand-Archive hla64-win-x64.zip -DestinationPath .
-$env:PATH = "$PWD\win-x64;$env:PATH"
+Expand-Archive hla64-win-x64.zip -DestinationPath HlaX64Cli
+$env:PATH = "$PWD\HlaX64Cli;$env:PATH"
 hla64 --version
+hla64 doctor
 ```
 
-Archives contain the CLI, MCP server under `mcp/`, and `LICENSE`.
+Archives contain the CLI, runtime files, MCP server under `mcp/`, and `LICENSE`.
 
-## Option 2 — .NET global tool
+## Option 3 — .NET global tool
 
 Requires the .NET 10 SDK (not just runtime):
 
@@ -66,7 +131,7 @@ Uninstall:
 dotnet tool uninstall --global HlaX64.Cli
 ```
 
-## Option 3 — Run from clone (developers)
+## Option 4 — Run from clone (developers)
 
 ```bash
 git clone https://github.com/megaalive/hlax64.git
