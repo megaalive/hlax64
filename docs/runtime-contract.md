@@ -38,6 +38,8 @@ registers dan stack alignment).
 | `hlax_is_printable`    | `mem.nasm`                   | ASCII printable 0x20..0x7E | shipped |
 | `hla64_exit`           | `startup.nasm`               | syscall `exit(rdi)` | MVP |
 
+Windows `hlax_file_read` accepts handle `0` (`stdin_fd`) and reads from `GetStdHandle(STD_INPUT_HANDLE)` so `tee` works with piped stdin.
+
 Tambahan akan muncul seiring Fase 9.5 → 10 → 11. Setiap entry baru
 harus terdaftar di tabel ini dan di `src/HlaX64.Runtime/abi-contract.md`.
 

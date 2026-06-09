@@ -110,6 +110,34 @@
           "expected": "stdout: stdin bytes echoed\nexit code: 0\nAlso writes the same bytes to argv[1] via hlax_file_write."
         },
         {
+          "id": "head",
+          "label": "head",
+          "path": "examples/tools/10-windows/head/head.hla64",
+          "run": "hla64 run examples/tools/10-windows/head/head.hla64 -- README.md",
+          "expected": "stdout: first 10 lines of argv[1] via hlax_file_read loop."
+        },
+        {
+          "id": "nl",
+          "label": "nl",
+          "path": "examples/tools/10-windows/nl/nl.hla64",
+          "run": "hla64 run examples/tools/10-windows/nl/nl.hla64 -- README.md",
+          "expected": "stdout: lines prefixed with N via stdout.put + hlax_stdout_write."
+        },
+        {
+          "id": "grep",
+          "label": "grep",
+          "path": "examples/tools/10-windows/grep/grep.hla64",
+          "run": "hla64 run examples/tools/10-windows/grep/grep.hla64 -- README.md pattern",
+          "expected": "stdout: matching lines (fixed literal, not regex)."
+        },
+        {
+          "id": "cmp",
+          "label": "cmp",
+          "path": "examples/tools/10-windows/cmp/cmp.hla64",
+          "run": "hla64 run examples/tools/10-windows/cmp/cmp.hla64 -- a.txt b.txt",
+          "expected": "stdout: identical or differ at offset\nexit code: 0 or 1"
+        },
+        {
           "id": "hexdump",
           "label": "hexdump",
           "path": "examples/tools/10-windows/hexdump/hexdump.hla64",

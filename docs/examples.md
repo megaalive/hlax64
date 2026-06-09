@@ -29,7 +29,7 @@ Top-level categories:
 | [`06-abi/`](../examples/curriculum/06-abi/) | stack-alignment, callee-saved, … | ABI edge cases |
 | [`07-interop/`](../examples/interop/07-interop/) | `export-lib` | Shared library export |
 | [`08-ai-agent/`](../examples/curriculum/08-ai-agent/) | `smoke-test` | Agent workflow |
-| [`10-real-tools/`](../examples/tools/10-windows/) | `listfiles`, `filesize`, `exists`, `linecount`, `hexdump`, `wc`, `cat`, `strings`, `cp`, `tee`, `fnv1a`, `filemagic`, `cmp` | Daily-use Win32 tools; each tool has `fixtures/`, `expected.stdout`, native Windows regression |
+| [`10-real-tools/`](../examples/tools/10-windows/) | `listfiles`, `filesize`, `exists`, `linecount`, `hexdump`, `wc`, `cat`, `strings`, `cp`, `tee`, `head`, `nl`, `grep`, `cmp`, `fnv1a`, `filemagic` | Daily-use Win32 tools; each tool has `fixtures/`, `expected.stdout`, native Windows regression |
 | [`11-csharp-interop-real/`](../examples/interop/11-csharp-interop-real/) | `native_count_lines`, `native_fnv1a`, `native_sum_bytes` | HlaX64 DLL + C# P/Invoke caller with expected output |
 | [`98-bug-farm/`](../examples/qa/bug-farm/) | (planned) | Compiler stress cases |
 | [`99-invalid/`](../examples/qa/invalid/) | (planned) | Negative examples with expected diagnostics |
@@ -54,7 +54,7 @@ Includes Level 3: `pointer_load_store`, `stack_array`, `string_length`, `array_s
 
 ## 2b. Curriculum manifests (`tests/examples-curriculum/`)
 
-70 manifests reference structured programs under `examples/`:
+79 manifests reference structured programs under `examples/`:
 
 ```bash
 hla64 test tests/examples-curriculum/
