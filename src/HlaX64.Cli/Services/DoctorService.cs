@@ -35,11 +35,15 @@ public sealed class DoctorReport
     }
 }
 
-public sealed class DoctorCheck
+public sealed record DoctorCheck
 {
     public string Name { get; init; } = "";
     public bool Passed { get; init; }
+    public string Status { get; init; } = "ok";
     public string Message { get; init; } = "";
+    public string? Path { get; init; }
+    public string? Source { get; init; }
+    public string? InstallHint { get; init; }
 }
 
 internal static class DoctorChecks
@@ -70,18 +74,29 @@ internal static class DoctorChecks
 
     public static DoctorCheck CheckNasm()
     {
-        if (NasmTool.TryFindNasm(out var path))
-            return Pass("NASM", $"Found at {path}");
-        return Fail("NASM", "Not found. Install from https://nasm.us");
+        return FromResolution(ToolchainResolver.Default.ResolveNasm());
     }
 
     public static DoctorCheck CheckLinker()
     {
-        if (LinkerTool.TryFindLinker(out var path, out var display, out _))
-            return Pass("Linker (Linux)", $"{display} at {path}");
-        if (LinkerTool.TryFindWindowsLinker(out var winPath, out var winDisplay, out _))
-            return Pass("Linker (Windows)", $"{winDisplay} at {winPath}");
-        return Fail("Linker", "No supported linker found.");
+        var windows = ToolchainResolver.Default.ResolveWindowsLinker();
+        var linux = ToolchainResolver.Default.ResolveLinuxLinker();
+        if (OperatingSystem.IsWindows())
+        {
+            if (windows.Found)
+                return FromResolution(windows);
+            if (linux.Found)
+                return FromResolution(linux) with { Name = "Linker (Linux)" };
+        }
+        else if (linux.Found)
+        {
+            return FromResolution(linux);
+        }
+
+        var hint = OperatingSystem.IsWindows()
+            ? windows.InstallHint ?? linux.InstallHint
+            : linux.InstallHint;
+        return Fail("Linker", "No supported linker found.", hint);
     }
 
     public static DoctorCheck CheckWsl()
@@ -98,9 +113,9 @@ internal static class DoctorChecks
             });
             if (process == null) return Fail("WSL", "Not available");
             process.WaitForExit(5000);
-            var output = process.StandardOutput.ReadToEnd().Trim();
+            var output = NormalizeProcessText(process.StandardOutput.ReadToEnd()).Trim();
             if (string.IsNullOrEmpty(output))
-                output = process.StandardError.ReadToEnd().Trim();
+                output = NormalizeProcessText(process.StandardError.ReadToEnd()).Trim();
             return Pass("WSL", string.IsNullOrEmpty(output) ? "Available" : output.Split('\n')[0]);
         }
         catch
@@ -111,17 +126,29 @@ internal static class DoctorChecks
 
     public static DoctorCheck CheckRuntimeFiles()
     {
-        var runtimeDir = RuntimeObjectProvider.FindRuntimeDirectory();
-        if (runtimeDir != null)
-            return Pass("Runtime files", $"Found in {runtimeDir}");
-        return Fail("Runtime files", "Not found. Set HLAX64_RUNTIME_DIR or run from the hlax64 repo.");
+        return FromResolution(ToolchainResolver.Default.ResolveRuntimeDirectory());
     }
 
     private static DoctorCheck Pass(string name, string message) =>
-        new() { Name = name, Passed = true, Message = message };
+        new() { Name = name, Passed = true, Status = "ok", Message = message };
 
-    private static DoctorCheck Fail(string name, string message) =>
-        new() { Name = name, Passed = false, Message = message };
+    private static DoctorCheck Fail(string name, string message, string? installHint = null) =>
+        new() { Name = name, Passed = false, Status = "missing", Message = message, InstallHint = installHint };
+
+    private static DoctorCheck FromResolution(ToolchainResolution resolution) =>
+        new()
+        {
+            Name = resolution.Name,
+            Passed = resolution.Found,
+            Status = resolution.Found ? "ok" : "missing",
+            Message = resolution.Message,
+            Path = resolution.Path,
+            Source = resolution.Source.ToString(),
+            InstallHint = resolution.InstallHint
+        };
+
+    private static string NormalizeProcessText(string text)
+        => text.Contains('\0') ? text.Replace("\0", "") : text;
 }
 
 public static class FormatService

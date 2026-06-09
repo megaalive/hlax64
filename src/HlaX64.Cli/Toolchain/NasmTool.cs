@@ -18,6 +18,13 @@ public sealed class NasmTool
 
     public static bool TryFindNasm(out string path)
     {
+        var resolved = ToolchainResolver.Default.ResolveNasm();
+        if (resolved.Found && !string.IsNullOrWhiteSpace(resolved.Path))
+        {
+            path = resolved.Path;
+            return true;
+        }
+
         // Try common locations.
         // Each candidate is (executable, prefixArgs) where prefixArgs is the
         // sub-command to run nasm (e.g. "nasm" for WSL). The --version flag

@@ -255,6 +255,10 @@ public static class RuntimeObjectProvider
 
     public static string? FindRuntimeDirectory()
     {
+        var resolved = ToolchainResolver.Default.ResolveRuntimeDirectory();
+        if (resolved.Found && !string.IsNullOrWhiteSpace(resolved.Path))
+            return resolved.Path;
+
         var env = Environment.GetEnvironmentVariable("HLAX64_RUNTIME_DIR");
         if (!string.IsNullOrWhiteSpace(env) && Directory.Exists(env))
             return Path.GetFullPath(env);

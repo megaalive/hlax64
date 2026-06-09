@@ -38,7 +38,10 @@ public sealed class DoctorCommand : Command<DoctorCommand.Settings>
         foreach (var r in report.Checks)
         {
             var icon = r.Passed ? "[green]\u2714[/]" : "[red]\u2718[/]";
-            AnsiConsole.MarkupLine($"  {icon} {r.Name}: {r.Message}");
+            var source = string.IsNullOrWhiteSpace(r.Source) ? "" : $" [grey]({Markup.Escape(r.Source)})[/]";
+            AnsiConsole.MarkupLine($"  {icon} {Markup.Escape(r.Name)}{source}: {Markup.Escape(r.Message)}");
+            if (!string.IsNullOrWhiteSpace(r.InstallHint))
+                AnsiConsole.MarkupLine($"     [grey]fix:[/] {Markup.Escape(r.InstallHint)}");
         }
 
         AnsiConsole.MarkupLine(report.Success

@@ -184,6 +184,16 @@ public sealed class LinkerTool
     /// </summary>
     public static bool TryFindLinker(out string path, out string displayName, out string versionArgs)
     {
+        var resolved = ToolchainResolver.Default.ResolveLinuxLinker();
+        if (resolved.Found && !string.IsNullOrWhiteSpace(resolved.Path))
+        {
+            var split = resolved.Path.Split('|', 2);
+            path = split[0];
+            displayName = resolved.Source == ToolchainSource.Wsl ? "WSL GCC" : resolved.Source.ToString();
+            versionArgs = split.Length == 2 ? split[1] : "";
+            return true;
+        }
+
         foreach (var candidate in LinkerCandidates)
         {
             string args = string.IsNullOrEmpty(candidate.SubCommand)
@@ -303,6 +313,15 @@ public sealed class LinkerTool
     /// </summary>
     public static bool TryFindWindowsLinker(out string path, out string displayName, out string versionArgs)
     {
+        var resolved = ToolchainResolver.Default.ResolveWindowsLinker();
+        if (resolved.Found && !string.IsNullOrWhiteSpace(resolved.Path))
+        {
+            path = resolved.Path;
+            displayName = resolved.Source.ToString();
+            versionArgs = "";
+            return true;
+        }
+
         foreach (var candidate in WindowsLinkerCandidates)
         {
             string args = string.IsNullOrEmpty(candidate.SubCommand)
