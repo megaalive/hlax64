@@ -10,7 +10,7 @@ public sealed class RuntimeObjectProviderTests
     public void TryBuildLinkExtras_dynamic_array_heap_includes_heap_runtime()
     {
         var repoRoot = FindRepoRoot();
-        var sourcePath = Path.Combine(repoRoot, "examples", "05-memory", "dynamic-array-heap.hla64");
+        var sourcePath = Path.Combine(repoRoot, "examples", "curriculum", "05-memory", "dynamic-array-heap.hla64");
         var source = File.ReadAllText(sourcePath);
         var options = CompilationOptions.Default with { Target = TargetTriple.WindowsX64MsAbi };
         var compilation = new Compilation(sourcePath, source, options);
@@ -47,7 +47,7 @@ public sealed class RuntimeObjectProviderTests
     public void TryBuildLinkExtras_linecount_includes_argv_runtime()
     {
         var repoRoot = FindRepoRoot();
-        var sourcePath = Path.Combine(repoRoot, "examples", "10-real-tools", "linecount", "linecount.hla64");
+        var sourcePath = Path.Combine(repoRoot, "examples", "tools", "10-windows", "linecount", "linecount.hla64");
         var source = File.ReadAllText(sourcePath);
         var options = CompilationOptions.Default with { Target = TargetTriple.WindowsX64MsAbi };
         var compilation = new Compilation(sourcePath, source, options);

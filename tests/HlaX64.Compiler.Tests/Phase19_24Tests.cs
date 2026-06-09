@@ -279,7 +279,7 @@ public sealed class Phase19_24Tests
         {
             var path = Path.Combine(dir.FullName, "tests", "samples", "hello", name);
             if (File.Exists(path)) return path;
-            path = Path.Combine(dir.FullName, "examples", "00-getting-started", name);
+            path = Path.Combine(dir.FullName, "examples", "curriculum", "00-getting-started", name);
             if (File.Exists(path)) return path;
             dir = dir.Parent;
         }

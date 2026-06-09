@@ -41,7 +41,7 @@ public class Compilation
 
     public static string GetVersion()
     {
-        return "0.1.0-alpha";
+        return "0.2.1-alpha";
     }
 
     public CompilationResult Process()

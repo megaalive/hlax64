@@ -1,4 +1,4 @@
-# v0.2.0-alpha — Useful Assembly Tools & Onboarding
+# v0.2.1-alpha — Assembly Lab bundle & terminal
 
 ## Try it now (no install)
 
@@ -19,18 +19,23 @@ The browser playground uses **cached** `hla64 explain --json` output. For live c
 | `checksums.txt` | SHA-256 |
 | `sbom-deps.json` | Dependency SBOM |
 
-For most users: extract `assembly-lab-*`, launch Assembly Lab, open **Settings**, and run **Test**. CLI-only users can extract `hla64-*`, add it to `PATH`, and run `hla64 doctor`. See [docs/install.md](docs/install.md).
+### Quick start (Assembly Lab bundle)
 
-## What's new since v0.1.0-alpha
+1. Extract `assembly-lab-win-x64.zip` (Windows) or `assembly-lab-linux-x64.tar.gz` (Linux).
+2. Run `install.ps1` / `install.sh` (optional — adds shortcuts and PATH helpers).
+3. Launch `HlaX64.AssemblyLab.exe` / `HlaX64.AssemblyLab`.
+4. Open **Settings → Toolchain**, click **Test** — bundled CLI, runtime, and docs should resolve automatically.
+5. Open the **Terminal** tab — interactive shell with Build/Run/Doctor injection.
 
-- **Assembly Lab bundle** — single archive with UI, CLI, MCP, runtime, docs, examples, and `hla64` wrapper scripts; optional `install.ps1` / `install.sh`
-- **Embedded terminal** — interactive PTY shell (PowerShell / cmd on Windows, bash/zsh on Linux) with Build/Run/Doctor command injection
-- **Toolchain Settings** — persistent NASM/linker/runtime paths in Assembly Lab, shared resolution order with `hla64 doctor`
-- **GitHub Pages playground** — 12 examples, NASM pane, Run locally commands, AI prompt copy
-- **Real tools** — wc, hexdump, filemagic, linecount, exists, fnv1a (+ Linux ports); argv runtime
-- **Assembly Lab** — desktop IR/NASM/ABI, build/run, DAP, Explain/Agent ([tutorial](docs/tutorials/06-assembly-lab.md))
-- **Language** — const, `:=`, enum, record/struct, static, idiv/div/jmp, `stdout.putu`
-- **Phases 17–18** — extern/FFI, verification warnings, `verify-stack` / `verify-abi`
-- **400+ tests** — curriculum, bug-farm, invalid catalog, real-tools regression
+CLI-only users: extract `hla64-*`, add to `PATH`, run `hla64 doctor`. Full guide: [docs/install.md](docs/install.md).
 
-Full changelog: [CHANGELOG.md](CHANGELOG.md) · Compare: [v0.1.0-alpha...v0.2.0-alpha](https://github.com/megaalive/hlax64/compare/v0.1.0-alpha...v0.2.0-alpha)
+## What's new since v0.2.0-alpha
+
+- **Just-work bundle** — single archive with UI, CLI, MCP, runtime NASM, examples, docs, wrapper scripts, and install helpers
+- **Embedded terminal** — PTY shell with scroll-stable overlay caret; key repeat and prompt tracking fixes
+- **Toolchain Settings** — browse/auto-detect/test/reset for NASM, linkers, runtime dir; shared resolver with `hla64 doctor`
+- **Release smoke tests** — `scripts/smoke-assembly-lab-bundle.ps1` validates doctor, hello build/run, bundled paths
+- **Conformance guardrails** — `verify-conformance` script in CI; hello NASM snapshot test; emitter drift documentation
+- **Contributing** — issue backlog doc, walkthrough, `.editorconfig`, Doctor install hints
+
+Full changelog: [CHANGELOG.md](CHANGELOG.md) · Compare: [v0.2.0-alpha...v0.2.1-alpha](https://github.com/megaalive/hlax64/compare/v0.2.0-alpha...v0.2.1-alpha)

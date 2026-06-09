@@ -79,7 +79,7 @@ public sealed class ExamplesInvalidTests
         var dir = AppContext.BaseDirectory;
         for (int i = 0; i < 8; i++)
         {
-            var candidate = Path.Combine(dir, "examples", "99-invalid");
+            var candidate = Path.Combine(dir, "examples", "qa", "invalid");
             if (Directory.Exists(candidate) &&
                 Directory.GetFiles(candidate, "manifest.json", SearchOption.AllDirectories).Length > 0)
                 return candidate;

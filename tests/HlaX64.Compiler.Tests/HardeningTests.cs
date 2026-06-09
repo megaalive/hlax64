@@ -200,7 +200,7 @@ public sealed class HardeningTests
     [Fact]
     public void BatchH_DifferentialSimpleArithmetic_Compiles()
     {
-        var path = FindExample("01-arithmetic/simple.hla64");
+        var path = FindExample("curriculum/01-arithmetic/simple.hla64");
         var source = File.ReadAllText(path);
         var result = new Compilation(path, source).Process();
         Assert.True(result.Success, string.Join("; ", result.Diagnostics));

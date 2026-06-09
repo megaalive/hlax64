@@ -49,7 +49,7 @@ Tutorials: [Getting started](docs/tutorials/01-getting-started.md) · [**Pattern
 
 ## Current Capabilities — HlaX64 0.2 Alpha
 
-HlaX64 is an **early multi-platform x64 language toolchain** — not a single-target MVP. Release [`v0.2.0-alpha`](https://github.com/megaalive/hlax64/releases/tag/v0.2.0-alpha) ships pre-built CLI and Assembly Lab archives; CI verifies every push.
+HlaX64 is an **early multi-platform x64 language toolchain** — not a single-target MVP. Release [`v0.2.1-alpha`](https://github.com/megaalive/hlax64/releases/tag/v0.2.1-alpha) ships pre-built CLI and Assembly Lab archives; CI verifies every push.
 
 ### Language
 

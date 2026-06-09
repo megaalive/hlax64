@@ -1,6 +1,6 @@
 name: Normalize release flags
 
-# Ensures alpha/beta tags stay pre-release; v0.2.0-alpha is "Latest" over v0.1.0-alpha.
+# Ensures alpha/beta tags stay pre-release; v0.2.1-alpha is "Latest" over older alphas.
 on:
   workflow_dispatch:
   push:
@@ -28,7 +28,8 @@ jobs:
 
             const updates = [
               { tag: 'v0.1.0-alpha', prerelease: true, make_latest: 'false' },
-              { tag: 'v0.2.0-alpha', prerelease: true, make_latest: 'true' },
+              { tag: 'v0.2.0-alpha', prerelease: true, make_latest: 'false' },
+              { tag: 'v0.2.1-alpha', prerelease: true, make_latest: 'true' },
             ];
 
             for (const u of updates) {
@@ -37,7 +38,7 @@ jobs:
                 core.info(`Skip ${u.tag}: release not found`);
                 continue;
               }
-              if (release.prerelease === u.prerelease && u.tag !== 'v0.2.0-alpha') {
+              if (release.prerelease === u.prerelease && u.tag !== 'v0.2.1-alpha') {
                 core.info(`${u.tag}: already prerelease=${u.prerelease}`);
                 continue;
               }

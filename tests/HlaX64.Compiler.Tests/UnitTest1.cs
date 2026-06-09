@@ -8,6 +8,6 @@ public class CompilationTests
     public void GetVersion_ReturnsExpectedVersion()
     {
         var version = Compilation.GetVersion();
-        Assert.Equal("0.1.0-alpha", version);
+        Assert.Equal("0.2.1-alpha", version);
     }
 }

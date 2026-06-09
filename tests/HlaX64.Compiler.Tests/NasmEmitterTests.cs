@@ -329,7 +329,7 @@ begin t;
 end t;";
         var nasm = Emit(source);
         Assert.Contains("lea rcx, [rbp-", nasm);
-        Assert.Contains("mov rax, [rcx]", nasm);
+        Assert.Contains("mov rax, qword [rcx]", nasm);
     }
 
     [Fact]

@@ -7,16 +7,26 @@ public class ToolchainResolverTests
     [Fact]
     public void ResolveRuntimeDirectory_Finds_AppLocal_Runtime()
     {
-        var root = CreateTempRoot();
-        var runtime = Path.Combine(root, "runtime", "linux-x64");
-        Directory.CreateDirectory(runtime);
-        File.WriteAllText(Path.Combine(runtime, "stdout.nasm"), "; test");
+        var previousRuntimeDir = Environment.GetEnvironmentVariable("HLAX64_RUNTIME_DIR");
+        try
+        {
+            Environment.SetEnvironmentVariable("HLAX64_RUNTIME_DIR", null);
 
-        var resolver = new ToolchainResolver(new ToolchainSettings(), root);
-        var result = resolver.ResolveRuntimeDirectory();
+            var root = CreateTempRoot();
+            var runtime = Path.Combine(root, "runtime", "linux-x64");
+            Directory.CreateDirectory(runtime);
+            File.WriteAllText(Path.Combine(runtime, "stdout.nasm"), "; test");
 
-        Assert.True(result.Found);
-        Assert.Equal(ToolchainSource.Bundled, result.Source);
+            var resolver = new ToolchainResolver(new ToolchainSettings(), root);
+            var result = resolver.ResolveRuntimeDirectory();
+
+            Assert.True(result.Found);
+            Assert.Equal(ToolchainSource.Bundled, result.Source);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("HLAX64_RUNTIME_DIR", previousRuntimeDir);
+        }
     }
 
     [Fact]

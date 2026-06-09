@@ -6,6 +6,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+## [0.2.1-alpha] - 2026-06-08
+
+**Assembly Lab bundle & terminal polish** — installable just-work archives, embedded PTY terminal, toolchain settings, conformance drift guards.
+
+### Highlights
+
+- **Assembly Lab bundle** — `assembly-lab-win-x64.zip` / `assembly-lab-linux-x64.tar.gz` with CLI, MCP, runtime, docs, examples, `install.ps1` / `install.sh`, and `bundle-manifest.json`
+- **Embedded terminal** — interactive PTY (PowerShell/cmd or bash/zsh) with overlay caret that tracks the prompt on scroll; Build/Run/Doctor command injection
+- **Toolchain Settings** — persistent NASM/linker/runtime paths shared with `hla64 doctor`; bundled path resolution for app-local installs
+- **Conformance** — `hello-snapshot` case (PR #23); `scripts/verify-conformance.ps1/.sh` in CI; clearer drift errors in `ConformanceTests`
+- **Issue triage** — `docs/issue-backlog.md`, contributing walkthrough, Doctor remediation hints
+
+### Fixed
+
+- Test paths aligned with `examples/curriculum/` and `examples/tools/` layout
+- `ToolchainResolverTests` isolates `HLAX64_RUNTIME_DIR` on Linux CI
+
 ## [0.2.0-alpha] - 2026-06-08
 
 **Useful Assembly Tools & Onboarding** — GitHub Pages playground, real-tool examples, Phases 15–24, 400+ tests.
@@ -69,6 +86,7 @@ First public alpha: compiler toolchain, MCP server, structured examples, CI, and
 - README and docs aligned with Linux + Windows targets, MCP, and feature status
 - `DoctorCommand` and explain/format services shared between CLI and MCP
 
-[Unreleased]: https://github.com/megaalive/hlax64/compare/v0.2.0-alpha...HEAD
+[Unreleased]: https://github.com/megaalive/hlax64/compare/v0.2.1-alpha...HEAD
+[0.2.1-alpha]: https://github.com/megaalive/hlax64/releases/tag/v0.2.1-alpha
 [0.2.0-alpha]: https://github.com/megaalive/hlax64/releases/tag/v0.2.0-alpha
 [0.1.0-alpha]: https://github.com/megaalive/hlax64/releases/tag/v0.1.0-alpha

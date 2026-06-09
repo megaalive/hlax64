@@ -13,7 +13,7 @@ namespace HlaX64.AssemblyLab.Tests;
 public class AssemblyLabBackendTests
 {
     private static string HelloPath =>
-        Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "examples", "00-getting-started", "hello.hla64"));
+        Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "examples", "curriculum", "00-getting-started", "hello.hla64"));
 
     private const string MinimalSource = """
         program t;
@@ -330,7 +330,7 @@ public class AssemblyLabBackendTests
         if (!LinkerTool.TryFindWindowsLinker(out _, out _, out _))
             return;
 
-        var helloPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "examples", "00-getting-started", "hello.hla64"));
+        var helloPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "examples", "curriculum", "00-getting-started", "hello.hla64"));
         if (!File.Exists(helloPath))
             return;
 
@@ -422,7 +422,7 @@ public class AssemblyLabBackendTests
         if (!OperatingSystem.IsWindows())
             return;
 
-        var hello = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "examples", "00-getting-started", "build", "hello", "hello.exe"));
+        var hello = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "examples", "curriculum", "00-getting-started", "build", "hello", "hello.exe"));
         if (!File.Exists(hello))
             return;
 
@@ -467,7 +467,7 @@ public class AssemblyLabBackendTests
     public static IEnumerable<object[]> RealToolCases()
     {
         var repoRoot = FindRepoRoot();
-        var toolsRoot = Path.Combine(repoRoot, "examples", "10-real-tools");
+        var toolsRoot = Path.Combine(repoRoot, "examples", "tools", "10-windows");
         if (!Directory.Exists(toolsRoot))
             yield break;
 
@@ -499,7 +499,7 @@ public class AssemblyLabBackendTests
             return;
 
         var repoRoot = FindRepoRoot();
-        var sourcePath = Path.Combine(repoRoot, "examples", "10-real-tools", tool, $"{tool}.hla64");
+        var sourcePath = Path.Combine(repoRoot, "examples", "tools", "10-windows", tool, $"{tool}.hla64");
         if (!File.Exists(sourcePath))
             return;
 
@@ -512,7 +512,7 @@ public class AssemblyLabBackendTests
             Assert.NotNull(build.OutputFile);
             Assert.True(File.Exists(build.OutputFile!), build.Message);
 
-            var toolDir = Path.Combine(repoRoot, "examples", "10-real-tools", tool);
+            var toolDir = Path.Combine(repoRoot, "examples", "tools", "10-windows", tool);
             var argumentsPath = Path.Combine(toolDir, "expected.arguments");
             var arguments = File.Exists(argumentsPath)
                 ? File.ReadAllText(argumentsPath).Trim()
@@ -552,7 +552,7 @@ public class AssemblyLabBackendTests
     public static IEnumerable<object[]> InteropRealCases()
     {
         var repoRoot = FindRepoRoot();
-        var interopRoot = Path.Combine(repoRoot, "examples", "11-csharp-interop-real");
+        var interopRoot = Path.Combine(repoRoot, "examples", "interop", "11-csharp-interop-real");
         if (!Directory.Exists(interopRoot))
             yield break;
 
@@ -586,7 +586,7 @@ public class AssemblyLabBackendTests
             return;
 
         var repoRoot = FindRepoRoot();
-        var exampleDir = Path.Combine(repoRoot, "examples", "11-csharp-interop-real", example);
+        var exampleDir = Path.Combine(repoRoot, "examples", "interop", "11-csharp-interop-real", example);
         var sourcePath = Path.Combine(exampleDir, $"{example}.hla64");
         var callerDir = Path.Combine(exampleDir, "caller");
         var callerProject = Directory.GetFiles(callerDir, "*.csproj").FirstOrDefault();

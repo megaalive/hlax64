@@ -37,12 +37,19 @@ public sealed class ExamplesCompileTests
             if (Directory.Exists(examples))
             {
                 return Directory.GetFiles(examples, "*.hla64", SearchOption.AllDirectories)
-                    .Where(p => !p.Contains($"{Path.DirectorySeparatorChar}99-invalid{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
+                    .Where(p => !IsExcludedExamplePath(p))
                     .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
                     .ToList();
             }
             dir = dir.Parent;
         }
         throw new DirectoryNotFoundException("Could not locate examples/");
+    }
+
+    private static bool IsExcludedExamplePath(string path)
+    {
+        var normalized = path.Replace('\\', '/');
+        return normalized.Contains("/99-invalid/", StringComparison.OrdinalIgnoreCase)
+            || normalized.Contains("/qa/invalid/", StringComparison.OrdinalIgnoreCase);
     }
 }

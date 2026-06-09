@@ -21,7 +21,7 @@ See [architecture.md](architecture.md) for the Mermaid pipeline diagram (renders
 
 ## Release announcement checklist
 
-Current tags: **`v0.2.0-alpha`** (latest pre-release), **`v0.1.0-alpha`** (pre-release, superseded).
+Current tags: **`v0.2.1-alpha`** (latest pre-release), **`v0.2.0-alpha`** and **`v0.1.0-alpha`** (pre-release, superseded).
 
 When tagging a new **`v*.*.*-alpha`** release:
 

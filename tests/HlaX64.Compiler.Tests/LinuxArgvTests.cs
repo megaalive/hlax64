@@ -12,7 +12,7 @@ public sealed class LinuxArgvTests
     public void SysV_linecount_emits_argv_bootstrap_at_start()
     {
         var repoRoot = FindRepoRoot();
-        var sourcePath = Path.Combine(repoRoot, "examples", "10-real-tools", "linecount", "linecount.hla64");
+        var sourcePath = Path.Combine(repoRoot, "examples", "tools", "10-windows", "linecount", "linecount.hla64");
         var source = File.ReadAllText(sourcePath);
         var options = CompilationOptions.Default with { Target = TargetTriple.LinuxX64SysV };
         var artifacts = CompilePipeline.Compile(sourcePath, source, options);
