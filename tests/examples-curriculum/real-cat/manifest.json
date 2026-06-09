@@ -1,0 +1,6 @@
+{
+  "name": "real-cat",
+  "source": "../../../examples/tools/10-windows/cat/cat.hla64",
+  "expectedExitCode": 0,
+  "description": "Real tool: copy file bytes to stdout via hlax_stdout_write (compile-only; native run via LinuxRealToolTests)"
+}

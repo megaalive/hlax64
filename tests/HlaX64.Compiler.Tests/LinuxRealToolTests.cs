@@ -21,6 +21,8 @@ public sealed class LinuxRealToolTests
         yield return ["exists"];
         yield return ["wc"];
         yield return ["fnv1a"];
+        yield return ["cat"];
+        yield return ["strings"];
     }
 
     [Theory]

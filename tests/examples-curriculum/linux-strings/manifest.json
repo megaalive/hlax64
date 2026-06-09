@@ -1,0 +1,6 @@
+{
+  "name": "linux-strings",
+  "source": "../../../examples/tools/12-linux/strings/strings.hla64",
+  "expectedExitCode": 0,
+  "description": "Linux real tool: strings via hlax_is_printable (compile-only; native run via LinuxRealToolTests)"
+}

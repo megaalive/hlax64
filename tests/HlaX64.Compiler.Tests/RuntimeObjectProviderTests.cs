@@ -158,6 +158,73 @@ public sealed class RuntimeObjectProviderTests
         }
     }
 
+    [Fact]
+    public void TryBuildLinkExtras_cat_includes_file_runtime_and_stdout_write()
+    {
+        var repoRoot = FindRepoRoot();
+        var sourcePath = Path.Combine(repoRoot, "examples", "tools", "10-windows", "cat", "cat.hla64");
+        var source = File.ReadAllText(sourcePath);
+
+        foreach (var target in new[] { TargetTriple.WindowsX64MsAbi, TargetTriple.LinuxX64SysV })
+        {
+            var options = CompilationOptions.Default with { Target = target };
+            var result = new Compilation(sourcePath, source, options).Process();
+            Assert.True(result.Success, string.Join("; ", result.Diagnostics));
+
+            var externs = RuntimeObjectProvider.CollectRequiredExterns(result.LoweredFunctions).ToList();
+            Assert.Contains("hlax_file_open_read", externs, StringComparer.OrdinalIgnoreCase);
+            Assert.Contains("hlax_stdout_write", externs, StringComparer.OrdinalIgnoreCase);
+
+            var cache = Path.Combine(Path.GetTempPath(), "hlax64-cat-test-" + Guid.NewGuid().ToString("N")[..8]);
+            try
+            {
+                Assert.True(RuntimeObjectProvider.TryBuildLinkExtras(
+                    result, isWindows: target == TargetTriple.WindowsX64MsAbi, cache, out var extras, out var error), error);
+                Assert.Contains(extras, e => e.Contains("hlax64-runtime-file", StringComparison.OrdinalIgnoreCase));
+                if (target == TargetTriple.LinuxX64SysV)
+                    Assert.Contains(extras, e => e.Equals("-lc", StringComparison.OrdinalIgnoreCase));
+            }
+            finally
+            {
+                if (Directory.Exists(cache))
+                    Directory.Delete(cache, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void TryBuildLinkExtras_strings_includes_file_mem_and_stdout_write()
+    {
+        var repoRoot = FindRepoRoot();
+        var sourcePath = Path.Combine(repoRoot, "examples", "tools", "10-windows", "strings", "strings.hla64");
+        var source = File.ReadAllText(sourcePath);
+
+        foreach (var target in new[] { TargetTriple.WindowsX64MsAbi, TargetTriple.LinuxX64SysV })
+        {
+            var options = CompilationOptions.Default with { Target = target };
+            var result = new Compilation(sourcePath, source, options).Process();
+            Assert.True(result.Success, string.Join("; ", result.Diagnostics));
+
+            var externs = RuntimeObjectProvider.CollectRequiredExterns(result.LoweredFunctions).ToList();
+            Assert.Contains("hlax_is_printable", externs, StringComparer.OrdinalIgnoreCase);
+            Assert.Contains("hlax_stdout_write", externs, StringComparer.OrdinalIgnoreCase);
+
+            var cache = Path.Combine(Path.GetTempPath(), "hlax64-strings-test-" + Guid.NewGuid().ToString("N")[..8]);
+            try
+            {
+                Assert.True(RuntimeObjectProvider.TryBuildLinkExtras(
+                    result, isWindows: target == TargetTriple.WindowsX64MsAbi, cache, out var extras, out var error), error);
+                Assert.Contains(extras, e => e.Contains("hlax64-runtime-file", StringComparison.OrdinalIgnoreCase));
+                Assert.Contains(extras, e => e.Contains("hlax64-runtime-mem", StringComparison.OrdinalIgnoreCase));
+            }
+            finally
+            {
+                if (Directory.Exists(cache))
+                    Directory.Delete(cache, recursive: true);
+            }
+        }
+    }
+
     private static string FindRepoRoot()
     {
         var dir = AppContext.BaseDirectory;

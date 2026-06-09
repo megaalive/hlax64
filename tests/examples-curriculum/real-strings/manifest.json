@@ -1,0 +1,6 @@
+{
+  "name": "real-strings",
+  "source": "../../../examples/tools/10-windows/strings/strings.hla64",
+  "expectedExitCode": 0,
+  "description": "Real tool: print printable runs via hlax_is_printable (compile-only; native run via LinuxRealToolTests)"
+}
