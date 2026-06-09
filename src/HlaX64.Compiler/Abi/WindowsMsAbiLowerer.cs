@@ -254,6 +254,8 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
         if (IsMemRef(dstVal))
         {
             var mem = MemoryRefEncoding.Parse(dstVal!);
+            if (src.StartsWith('['))
+                return new LoweredInstruction($"    mov rax, {src}\n    {MemoryRefEncoding.EmitStore(mem, "rax")}");
             return new LoweredInstruction($"    {MemoryRefEncoding.EmitStore(mem, src)}");
         }
 
@@ -391,6 +393,22 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
 
     private static string AddrVariable(IrValue value) => value.Name![5..];
 
+    private void AppendStdoutPutAddrRef(System.Text.StringBuilder sb, IrValue arg, string reg)
+    {
+        var varName = AddrVariable(arg);
+        if (_globalData.ContainsKey(varName))
+            sb.AppendLine($"    lea {reg}, [{varName}]");
+        else if (_valueMap.TryGetValue(varName, out var slot))
+        {
+            if (slot.StartsWith('[') && slot.EndsWith(']'))
+                sb.AppendLine($"    lea {reg}, {slot}");
+            else
+                sb.AppendLine($"    mov {reg}, {slot}");
+        }
+        else
+            sb.AppendLine($"    lea {reg}, [{varName}]");
+    }
+
     private string EnsureStringLabel(string value)
     {
         foreach (var existing in _stringLiterals)
@@ -523,9 +541,27 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
             }
             else if (rawName != null && _globalData.ContainsKey(rawName))
             {
+                var symbol = _globalData[rawName];
+                if (symbol.ElementCount == 1)
+                {
+                    _externs.Add(intRuntime);
+                    sb.AppendLine($"    ; RUNTIME: {intRuntime} (global scalar)");
+                    sb.AppendLine($"    mov rcx, {GlobalDataEncoding.FormatMem(rawName, symbol.Type.BitWidth)}");
+                    sb.AppendLine($"    call {intRuntime}");
+                }
+                else
+                {
+                    _externs.Add("stdout_put_str");
+                    sb.AppendLine("    ; RUNTIME: stdout_put_str (global buffer)");
+                    sb.AppendLine($"    lea rcx, [{rawName}]");
+                    sb.AppendLine("    call stdout_put_str");
+                }
+            }
+            else if (IsAddrRef(arg))
+            {
                 _externs.Add("stdout_put_str");
-                sb.AppendLine("    ; RUNTIME: stdout_put_str (global pointer)");
-                sb.AppendLine($"    mov rcx, [{rawName}]");
+                sb.AppendLine("    ; RUNTIME: stdout_put_str (address-of buffer)");
+                AppendStdoutPutAddrRef(sb, arg, "rcx");
                 sb.AppendLine("    call stdout_put_str");
             }
             else
@@ -588,6 +624,9 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
         if (name.StartsWith("imm:"))
             return name.Substring(4);
 
+        if (TryResolveStdFileDescriptor(name, out var fd))
+            return fd;
+
         if (IsRegisterName(name))
             return name;
 
@@ -602,6 +641,18 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
         }
 
         return name;
+    }
+
+    private static bool TryResolveStdFileDescriptor(string name, out string value)
+    {
+        value = name switch
+        {
+            "stdin_fd" => "0",
+            "stdout_fd" => "1",
+            "stderr_fd" => "2",
+            _ => ""
+        };
+        return value.Length != 0;
     }
 
     private static bool IsRegisterName(string name)

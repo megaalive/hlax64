@@ -47,8 +47,8 @@ internal static class MemoryRefEncoding
         var addr = FormatAddress(mem);
         return mem.SizeBits switch
         {
-            8 => $"mov byte [{addr}], {source}",
-            16 => $"mov word [{addr}], {source}",
+            8 => $"mov byte [{addr}], {RegisterForBits(source, 8)}",
+            16 => $"mov word [{addr}], {RegisterForBits(source, 16)}",
             32 => $"mov dword [{addr}], {RegisterForBits(source, 32)}",
             _ => $"mov qword [{addr}], {source}",
         };
@@ -56,9 +56,65 @@ internal static class MemoryRefEncoding
 
     private static string RegisterForBits(string operand, int bits)
     {
-        if (bits != 32)
-            return operand;
+        return bits switch
+        {
+            8 => Register8(operand),
+            16 => Register16(operand),
+            32 => Register32(operand),
+            _ => operand
+        };
+    }
 
+    private static string Register8(string operand)
+    {
+        return operand.ToLowerInvariant() switch
+        {
+            "rax" or "eax" => "al",
+            "rbx" or "ebx" => "bl",
+            "rcx" or "ecx" => "cl",
+            "rdx" or "edx" => "dl",
+            "rsi" or "esi" => "sil",
+            "rdi" or "edi" => "dil",
+            "rbp" or "ebp" => "bpl",
+            "rsp" or "esp" => "spl",
+            "r8" or "r8d" => "r8b",
+            "r9" or "r9d" => "r9b",
+            "r10" or "r10d" => "r10b",
+            "r11" or "r11d" => "r11b",
+            "r12" or "r12d" => "r12b",
+            "r13" or "r13d" => "r13b",
+            "r14" or "r14d" => "r14b",
+            "r15" or "r15d" => "r15b",
+            _ => operand
+        };
+    }
+
+    private static string Register16(string operand)
+    {
+        return operand.ToLowerInvariant() switch
+        {
+            "rax" or "eax" => "ax",
+            "rbx" or "ebx" => "bx",
+            "rcx" or "ecx" => "cx",
+            "rdx" or "edx" => "dx",
+            "rsi" or "esi" => "si",
+            "rdi" or "edi" => "di",
+            "rbp" or "ebp" => "bp",
+            "rsp" or "esp" => "sp",
+            "r8" or "r8d" => "r8w",
+            "r9" or "r9d" => "r9w",
+            "r10" or "r10d" => "r10w",
+            "r11" or "r11d" => "r11w",
+            "r12" or "r12d" => "r12w",
+            "r13" or "r13d" => "r13w",
+            "r14" or "r14d" => "r14w",
+            "r15" or "r15d" => "r15w",
+            _ => operand
+        };
+    }
+
+    private static string Register32(string operand)
+    {
         return operand.ToLowerInvariant() switch
         {
             "rax" => "eax",

@@ -276,6 +276,8 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         if (IsMemRef(dstVal))
         {
             var mem = MemoryRefEncoding.Parse(dstVal!);
+            if (src.StartsWith('['))
+                return new LoweredInstruction($"    mov rax, {src}\n    {MemoryRefEncoding.EmitStore(mem, "rax")}");
             return new LoweredInstruction($"    {MemoryRefEncoding.EmitStore(mem, src)}");
         }
 
@@ -427,6 +429,22 @@ public sealed class SysVAbiLowerer : IAbiLowerer
            && !AddressRefEncoding.IsStringRef(value);
 
     private static string AddrVariable(IrValue value) => value.Name![5..];
+
+    private void AppendStdoutPutAddrRef(System.Text.StringBuilder sb, IrValue arg, string reg)
+    {
+        var varName = AddrVariable(arg);
+        if (_globalData.ContainsKey(varName))
+            sb.AppendLine($"    lea {reg}, [{varName}]");
+        else if (_valueMap.TryGetValue(varName, out var slot))
+        {
+            if (slot.StartsWith('[') && slot.EndsWith(']'))
+                sb.AppendLine($"    lea {reg}, {slot}");
+            else
+                sb.AppendLine($"    mov {reg}, {slot}");
+        }
+        else
+            sb.AppendLine($"    lea {reg}, [{varName}]");
+    }
 
     private string EnsureStringLabel(string value)
     {
@@ -596,6 +614,22 @@ public sealed class SysVAbiLowerer : IAbiLowerer
                 sb.AppendLine("    lea rsp, [rsp+r8]    ; deallocate buffer");
                 sb.AppendLine("    lea rsp, [rsp+r8*8]  ; deallocate digit pushes");
             }
+            else if (IsAddrRef(arg))
+            {
+                var uid = _labelCounter++;
+                sb.AppendLine("    ; RUNTIME: stdout_put_str");
+                AppendStdoutPutAddrRef(sb, arg, "rsi");
+                sb.AppendLine("    mov rax, 1     ; sys_write");
+                sb.AppendLine("    mov rdi, 1     ; stdout");
+                sb.AppendLine("    xor rdx, rdx");
+                sb.AppendLine($".Laddr_strlen_{uid}:");
+                sb.AppendLine("    cmp byte [rsi + rdx], 0");
+                sb.AppendLine($"    je .Laddr_strlen_done_{uid}");
+                sb.AppendLine("    inc rdx");
+                sb.AppendLine($"    jmp .Laddr_strlen_{uid}");
+                sb.AppendLine($".Laddr_strlen_done_{uid}:");
+                sb.AppendLine("    syscall");
+            }
             else
             {
                 // Assume it's a string literal -> emit label
@@ -674,6 +708,13 @@ public sealed class SysVAbiLowerer : IAbiLowerer
                 sb.AppendLine("    mov rdi, rax");
                 sb.AppendLine($"    call {intRuntime}");
             }
+            else if (IsAddrRef(arg))
+            {
+                _externs.Add("stdout_put_str");
+                sb.AppendLine("    ; RUNTIME: stdout_put_str (address-of buffer, library)");
+                AppendStdoutPutAddrRef(sb, arg, "rdi");
+                sb.AppendLine("    call stdout_put_str");
+            }
             else
             {
                 // String literal via label
@@ -733,6 +774,9 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         if (name.StartsWith("imm:"))
             return name.Substring(4);
 
+        if (TryResolveStdFileDescriptor(name, out var fd))
+            return fd;
+
         // Register names
         if (IsRegisterName(name))
             return name;
@@ -749,6 +793,18 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         }
 
         return name;
+    }
+
+    private static bool TryResolveStdFileDescriptor(string name, out string value)
+    {
+        value = name switch
+        {
+            "stdin_fd" => "0",
+            "stdout_fd" => "1",
+            "stderr_fd" => "2",
+            _ => ""
+        };
+        return value.Length != 0;
     }
 
     private static bool IsRegisterName(string name)
