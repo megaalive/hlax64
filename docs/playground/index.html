@@ -7,7 +7,6 @@
   <!-- Highlight.js for syntax highlighting -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs2015.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/nasm.min.js"></script>
   <style>
     /* ─── Design tokens (VS Code dark) ──────────────────────────────── */
     :root {
@@ -416,23 +415,26 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      position: relative;
     }
     #source {
       position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       resize: none;
       background: var(--bg);
       color: var(--text);
       border: none;
       padding: 0.75rem;
       padding-left: calc(3rem + 0.75rem);
+      font-family: 'Cascadia Code', 'Fira Code', ui-monospace, Consolas, 'Courier New', monospace;
       font-size: 13px;
       line-height: 1.5;
       tab-size: 4;
       outline: none;
-      z-index: 10;
+      z-index: 20;
       caret-color: var(--text-bright);
       display: none;
     }
@@ -785,6 +787,21 @@
     .hljs-label { color: #ce9178; }
     .hljs-operator { color: #d4d4d4; }
     .hljs-punctuation { color: #d4d4d4; }
+
+    /* Custom syntax highlighting classes */
+    .hl-keyword { color: #569cd6; font-weight: 500; }     /* blue - keywords */
+    .hl-instr { color: #c586c0; }                           /* purple - instructions */
+    .hl-register { color: #4ec9b0; }                       /* teal - registers */
+    .hl-number { color: #b5cea8; }                         /* green - numbers */
+    .hl-string { color: #ce9178; }                        /* orange - strings */
+    .hl-comment { color: #6a9955; font-style: italic; }    /* green - comments */
+    .hl-label { color: #dcdcaa; }                         /* yellow - labels */
+    .hl-section { color: #569cd6; }                       /* blue - sections */
+    .hl-builtin { color: #4ec9b0; }                       /* teal - builtins */
+    .hl-func { color: #dcdcaa; }                          /* yellow - functions */
+    .hl-literal { color: #569cd6; }                        /* blue - literals */
+    .hl-op { color: #d4d4d4; }                            /* gray - operators */
+
     .code-placeholder {
       color: var(--text-dim);
       font-style: italic;
@@ -1006,18 +1023,70 @@ function updateLineNumbers(containerId, lineCount) {
   }
 }
 
+// Custom syntax highlighter for HLA64/Assembly
+function highlightCode(code, language) {
+  // Escape HTML first
+  let html = escapeHtml(code);
+
+  if (language === 'nasm') {
+    // NASM Assembly highlighting
+    // Comments (semicolon to end of line)
+    html = html.replace(/;.*$/gm, '<span class="hl-comment">$&</span>');
+    // Labels (words ending with colon)
+    html = html.replace(/^(\s*)([A-Za-z_][A-Za-z0-9_]*):/gm, '$1<span class="hl-label">$2</span>:');
+    // Section directives (.section, .data, .text, etc.)
+    html = html.replace(/^(\s*)(\.[a-z_][a-z0-9_]*)/gim, '$1<span class="hl-section">$2</span>');
+    // Global/Extern directives
+    html = html.replace(/^(global|extern|section|data|text|bss|rodata)\b/gi, '<span class="hl-keyword">$1</span>');
+    // Instructions (common x86)
+    const instrs = 'mov|movzx|movsx|add|sub|mul|imul|div|idiv|inc|dec|neg|and|or|xor|not|shl|shr|sal|sar|rol|ror|cmp|test|push|pop|lea|jmp|je|jne|jz|jnz|jg|jl|jge|jle|ja|jb|jae|jbe|call|ret|int|syscall|leave|enter|nop|hlt|cli|sti|cld|std';
+    html = html.replace(new RegExp(`\\b(${instrs})\\b`, 'gi'), '<span class="hl-instr">$1</span>');
+    // Registers
+    const regs = 'rax|rbx|rcx|rdx|rsi|rdi|rbp|rsp|r8|r9|r10|r11|r12|r13|r14|r15|eax|ebx|ecx|edx|esi|edi|ebp|esp|r8d|r9d|r10d|r11d|r12d|r13d|r14d|r15d|ax|bx|cx|dx|si|di|bp|sp|ah|al|bh|bl|ch|cl|dh|dl|cs|ds|es|fs|gs|ss|rip|eip';
+    html = html.replace(new RegExp(`\\b(${regs})\\b`, 'gi'), '<span class="hl-register">$1</span>');
+    // Numbers (hex, decimal)
+    html = html.replace(/\b(0x[0-9A-Fa-f]+|[0-9]+)\b/g, '<span class="hl-number">$1</span>');
+    // Strings
+    html = html.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g, '<span class="hl-string">$&</span>');
+    // Operators
+    html = html.replace(/([+\-*/=<>!&|^~%,()\[\]{}])/g, '<span class="hl-op">$1</span>');
+  } else {
+    // HLA64/Generic highlighting
+    // Comments (// and # style)
+    html = html.replace(/(\/\/|#).*$/gm, '<span class="hl-comment">$&</span>');
+    // Block comments (* ... *)
+    html = html.replace(/(\(\*|\*\/)/g, '<span class="hl-comment">$1</span>');
+    // Keywords
+    const keywords = 'program|procedure|begin|end|var|static|const|if|then|else|endif|while|endwhile|for|endfor|repeat|until|break|continue|return|extern|include|namespace|endnamespace|type|record|union|enum';
+    html = html.replace(new RegExp(`\\b(${keywords})\\b`, 'gi'), '<span class="hl-keyword">$1</span>');
+    // Built-in functions
+    const builtins = 'stdout.put|stdout.putu|stdout.puti|stdout.putb|stdout.putc|stdout.putln|stdin.get|stdin.getu|stdin.geti|file.open|file.close|file.read|file.write|malloc|free|strlen|strcpy|strcat|strcmp|printf';
+    html = html.replace(new RegExp(`\\b(${builtins})\\b`, 'gi'), '<span class="hl-builtin">$1</span>');
+    // String literals
+    html = html.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g, '<span class="hl-string">$&</span>');
+    // Numbers
+    html = html.replace(/\b(0x[0-9A-Fa-f]+|[0-9]+)\b/g, '<span class="hl-number">$1</span>');
+    // Boolean literals
+    html = html.replace(/\b(true|false)\b/gi, '<span class="hl-literal">$1</span>');
+    // Labels in jumps
+    html = html.replace(/(\bcall\s+)([A-Za-z_][A-Za-z0-9_]*)/gi, '$1<span class="hl-func">$2</span>');
+    // Operators
+    html = html.replace(/([+\-*/=<>!&|^~%,()\[\]{}:])/g, '<span class="hl-op">$1</span>');
+  }
+
+  return html;
+}
+
 function highlightSource(code) {
   const el = $('source-code');
-  el.textContent = code;
-  el.className = 'language-hla64';
-  hljs.highlightElement(el);
+  if (!el) return;
+  el.innerHTML = highlightCode(code, 'hla64');
 }
 
 function highlightNasm(code) {
   const el = $('nasm-code');
-  el.textContent = code;
-  el.className = 'language-nasm';
-  hljs.highlightElement(el);
+  if (!el) return;
+  el.innerHTML = highlightCode(code, 'nasm');
 }
 
 function syncScroll(sourceEl, linesEl, codeEl) {
@@ -1469,34 +1538,9 @@ $('source').addEventListener('input', () => {
   $('nasm-meta').textContent = 'linux-x64-sysv · stale (diedit)';
   $('source-status').className = 'status-dot stale';
   $('nasm-status').className = 'status-dot stale';
-  // Update line numbers and highlighted view (if visible)
+  // Update line numbers in highlight view
   const sourceText = $('source').value;
   updateLineNumbers('source-lines', sourceText.split('\n').length);
-  if (isEditingSource) {
-    highlightSource(sourceText);
-  }
-});
-
-$('source').addEventListener('click', () => {
-  // In edit mode, allow normal click for cursor positioning
-  if (isEditingSource) return;
-  // Auto-explain on click when in view mode
-  runExplainLine();
-});
-
-// Handle clicks on the highlighted source view
-$('source-highlight').addEventListener('click', (e) => {
-  // Only handle clicks on the code content, not on the line numbers
-  if (e.target.closest('.line-numbers')) return;
-  // Switch to edit mode on click
-  if (!isEditingSource) {
-    toggleEditMode();
-    // Position cursor at click location (approximate)
-    setTimeout(() => {
-      const ta = $('source');
-      ta.focus();
-    }, 50);
-  }
 });
 
 document.querySelectorAll('[data-prompt]').forEach(btn => {
