@@ -1,5 +1,5 @@
 using Avalonia.Controls;
-using Avalonia.Interactivity;
+using Avalonia.Input;
 using AvaloniaEdit;
 using HlaX64.AssemblyLab.Controls;
 using HlaX64.AssemblyLab.Models;
@@ -177,7 +177,7 @@ public partial class MainWindow : Window
         editor.ScrollToLine(Math.Max(1, line - 3));
     }
 
-    private void Diagnostics_DoubleTapped(object? sender, RoutedEventArgs e)
+    private void Diagnostics_DoubleTapped(object? sender, TappedEventArgs e)
     {
         if (sender is ListBox { SelectedItem: LabDiagnosticItem item } &&
             DataContext is MainWindowViewModel vm)
