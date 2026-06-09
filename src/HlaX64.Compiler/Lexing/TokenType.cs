@@ -35,6 +35,8 @@ public enum TokenType
     While,
     Do,
     Endwhile,
+    Break,
+    Continue,
     
     // Pragmas and directives
     Pragma,

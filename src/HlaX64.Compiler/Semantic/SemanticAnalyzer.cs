@@ -34,6 +34,7 @@ public sealed class SemanticAnalyzer
     private readonly Dictionary<string, EnumTypeSymbol> _scopeEnums = new(StringComparer.OrdinalIgnoreCase);
     private CompileTimeConstTable _constTable = new();
     private CompileTimeConstTable _programConstTable = new();
+    private int _loopDepth;
 
     public CompileTimeConstTable ConstTable => _programConstTable;
     public RecordTypeRegistry RecordTypes => _recordRegistry;
@@ -138,9 +139,6 @@ public sealed class SemanticAnalyzer
         EvaluateConstBlocks(program.Constants, _programConstTable, retryPass: true);
         EvaluateStaticBlocks(program.Statics, program);
 
-        if (_diagnostics.HasErrors)
-            return _diagnostics;
-
         _constTable = _programConstTable;
         foreach (var stmt in program.Statements)
         {
@@ -152,11 +150,26 @@ public sealed class SemanticAnalyzer
 
     private void CheckProgramNameMatch(ProgramNode program)
     {
-        // TODO: The parser currently doesn't track begin/end names separately.
-        // For now, we check that the program has a valid name.
         if (string.IsNullOrWhiteSpace(program.Name))
         {
             _diagnostics.Error("HLAX0001", "Program name is empty", 1, 1);
+            return;
+        }
+
+        if (!string.Equals(program.Name, program.BeginName, StringComparison.OrdinalIgnoreCase))
+        {
+            _diagnostics.Error(
+                "HLAX0010",
+                $"Program name '{program.Name}' does not match begin block '{program.BeginName}'",
+                program.BeginLine, program.BeginColumn);
+        }
+
+        if (!string.Equals(program.BeginName, program.EndName, StringComparison.OrdinalIgnoreCase))
+        {
+            _diagnostics.Error(
+                "HLAX0011",
+                $"Begin block '{program.BeginName}' does not match end block '{program.EndName}'",
+                program.EndLine, program.EndColumn);
         }
     }
 
@@ -329,6 +342,12 @@ public sealed class SemanticAnalyzer
                 break;
             case WhileNode whileNode:
                 AnalyzeWhile(whileNode);
+                break;
+            case BreakNode br:
+                AnalyzeBreak(br);
+                break;
+            case ContinueNode cont:
+                AnalyzeContinue(cont);
                 break;
             case ProcedureNode proc:
                 AnalyzeProcedure(proc);
@@ -677,7 +696,7 @@ public sealed class SemanticAnalyzer
 
     private void AnalyzeIf(IfNode ifNode)
     {
-        AnalyzeCondition(ifNode.Condition);
+        AnalyzeControlFlowCondition(ifNode.Condition, ifNode.Line, ifNode.Column);
 
         foreach (var stmt in ifNode.ThenBody)
             AnalyzeStatement(stmt);
@@ -687,10 +706,46 @@ public sealed class SemanticAnalyzer
 
     private void AnalyzeWhile(WhileNode whileNode)
     {
-        AnalyzeCondition(whileNode.Condition);
+        AnalyzeControlFlowCondition(whileNode.Condition, whileNode.Line, whileNode.Column);
 
+        _loopDepth++;
         foreach (var stmt in whileNode.Body)
             AnalyzeStatement(stmt);
+        _loopDepth--;
+    }
+
+    private void AnalyzeBreak(BreakNode node)
+    {
+        if (_loopDepth <= 0)
+        {
+            _diagnostics.Error("HLAX0074",
+                "'break' may only appear inside a while loop",
+                node.Line, node.Column);
+        }
+    }
+
+    private void AnalyzeContinue(ContinueNode node)
+    {
+        if (_loopDepth <= 0)
+        {
+            _diagnostics.Error("HLAX0074",
+                "'continue' may only appear inside a while loop",
+                node.Line, node.Column);
+        }
+    }
+
+    private void AnalyzeControlFlowCondition(AstNode condition, int line, int column)
+    {
+        if (condition is ComparisonNode comp)
+        {
+            AnalyzeOperand(comp.Left);
+            AnalyzeOperand(comp.Right);
+            return;
+        }
+
+        _diagnostics.Error("HLAX0075",
+            "Control-flow condition must be a comparison expression",
+            line, column);
     }
 
     private void AnalyzeCondition(AstNode condition)

@@ -182,9 +182,9 @@ public class SemanticAnalyzerTests
                 mov([42], rax);
             end bad;
             """;
-        var lexer = new Lexer(source);
-        var parser = new Parser(lexer.Tokenize());
-        Assert.Throws<ParseException>(() => parser.Parse());
+        var result = new Compilation("(test)", source).Process();
+        Assert.False(result.Success);
+        Assert.Contains(result.StructuredDiagnostics, d => d.Code == "HLAX1000");
     }
 
     [Fact]
@@ -204,5 +204,21 @@ public class SemanticAnalyzerTests
             """);
         var diagnostics = new SemanticAnalyzer().Analyze(program);
         Assert.False(diagnostics.HasErrors);
+    }
+
+    [Fact]
+    public void Analyze_BeginEndNameMismatch_ReportsErrors()
+    {
+        var program = ParseProgram("""
+            program hello;
+            begin foo;
+                mov(1, rax);
+            end hello;
+            """);
+        var diagnostics = new SemanticAnalyzer().Analyze(program);
+
+        Assert.True(diagnostics.HasErrors);
+        Assert.Contains(diagnostics.Diagnostics, d => d.Code == "HLAX0010");
+        Assert.Contains(diagnostics.Diagnostics, d => d.Code == "HLAX0011");
     }
 }

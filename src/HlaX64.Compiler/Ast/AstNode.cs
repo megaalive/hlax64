@@ -17,6 +17,12 @@ public class ProgramNode : AstNode
 {
     public override string Kind => "Program";
     public string Name { get; }
+    public string BeginName { get; }
+    public string EndName { get; }
+    public int BeginLine { get; }
+    public int BeginColumn { get; }
+    public int EndLine { get; }
+    public int EndColumn { get; }
     public List<AstNode> Includes { get; }
     public List<AstNode> Constants { get; }
     public List<AstNode> Enums { get; }
@@ -26,11 +32,19 @@ public class ProgramNode : AstNode
     public List<AstNode> TypeAliases { get; }
     public List<AstNode> Statements { get; }
 
-    public ProgramNode(string name, List<AstNode> includes, List<AstNode> constants,
+    public ProgramNode(string name, string beginName, string endName,
+        int beginLine, int beginColumn, int endLine, int endColumn,
+        List<AstNode> includes, List<AstNode> constants,
         List<AstNode> enums, List<AstNode> records, List<AstNode> statics,
         List<AstNode> externs, List<AstNode> typeAliases, List<AstNode> statements)
     {
         Name = name;
+        BeginName = beginName;
+        EndName = endName;
+        BeginLine = beginLine;
+        BeginColumn = beginColumn;
+        EndLine = endLine;
+        EndColumn = endColumn;
         Includes = includes;
         Constants = constants;
         Enums = enums;
@@ -632,6 +646,16 @@ public class WhileNode : AstNode
         Condition = condition;
         Body = body;
     }
+}
+
+public class BreakNode : AstNode
+{
+    public override string Kind => "Break";
+}
+
+public class ContinueNode : AstNode
+{
+    public override string Kind => "Continue";
 }
 
 /// <summary>

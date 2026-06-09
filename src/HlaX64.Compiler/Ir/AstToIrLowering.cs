@@ -18,6 +18,7 @@ public sealed class AstToIrLowering
     private CompileTimeConstTable _activeConstTable;
     private Dictionary<string, RecordTypeSymbol> _recordLocals = new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<string, RecordTypeSymbol> _procedureRecordTypes = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Stack<(string EndLabel, string ContinueLabel)> _loopStack = new();
 
     public AstToIrLowering(CompileTimeConstTable? constTable = null, RecordTypeRegistry? recordRegistry = null,
         GlobalDataRegistry? globalDataRegistry = null, ExternProcedureRegistry? externRegistry = null,
@@ -143,6 +144,16 @@ public sealed class AstToIrLowering
                 return LowerIf(ifNode, block, func);
             case WhileNode whileNode:
                 return LowerWhile(whileNode, block, func);
+            case BreakNode:
+                if (_loopStack.Count == 0)
+                    return block;
+                block.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = _loopStack.Peek().EndLabel });
+                return block;
+            case ContinueNode:
+                if (_loopStack.Count == 0)
+                    return block;
+                block.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = _loopStack.Peek().ContinueLabel });
+                return block;
             case AssignExprNode assign:
                 LowerAssignExpr(assign, block);
                 return block;
@@ -438,6 +449,34 @@ public sealed class AstToIrLowering
         block.Add(new IrInstruction(IrOpcode.Call, operands: callArgs, immediate: immediate));
     }
 
+    private static CompareKind MapControlFlowCompareOperator(string op) => op switch
+    {
+        "=" or "==" => CompareKind.Equal,
+        "!=" => CompareKind.NotEqual,
+        "<" => CompareKind.LessThanSigned,
+        "<=" => CompareKind.LessOrEqualSigned,
+        ">" => CompareKind.GreaterThanSigned,
+        ">=" => CompareKind.GreaterOrEqualSigned,
+        "<?" => CompareKind.LessThanUnsigned,
+        ">?" => CompareKind.GreaterThanUnsigned,
+        _ => CompareKind.Equal
+    };
+
+    private static CompareKind InvertCompareKind(CompareKind kind) => kind switch
+    {
+        CompareKind.Equal => CompareKind.NotEqual,
+        CompareKind.NotEqual => CompareKind.Equal,
+        CompareKind.LessThanSigned => CompareKind.GreaterOrEqualSigned,
+        CompareKind.LessOrEqualSigned => CompareKind.GreaterThanSigned,
+        CompareKind.GreaterThanSigned => CompareKind.LessOrEqualSigned,
+        CompareKind.GreaterOrEqualSigned => CompareKind.LessThanSigned,
+        CompareKind.LessThanUnsigned => CompareKind.GreaterOrEqualUnsigned,
+        CompareKind.LessOrEqualUnsigned => CompareKind.GreaterThanUnsigned,
+        CompareKind.GreaterThanUnsigned => CompareKind.LessOrEqualUnsigned,
+        CompareKind.GreaterOrEqualUnsigned => CompareKind.LessThanUnsigned,
+        _ => CompareKind.NotEqual
+    };
+
     private int _labelCounter;
 
     private IrBasicBlock LowerIf(IfNode ifNode, IrBasicBlock block, IrFunction func)
@@ -448,15 +487,7 @@ public sealed class AstToIrLowering
         var left = ResolveOperand(comp.Left);
         var right = ResolveOperand(comp.Right);
 
-        var cmpKind = comp.Operator switch
-        {
-            "=" => CompareKind.Equal,
-            "<" => CompareKind.LessThanSigned,
-            ">" => CompareKind.GreaterThanSigned,
-            "<?" => CompareKind.LessThanUnsigned,
-            ">?" => CompareKind.GreaterThanUnsigned,
-            _ => CompareKind.Equal
-        };
+        var cmpKind = MapControlFlowCompareOperator(comp.Operator);
 
         block.Add(new IrInstruction(IrOpcode.Compare, operands: new List<IrValue> { left, right })
         {
@@ -523,31 +554,14 @@ public sealed class AstToIrLowering
         {
             var left = ResolveOperand(comp.Left);
             var right = ResolveOperand(comp.Right);
-
-            var cmpKind = comp.Operator switch
-            {
-                "=" => CompareKind.Equal,
-                "<" => CompareKind.LessThanSigned,
-                ">" => CompareKind.GreaterThanSigned,
-                "<?" => CompareKind.LessThanUnsigned,
-                ">?" => CompareKind.GreaterThanUnsigned,
-                _ => CompareKind.Equal
-            };
+            var cmpKind = MapControlFlowCompareOperator(comp.Operator);
 
             headerBlock.Add(new IrInstruction(IrOpcode.Compare, operands: new List<IrValue> { left, right })
             {
                 CmpKind = cmpKind
             });
 
-            var exitKind = comp.Operator switch
-            {
-                "=" => CompareKind.NotEqual,
-                "<" => CompareKind.GreaterOrEqualSigned,
-                ">" => CompareKind.LessOrEqualSigned,
-                "<?" => CompareKind.GreaterOrEqualUnsigned,
-                ">?" => CompareKind.LessOrEqualUnsigned,
-                _ => CompareKind.NotEqual
-            };
+            var exitKind = InvertCompareKind(cmpKind);
 
             headerBlock.Add(new IrInstruction(IrOpcode.ConditionalBranch)
             {
@@ -558,9 +572,11 @@ public sealed class AstToIrLowering
 
         headerBlock.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = bodyBlock.Label });
 
+        _loopStack.Push((endBlock.Label, headerBlock.Label));
         var current = bodyBlock;
         foreach (var stmt in whileNode.Body)
             current = LowerStatement(stmt, current, func);
+        _loopStack.Pop();
         current.Add(new IrInstruction(IrOpcode.Branch) { TargetBlock = headerBlock.Label });
 
         func.AddBlock(endBlock);

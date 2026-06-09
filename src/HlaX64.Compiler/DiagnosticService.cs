@@ -25,12 +25,14 @@ public static class DiagnosticService
             var lexer = new Lexer(sourceText);
             var parser = new Parser(lexer.Tokenize());
             var program = parser.Parse();
+            var diagnostics = parser.Diagnostics.ToList();
             var sem = new SemanticAnalyzer(warnings ?? CompilerWarnings.LanguageServerDefaults);
-            var diags = sem.Analyze(program);
+            var semDiags = sem.Analyze(program);
+            diagnostics.AddRange(semDiags.Diagnostics);
             return new AnalysisResult
             {
-                Success = !diags.HasErrors,
-                Diagnostics = diags.Diagnostics.ToList()
+                Success = !parser.HasErrors && !semDiags.HasErrors,
+                Diagnostics = diagnostics
             };
         }
         catch (ParseException ex)

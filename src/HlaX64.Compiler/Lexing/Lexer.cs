@@ -305,6 +305,8 @@ public sealed class Lexer
             "while" => TokenType.While,
             "do" => TokenType.Do,
             "endwhile" => TokenType.Endwhile,
+            "break" => TokenType.Break,
+            "continue" => TokenType.Continue,
             "pragma" => TokenType.Pragma,
 
             // 64-bit registers

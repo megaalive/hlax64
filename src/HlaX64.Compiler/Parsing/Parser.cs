@@ -1,4 +1,5 @@
 using HlaX64.Compiler.Ast;
+using HlaX64.Compiler.Diagnostics;
 using HlaX64.Compiler.Lexing;
 
 namespace HlaX64.Compiler.Parsing;
@@ -7,6 +8,10 @@ public sealed class Parser
 {
     private readonly List<Token> _tokens;
     private int _pos;
+    private readonly List<Diagnostic> _diagnostics = [];
+
+    public IReadOnlyList<Diagnostic> Diagnostics => _diagnostics;
+    public bool HasErrors => _diagnostics.Exists(d => d.Severity == DiagnosticSeverity.Error);
 
     public Parser(List<Token> tokens)
     {
@@ -67,7 +72,8 @@ public sealed class Parser
 
         // begin name;
         Expect(TokenType.Begin);
-        var beginName = Expect(TokenType.Identifier).Value;
+        var beginToken = Expect(TokenType.Identifier);
+        var beginName = beginToken.Value;
         Expect(TokenType.Semicolon);
 
         // Statements
@@ -79,7 +85,8 @@ public sealed class Parser
 
         // end name;
         Expect(TokenType.End);
-        var endName = Expect(TokenType.Identifier).Value;
+        var endToken = Expect(TokenType.Identifier);
+        var endName = endToken.Value;
         Expect(TokenType.Semicolon);
 
         // Combine procedures + main statements into the program
@@ -87,7 +94,9 @@ public sealed class Parser
         allStatements.AddRange(procedures);
         allStatements.AddRange(statements);
 
-        return new ProgramNode(programName, includes, constants, enums, records, statics, externs, typeAliases, allStatements);
+        return new ProgramNode(programName, beginName, endName,
+            beginToken.Line, beginToken.Column, endToken.Line, endToken.Column,
+            includes, constants, enums, records, statics, externs, typeAliases, allStatements);
     }
 
     private List<AstNode> ParseStatementsUntilEnd()
@@ -104,7 +113,20 @@ public sealed class Parser
             if (token.Type == TokenType.Endif || token.Type == TokenType.Endwhile)
                 break;
 
-            stmts.Add(ParseStatement());
+            var startPos = _pos;
+            var startDiagCount = _diagnostics.Count;
+            try
+            {
+                stmts.Add(ParseStatement());
+            }
+            catch (ParseException ex)
+            {
+                ReportParseException(ex);
+                _pos = startPos;
+                while (_diagnostics.Count > startDiagCount + 1)
+                    _diagnostics.RemoveAt(_diagnostics.Count - 1);
+                SyncToNextStatement();
+            }
         }
 
         return stmts;
@@ -120,6 +142,20 @@ public sealed class Parser
 
         if (token.Type == TokenType.While)
             return ParseWhile();
+
+        if (token.Type == TokenType.Break)
+        {
+            Advance();
+            Expect(TokenType.Semicolon);
+            return WithLocation(new BreakNode(), token);
+        }
+
+        if (token.Type == TokenType.Continue)
+        {
+            Advance();
+            Expect(TokenType.Semicolon);
+            return WithLocation(new ContinueNode(), token);
+        }
 
         if (token.Type == TokenType.Identifier && _pos + 1 < _tokens.Count &&
             _tokens[_pos + 1].Type == TokenType.Colon)
@@ -301,7 +337,7 @@ public sealed class Parser
         var parameters = ParseParameterList();
         var returnType = ParseReturnTypeClause(required: true);
         var linkLibrary = ParseFromClause();
-        Expect(TokenType.Semicolon);
+        ConsumeSemicolon("extern procedure declaration");
         return WithLocation(new ExternProcedureNode(name, parameters, returnType, linkLibrary, isVariadic), open);
     }
 
@@ -313,26 +349,53 @@ public sealed class Parser
         Expect(TokenType.Procedure);
         var parameters = ParseParameterList();
         var returnType = ParseReturnTypeClause(required: true);
-        Expect(TokenType.Semicolon);
+        ConsumeSemicolon("type alias declaration");
         return WithLocation(new TypeAliasNode(name, parameters, returnType), open);
     }
 
     private List<ParameterNode> ParseParameterList()
     {
         var parameters = new List<ParameterNode>();
-        if (_pos < _tokens.Count && _tokens[_pos].Type == TokenType.LeftParen)
+        if (Peek().Type != TokenType.LeftParen)
+            return parameters;
+
+        Advance();
+        while (Peek().Type != TokenType.RightParen && Peek().Type != TokenType.EndOfFile)
         {
-            Advance();
-            if (Peek().Type != TokenType.RightParen)
+            if (Peek().Type == TokenType.Semicolon)
             {
-                parameters.Add(ParseParameter());
-                while (Peek().Type == TokenType.Semicolon)
+                Advance();
+                continue;
+            }
+
+            if (TryParseParameter(out var param))
+            {
+                parameters.Add(param);
+                if (Peek().Type == TokenType.Identifier)
                 {
-                    Advance();
-                    parameters.Add(ParseParameter());
+                    var next = Peek();
+                    ReportParseError(
+                        $"Expected ';' between procedure parameters but got '{next.Type}' ('{next.Value}')",
+                        next.Line, next.Column);
                 }
             }
-            Expect(TokenType.RightParen);
+            else
+            {
+                RecoverInParameterList();
+            }
+        }
+
+        if (Peek().Type == TokenType.RightParen)
+        {
+            Advance();
+        }
+        else
+        {
+            var token = Peek();
+            ReportParseError(
+                $"Expected ')' to close parameter list but got '{token.Type}' ('{token.Value}')",
+                token.Line, token.Column);
+            SkipUntilRightParen();
         }
 
         return parameters;
@@ -343,14 +406,22 @@ public sealed class Parser
         if (Peek().Type == TokenType.Colon)
         {
             Advance();
-            return Expect(TokenType.Identifier).Value;
+            if (Peek().Type == TokenType.Identifier)
+                return Advance().Value;
+
+            var token = Peek();
+            ReportParseError(
+                $"Expected return type identifier but got '{token.Type}' ('{token.Value}')",
+                token.Line, token.Column);
+            return "void";
         }
 
         if (required)
         {
             var token = Peek();
-            throw new ParseException(
-                $"Expected return type after ')' but got '{token.Type}' ('{token.Value}') at line {token.Line}, column {token.Column}");
+            ReportParseError(
+                $"Expected return type after ')' but got '{token.Type}' ('{token.Value}')",
+                token.Line, token.Column);
         }
 
         return "void";
@@ -362,7 +433,14 @@ public sealed class Parser
             return null;
 
         Advance();
-        return Expect(TokenType.StringLiteral).Value;
+        if (Peek().Type == TokenType.StringLiteral)
+            return Advance().Value;
+
+        var token = Peek();
+        ReportParseError(
+            $"Expected library name string after 'from' but got '{token.Type}' ('{token.Value}')",
+            token.Line, token.Column);
+        return null;
     }
 
     private ConstBlockNode ParseConstBlock()
@@ -785,11 +863,132 @@ public sealed class Parser
     }
 
     private ParameterNode ParseParameter()
+        => TryParseParameter(out var param) ? param : new ParameterNode("_", "void");
+
+    private bool TryParseParameter(out ParameterNode param)
     {
-        var name = Expect(TokenType.Identifier).Value;
-        Expect(TokenType.Colon);
-        var type = Expect(TokenType.Identifier).Value;
-        return new ParameterNode(name, type);
+        param = null!;
+        if (Peek().Type != TokenType.Identifier)
+            return false;
+
+        var nameToken = Advance();
+        if (Peek().Type != TokenType.Colon)
+        {
+            ReportParseError(
+                $"Expected ':' after parameter name '{nameToken.Value}'",
+                nameToken.Line, nameToken.Column);
+            SkipUntilSemicolonOrRightParen();
+            return false;
+        }
+
+        Advance();
+        if (Peek().Type != TokenType.Identifier)
+        {
+            var token = Peek();
+            ReportParseError(
+                $"Expected parameter type identifier but got '{token.Type}' ('{token.Value}')",
+                token.Line, token.Column);
+            SkipUntilSemicolonOrRightParen();
+            return false;
+        }
+
+        var typeToken = Advance();
+        while (Peek().Type == TokenType.Identifier)
+        {
+            var junk = Advance();
+            ReportParseError(
+                $"Unexpected token '{junk.Value}' after parameter type '{typeToken.Value}'",
+                junk.Line, junk.Column);
+        }
+
+        param = new ParameterNode(nameToken.Value, typeToken.Value);
+        return true;
+    }
+
+    private void RecoverInParameterList()
+    {
+        var token = Peek();
+        ReportParseError(
+            $"Expected parameter name but got '{token.Type}' ('{token.Value}')",
+            token.Line, token.Column);
+        Advance();
+        SkipUntilSemicolonOrRightParen();
+    }
+
+    private void ConsumeSemicolon(string context)
+    {
+        if (Peek().Type == TokenType.Semicolon)
+        {
+            Advance();
+            return;
+        }
+
+        var token = Peek();
+        ReportParseError(
+            $"Expected ';' after {context} but got '{token.Type}' ('{token.Value}')",
+            token.Line, token.Column);
+        SkipUntilSemicolon();
+        if (Peek().Type == TokenType.Semicolon)
+            Advance();
+    }
+
+    private void SyncToNextStatement()
+    {
+        if (_pos >= _tokens.Count)
+            return;
+
+        var startLine = Peek().Line;
+        while (_pos < _tokens.Count)
+        {
+            var token = Peek();
+            if (token.Type == TokenType.Semicolon)
+            {
+                Advance();
+                return;
+            }
+
+            if (token.Line != startLine)
+                return;
+
+            Advance();
+        }
+    }
+
+    private void SkipUntilSemicolon()
+    {
+        while (_pos < _tokens.Count && Peek().Type != TokenType.Semicolon)
+            Advance();
+    }
+
+    private void SkipUntilSemicolonOrRightParen()
+    {
+        while (_pos < _tokens.Count)
+        {
+            var type = Peek().Type;
+            if (type is TokenType.Semicolon or TokenType.RightParen)
+                return;
+            Advance();
+        }
+    }
+
+    private void SkipUntilRightParen()
+    {
+        while (_pos < _tokens.Count && Peek().Type != TokenType.RightParen)
+            Advance();
+        if (Peek().Type == TokenType.RightParen)
+            Advance();
+    }
+
+    private void ReportParseError(string message, int line, int column)
+    {
+        _diagnostics.Add(new Diagnostic("HLAX1000", DiagnosticSeverity.Error, message, line, column));
+    }
+
+    private void ReportParseException(ParseException ex)
+    {
+        var line = ex.Line > 0 ? ex.Line : 1;
+        var column = ex.Column > 0 ? ex.Column : 1;
+        ReportParseError(ex.Message, line, column);
     }
 
     private AstNode ParseIf()
@@ -845,7 +1044,10 @@ public sealed class Parser
         var left = ParseOperand();
         var op = Peek();
 
-        if (op.Type == TokenType.Equals || op.Type == TokenType.LessThan || op.Type == TokenType.GreaterThan ||
+        if (op.Type == TokenType.Equals || op.Type == TokenType.DoubleEquals ||
+            op.Type == TokenType.NotEquals || op.Type == TokenType.LessThan ||
+            op.Type == TokenType.GreaterThan || op.Type == TokenType.LessOrEqual ||
+            op.Type == TokenType.GreaterOrEqual ||
             op.Type == TokenType.LessThanUnsigned || op.Type == TokenType.GreaterThanUnsigned)
         {
             Advance();

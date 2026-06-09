@@ -75,9 +75,9 @@ public sealed class ConformanceTests
 
         if (manifest.ExpectParseError)
         {
-            var lexer = new Lexer(source);
-            var parser = new Parser(lexer.Tokenize());
-            Assert.Throws<ParseException>(() => parser.Parse());
+            var parseResult = new Compilation("(conformance)", source).Process();
+            Assert.False(parseResult.Success);
+            Assert.Contains(parseResult.StructuredDiagnostics, d => d.Code == "HLAX1000");
             return;
         }
 

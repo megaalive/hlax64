@@ -57,8 +57,13 @@ public class Compilation
             // 2. Parse
             var parser = new Parser(tokens);
             var program = parser.Parse();
+            foreach (var diag in parser.Diagnostics)
+            {
+                result.StructuredDiagnostics.Add(diag);
+                result.Diagnostics.Add(diag.ToString());
+            }
 
-            // 3. Semantic analysis
+            // 3. Semantic analysis (run even after parse errors to surface additional issues)
             var semantic = new SemanticAnalyzer(Options.Warnings, Options.CpuFeatures);
             var semDiags = semantic.Analyze(program);
             foreach (var diag in semDiags.Diagnostics)
@@ -67,7 +72,7 @@ public class Compilation
                 result.Diagnostics.Add(diag.ToString());
             }
 
-            if (semDiags.HasErrors)
+            if (parser.HasErrors || semDiags.HasErrors)
             {
                 result.Success = false;
                 return result;
@@ -133,11 +138,19 @@ public class Compilation
         }
         catch (ParseException ex)
         {
-            result.Diagnostics.Add($"Parse error: {ex.Message}");
+            var line = ex.Line > 0 ? ex.Line : 1;
+            var column = ex.Column > 0 ? ex.Column : 1;
+            var diag = new Diagnostic("HLAX1000", DiagnosticSeverity.Error, ex.Message, line, column);
+            result.StructuredDiagnostics.Add(diag);
+            result.Diagnostics.Add(diag.ToString());
+            result.Success = false;
         }
         catch (Exception ex)
         {
-            result.Diagnostics.Add($"Error: {ex.Message}");
+            var diag = new Diagnostic("HLAX0000", DiagnosticSeverity.Error, ex.Message, 1, 1);
+            result.StructuredDiagnostics.Add(diag);
+            result.Diagnostics.Add(diag.ToString());
+            result.Success = false;
         }
 
         return result;

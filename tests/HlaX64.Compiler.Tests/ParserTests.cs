@@ -241,4 +241,32 @@ public class ParserTests
         var lit = Assert.IsType<IntegerLiteralNode>(instr.Operands[0]);
         Assert.Equal(long.MinValue, lit.Value);
     }
+
+    [Fact]
+    public void Parse_IfWithNotEqual_ParsesComparisonOperator()
+    {
+        var source = "program t;\nbegin t;\n    if(rax != 0) then mov(1, rbx); endif;\nend t;";
+        var program = new Parser(new Lexer(source).Tokenize()).Parse();
+        var ifNode = Assert.IsType<IfNode>(program.Statements[0]);
+        var comp = Assert.IsType<ComparisonNode>(ifNode.Condition);
+        Assert.Equal("!=", comp.Operator);
+    }
+
+    [Fact]
+    public void Parse_WhileWithBreakContinue_ParsesLoopControl()
+    {
+        var source = """
+            program t;
+            begin t;
+                while(rax > 0) do
+                    break;
+                    continue;
+                endwhile;
+            end t;
+            """;
+        var program = new Parser(new Lexer(source).Tokenize()).Parse();
+        var whileNode = Assert.IsType<WhileNode>(program.Statements[0]);
+        Assert.IsType<BreakNode>(whileNode.Body[0]);
+        Assert.IsType<ContinueNode>(whileNode.Body[1]);
+    }
 }
