@@ -53,6 +53,8 @@ dotnet build
 dotnet test   # 314 unit tests; native samples require Linux toolchain in CI
 ```
 
+After changing NASM or IR emission, run `./scripts/verify-conformance.sh` (or `verify-conformance.ps1` on Windows) so `tests/conformance/*/manifest.json` stays aligned. CI fails fast on drift. See [tests/conformance/README.md](../tests/conformance/README.md).
+
 ### Assembly Lab (Phase 15)
 
 Cross-platform Avalonia desktop app for visual pipeline exploration:

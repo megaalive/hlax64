@@ -37,14 +37,32 @@ public sealed class ConformanceTests
             var emitter = new HlaX64.Backend.Nasm.Emitters.NasmEmitter();
             var nasm = emitter.Emit(result.LoweredFunctions, result.StringLiterals, result.GlobalData);
             foreach (var fragment in manifest.ExpectNasmContains)
-                Assert.Contains(fragment, nasm, StringComparison.Ordinal);
+            {
+                if (nasm.Contains(fragment, StringComparison.Ordinal))
+                    continue;
+
+                var caseName = Path.GetFileName(caseDir);
+                Assert.Fail(
+                    $"NASM fragment not found in conformance case '{caseName}': \"{fragment}\".{Environment.NewLine}" +
+                    $"Emitted NASM changed — update tests/conformance/valid/{caseName}/manifest.json in the same PR.{Environment.NewLine}" +
+                    "Verify locally: scripts/verify-conformance.ps1 (see tests/conformance/README.md).");
+            }
         }
 
         if (manifest.ExpectIrContains is { Length: > 0 })
         {
             var irText = string.Join('\n', result.IrFunctions.Select(f => f.ToString()));
             foreach (var fragment in manifest.ExpectIrContains)
-                Assert.Contains(fragment, irText, StringComparison.Ordinal);
+            {
+                if (irText.Contains(fragment, StringComparison.Ordinal))
+                    continue;
+
+                var caseName = Path.GetFileName(caseDir);
+                Assert.Fail(
+                    $"IR fragment not found in conformance case '{caseName}': \"{fragment}\".{Environment.NewLine}" +
+                    $"Update tests/conformance/valid/{caseName}/manifest.json in the same PR.{Environment.NewLine}" +
+                    "Verify locally: scripts/verify-conformance.ps1 (see tests/conformance/README.md).");
+            }
         }
     }
 

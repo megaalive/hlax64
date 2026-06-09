@@ -15,6 +15,7 @@
 
 - [ ] `dotnet build` passes with 0 warnings
 - [ ] `dotnet test` passes (all tests)
+- [ ] Conformance manifests updated if NASM/IR output changed (`scripts/verify-conformance.ps1`)
 - [ ] Native integration tests pass (if applicable)
 - [ ] Documentation updated (`docs/`)
 - [ ] Examples updated (if user-facing)

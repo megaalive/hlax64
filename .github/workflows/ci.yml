@@ -32,6 +32,9 @@ jobs:
       - name: Build
         run: dotnet build
 
+      - name: Conformance manifests (NASM/IR snapshots)
+        run: dotnet test tests/HlaX64.Compiler.Tests/HlaX64.Compiler.Tests.csproj --filter "FullyQualifiedName~ConformanceTests" --no-build
+
       - name: Publish Assembly Lab (smoke, Windows)
         if: runner.os == 'Windows'
         run: dotnet publish src/HlaX64.AssemblyLab/HlaX64.AssemblyLab.csproj -c Release -r win-x64 --self-contained false -o publish/assembly-lab-smoke

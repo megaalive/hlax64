@@ -98,6 +98,7 @@ docs/                    Language spec, ABI docs, roadmap
 
 - [ ] Build passes (0 warnings)
 - [ ] Unit tests pass
+- [ ] Conformance manifests updated if NASM/IR output changed (`scripts/verify-conformance.ps1`)
 - [ ] Native integration tests pass (if applicable)
 - [ ] Documentation updated
 - [ ] Examples updated (if applicable)
@@ -114,12 +115,33 @@ Every new language feature must update:
 4. Semantic analyzer (validation)
 5. IR (if new semantics)
 6. ABI lowerer (if ABI-relevant)
-7. NASM emitter (code generation)
+7. NASM emitter (code generation) — update `tests/conformance/valid/*/manifest.json` when output changes
 8. Unit tests (`HlaX64.Compiler.Tests`)
 9. Native integration tests (`tests/samples/`)
 10. Language specification (`docs/language-spec.md`)
 11. Examples (if user-facing)
 12. Release notes
+
+Run `scripts/verify-conformance.ps1` (or `.sh`) after any change to NASM or IR output.
+
+## Conformance manifests (NASM / IR snapshots)
+
+Cases under `tests/conformance/` lock stable fragments of compiler output via `manifest.json`:
+
+- **Valid cases** — `expectNasmContains` / `expectIrContains` must match emitted text.
+- **Invalid cases** — expected diagnostic codes or parse errors.
+
+**Rule:** If you change `src/HlaX64.Backend.Nasm/` or lowering that affects emitted NASM/IR, update the relevant manifest **in the same PR**. Never merge emitter changes with stale manifests.
+
+```bash
+# Linux / macOS
+./scripts/verify-conformance.sh
+
+# Windows
+./scripts/verify-conformance.ps1
+```
+
+CI runs `ConformanceTests` explicitly on every push and pull request. See [tests/conformance/README.md](../../tests/conformance/README.md).
 
 ## Adding Diagnostics
 

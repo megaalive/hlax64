@@ -5,6 +5,9 @@ using System.Text;
 
 namespace HlaX64.Backend.Nasm.Emitters;
 
+// NASM text shape is locked by tests/conformance/valid/*/manifest.json (expectNasmContains).
+// After changing emission, run scripts/verify-conformance.ps1 and update manifests in the same PR.
+
 public sealed class NasmEmitOptions
 {
     public bool EmitDebugInfo { get; init; }
