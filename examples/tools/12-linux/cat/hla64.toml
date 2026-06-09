@@ -1,0 +1,4 @@
+name = "cat"
+version = "0.1.0"
+target = "linux-x64-sysv"
+main = "cat.hla64"
