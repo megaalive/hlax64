@@ -10,6 +10,8 @@ namespace HlaX64.AssemblyLab.Views;
 
 public partial class MainWindow : Window
 {
+    private const int TerminalBottomTabIndex = 1;
+
     private TextEditor? _sourceEditor;
     private TextEditor? _irEditor;
     private TextEditor? _nasmEditor;
@@ -36,17 +38,33 @@ public partial class MainWindow : Window
         vm.StorageProvider = StorageProvider;
 
         var labTerminal = this.FindControl<Controls.LabTerminalControl>("LabTerminal");
+        var terminalHostPanel = this.FindControl<DockPanel>("TerminalHostPanel");
         if (labTerminal != null)
             vm.AttachTerminalHost(labTerminal);
 
         var bottomTabs = this.FindControl<TabControl>("BottomTabControl");
         if (bottomTabs != null)
         {
-            bottomTabs.SelectionChanged += (_, _) =>
+            void SyncTerminalHost()
             {
-                if (bottomTabs.SelectedIndex == 1)
+                var showTerminal = bottomTabs.SelectedIndex == TerminalBottomTabIndex;
+                if (terminalHostPanel != null)
+                    terminalHostPanel.IsVisible = showTerminal;
+
+                if (showTerminal)
                     labTerminal?.FocusTerminal();
+                else
+                    labTerminal?.NotifyTabHidden();
+            }
+
+            bottomTabs.SelectionChanged += (_, _) => SyncTerminalHost();
+            vm.PropertyChanged += (_, args) =>
+            {
+                if (args.PropertyName == nameof(MainWindowViewModel.SelectedBottomTabIndex))
+                    SyncTerminalHost();
             };
+
+            SyncTerminalHost();
         }
 
         _sourceEditor = this.FindControl<TextEditor>("SourceEditor");

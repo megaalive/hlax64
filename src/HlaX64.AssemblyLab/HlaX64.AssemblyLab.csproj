@@ -11,6 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="HlaX64.AssemblyLab.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
 
@@ -25,7 +29,8 @@
     <!-- Override Avalonia.FreeDesktop transitive; GHSA-xrw6-gwf8-vvr9 fixed in 0.22+ -->
     <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.3.0" />
     <PackageReference Include="AvaloniaEdit.TextMate" Version="11.3.0" />
-    <PackageReference Include="AvaloniaTerminal" Version="1.0.0-alpha.11" />
+    <PackageReference Include="AvaloniaTerminal" Version="1.0.0-alpha.12" />
+    <PackageReference Include="XTerm.NET" Version="1.0.12" />
     <PackageReference Include="Porta.Pty" Version="1.0.7" />
     <PackageReference Include="Tmds.DBus.Protocol" Version="0.94.1" />
     <PackageReference Include="Avalonia" Version="11.3.12" />

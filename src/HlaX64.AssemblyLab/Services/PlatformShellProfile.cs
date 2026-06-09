@@ -78,17 +78,23 @@ public static class PlatformShellProfile
 
     private static ShellSpec ResolveWindows()
     {
-        if (FindOnPath("pwsh.exe") is not null)
-            return new ShellSpec("pwsh.exe", ["-NoLogo"], "PowerShell 7");
+        if (FindOnPath("pwsh.exe") is { } pwsh)
+            return new ShellSpec(pwsh, ["-NoLogo", "-NoExit"], "PowerShell 7");
 
-        if (FindOnPath("powershell.exe") is not null)
-            return new ShellSpec("powershell.exe", ["-NoLogo"], "Windows PowerShell");
+        var systemPs = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.System),
+            "WindowsPowerShell", "v1.0", "powershell.exe");
+        if (File.Exists(systemPs))
+            return new ShellSpec(systemPs, ["-NoLogo", "-NoExit"], "Windows PowerShell");
+
+        if (FindOnPath("powershell.exe") is { } ps)
+            return new ShellSpec(ps, ["-NoLogo", "-NoExit"], "Windows PowerShell");
 
         var comSpec = Environment.GetEnvironmentVariable("ComSpec");
         if (!string.IsNullOrWhiteSpace(comSpec) && File.Exists(comSpec))
-            return new ShellSpec(comSpec, [], Path.GetFileName(comSpec));
+            return new ShellSpec(comSpec, ["/Q"], Path.GetFileName(comSpec));
 
-        return new ShellSpec("cmd.exe", [], "cmd.exe");
+        return new ShellSpec("cmd.exe", ["/Q"], "cmd.exe");
     }
 
     private static ShellSpec ResolveUnix(string[] candidates)

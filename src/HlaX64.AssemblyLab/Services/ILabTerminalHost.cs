@@ -10,6 +10,8 @@ public interface ILabTerminalHost
 
     void NotifyTabVisible();
 
+    void NotifyTabHidden();
+
     void Restart();
 
     void StopShell();

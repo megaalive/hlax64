@@ -14,11 +14,6 @@
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
         <StyleInclude Source="avares://AvaloniaTerminal/Styles/Colors.axaml"/>
 
-        <!-- Hide broken built-in terminal caret; LabTerminalControl draws its own overlay. -->
-        <Style Selector="terminal|TerminalControl">
-            <Setter Property="CaretBrush" Value="Transparent"/>
-        </Style>
-
         <!-- Window -->
         <Style Selector="Window">
             <Setter Property="Background" Value="#1e1e1e"/>

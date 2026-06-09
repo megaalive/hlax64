@@ -220,123 +220,132 @@
                           Background="#1a1a1a"
                           ResizeDirection="Rows"/>
 
-            <!-- Bottom panel: output tabs -->
-            <TabControl x:Name="BottomTabControl" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
-                        Background="#1e1e1e"
-                        Padding="0"
-                        SelectedIndex="{Binding SelectedBottomTabIndex}">
-                <TabItem Header="Output">
-                    <ScrollViewer Background="#1e1e1e">
-                        <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
-                                 TextWrapping="Wrap" Text="{Binding OutputText}"/>
-                    </ScrollViewer>
-                </TabItem>
-                <TabItem Header="Terminal">
-                    <DockPanel Background="#1e1e1e">
-                        <Border DockPanel.Dock="Top"
-                                Background="#252526"
-                                BorderBrush="#333333"
-                                BorderThickness="0,0,0,1"
-                                Padding="4,3">
-                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                <Button Classes="toolbar-btn" Content="Build"   Command="{Binding TerminalPresetBuildCommand}"  ToolTip.Tip="Inject hla64 build for current file"/>
-                                <Button Classes="toolbar-btn" Content="Run"     Command="{Binding TerminalPresetRunCommand}"    ToolTip.Tip="Inject hla64 run for current file"/>
-                                <Button Classes="toolbar-btn" Content="Doctor"  Command="{Binding TerminalPresetDoctorCommand}" ToolTip.Tip="Inject hla64 doctor"/>
-                                <Button Classes="toolbar-btn" Content="Restart" Command="{Binding TerminalRestartCommand}"      ToolTip.Tip="Restart interactive shell"/>
-                                <Button Classes="toolbar-btn" Content="Stop"    Command="{Binding TerminalStopShellCommand}"    ToolTip.Tip="Stop shell process"/>
-                            </StackPanel>
-                        </Border>
-                        <controls:LabTerminalControl x:Name="LabTerminal"/>
-                    </DockPanel>
-                </TabItem>
-                <TabItem Header="DAP">
-                    <ScrollViewer Background="#1e1e1e">
-                        <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
-                                 TextWrapping="Wrap" Text="{Binding DapText}"/>
-                    </ScrollViewer>
-                </TabItem>
-                <TabItem Header="Capabilities">
-                    <ScrollViewer Background="#1e1e1e">
-                        <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
-                                 TextWrapping="Wrap" Text="{Binding CapabilitiesText}"/>
-                    </ScrollViewer>
-                </TabItem>
-                <TabItem Header="Toolchain">
-                    <ScrollViewer Background="#1e1e1e">
-                        <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
-                                 TextWrapping="Wrap" Text="{Binding ToolchainText}"/>
-                    </ScrollViewer>
-                </TabItem>
-                <TabItem Header="Settings">
-                    <Grid Background="#1e1e1e"
-                          ColumnDefinitions="Auto,*,Auto"
-                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*"
-                          Margin="8"
-                          RowSpacing="6"
-                          ColumnSpacing="6">
-                        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
-                                   Text="TOOLCHAIN SETTINGS"
-                                   Classes="section-header"/>
+            <!-- Bottom panel: output tabs + persistent terminal host (never unloaded) -->
+            <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3">
+                <TabControl x:Name="BottomTabControl"
+                            Background="#1e1e1e"
+                            Padding="0"
+                            SelectedIndex="{Binding SelectedBottomTabIndex}">
+                    <TabItem Header="Output">
+                        <ScrollViewer Background="#1e1e1e">
+                            <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
+                                     TextWrapping="Wrap" Text="{Binding OutputText}"/>
+                        </ScrollViewer>
+                    </TabItem>
+                    <TabItem Header="Terminal">
+                        <!-- Placeholder only — real terminal lives in TerminalHostPanel overlay. -->
+                        <Panel Background="#1e1e1e"/>
+                    </TabItem>
+                    <TabItem Header="DAP">
+                        <ScrollViewer Background="#1e1e1e">
+                            <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
+                                     TextWrapping="Wrap" Text="{Binding DapText}"/>
+                        </ScrollViewer>
+                    </TabItem>
+                    <TabItem Header="Capabilities">
+                        <ScrollViewer Background="#1e1e1e">
+                            <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
+                                     TextWrapping="Wrap" Text="{Binding CapabilitiesText}"/>
+                        </ScrollViewer>
+                    </TabItem>
+                    <TabItem Header="Toolchain">
+                        <ScrollViewer Background="#1e1e1e">
+                            <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
+                                     TextWrapping="Wrap" Text="{Binding ToolchainText}"/>
+                        </ScrollViewer>
+                    </TabItem>
+                    <TabItem Header="Settings">
+                        <Grid Background="#1e1e1e"
+                              ColumnDefinitions="Auto,*,Auto"
+                              RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*"
+                              Margin="8"
+                              RowSpacing="6"
+                              ColumnSpacing="6">
+                            <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
+                                       Text="TOOLCHAIN SETTINGS"
+                                       Classes="section-header"/>
 
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="hla64 CLI" Foreground="#cccccc" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="1" Grid.Column="1" Classes="terminal-command" Text="{Binding SettingsHla64Path}" Watermark="Auto / bundled / PATH"/>
-                        <Button Grid.Row="1" Grid.Column="2" Classes="toolbar-btn" Content="Browse" Command="{Binding BrowseHla64PathCommand}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="hla64 CLI" Foreground="#cccccc" VerticalAlignment="Center"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" Classes="terminal-command" Text="{Binding SettingsHla64Path}" Watermark="Auto / bundled / PATH"/>
+                            <Button Grid.Row="1" Grid.Column="2" Classes="toolbar-btn" Content="Browse" Command="{Binding BrowseHla64PathCommand}"/>
 
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Runtime directory" Foreground="#cccccc" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="2" Grid.Column="1" Classes="terminal-command" Text="{Binding SettingsRuntimeDirectory}" Watermark="runtime folder or HLAX64_RUNTIME_DIR"/>
-                        <Button Grid.Row="2" Grid.Column="2" Classes="toolbar-btn" Content="Browse" Command="{Binding BrowseRuntimeDirectoryCommand}"/>
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Runtime directory" Foreground="#cccccc" VerticalAlignment="Center"/>
+                            <TextBox Grid.Row="2" Grid.Column="1" Classes="terminal-command" Text="{Binding SettingsRuntimeDirectory}" Watermark="runtime folder or HLAX64_RUNTIME_DIR"/>
+                            <Button Grid.Row="2" Grid.Column="2" Classes="toolbar-btn" Content="Browse" Command="{Binding BrowseRuntimeDirectoryCommand}"/>
 
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="NASM" Foreground="#cccccc" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="3" Grid.Column="1" Classes="terminal-command" Text="{Binding SettingsNasmPath}" Watermark="nasm executable"/>
-                        <Button Grid.Row="3" Grid.Column="2" Classes="toolbar-btn" Content="Browse" Command="{Binding BrowseNasmPathCommand}"/>
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="NASM" Foreground="#cccccc" VerticalAlignment="Center"/>
+                            <TextBox Grid.Row="3" Grid.Column="1" Classes="terminal-command" Text="{Binding SettingsNasmPath}" Watermark="nasm executable"/>
+                            <Button Grid.Row="3" Grid.Column="2" Classes="toolbar-btn" Content="Browse" Command="{Binding BrowseNasmPathCommand}"/>
 
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Windows linker" Foreground="#cccccc" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="4" Grid.Column="1" Classes="terminal-command" Text="{Binding SettingsWindowsLinkerPath}" Watermark="lld-link or link.exe"/>
-                        <Button Grid.Row="4" Grid.Column="2" Classes="toolbar-btn" Content="Browse" Command="{Binding BrowseWindowsLinkerPathCommand}"/>
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Windows linker" Foreground="#cccccc" VerticalAlignment="Center"/>
+                            <TextBox Grid.Row="4" Grid.Column="1" Classes="terminal-command" Text="{Binding SettingsWindowsLinkerPath}" Watermark="lld-link or link.exe"/>
+                            <Button Grid.Row="4" Grid.Column="2" Classes="toolbar-btn" Content="Browse" Command="{Binding BrowseWindowsLinkerPathCommand}"/>
 
-                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Linux linker" Foreground="#cccccc" VerticalAlignment="Center"/>
-                        <TextBox Grid.Row="5" Grid.Column="1" Classes="terminal-command" Text="{Binding SettingsLinuxLinkerPath}" Watermark="gcc / ld / WSL auto"/>
-                        <Button Grid.Row="5" Grid.Column="2" Classes="toolbar-btn" Content="Browse" Command="{Binding BrowseLinuxLinkerPathCommand}"/>
+                            <TextBlock Grid.Row="5" Grid.Column="0" Text="Linux linker" Foreground="#cccccc" VerticalAlignment="Center"/>
+                            <TextBox Grid.Row="5" Grid.Column="1" Classes="terminal-command" Text="{Binding SettingsLinuxLinkerPath}" Watermark="gcc / ld / WSL auto"/>
+                            <Button Grid.Row="5" Grid.Column="2" Classes="toolbar-btn" Content="Browse" Command="{Binding BrowseLinuxLinkerPathCommand}"/>
 
-                        <DockPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3">
-                            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="4" Margin="0,2,0,6">
-                                <Button Classes="toolbar-accent" Content="Auto Detect" Command="{Binding AutoDetectToolchainCommand}"/>
-                                <Button Classes="toolbar-accent" Content="Test" Command="{Binding TestToolchainSettingsCommand}"/>
-                                <Button Classes="toolbar-btn" Content="Save" Command="{Binding SaveToolchainSettingsCommand}"/>
-                                <Button Classes="toolbar-danger" Content="Reset" Command="{Binding ResetToolchainSettingsCommand}"/>
-                            </StackPanel>
-                            <ScrollViewer>
-                                <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
-                                         TextWrapping="Wrap" Text="{Binding SettingsStatusText}"/>
-                            </ScrollViewer>
-                        </DockPanel>
-                    </Grid>
-                </TabItem>
-                <TabItem Header="Agent">
-                    <ScrollViewer Background="#1e1e1e">
-                        <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
-                                 TextWrapping="Wrap" Text="{Binding AgentText}"/>
-                    </ScrollViewer>
-                </TabItem>
-                <TabItem Header="MCP">
-                    <ScrollViewer Background="#1e1e1e">
-                        <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
-                                 TextWrapping="Wrap" Text="{Binding McpText}"/>
-                    </ScrollViewer>
-                </TabItem>
-                <TabItem Header="Plan">
-                    <ScrollViewer Background="#1e1e1e">
-                        <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
-                                 TextWrapping="Wrap" Text="{Binding PlanText}"/>
-                    </ScrollViewer>
-                </TabItem>
-                <TabItem Header="Diff">
-                    <ScrollViewer Background="#1e1e1e">
-                        <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
-                                 TextWrapping="Wrap" Text="{Binding DiffText}"/>
-                    </ScrollViewer>
-                </TabItem>
-            </TabControl>
+                            <DockPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3">
+                                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="4" Margin="0,2,0,6">
+                                    <Button Classes="toolbar-accent" Content="Auto Detect" Command="{Binding AutoDetectToolchainCommand}"/>
+                                    <Button Classes="toolbar-accent" Content="Test" Command="{Binding TestToolchainSettingsCommand}"/>
+                                    <Button Classes="toolbar-btn" Content="Save" Command="{Binding SaveToolchainSettingsCommand}"/>
+                                    <Button Classes="toolbar-danger" Content="Reset" Command="{Binding ResetToolchainSettingsCommand}"/>
+                                </StackPanel>
+                                <ScrollViewer>
+                                    <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
+                                             TextWrapping="Wrap" Text="{Binding SettingsStatusText}"/>
+                                </ScrollViewer>
+                            </DockPanel>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="Agent">
+                        <ScrollViewer Background="#1e1e1e">
+                            <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
+                                     TextWrapping="Wrap" Text="{Binding AgentText}"/>
+                        </ScrollViewer>
+                    </TabItem>
+                    <TabItem Header="MCP">
+                        <ScrollViewer Background="#1e1e1e">
+                            <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
+                                     TextWrapping="Wrap" Text="{Binding McpText}"/>
+                        </ScrollViewer>
+                    </TabItem>
+                    <TabItem Header="Plan">
+                        <ScrollViewer Background="#1e1e1e">
+                            <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
+                                     TextWrapping="Wrap" Text="{Binding PlanText}"/>
+                        </ScrollViewer>
+                    </TabItem>
+                    <TabItem Header="Diff">
+                        <ScrollViewer Background="#1e1e1e">
+                            <TextBox Classes="output-panel" IsReadOnly="True" AcceptsReturn="True"
+                                     TextWrapping="Wrap" Text="{Binding DiffText}"/>
+                        </ScrollViewer>
+                    </TabItem>
+                </TabControl>
+
+                <DockPanel x:Name="TerminalHostPanel"
+                           IsVisible="False"
+                           Margin="0,30,0,0"
+                           ZIndex="1"
+                           Background="#1e1e1e">
+                    <Border DockPanel.Dock="Top"
+                            Background="#252526"
+                            BorderBrush="#333333"
+                            BorderThickness="0,0,0,1"
+                            Padding="4,3">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Button Classes="toolbar-btn" Content="Build"   Command="{Binding TerminalPresetBuildCommand}"  ToolTip.Tip="Inject hla64 build for current file"/>
+                            <Button Classes="toolbar-btn" Content="Run"     Command="{Binding TerminalPresetRunCommand}"    ToolTip.Tip="Inject hla64 run for current file"/>
+                            <Button Classes="toolbar-btn" Content="Doctor"  Command="{Binding TerminalPresetDoctorCommand}" ToolTip.Tip="Inject hla64 doctor"/>
+                            <Button Classes="toolbar-btn" Content="Restart" Command="{Binding TerminalRestartCommand}"      ToolTip.Tip="Restart interactive shell"/>
+                            <Button Classes="toolbar-btn" Content="Stop"    Command="{Binding TerminalStopShellCommand}"    ToolTip.Tip="Stop shell process"/>
+                        </StackPanel>
+                    </Border>
+                    <controls:LabTerminalControl x:Name="LabTerminal"/>
+                </DockPanel>
+            </Grid>
 
         </Grid>
 

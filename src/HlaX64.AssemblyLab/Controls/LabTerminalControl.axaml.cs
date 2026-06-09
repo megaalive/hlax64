@@ -1,10 +1,5 @@
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
 using Avalonia.Input;
-using Avalonia.Interactivity;
-using Avalonia.Media;
-using Avalonia.Media.TextFormatting;
 using Avalonia.Threading;
 using AvaloniaTerminal;
 using HlaX64.AssemblyLab.Services;
@@ -13,6 +8,8 @@ namespace HlaX64.AssemblyLab.Controls;
 
 public partial class LabTerminalControl : UserControl, ILabTerminalHost
 {
+    private static readonly TimeSpan TypingQuietPeriod = TimeSpan.FromMilliseconds(350);
+
     private readonly TerminalControlModel _model = new(new TerminalOptions
     {
         ReflowOnResize = false,
@@ -29,79 +26,34 @@ public partial class LabTerminalControl : UserControl, ILabTerminalHost
     private bool _shellStartRequested;
     private bool _tabVisible;
     private Task? _shellStartTask;
-    private DispatcherTimer? _caretSyncTimer;
-    private DispatcherTimer? _caretBlinkTimer;
-    private Action? _wrappedUpdateUi;
-    private Size? _measuredCellSize;
-    private bool _overlayCaretVisible = true;
+    private bool _isAttachedToVisualTree;
+    private CancellationTokenSource? _shellStartCts;
+    private bool _ptyInputDisposed;
+    private DispatcherTimer? _cursorSyncTimer;
+    private DateTime _lastUserInputUtc = DateTime.MinValue;
 
     public LabTerminalControl()
     {
         InitializeComponent();
         TerminalView.Model = _model;
-        TerminalView.CaretBrush = Brushes.Transparent;
         _model.UserInput += OnUserInput;
         _model.SizeChanged += OnTerminalSizeChanged;
 
-        _caretSyncTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(48) };
-        _caretSyncTimer.Tick += (_, _) =>
+        _cursorSyncTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(150) };
+        _cursorSyncTimer.Tick += (_, _) =>
         {
-            _caretSyncTimer.Stop();
-            UpdateOverlayCaret();
+            _cursorSyncTimer.Stop();
+            if (!_tabVisible || IsUserTyping())
+                return;
+
+            TerminalCursorHelper.TrySyncIfStale(_model);
         };
 
-        _caretBlinkTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(530) };
-        _caretBlinkTimer.Tick += (_, _) =>
-        {
-            _overlayCaretVisible = !_overlayCaretVisible;
-            UpdateOverlayCaretOpacity();
-        };
+        TerminalView.PointerPressed += (_, _) => RestoreKeyboardFocus();
 
-        TerminalView.GotFocus += (_, _) =>
-        {
-            _overlayCaretVisible = true;
-            _caretBlinkTimer?.Start();
-            UpdateOverlayCaret();
-        };
-        TerminalView.LostFocus += (_, _) =>
-        {
-            _caretBlinkTimer?.Stop();
-            _overlayCaretVisible = true;
-            UpdateOverlayCaretOpacity();
-        };
-
-        TerminalView.PropertyChanged += (_, args) =>
-        {
-            if (args.Property.Name is nameof(TerminalControl.Model) or nameof(TerminalControl.FontFamily) or nameof(TerminalControl.FontSize))
-            {
-                _measuredCellSize = null;
-                Dispatcher.UIThread.Post(HookTerminalUpdateUi, DispatcherPriority.Loaded);
-            }
-        };
-
-        TerminalView.AddHandler(
-            InputElement.PointerWheelChangedEvent,
-            OnTerminalPointerWheelChanged,
-            RoutingStrategies.Bubble,
-            handledEventsToo: true);
-
-        TerminalView.AddHandler(
-            RangeBase.ValueChangedEvent,
-            OnTerminalScrollBarValueChanged,
-            RoutingStrategies.Bubble | RoutingStrategies.Tunnel,
-            handledEventsToo: true);
-
-        Loaded += (_, _) =>
-        {
-            HookTerminalUpdateUi();
-            UpdateOverlayCaret();
-        };
-
-        DetachedFromVisualTree += (_, _) =>
-        {
-            StopShell();
-            _ptyInput.Dispose();
-        };
+        AttachedToVisualTree += (_, _) => _isAttachedToVisualTree = true;
+        DetachedFromVisualTree += (_, _) => _isAttachedToVisualTree = false;
+        Unloaded += (_, _) => DisposeTerminalResources();
     }
 
     public void Configure(string workingDirectory, string? repoRoot)
@@ -118,79 +70,110 @@ public partial class LabTerminalControl : UserControl, ILabTerminalHost
         _ = SendLineAsync(line);
     }
 
-    public void FocusTerminal()
-    {
-        NotifyTabVisible();
-        Dispatcher.UIThread.Post(() =>
-        {
-            TerminalView.Focus(NavigationMethod.Pointer);
-            UpdateOverlayCaret();
-        });
-    }
+    public void FocusTerminal() => NotifyTabVisible();
 
     public void NotifyTabVisible()
     {
         _tabVisible = true;
+        if (_session?.IsRunning == true)
+        {
+            _ptyInput.Attach(_session);
+            RestoreTerminalLayout();
+            return;
+        }
+
         TryStartShellWhenReady();
     }
+
+    public void NotifyTabHidden() => _tabVisible = false;
 
     public void Restart()
     {
         StopShell();
-        _shellStartRequested = false;
-        _shellStartTask = null;
         _tabVisible = true;
         RequestShellStart();
     }
 
     public void StopShell()
     {
+        CancelPendingShellStart();
+
         _model.UserInput -= OnUserInput;
         _model.SizeChanged -= OnTerminalSizeChanged;
 
         _ptyInput.Detach();
-        _session?.Dispose();
-        _session = null;
+        if (_session != null)
+        {
+            _session.DataReceived -= OnSessionDataReceived;
+            _session.Exited -= OnSessionExited;
+            _session.Dispose();
+            _session = null;
+        }
+
         _lastResize = null;
-        _shellStartRequested = false;
-        _shellStartTask = null;
-        _caretSyncTimer?.Stop();
-        _caretBlinkTimer?.Stop();
         _model.UserInput += OnUserInput;
         _model.SizeChanged += OnTerminalSizeChanged;
-        HideOverlayCaret();
-        TerminalView.CaretBrush = Brushes.Transparent;
     }
 
-    private void HookTerminalUpdateUi()
+    private void RestoreTerminalLayout()
     {
-        if (ReferenceEquals(_model.UpdateUI, _wrappedUpdateUi))
+        _lastResize = null;
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (!_tabVisible)
+                return;
+
+            if (HasValidTerminalSize())
+                ApplyShellResize(_model.Terminal.Cols, _model.Terminal.Rows);
+
+            RestoreKeyboardFocus();
+            if (!IsUserTyping())
+                TerminalCursorHelper.TrySyncIfStale(_model);
+        }, DispatcherPriority.Loaded);
+    }
+
+    private void RestoreKeyboardFocus()
+        => TerminalView.Focus(NavigationMethod.Tab);
+
+    private bool IsUserTyping()
+        => DateTime.UtcNow - _lastUserInputUtc < TypingQuietPeriod;
+
+    private void DisposeTerminalResources()
+    {
+        _isAttachedToVisualTree = false;
+        _tabVisible = false;
+        StopShell();
+        if (_ptyInputDisposed)
             return;
 
-        var inner = _model.UpdateUI;
-        _wrappedUpdateUi = () =>
+        _ptyInputDisposed = true;
+        _ptyInput.Dispose();
+    }
+
+    private void CancelPendingShellStart()
+    {
+        _shellStartRequested = false;
+        _shellStartTask = null;
+
+        if (_shellStartCts == null)
+            return;
+
+        try
         {
-            inner?.Invoke();
-            UpdateOverlayCaret();
-        };
-        _model.UpdateUI = _wrappedUpdateUi;
-    }
+            _shellStartCts.Cancel();
+        }
+        catch (ObjectDisposedException) { }
 
-    private void OnTerminalPointerWheelChanged(object? sender, PointerWheelEventArgs e)
-    {
-        ScheduleOverlayCaretUpdate();
-        Dispatcher.UIThread.Post(UpdateOverlayCaret, DispatcherPriority.Render);
-    }
-
-    private void OnTerminalScrollBarValueChanged(object? sender, RangeBaseValueChangedEventArgs e)
-    {
-        ScheduleOverlayCaretUpdate();
-        Dispatcher.UIThread.Post(UpdateOverlayCaret, DispatcherPriority.Render);
+        _shellStartCts.Dispose();
+        _shellStartCts = null;
     }
 
     private void RequestShellStart()
     {
         if (_shellStartRequested || !_tabVisible)
+            return;
+
+        if (_session?.IsRunning == true)
             return;
 
         if (!HasValidTerminalSize())
@@ -230,12 +213,7 @@ public partial class LabTerminalControl : UserControl, ILabTerminalHost
         try
         {
             await EnsureShellStartedAsync().ConfigureAwait(false);
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                _model.Send(line + "\r");
-                UpdateOverlayCaret();
-                ScheduleOverlayCaretUpdate();
-            });
+            await Dispatcher.UIThread.InvokeAsync(() => _model.Send(line + "\r"));
         }
         catch (Exception ex)
         {
@@ -246,6 +224,10 @@ public partial class LabTerminalControl : UserControl, ILabTerminalHost
 
     private async Task StartShellAsync()
     {
+        CancelPendingShellStart();
+        _shellStartCts = new CancellationTokenSource();
+        var token = _shellStartCts.Token;
+
         try
         {
             _session?.Dispose();
@@ -256,32 +238,71 @@ public partial class LabTerminalControl : UserControl, ILabTerminalHost
 
             var cols = Math.Max(_model.Terminal.Cols, 80);
             var rows = Math.Max(_model.Terminal.Rows, 24);
-            await _session.StartAsync(_workingDirectory, cols, rows, _repoRoot).ConfigureAwait(false);
+            await _session.StartAsync(_workingDirectory, cols, rows, _repoRoot, token).ConfigureAwait(false);
+
+            if (token.IsCancellationRequested)
+            {
+                _session.DataReceived -= OnSessionDataReceived;
+                _session.Exited -= OnSessionExited;
+                _session.Dispose();
+                _session = null;
+                _ptyInput.Detach();
+                return;
+            }
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                ApplyShellResize(Math.Max(_model.Terminal.Cols, 1), Math.Max(_model.Terminal.Rows, 1));
-                UpdateOverlayCaret();
-                ScheduleOverlayCaretUpdate();
+                if (HasValidTerminalSize())
+                    ApplyShellResize(_model.Terminal.Cols, _model.Terminal.Rows);
+
+                TerminalCursorHelper.TrySyncIfStale(_model);
             });
+        }
+        catch (OperationCanceledException)
+        {
+            if (_session != null)
+            {
+                _session.DataReceived -= OnSessionDataReceived;
+                _session.Exited -= OnSessionExited;
+                _session.Dispose();
+                _session = null;
+            }
+
+            _ptyInput.Detach();
         }
         catch (Exception ex)
         {
+            if (token.IsCancellationRequested)
+                return;
+
             _shellStartRequested = false;
             _shellStartTask = null;
             await Dispatcher.UIThread.InvokeAsync(() =>
-                _model.Feed($"\r\n[Terminal failed to start: {ex.Message}]\r\n"));
+            {
+                if (!_isAttachedToVisualTree)
+                    return;
+
+                _model.Feed($"\r\n[Terminal failed to start: {ex.Message}]\r\n");
+            });
+        }
+        finally
+        {
+            if (!token.IsCancellationRequested)
+            {
+                _shellStartRequested = false;
+                _shellStartTask = null;
+            }
         }
     }
 
     private void OnUserInput(byte[] data)
     {
-        if (data.Length == 0)
+        if (data.Length == 0 || _session?.IsRunning != true)
             return;
 
-        _overlayCaretVisible = true;
+        _lastUserInputUtc = DateTime.UtcNow;
+        _ptyInput.Attach(_session);
         _ptyInput.Enqueue(NormalizeTerminalInput(data));
-        UpdateOverlayCaret();
     }
 
     private void OnSessionDataReceived(byte[] data)
@@ -289,26 +310,29 @@ public partial class LabTerminalControl : UserControl, ILabTerminalHost
         Dispatcher.UIThread.Post(() =>
         {
             _model.Feed(data, data.Length);
-            UpdateOverlayCaret();
-            ScheduleOverlayCaretUpdate();
+            ScheduleCursorSyncAfterOutput();
         }, DispatcherPriority.Background);
     }
 
-    private void ScheduleOverlayCaretUpdate()
+    private void ScheduleCursorSyncAfterOutput()
     {
-        _caretSyncTimer?.Stop();
-        _caretSyncTimer?.Start();
+        if (!_tabVisible || !_model.Terminal.Buffer.IsAtBottom || IsUserTyping())
+            return;
+
+        _cursorSyncTimer?.Stop();
+        _cursorSyncTimer?.Start();
     }
 
     private void OnSessionExited(int exitCode)
     {
         Dispatcher.UIThread.Post(() =>
         {
+            if (!_isAttachedToVisualTree)
+                return;
+
             _model.Feed($"\r\n[Shell exited with code {exitCode} — press Restart]\r\n");
             _shellStartRequested = false;
             _shellStartTask = null;
-            UpdateOverlayCaret();
-            ScheduleOverlayCaretUpdate();
         });
     }
 
@@ -316,90 +340,25 @@ public partial class LabTerminalControl : UserControl, ILabTerminalHost
     {
         _ = width;
         _ = height;
-        ApplyShellResize(cols, rows);
-        TryStartShellWhenReady();
-        ScheduleOverlayCaretUpdate();
+        if (_tabVisible && _isAttachedToVisualTree)
+        {
+            ApplyShellResize(cols, rows);
+            TryStartShellWhenReady();
+        }
     }
 
     private void ApplyShellResize(int cols, int rows)
     {
-        var normalized = (Math.Max(cols, 1), Math.Max(rows, 1));
+        if (!_tabVisible || cols < 20 || rows < 5)
+            return;
+
+        var normalized = (cols, rows);
         if (_lastResize == normalized)
             return;
 
         _lastResize = normalized;
         _session?.Resize(normalized.Item1, normalized.Item2);
     }
-
-    private void UpdateOverlayCaret()
-    {
-        TerminalView.CaretBrush = Brushes.Transparent;
-
-        if (!TerminalTypingCaret.TryGetViewportPosition(_model, out var column, out var row))
-        {
-            HideOverlayCaret();
-            return;
-        }
-
-        var cellWidth = GetCellWidth();
-        var cellHeight = GetCellHeight();
-        var rows = _model.Terminal.Rows;
-
-        row = Math.Clamp(row, 0, Math.Max(rows - 1, 0));
-
-        var textHeight = cellHeight * rows;
-        CaretOverlay.Height = textHeight;
-        CaretOverlay.ClipToBounds = true;
-
-        OverlayCaret.Width = Math.Max(cellWidth - 1, 1);
-        OverlayCaret.Height = cellHeight;
-        Canvas.SetLeft(OverlayCaret, column * cellWidth);
-        Canvas.SetTop(OverlayCaret, row * cellHeight);
-        OverlayCaret.IsVisible = true;
-        UpdateOverlayCaretOpacity();
-    }
-
-    private void UpdateOverlayCaretOpacity()
-    {
-        if (!OverlayCaret.IsVisible)
-            return;
-
-        var show = _overlayCaretVisible || !TerminalView.IsFocused;
-        OverlayCaret.Opacity = show ? 1 : 0;
-    }
-
-    private void HideOverlayCaret()
-    {
-        OverlayCaret.IsVisible = false;
-    }
-
-    private Size GetCellSize()
-    {
-        if (_measuredCellSize is { } cached)
-            return cached;
-
-        try
-        {
-            var typeface = new Typeface(new FontFamily(TerminalView.FontFamily), FontStyle.Normal, FontWeight.Normal);
-            var shaped = TextShaper.Current.ShapeText("a", new TextShaperOptions(typeface.GlyphTypeface, TerminalView.FontSize));
-            var run = new ShapedTextRun(shaped, new GenericTextRunProperties(typeface, TerminalView.FontSize));
-            _measuredCellSize = run.Size;
-        }
-        catch (Exception)
-        {
-            _measuredCellSize = new Size(
-                Math.Max(TerminalView.FontSize * 0.6, 1),
-                Math.Max(TerminalView.FontSize * 1.4, 1));
-        }
-
-        return _measuredCellSize.Value;
-    }
-
-    private double GetCellWidth()
-        => Math.Max(GetCellSize().Width, 1);
-
-    private double GetCellHeight()
-        => Math.Max(GetCellSize().Height, 1);
 
     private static byte[] NormalizeTerminalInput(byte[] input)
     {

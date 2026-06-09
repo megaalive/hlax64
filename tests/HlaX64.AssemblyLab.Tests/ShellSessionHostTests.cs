@@ -64,6 +64,20 @@ public class PlatformShellProfileTests
     }
 
     [Fact]
+    public void ResolveWindows_Prefers_PowerShell_Over_ComSpec()
+    {
+        if (!OperatingSystem.IsWindows())
+            return;
+
+        var shell = PlatformShellProfile.Resolve();
+        var name = shell.DisplayName;
+        Assert.True(
+            name.Contains("PowerShell", StringComparison.OrdinalIgnoreCase)
+            || name.Equals("cmd.exe", StringComparison.OrdinalIgnoreCase),
+            $"Unexpected shell: {name}");
+    }
+
+    [Fact]
     public void BuildEnvironment_Includes_Term_And_Lab_Flags()
     {
         var env = PlatformShellProfile.BuildEnvironment(Environment.CurrentDirectory, Directory.GetCurrentDirectory());
