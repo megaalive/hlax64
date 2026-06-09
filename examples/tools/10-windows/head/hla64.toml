@@ -1,0 +1,4 @@
+name = "head"
+version = "0.1.0"
+target = "windows-x64-msabi"
+main = "head.hla64"

@@ -1,4 +1,4 @@
-// cmp.hla64 - byte-compare two files (argv[1], argv[2]) (Windows MS ABI).
+// cmp.hla64 - byte-compare two files (argv[1], argv[2]) (Linux SysV).
 //
 // Stress: dual hlax_file_* handles, streaming compare loop.
 
@@ -99,7 +99,7 @@ begin cmp;
         mov(rax, r12);
         call hlax_file_open_read(r12);
 
-        if(rax = -1) then
+        if(rax < 0) then
             stdout.put("open failed", nl);
             mov(1, rbx);
         else
@@ -108,7 +108,7 @@ begin cmp;
             mov(rax, r12);
             call hlax_file_open_read(r12);
 
-            if(rax = -1) then
+            if(rax < 0) then
                 stdout.put("open failed", nl);
                 call hlax_file_close(r14);
                 mov(1, rbx);

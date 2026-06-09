@@ -13,6 +13,12 @@ Linux SysV ports of selected command-line tools using `libc.so` instead of Win32
 | `strings` | Printable runs (len >= 4) | `hlax_is_printable`, run buffer across reads |
 | `cp` | Copy file to file | `hlax_file_open_write`, read/write loop |
 | `tee` | Stdin to stdout + file | `stdin_fd`, `hlax_stdout_write` + `hlax_file_write` |
+| `head` | First 10 lines | read loop, newline counting |
+| `nl` | Number lines | `stdout.put` + byte write loop |
+| `grep` | Fixed-string line filter | line buffer, `hlax_strlen` |
+| `cmp` | Byte-compare two files | dual `hlax_file_*`, streaming compare |
+| `hexdump` | Hex dump first chunk | nibble formatting |
+| `filemagic` | Magic-byte classifier | `hlax_is_printable` text fallback |
 | `fnv1a` | FNV-1a 64-bit file hash | xor/imul loop, **`stdout.putu`** unsigned decimal |
 
 ## Build
