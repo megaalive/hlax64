@@ -32,8 +32,11 @@ if ($isWindowsHost) {
 Assert-Exists $hla64 "hla64 wrapper"
 
 Write-Host "=== hla64 doctor ==="
+$prevNativeErrors = $PSNativeCommandUseErrorActionPreference
+$PSNativeCommandUseErrorActionPreference = $false
 & $hla64 doctor --json
 $doctorOk = $LASTEXITCODE -eq 0
+$PSNativeCommandUseErrorActionPreference = $prevNativeErrors
 if (-not $doctorOk) {
     Write-Warning "doctor reported missing optional/system dependencies; continuing smoke checks"
 }
@@ -44,10 +47,12 @@ Assert-Exists $hello "hello example"
 Write-Host "=== hla64 build hello ==="
 if ($doctorOk) {
     $target = if ($isWindowsHost) { "windows-x64-msabi" } else { "linux-x64-sysv" }
+    $PSNativeCommandUseErrorActionPreference = $false
     & $hla64 build $hello --target $target
     if ($LASTEXITCODE -ne 0) {
         throw "hello build failed"
     }
+    $PSNativeCommandUseErrorActionPreference = $prevNativeErrors
 } else {
     Write-Warning "Skipping build smoke because doctor did not pass on this runner."
 }

@@ -120,7 +120,9 @@ public sealed class ToolchainResolver
                 return Found("Windows linker", candidate, ToolchainSource.Bundled);
         }
 
-        foreach (var name in new[] { "lld-link", "link", "link.exe" })
+        foreach (var name in OperatingSystem.IsWindows()
+                     ? new[] { "lld-link", "link", "link.exe" }
+                     : new[] { "lld-link" })
         {
             if (TryFindOnPath(name, out var path))
                 return Found("Windows linker", path, ToolchainSource.Path);

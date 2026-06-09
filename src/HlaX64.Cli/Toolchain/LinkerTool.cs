@@ -324,6 +324,10 @@ public sealed class LinkerTool
 
         foreach (var candidate in WindowsLinkerCandidates)
         {
+            if (!OperatingSystem.IsWindows()
+                && candidate.Command is "link" or "link.exe")
+                continue;
+
             string args = string.IsNullOrEmpty(candidate.SubCommand)
                 ? candidate.VersionArg
                 : $"{candidate.SubCommand} {candidate.VersionArg}";
