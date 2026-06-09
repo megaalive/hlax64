@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>HlaX64 Playground</title>
+  <!-- Highlight.js for syntax highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs2015.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/nasm.min.js"></script>
   <style>
     /* ─── Design tokens (VS Code dark) ──────────────────────────────── */
     :root {
@@ -195,7 +199,7 @@
     /* Root nav view */
     #nav-root { transform: translateX(0); }
 
-    /* Category headers */
+    /* Category headers - make them stand out as labels/headers */
     .nav-cat-btn {
       display: flex;
       align-items: center;
@@ -203,24 +207,28 @@
       width: 100%;
       padding: 0.5rem 0.75rem;
       border: none;
-      background: transparent;
-      color: var(--text);
+      background: var(--bg3);
+      color: var(--accent-green);
       cursor: pointer;
       font-size: 0.82rem;
-      font-weight: 600;
+      font-weight: 700;
       border-bottom: 1px solid var(--border);
+      border-left: 3px solid var(--accent-green);
       gap: 0.4rem;
     }
-    .nav-cat-btn:hover { background: var(--bg3); }
+    .nav-cat-btn:hover { background: var(--border); }
     .nav-cat-btn .cat-label { flex: 1; text-align: left; }
     .nav-cat-btn .cat-count {
       font-size: 0.68rem;
       color: var(--text-dim);
       font-weight: 400;
+      background: var(--bg);
+      padding: 0.1rem 0.4rem;
+      border-radius: 10px;
     }
     .nav-cat-btn .chevron {
       color: var(--text-dim);
-      font-size: 0.7rem;
+      font-size: 0.9rem;
     }
 
     /* Example/group view header */
@@ -234,23 +242,34 @@
       border-bottom: 1px solid var(--border);
       background: var(--bg3);
     }
-    /* Group subheading */
+    /* Group subheading - visually distinct from both category and items */
     .nav-group-label {
-      display: block;
-      padding: 0.5rem 0.75rem 0.2rem;
-      font-size: 0.67rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.75rem 0.2rem 1rem;
+      font-size: 0.65rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      color: var(--accent-yellow);
     }
-    /* Example buttons */
+    .nav-group-label::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: var(--accent-yellow);
+      border-radius: 1px;
+      flex-shrink: 0;
+    }
+    /* Example buttons - clearly clickable items, distinct from labels */
     .nav-ex-btn {
       display: flex;
       align-items: center;
       gap: 0.5rem;
       width: 100%;
-      padding: 0.42rem 0.75rem 0.42rem 1rem;
+      padding: 0.42rem 0.75rem 0.42rem 1.2rem;
       border: none;
       background: transparent;
       color: var(--text);
@@ -258,12 +277,31 @@
       font-size: 0.82rem;
       text-align: left;
       border-left: 2px solid transparent;
+      position: relative;
+    }
+    .nav-ex-btn::before {
+      content: '';
+      position: absolute;
+      left: 0.55rem;
+      width: 5px;
+      height: 5px;
+      border: 1px solid var(--text-dim);
+      border-radius: 50%;
+      background: transparent;
     }
     .nav-ex-btn:hover { background: var(--bg3); }
+    .nav-ex-btn:hover::before {
+      border-color: var(--link);
+      background: var(--link);
+    }
     .nav-ex-btn.active {
       background: #04395e;
       border-left-color: var(--link);
       color: var(--text-bright);
+    }
+    .nav-ex-btn.active::before {
+      border-color: var(--link);
+      background: var(--link);
     }
     .nav-ex-btn .ex-label { flex: 1; }
 
@@ -344,6 +382,27 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    .pane-head .pane-edit-btn {
+      margin-left: auto;
+      padding: 0.15rem 0.5rem;
+      font-size: 0.65rem;
+      font-weight: 600;
+      border: 1px solid var(--border2);
+      background: var(--bg3);
+      color: var(--text-dim);
+      border-radius: 3px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .pane-head .pane-edit-btn:hover {
+      background: var(--border);
+      color: var(--text);
+    }
+    .pane-head .pane-edit-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
     .pane-head .status-dot {
       width: 7px; height: 7px;
       border-radius: 50%;
@@ -359,31 +418,30 @@
       flex-direction: column;
     }
     #source {
-      flex: 1;
-      min-height: 0;
+      position: absolute;
+      inset: 0;
       width: 100%;
+      height: 100%;
       resize: none;
       background: var(--bg);
       color: var(--text);
       border: none;
       padding: 0.75rem;
+      padding-left: calc(3rem + 0.75rem);
       font-size: 13px;
       line-height: 1.5;
       tab-size: 4;
       outline: none;
+      z-index: 10;
+      caret-color: var(--text-bright);
+      display: none;
     }
+    #source.visible {
+      display: block;
+    }
+    /* NASM pane - now uses highlighted view, keep #nasm as hidden fallback */
     #nasm {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      margin: 0;
-      padding: 0.75rem;
-      font-size: 12px;
-      line-height: 1.5;
-      background: var(--bg);
-      color: var(--text);
-      white-space: pre-wrap;
-      word-break: break-word;
+      display: none;
     }
 
     /* ─── Horizontal splitter between editor panes ────────────────────── */
@@ -646,6 +704,92 @@
     ::-webkit-scrollbar-track { background: var(--bg2); }
     ::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--border2); }
+
+    /* ─── Utility ───────────────────────────────────────────────────── */
+    .hidden { display: none !important; }
+
+    /* ─── Code editor with syntax highlighting ──────────────────────── */
+    .code-editor {
+      position: relative;
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      background: var(--bg);
+    }
+    .code-editor.hidden { display: none; }
+    .line-numbers {
+      padding: 0.75rem 0;
+      background: var(--bg2);
+      color: var(--text-dim);
+      font-size: 12px;
+      line-height: 1.5;
+      text-align: right;
+      user-select: none;
+      overflow: hidden;
+      min-width: 3rem;
+      border-right: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .line-numbers span {
+      display: block;
+      padding: 0 0.5rem;
+    }
+    .code-content {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 0.75rem;
+    }
+    .code-content pre {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre;
+      word-break: normal;
+      overflow: visible;
+    }
+    .code-content code {
+      font-family: 'Cascadia Code', 'Fira Code', ui-monospace, Consolas, 'Courier New', monospace;
+      background: transparent;
+      border: none;
+      padding: 0;
+      font-size: inherit;
+    }
+    /* Ensure hljs uses our theme colors */
+    .hljs {
+      background: transparent !important;
+      color: var(--text) !important;
+      padding: 0 !important;
+    }
+    /* Highlight.js override for VS2015-like dark theme */
+    .hljs-keyword { color: #569cd6; }
+    .hljs-string { color: #ce9178; }
+    .hljs-comment { color: #6a9955; font-style: italic; }
+    .hljs-number { color: #b5cea8; }
+    .hljs-register { color: #4ec9b0; }
+    .hljs-title { color: #dcdcaa; }
+    .hljs-function { color: #dcdcaa; }
+    .hljs-params { color: #9cdcfe; }
+    .hljs-directive { color: #c586c0; }
+    .hljs-section { color: #569cd6; }
+    .hljs-built_in { color: #4ec9b0; }
+    .hljs-type { color: #4ec9b0; }
+    .hljs-attr { color: #9cdcfe; }
+    .hljs-variable { color: #9cdcfe; }
+    .hljs-literal { color: #569cd6; }
+    .hljs-meta { color: #9cdcfe; }
+    .hljs-symbol { color: #dcdcaa; }
+    .hljs-label { color: #ce9178; }
+    .hljs-operator { color: #d4d4d4; }
+    .hljs-punctuation { color: #d4d4d4; }
+    .code-placeholder {
+      color: var(--text-dim);
+      font-style: italic;
+      padding: 0.75rem;
+    }
   </style>
 </head>
 <body>
@@ -702,9 +846,18 @@
             <span class="status-dot" id="source-status"></span>
             HlaX64 Source
             <span class="badge" id="source-path"></span>
+            <button class="pane-edit-btn" type="button" id="edit-source-btn" title="Toggle edit mode">Edit</button>
           </div>
-          <div class="pane-body">
-            <textarea id="source" spellcheck="false" autocorrect="off" autocapitalize="off"></textarea>
+          <div class="pane-body" id="source-pane-body">
+            <!-- Highlighted code view -->
+            <div class="code-editor" id="source-highlight">
+              <div class="line-numbers" id="source-lines"></div>
+              <div class="code-content">
+                <pre><code id="source-code" class="language-hla64"></code></pre>
+              </div>
+            </div>
+            <!-- Plain textarea for editing (shown when editing) -->
+            <textarea id="source" spellcheck="false" autocorrect="off" autocapitalize="off" placeholder="Klik tombol Edit untuk mengedit source..."></textarea>
           </div>
         </div>
 
@@ -719,7 +872,14 @@
             <span class="badge" id="nasm-meta"></span>
           </div>
           <div class="pane-body">
-            <pre id="nasm"></pre>
+            <div class="code-editor" id="nasm-highlight">
+              <div class="line-numbers" id="nasm-lines"></div>
+              <div class="code-content">
+                <pre><code id="nasm-code" class="language-nasm"></code></pre>
+              </div>
+            </div>
+            <!-- Original pre for fallback -->
+            <pre id="nasm" class="hidden"></pre>
           </div>
         </div>
 
@@ -823,6 +983,48 @@ async function fetchText(url) {
 
 function normalizeText(t) {
   return (t || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+}
+
+/* ── Syntax highlighting ──────────────────────────────────────────── */
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function updateLineNumbers(containerId, lineCount) {
+  const el = $(containerId);
+  if (!el) return;
+  el.innerHTML = '';
+  for (let i = 1; i <= lineCount; i++) {
+    const span = document.createElement('span');
+    span.textContent = i;
+    el.appendChild(span);
+  }
+}
+
+function highlightSource(code) {
+  const el = $('source-code');
+  el.textContent = code;
+  el.className = 'language-hla64';
+  hljs.highlightElement(el);
+}
+
+function highlightNasm(code) {
+  const el = $('nasm-code');
+  el.textContent = code;
+  el.className = 'language-nasm';
+  hljs.highlightElement(el);
+}
+
+function syncScroll(sourceEl, linesEl, codeEl) {
+  sourceEl.addEventListener('scroll', () => {
+    linesEl.scrollTop = sourceEl.scrollTop;
+    codeEl.parentElement.parentElement.scrollTop = sourceEl.scrollTop;
+  });
 }
 
 /* ── State ───────────────────────────────────────────────────────── */
@@ -1110,22 +1312,37 @@ async function loadExample(id, pushUrl) {
   try {
     const json = await fetchText(`cache/${ex.category}/${ex.id}.json`);
     explainCache = JSON.parse(json);
-    $('nasm').textContent = normalizeText(explainCache.nasm || '(tidak ada NASM dalam cache)');
+    const nasmText = normalizeText(explainCache.nasm || '(tidak ada NASM dalam cache)');
+    // Update highlighted NASM view
+    highlightNasm(nasmText);
+    updateLineNumbers('nasm-lines', nasmText.split('\n').length);
+    // Also update hidden original for compatibility
+    $('nasm').textContent = nasmText;
     $('ir').textContent = normalizeText((explainCache.ir || []).join('\n\n'));
     if (explainCache.diagnostics?.length) {
       $('nasm-meta').textContent += ` · ${explainCache.diagnostics.length} diagnostic(s)`;
     }
   } catch {
     explainCache = null;
-    $('nasm').textContent = 'Tidak ada NASM cache.\nJalankan: scripts/generate-playground-cache.ps1';
+    const errMsg = 'Tidak ada NASM cache.\nJalankan: scripts/generate-playground-cache.ps1';
+    highlightNasm(errMsg);
+    updateLineNumbers('nasm-lines', errMsg.split('\n').length);
+    $('nasm').textContent = errMsg;
     $('ir').textContent = '';
   }
 
   // Load source
   try {
-    $('source').value = await fetchText(rawUrl(ex.path));
+    const sourceText = await fetchText(rawUrl(ex.path));
+    $('source').value = sourceText;
+    // Update highlighted source view
+    highlightSource(sourceText);
+    updateLineNumbers('source-lines', sourceText.split('\n').length);
   } catch {
-    $('source').value = `// Tidak bisa memuat ${ex.path}\n// Buka repo lokal atau periksa koneksi.`;
+    const errMsg = `// Tidak bisa memuat ${ex.path}\n// Buka repo lokal atau periksa koneksi.`;
+    $('source').value = errMsg;
+    highlightSource(errMsg);
+    updateLineNumbers('source-lines', errMsg.split('\n').length);
   }
 
   $('line-explain').textContent = ex.note || '';
@@ -1252,11 +1469,34 @@ $('source').addEventListener('input', () => {
   $('nasm-meta').textContent = 'linux-x64-sysv · stale (diedit)';
   $('source-status').className = 'status-dot stale';
   $('nasm-status').className = 'status-dot stale';
+  // Update line numbers and highlighted view (if visible)
+  const sourceText = $('source').value;
+  updateLineNumbers('source-lines', sourceText.split('\n').length);
+  if (isEditingSource) {
+    highlightSource(sourceText);
+  }
 });
 
 $('source').addEventListener('click', () => {
-  // Auto-explain on click
+  // In edit mode, allow normal click for cursor positioning
+  if (isEditingSource) return;
+  // Auto-explain on click when in view mode
   runExplainLine();
+});
+
+// Handle clicks on the highlighted source view
+$('source-highlight').addEventListener('click', (e) => {
+  // Only handle clicks on the code content, not on the line numbers
+  if (e.target.closest('.line-numbers')) return;
+  // Switch to edit mode on click
+  if (!isEditingSource) {
+    toggleEditMode();
+    // Position cursor at click location (approximate)
+    setTimeout(() => {
+      const ta = $('source');
+      ta.focus();
+    }, 50);
+  }
 });
 
 document.querySelectorAll('[data-prompt]').forEach(btn => {
@@ -1271,6 +1511,43 @@ $('copy-clone').onclick = async (e) => {
   await navigator.clipboard.writeText(e.currentTarget.dataset.cmd || '');
   toast('Perintah dotnet run disalin');
 };
+
+/* ── Edit mode toggle ────────────────────────────────────────────── */
+let isEditingSource = false;
+
+function toggleEditMode() {
+  isEditingSource = !isEditingSource;
+  const btn = $('edit-source-btn');
+  const ta = $('source');
+  const hl = $('source-highlight');
+
+  if (isEditingSource) {
+    btn.textContent = 'View';
+    btn.classList.add('active');
+    ta.classList.add('visible');
+    hl.style.display = 'none';
+    ta.focus();
+  } else {
+    btn.textContent = 'Edit';
+    btn.classList.remove('active');
+    ta.classList.remove('visible');
+    hl.style.display = 'flex';
+    // Update highlighted view with current source
+    const sourceText = ta.value;
+    highlightSource(sourceText);
+    updateLineNumbers('source-lines', sourceText.split('\n').length);
+  }
+}
+
+$('edit-source-btn').onclick = toggleEditMode;
+
+// Sync scroll between textarea and line numbers in edit mode
+$('source').addEventListener('scroll', () => {
+  const lines = $('source-lines');
+  if (lines) {
+    lines.style.transform = `translateY(-${$('source').scrollTop}px)`;
+  }
+});
 
 /* ── Init ────────────────────────────────────────────────────────── */
 async function init() {
