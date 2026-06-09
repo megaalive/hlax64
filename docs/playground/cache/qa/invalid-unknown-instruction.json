@@ -1,0 +1,17 @@
+﻿{
+  "schemaVersion": 1,
+  "success": false,
+  "version": "0.2.1-alpha",
+  "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\qa\\invalid\\unknown-instruction\\unknown-instruction.hla64",
+  "target": "linux-x64-sysv",
+  "diagnostics": [
+    {
+      "code": "HLAX0071",
+      "severity": "error",
+      "message": "Unknown instruction \u0027movz\u0027 \u2014 see \u0060hla64 list-instructions\u0060 or data/instructions.json",
+      "line": 4,
+      "column": 5,
+      "suggestion": "mov"
+    }
+  ]
+}

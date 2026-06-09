@@ -1,0 +1,15 @@
+﻿{
+  "schemaVersion": 1,
+  "success": true,
+  "version": "0.2.1-alpha",
+  "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\qa\\bug-farm\\idiv-loop\\idiv-r8.hla64",
+  "target": "linux-x64-sysv",
+  "diagnostics": [],
+  "ir": [
+    "function _start:\n  entry:\n    v0 = Move v1\n    v2 = Move v3\n    v0 = Modulo v2\n    v4 = Move v0"
+  ],
+  "lowered": [
+    "function _start:\n  entry: True, export: False\n  stack frame: 8 bytes\n  entry:\n        xor ebx, ebx    ; default exit code = 0 (callee-saved)\n        push rbp\n        mov rbp, rsp\n        sub rsp, 8      ; align stack to 16 bytes\n        mov rax, 32319\n        mov r8, 10\n        cqo\r\n    idiv r8\r\n    mov rax, rdx\n        mov rbx, rax\n        mov rdi, rbx    ; exit code\n        mov rax, 60     ; sys_exit\n        syscall"
+  ],
+  "nasm": "bits 64\r\nsection .text\r\nglobal _start\r\n\r\n_start:\r\n    xor ebx, ebx    ; default exit code = 0 (callee-saved)\r\n    push rbp\r\n    mov rbp, rsp\r\n    sub rsp, 8      ; align stack to 16 bytes\r\n    mov rax, 32319\r\n    mov r8, 10\r\n    cqo\r\n    idiv r8\r\n    mov rax, rdx\r\n    mov rbx, rax\r\n    mov rdi, rbx    ; exit code\r\n    mov rax, 60     ; sys_exit\r\n    syscall\r\n\r\nsection .data\r\nnewline db 0x0A\r\n"
+}

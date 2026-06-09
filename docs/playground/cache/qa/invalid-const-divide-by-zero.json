@@ -1,0 +1,23 @@
+﻿{
+  "schemaVersion": 1,
+  "success": false,
+  "version": "0.2.1-alpha",
+  "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\qa\\invalid\\const-divide-by-zero\\const-divide-by-zero.hla64",
+  "target": "linux-x64-sysv",
+  "diagnostics": [
+    {
+      "code": "HLAX0032",
+      "severity": "error",
+      "message": "Division by zero in compile-time expression",
+      "line": 3,
+      "column": 12
+    },
+    {
+      "code": "HLAX0032",
+      "severity": "error",
+      "message": "Division by zero in compile-time expression",
+      "line": 3,
+      "column": 12
+    }
+  ]
+}

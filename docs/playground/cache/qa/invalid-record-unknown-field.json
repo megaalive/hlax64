@@ -1,0 +1,16 @@
+﻿{
+  "schemaVersion": 1,
+  "success": false,
+  "version": "0.2.1-alpha",
+  "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\qa\\invalid\\record-unknown-field\\record-unknown-field.hla64",
+  "target": "linux-x64-sysv",
+  "diagnostics": [
+    {
+      "code": "HLAX0043",
+      "severity": "error",
+      "message": "Unknown field \u0027nope\u0027 in record variable \u0027header\u0027",
+      "line": 8,
+      "column": 12
+    }
+  ]
+}

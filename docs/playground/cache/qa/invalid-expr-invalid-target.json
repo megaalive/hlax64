@@ -1,0 +1,16 @@
+﻿{
+  "schemaVersion": 1,
+  "success": false,
+  "version": "0.2.1-alpha",
+  "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\qa\\invalid\\expr-invalid-target\\expr-invalid-target.hla64",
+  "target": "linux-x64-sysv",
+  "diagnostics": [
+    {
+      "code": "HLAX0035",
+      "severity": "error",
+      "message": "\u0027:=\u0027 assignment target must be an int64 scalar local or 64-bit register, not \u0027slot\u0027",
+      "line": 5,
+      "column": 5
+    }
+  ]
+}

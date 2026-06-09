@@ -1,0 +1,16 @@
+﻿{
+  "schemaVersion": 1,
+  "success": false,
+  "version": "0.2.1-alpha",
+  "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\qa\\invalid\\wrong-operand-count\\wrong-operand-count.hla64",
+  "target": "linux-x64-sysv",
+  "diagnostics": [
+    {
+      "code": "HLAX0004",
+      "severity": "error",
+      "message": "Instruction \u0027mov\u0027 expects 2-2 operands, but got 1",
+      "line": 4,
+      "column": 5
+    }
+  ]
+}

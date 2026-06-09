@@ -1,0 +1,16 @@
+﻿{
+  "schemaVersion": 1,
+  "success": false,
+  "version": "0.2.1-alpha",
+  "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\qa\\invalid\\unknown-type\\unknown-type.hla64",
+  "target": "linux-x64-sysv",
+  "diagnostics": [
+    {
+      "code": "HLAX0020",
+      "severity": "error",
+      "message": "Unknown type \u0027foobar\u0027 for variable \u0027x\u0027",
+      "line": 3,
+      "column": 5
+    }
+  ]
+}

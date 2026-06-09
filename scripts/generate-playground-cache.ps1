@@ -9,10 +9,19 @@ $manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
 Push-Location $root
 try {
     dotnet build src/HlaX64.Cli/HlaX64.Cli.csproj -v q
+    function Get-ManifestExamples($category) {
+        if ($category.examples) { return @($category.examples) }
+        $all = @()
+        foreach ($g in $category.groups) {
+            $all += @($g.examples)
+        }
+        return $all
+    }
+
     foreach ($cat in $manifest.categories) {
         $cacheDir = Join-Path $root "docs/playground/cache/$($cat.id)"
         New-Item -ItemType Directory -Force -Path $cacheDir | Out-Null
-        foreach ($e in $cat.examples) {
+        foreach ($e in (Get-ManifestExamples $cat)) {
             $out = Join-Path $cacheDir "$($e.id).json"
             dotnet run --project src/HlaX64.Cli --no-build -- explain $e.path --json 2>$null | Set-Content -Encoding utf8 $out
             Write-Host "Wrote $($cat.id)/$($e.id).json"

@@ -1,345 +1,1629 @@
 {
-  "categories": [
-    {
-      "id": "curriculum",
-      "label": "Curriculum",
-      "examples": [
-        {
-          "id": "hello",
-          "label": "Hello world",
-          "path": "examples/curriculum/00-getting-started/hello.hla64",
-          "run": "hla64 run examples/curriculum/00-getting-started/hello.hla64",
-          "expected": "stdout:\n  Hello from HlaX64\nexit code: 0"
-        },
-        {
-          "id": "exitcode",
-          "label": "Exit code",
-          "path": "examples/curriculum/00-getting-started/exitcode.hla64",
-          "run": "hla64 run examples/curriculum/00-getting-started/exitcode.hla64",
-          "expected": "(no stdout)\nexit code: 42"
-        },
-        {
-          "id": "arithmetic",
-          "label": "Arithmetic",
-          "path": "examples/curriculum/01-arithmetic/simple.hla64",
-          "run": "hla64 run examples/curriculum/01-arithmetic/simple.hla64",
-          "expected": "(no stdout)\nexit code: 30  (10 + 20 in rax)"
-        },
-        {
-          "id": "if-while",
-          "label": "If / while",
-          "path": "examples/curriculum/03-control-flow/count.hla64",
-          "run": "hla64 run examples/curriculum/03-control-flow/count.hla64",
-          "expected": "stdout:\n  count = 5\nexit code: 0"
-        },
-        {
-          "id": "procedure",
-          "label": "Procedure call",
-          "path": "examples/curriculum/04-procedures/add-two.hla64",
-          "run": "hla64 run examples/curriculum/04-procedures/add-two.hla64",
-          "expected": "(no stdout)\nexit code: 30  (AddTwo(10, 20))"
-        },
-        {
-          "id": "stack-local",
-          "label": "Stack local",
-          "path": "examples/curriculum/05-memory/stack-array.hla64",
-          "run": "hla64 run examples/curriculum/05-memory/stack-array.hla64",
-          "expected": "(no stdout)\nexit code: 42  (stack array demo)"
-        },
-        {
-          "id": "extern-puts",
-          "label": "Call libc puts",
-          "path": "examples/interop/07-interop/extern-puts.hla64",
-          "run": "hla64 run examples/interop/07-interop/extern-puts.hla64",
-          "expected": "stdout:\n  Hello from puts\nexit code: (puts return in rbx)",
-          "note": "C interop via extern; printf sample planned for v0.2."
-        }
-      ]
-    },
-    {
-      "id": "tools",
-      "label": "Real tools",
-      "examples": [
-        {
-          "id": "linecount",
-          "label": "File read",
-          "path": "examples/tools/10-windows/linecount/linecount.hla64",
-          "run": "hla64 run examples/tools/10-windows/linecount/linecount.hla64 -- README.md",
-          "expected": "stdout:\n  lines: <n>\nUses argv[1] as the file path to read."
-        },
-        {
-          "id": "argv",
-          "label": "argv",
-          "path": "examples/tools/10-windows/exists/exists.hla64",
-          "run": "hla64 run examples/tools/10-windows/exists/exists.hla64 -- .",
-          "expected": "About argc / argv:\n  hlax_argv_count() → argc (argv[0] program name + user args)\n  hlax_argv_get(1)  → argv[1] (first user argument)\n\nRun with a path that exists:\n  hla64 run examples/tools/10-windows/exists/exists.hla64 -- .\n\nstdout:\n  exists\nexit code: 0\n\nRun with a missing path:\n  hla64 run examples/tools/10-windows/exists/exists.hla64 -- __missing__\n\nstdout:\n  missing\nexit code: 1"
-        },
-        {
-          "id": "wc",
-          "label": "wc",
-          "path": "examples/tools/10-windows/wc/wc.hla64",
-          "run": "hla64 run examples/tools/10-windows/wc/wc.hla64 -- README.md",
-          "expected": "stdout (example):\n  lines: …  words: …  bytes: …\nargv[1] = file to count."
-        },
-        {
-          "id": "cat",
-          "label": "cat",
-          "path": "examples/tools/10-windows/cat/cat.hla64",
-          "run": "hla64 run examples/tools/10-windows/cat/cat.hla64 -- README.md",
-          "expected": "stdout: raw file bytes copied via hlax_file_read + hlax_stdout_write loop."
-        },
-        {
-          "id": "strings",
-          "label": "strings",
-          "path": "examples/tools/10-windows/strings/strings.hla64",
-          "run": "hla64 run examples/tools/10-windows/strings/strings.hla64 -- README.md",
-          "expected": "stdout: printable runs (length >= 4) one per line via hlax_is_printable."
-        },
-        {
-          "id": "cp",
-          "label": "cp",
-          "path": "examples/tools/10-windows/cp/cp.hla64",
-          "run": "hla64 run examples/tools/10-windows/cp/cp.hla64 -- src.txt dst.txt",
-          "expected": "stdout: (none)\nexit code: 0\nCopies argv[1] bytes to argv[2] via hlax_file_open_write + hlax_file_write loop."
-        },
-        {
-          "id": "tee",
-          "label": "tee",
-          "path": "examples/tools/10-windows/tee/tee.hla64",
-          "run": "echo hello | hla64 run examples/tools/10-windows/tee/tee.hla64 -- out.txt",
-          "expected": "stdout: stdin bytes echoed\nexit code: 0\nAlso writes the same bytes to argv[1] via hlax_file_write."
-        },
-        {
-          "id": "head",
-          "label": "head",
-          "path": "examples/tools/10-windows/head/head.hla64",
-          "run": "hla64 run examples/tools/10-windows/head/head.hla64 -- README.md",
-          "expected": "stdout: first 10 lines of argv[1] via hlax_file_read loop."
-        },
-        {
-          "id": "nl",
-          "label": "nl",
-          "path": "examples/tools/10-windows/nl/nl.hla64",
-          "run": "hla64 run examples/tools/10-windows/nl/nl.hla64 -- README.md",
-          "expected": "stdout: lines prefixed with N via stdout.put + hlax_stdout_write."
-        },
-        {
-          "id": "grep",
-          "label": "grep",
-          "path": "examples/tools/10-windows/grep/grep.hla64",
-          "run": "hla64 run examples/tools/10-windows/grep/grep.hla64 -- README.md pattern",
-          "expected": "stdout: matching lines (fixed literal, not regex)."
-        },
-        {
-          "id": "cmp",
-          "label": "cmp",
-          "path": "examples/tools/10-windows/cmp/cmp.hla64",
-          "run": "hla64 run examples/tools/10-windows/cmp/cmp.hla64 -- a.txt b.txt",
-          "expected": "stdout: identical or differ at offset\nexit code: 0 or 1"
-        },
-        {
-          "id": "hexdump",
-          "label": "hexdump",
-          "path": "examples/tools/10-windows/hexdump/hexdump.hla64",
-          "run": "hla64 run examples/tools/10-windows/hexdump/hexdump.hla64 -- README.md",
-          "expected": "stdout: hex + ASCII columns for argv[1] file bytes."
-        },
-        {
-          "id": "filemagic",
-          "label": "filemagic",
-          "path": "examples/tools/10-windows/filemagic/filemagic.hla64",
-          "run": "hla64 run examples/tools/10-windows/filemagic/filemagic.hla64 -- README.md",
-          "expected": "stdout: detected type from magic bytes (e.g. text, PE, ELF)."
-        }
-      ]
-    },
-    {
-      "id": "project-euler",
-      "label": "Project Euler",
-      "examples": [
-        {
-          "id": "euler001",
-          "label": "Euler #1 brute",
-          "path": "examples/project-euler/problems/euler001-multiples-of-3-and-5-bruteforce.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler001-multiples-of-3-and-5-bruteforce.hla64",
-          "expected": "stdout:\n  Euler #1 = 233168\nSolve yourself first — compare with formula variant."
-        },
-        {
-          "id": "euler001-formula",
-          "label": "Euler #1 formula",
-          "path": "examples/project-euler/problems/euler001-multiples-of-3-and-5-formula.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler001-multiples-of-3-and-5-formula.hla64",
-          "expected": "stdout:\n  Euler #1 = 233168\nO(1) vs loop — inspect NASM diff in Explain tab."
-        },
-        {
-          "id": "euler002",
-          "label": "Euler #2 Fib",
-          "path": "examples/project-euler/problems/euler002-even-fibonacci.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler002-even-fibonacci.hla64",
-          "expected": "stdout:\n  Euler #2 = 4613732"
-        },
-        {
-          "id": "euler003",
-          "label": "Euler #3 prime factor",
-          "path": "examples/project-euler/problems/euler003-largest-prime-factor.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler003-largest-prime-factor.hla64",
-          "expected": "stdout:\n  Euler #3 = 6857"
-        },
-        {
-          "id": "euler004",
-          "label": "Euler #4 palindrome",
-          "path": "examples/project-euler/problems/euler004-largest-palindrome-product.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler004-largest-palindrome-product.hla64",
-          "expected": "stdout:\n  Euler #4 = 906609"
-        },
-        {
-          "id": "euler005",
-          "label": "Euler #5 LCM",
-          "path": "examples/project-euler/problems/euler005-smallest-multiple.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler005-smallest-multiple.hla64",
-          "expected": "stdout:\n  Euler #5 = 232792560"
-        },
-        {
-          "id": "euler006",
-          "label": "Euler #6 sum-square diff",
-          "path": "examples/project-euler/problems/euler006-sum-square-difference.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler006-sum-square-difference.hla64",
-          "expected": "stdout:\n  Euler #6 = 25164150"
-        },
-        {
-          "id": "euler007",
-          "label": "Euler #7 10001st prime",
-          "path": "examples/project-euler/problems/euler007-10001st-prime.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler007-10001st-prime.hla64",
-          "expected": "stdout:\n  Euler #7 = 104743"
-        },
-        {
-          "id": "euler008",
-          "label": "Euler #8 product series",
-          "path": "examples/project-euler/problems/euler008-largest-product-series.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler008-largest-product-series.hla64",
-          "expected": "stdout:\n  Euler #8 = 23514624000"
-        },
-        {
-          "id": "euler009",
-          "label": "Euler #9 pythagorean",
-          "path": "examples/project-euler/problems/euler009-pythagorean-triplet.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler009-pythagorean-triplet.hla64",
-          "expected": "stdout:\n  Euler #9 = 31875000"
-        },
-        {
-          "id": "euler010",
-          "label": "Euler #10 sum primes",
-          "path": "examples/project-euler/problems/euler010-sum-primes-below-2m.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler010-sum-primes-below-2m.hla64",
-          "expected": "stdout:\n  Euler #10 = 142913828922"
-        },
-        {
-          "id": "euler011",
-          "label": "Euler #11 grid product",
-          "path": "examples/project-euler/problems/euler011-largest-product-grid.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler011-largest-product-grid.hla64",
-          "expected": "stdout:\n  Euler #11 = 70600674"
-        },
-        {
-          "id": "euler012",
-          "label": "Euler #12 triangular",
-          "path": "examples/project-euler/problems/euler012-highly-divisible-triangular.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler012-highly-divisible-triangular.hla64",
-          "expected": "stdout:\n  Euler #12 = 76576500"
-        },
-        {
-          "id": "euler013",
-          "label": "Euler #13 large sum",
-          "path": "examples/project-euler/problems/euler013-large-sum.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler013-large-sum.hla64",
-          "expected": "stdout:\n  Euler #13 = 5537376230"
-        },
-        {
-          "id": "euler014",
-          "label": "Euler #14 Collatz",
-          "path": "examples/project-euler/problems/euler014-longest-collatz-chain.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler014-longest-collatz-chain.hla64",
-          "expected": "stdout:\n  Euler #14 = 837799"
-        },
-        {
-          "id": "euler015",
-          "label": "Euler #15 lattice paths",
-          "path": "examples/project-euler/problems/euler015-lattice-paths.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler015-lattice-paths.hla64",
-          "expected": "stdout:\n  Euler #15 = 137846528820"
-        },
-        {
-          "id": "euler016",
-          "label": "Euler #16 power digit sum",
-          "path": "examples/project-euler/problems/euler016-power-digit-sum.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler016-power-digit-sum.hla64",
-          "expected": "stdout:\n  Euler #16 = 1366"
-        },
-        {
-          "id": "euler017",
-          "label": "Euler #17 letter counts",
-          "path": "examples/project-euler/problems/euler017-number-letter-counts.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler017-number-letter-counts.hla64",
-          "expected": "stdout:\n  Euler #17 = 21124"
-        },
-        {
-          "id": "euler018",
-          "label": "Euler #18 path sum",
-          "path": "examples/project-euler/problems/euler018-maximum-path-sum.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler018-maximum-path-sum.hla64",
-          "expected": "stdout:\n  Euler #18 = 1074"
-        },
-        {
-          "id": "euler019",
-          "label": "Euler #19 Sundays",
-          "path": "examples/project-euler/problems/euler019-counting-sundays.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler019-counting-sundays.hla64",
-          "expected": "stdout:\n  Euler #19 = 171"
-        },
-        {
-          "id": "euler020",
-          "label": "Euler #20 factorial digits",
-          "path": "examples/project-euler/problems/euler020-factorial-digit-sum.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler020-factorial-digit-sum.hla64",
-          "expected": "stdout:\n  Euler #20 = 648"
-        },
-        {
-          "id": "euler021",
-          "label": "Euler #21 amicable",
-          "path": "examples/project-euler/problems/euler021-amicable-numbers.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler021-amicable-numbers.hla64",
-          "expected": "stdout:\n  Euler #21 = 31626"
-        },
-        {
-          "id": "euler022",
-          "label": "Euler #22 names scores",
-          "path": "examples/project-euler/problems/euler022-names-scores.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler022-names-scores.hla64",
-          "expected": "stdout:\n  Euler #22 = 871198282"
-        },
-        {
-          "id": "euler023",
-          "label": "Euler #23 abundant sums",
-          "path": "examples/project-euler/problems/euler023-non-abundant-sums.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler023-non-abundant-sums.hla64",
-          "expected": "stdout:\n  Euler #23 = 4179871"
-        },
-        {
-          "id": "euler024",
-          "label": "Euler #24 permutations",
-          "path": "examples/project-euler/problems/euler024-lexicographic-permutations.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler024-lexicographic-permutations.hla64",
-          "expected": "stdout:\n  Euler #24 = 2783915460"
-        },
-        {
-          "id": "euler025",
-          "label": "Euler #25 Fibonacci index",
-          "path": "examples/project-euler/problems/euler025-1000-digit-fibonacci.hla64",
-          "run": "hla64 run examples/project-euler/problems/euler025-1000-digit-fibonacci.hla64",
-          "expected": "stdout:\n  Euler #25 = 4782"
-        }
-      ]
-    }
-  ]
+    "categories":  [
+                       {
+                           "id":  "curriculum",
+                           "label":  "Curriculum",
+                           "groups":  [
+                                          {
+                                              "id":  "00-getting-started",
+                                              "label":  "00 Getting started",
+                                              "examples":  [
+                                                               {
+                                                                   "id":  "exitcode",
+                                                                   "label":  "Exitcode",
+                                                                   "path":  "examples/curriculum/00-getting-started/exitcode.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/00-getting-started/exitcode.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "hello",
+                                                                   "label":  "Hello",
+                                                                   "path":  "examples/curriculum/00-getting-started/hello.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/00-getting-started/hello.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               }
+                                                           ]
+                                          },
+                                          {
+                                              "id":  "01-arithmetic",
+                                              "label":  "01 Arithmetic",
+                                              "examples":  [
+                                                               {
+                                                                   "id":  "curriculum-01-arithmetic-const-expr",
+                                                                   "label":  "Const Expr",
+                                                                   "path":  "examples/curriculum/01-arithmetic/const-expr.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/01-arithmetic/const-expr.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-01-arithmetic-expr-assign",
+                                                                   "label":  "Expr Assign",
+                                                                   "path":  "examples/curriculum/01-arithmetic/expr-assign.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/01-arithmetic/expr-assign.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-01-arithmetic-inc-dec",
+                                                                   "label":  "Inc Dec",
+                                                                   "path":  "examples/curriculum/01-arithmetic/inc-dec.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/01-arithmetic/inc-dec.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-01-arithmetic-move-values",
+                                                                   "label":  "Move Values",
+                                                                   "path":  "examples/curriculum/01-arithmetic/move-values.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/01-arithmetic/move-values.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "arithmetic",
+                                                                   "label":  "Simple",
+                                                                   "path":  "examples/curriculum/01-arithmetic/simple.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/01-arithmetic/simple.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-01-arithmetic-subtract",
+                                                                   "label":  "Subtract",
+                                                                   "path":  "examples/curriculum/01-arithmetic/subtract.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/01-arithmetic/subtract.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               }
+                                                           ]
+                                          },
+                                          {
+                                              "id":  "02-types",
+                                              "label":  "02 Types",
+                                              "examples":  [
+                                                               {
+                                                                   "id":  "curriculum-02-types-color-enum",
+                                                                   "label":  "Color Enum",
+                                                                   "path":  "examples/curriculum/02-types/color-enum.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/02-types/color-enum.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-02-types-patient-header",
+                                                                   "label":  "Patient Header",
+                                                                   "path":  "examples/curriculum/02-types/patient-header.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/02-types/patient-header.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-02-types-signed-compare",
+                                                                   "label":  "Signed Compare",
+                                                                   "path":  "examples/curriculum/02-types/signed-compare.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/02-types/signed-compare.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-02-types-struct-point",
+                                                                   "label":  "Struct Point",
+                                                                   "path":  "examples/curriculum/02-types/struct-point.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/02-types/struct-point.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-02-types-unsigned-compare",
+                                                                   "label":  "Unsigned Compare",
+                                                                   "path":  "examples/curriculum/02-types/unsigned-compare.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/02-types/unsigned-compare.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               }
+                                                           ]
+                                          },
+                                          {
+                                              "id":  "03-control-flow",
+                                              "label":  "03 Control flow",
+                                              "examples":  [
+                                                               {
+                                                                   "id":  "if-while",
+                                                                   "label":  "Count",
+                                                                   "path":  "examples/curriculum/03-control-flow/count.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/03-control-flow/count.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-03-control-flow-idiv-jmp",
+                                                                   "label":  "Idiv Jmp",
+                                                                   "path":  "examples/curriculum/03-control-flow/idiv-jmp.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/03-control-flow/idiv-jmp.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-03-control-flow-if-else",
+                                                                   "label":  "If Else",
+                                                                   "path":  "examples/curriculum/03-control-flow/if-else.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/03-control-flow/if-else.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               }
+                                                           ]
+                                          },
+                                          {
+                                              "id":  "04-procedures",
+                                              "label":  "04 Procedures",
+                                              "examples":  [
+                                                               {
+                                                                   "id":  "procedure",
+                                                                   "label":  "Add Two",
+                                                                   "path":  "examples/curriculum/04-procedures/add-two.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/04-procedures/add-two.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-04-procedures-factorial-iter",
+                                                                   "label":  "Factorial Iter",
+                                                                   "path":  "examples/curriculum/04-procedures/factorial-iter.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/04-procedures/factorial-iter.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-04-procedures-factorial-rec",
+                                                                   "label":  "Factorial Rec",
+                                                                   "path":  "examples/curriculum/04-procedures/factorial-rec.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/04-procedures/factorial-rec.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-04-procedures-no-args",
+                                                                   "label":  "No Args",
+                                                                   "path":  "examples/curriculum/04-procedures/no-args.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/04-procedures/no-args.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-04-procedures-six-args",
+                                                                   "label":  "Six Args",
+                                                                   "path":  "examples/curriculum/04-procedures/six-args.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/04-procedures/six-args.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               }
+                                                           ]
+                                          },
+                                          {
+                                              "id":  "05-memory",
+                                              "label":  "05 Memory",
+                                              "examples":  [
+                                                               {
+                                                                   "id":  "curriculum-05-memory-array-byte-last",
+                                                                   "label":  "Array Byte Last",
+                                                                   "path":  "examples/curriculum/05-memory/array-byte-last.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/05-memory/array-byte-last.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-05-memory-array-fill",
+                                                                   "label":  "Array Fill",
+                                                                   "path":  "examples/curriculum/05-memory/array-fill.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/05-memory/array-fill.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-05-memory-array-literal-index",
+                                                                   "label":  "Array Literal Index",
+                                                                   "path":  "examples/curriculum/05-memory/array-literal-index.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/05-memory/array-literal-index.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-05-memory-array-max",
+                                                                   "label":  "Array Max",
+                                                                   "path":  "examples/curriculum/05-memory/array-max.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/05-memory/array-max.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-05-memory-array-sum",
+                                                                   "label":  "Array Sum",
+                                                                   "path":  "examples/curriculum/05-memory/array-sum.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/05-memory/array-sum.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-05-memory-const-buffer-size",
+                                                                   "label":  "Const Buffer Size",
+                                                                   "path":  "examples/curriculum/05-memory/const-buffer-size.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/05-memory/const-buffer-size.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-05-memory-cstring-walk",
+                                                                   "label":  "Cstring Walk",
+                                                                   "path":  "examples/curriculum/05-memory/cstring-walk.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/05-memory/cstring-walk.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-05-memory-dynamic-array",
+                                                                   "label":  "Dynamic Array",
+                                                                   "path":  "examples/curriculum/05-memory/dynamic-array.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/05-memory/dynamic-array.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-05-memory-dynamic-array-heap",
+                                                                   "label":  "Dynamic Array Heap",
+                                                                   "path":  "examples/curriculum/05-memory/dynamic-array-heap.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/05-memory/dynamic-array-heap.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-05-memory-global-counter",
+                                                                   "label":  "Global Counter",
+                                                                   "path":  "examples/curriculum/05-memory/global-counter.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/05-memory/global-counter.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-05-memory-pointer-load-store",
+                                                                   "label":  "Pointer Load Store",
+                                                                   "path":  "examples/curriculum/05-memory/pointer-load-store.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/05-memory/pointer-load-store.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-05-memory-pointer-store",
+                                                                   "label":  "Pointer Store",
+                                                                   "path":  "examples/curriculum/05-memory/pointer-store.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/05-memory/pointer-store.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "stack-local",
+                                                                   "label":  "Stack Array",
+                                                                   "path":  "examples/curriculum/05-memory/stack-array.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/05-memory/stack-array.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-05-memory-string-length",
+                                                                   "label":  "String Length",
+                                                                   "path":  "examples/curriculum/05-memory/string-length.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/05-memory/string-length.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-05-memory-sum-1-to-5",
+                                                                   "label":  "Sum 1 To 5",
+                                                                   "path":  "examples/curriculum/05-memory/sum-1-to-5.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/05-memory/sum-1-to-5.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-05-memory-typed-byte",
+                                                                   "label":  "Typed Byte",
+                                                                   "path":  "examples/curriculum/05-memory/typed-byte.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/05-memory/typed-byte.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               }
+                                                           ]
+                                          },
+                                          {
+                                              "id":  "06-abi",
+                                              "label":  "06 ABI",
+                                              "examples":  [
+                                                               {
+                                                                   "id":  "curriculum-06-abi-avx2-intrinsic",
+                                                                   "label":  "Avx2 Intrinsic",
+                                                                   "path":  "examples/curriculum/06-abi/avx2-intrinsic.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/06-abi/avx2-intrinsic.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-06-abi-callee-saved",
+                                                                   "label":  "Callee Saved",
+                                                                   "path":  "examples/curriculum/06-abi/callee-saved.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/06-abi/callee-saved.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-06-abi-float-return",
+                                                                   "label":  "Float Return",
+                                                                   "path":  "examples/curriculum/06-abi/float-return.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/06-abi/float-return.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-06-abi-record-param",
+                                                                   "label":  "Record Param",
+                                                                   "path":  "examples/curriculum/06-abi/record-param.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/06-abi/record-param.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-06-abi-sse2-add",
+                                                                   "label":  "Sse2 Add",
+                                                                   "path":  "examples/curriculum/06-abi/sse2-add.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/06-abi/sse2-add.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-06-abi-stack-alignment",
+                                                                   "label":  "Stack Alignment",
+                                                                   "path":  "examples/curriculum/06-abi/stack-alignment.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/06-abi/stack-alignment.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-06-abi-stack-args-sysv",
+                                                                   "label":  "Stack Args Sysv",
+                                                                   "path":  "examples/curriculum/06-abi/stack-args-sysv.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/06-abi/stack-args-sysv.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "curriculum-06-abi-windows-exitcode",
+                                                                   "label":  "Windows Exitcode",
+                                                                   "path":  "examples/curriculum/06-abi/windows-exitcode.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/06-abi/windows-exitcode.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               }
+                                                           ]
+                                          },
+                                          {
+                                              "id":  "08-ai-agent",
+                                              "label":  "08 AI agent",
+                                              "examples":  [
+                                                               {
+                                                                   "id":  "curriculum-08-ai-agent-smoke-test",
+                                                                   "label":  "Smoke Test",
+                                                                   "path":  "examples/curriculum/08-ai-agent/smoke-test.hla64",
+                                                                   "run":  "hla64 run examples/curriculum/08-ai-agent/smoke-test.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               }
+                                                           ]
+                                          }
+                                      ]
+                       },
+                       {
+                           "id":  "interop",
+                           "label":  "Interop",
+                           "groups":  [
+                                          {
+                                              "id":  "07-interop",
+                                              "label":  "07 C / extern",
+                                              "examples":  [
+                                                               {
+                                                                   "id":  "interop-07-interop-export-lib",
+                                                                   "label":  "Export Lib",
+                                                                   "path":  "examples/interop/07-interop/export-lib.hla64",
+                                                                   "run":  "hla64 run examples/interop/07-interop/export-lib.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "extern-puts",
+                                                                   "label":  "Extern Puts",
+                                                                   "path":  "examples/interop/07-interop/extern-puts.hla64",
+                                                                   "run":  "hla64 run examples/interop/07-interop/extern-puts.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "interop-07-interop-indirect-call",
+                                                                   "label":  "Indirect Call",
+                                                                   "path":  "examples/interop/07-interop/indirect-call.hla64",
+                                                                   "run":  "hla64 run examples/interop/07-interop/indirect-call.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               }
+                                                           ]
+                                          },
+                                          {
+                                              "id":  "11-csharp-interop-real",
+                                              "label":  "11 C# interop",
+                                              "examples":  [
+                                                               {
+                                                                   "id":  "interop-11-csharp-interop-real-native_count_lines-native_count_lines",
+                                                                   "label":  "Native_Count_Lines",
+                                                                   "path":  "examples/interop/11-csharp-interop-real/native_count_lines/native_count_lines.hla64",
+                                                                   "run":  "hla64 run examples/interop/11-csharp-interop-real/native_count_lines/native_count_lines.hla64 -- fixtures/sample-b.txt",
+                                                                   "expected":  "stdout:\n  lines: 2\nexit code: 0",
+                                                                   "note":  "Build as native DLL; see folder README for C# caller."
+                                                               },
+                                                               {
+                                                                   "id":  "interop-11-csharp-interop-real-native_fnv1a-native_fnv1a",
+                                                                   "label":  "Native_Fnv1a",
+                                                                   "path":  "examples/interop/11-csharp-interop-real/native_fnv1a/native_fnv1a.hla64",
+                                                                   "run":  "hla64 run examples/interop/11-csharp-interop-real/native_fnv1a/native_fnv1a.hla64 -- fixtures/sample-a.txt",
+                                                                   "expected":  "stdout:\n  fnv1a=-4912795366963963885\nexit code: 0",
+                                                                   "note":  "Build as native DLL; see folder README for C# caller."
+                                                               },
+                                                               {
+                                                                   "id":  "interop-11-csharp-interop-real-native_sum_bytes-native_sum_bytes",
+                                                                   "label":  "Native_Sum_Bytes",
+                                                                   "path":  "examples/interop/11-csharp-interop-real/native_sum_bytes/native_sum_bytes.hla64",
+                                                                   "run":  "hla64 run examples/interop/11-csharp-interop-real/native_sum_bytes/native_sum_bytes.hla64 -- fixtures/sample-a.txt",
+                                                                   "expected":  "stdout:\n  sum=528\nexit code: 0",
+                                                                   "note":  "Build as native DLL; see folder README for C# caller."
+                                                               }
+                                                           ]
+                                          }
+                                      ]
+                       },
+                       {
+                           "id":  "tools",
+                           "label":  "Tools",
+                           "groups":  [
+                                          {
+                                              "id":  "10-windows",
+                                              "label":  "10 Windows",
+                                              "examples":  [
+                                                               {
+                                                                   "id":  "cat",
+                                                                   "label":  "Cat",
+                                                                   "path":  "examples/tools/10-windows/cat/cat.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/cat/cat.hla64 -- examples\\tools\\10-windows\\cat\\fixtures\\sample-cat.txt",
+                                                                   "expected":  "stdout:\n  bravo\r\ncharlie\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "cmp",
+                                                                   "label":  "Cmp",
+                                                                   "path":  "examples/tools/10-windows/cmp/cmp.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/cmp/cmp.hla64 -- examples\\tools\\10-windows\\cmp\\fixtures\\sample-a.txt examples\\tools\\10-windows\\cmp\\fixtures\\sample-a.txt",
+                                                                   "expected":  "stdout:\n  identical\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "cp",
+                                                                   "label":  "Cp",
+                                                                   "path":  "examples/tools/10-windows/cp/cp.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/cp/cp.hla64 -- examples\\tools\\10-windows\\cp\\fixtures\\sample-cp-src.txt $OUTPUT",
+                                                                   "expected":  "exit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "cpucount",
+                                                                   "label":  "Cpucount",
+                                                                   "path":  "examples/tools/10-windows/cpucount/cpucount.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/cpucount/cpucount.hla64",
+                                                                   "expected":  "stdout:\n  cpus=\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "diskfree",
+                                                                   "label":  "Diskfree",
+                                                                   "path":  "examples/tools/10-windows/diskfree/diskfree.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/diskfree/diskfree.hla64 -- .",
+                                                                   "expected":  "stdout:\n  total=\r\navail=\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "dnslookup",
+                                                                   "label":  "Dnslookup",
+                                                                   "path":  "examples/tools/10-windows/dnslookup/dnslookup.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/dnslookup/dnslookup.hla64 -- localhost",
+                                                                   "expected":  "stdout:\n  127.0.0.1\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "argv",
+                                                                   "label":  "Exists",
+                                                                   "path":  "examples/tools/10-windows/exists/exists.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/exists/exists.hla64 -- examples\\tools\\10-windows\\exists\\fixtures\\sample-a.txt",
+                                                                   "expected":  "stdout:\n  exists\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "filemagic",
+                                                                   "label":  "Filemagic",
+                                                                   "path":  "examples/tools/10-windows/filemagic/filemagic.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/filemagic/filemagic.hla64 -- examples\\tools\\10-windows\\filemagic\\fixtures\\sample-a.txt",
+                                                                   "expected":  "stdout:\n  type: text\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "filesize",
+                                                                   "label":  "Filesize",
+                                                                   "path":  "examples/tools/10-windows/filesize/filesize.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/filesize/filesize.hla64 -- examples\\tools\\10-windows\\filesize\\fixtures\\sample-a.txt",
+                                                                   "expected":  "stdout:\n  bytes: 6\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "fnv1a",
+                                                                   "label":  "Fnv1a",
+                                                                   "path":  "examples/tools/10-windows/fnv1a/fnv1a.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/fnv1a/fnv1a.hla64 -- examples\\tools\\10-windows\\fnv1a\\fixtures\\sample-a.txt",
+                                                                   "expected":  "stdout:\n  fnv1a=13533948706745587731\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "grep",
+                                                                   "label":  "Grep",
+                                                                   "path":  "examples/tools/10-windows/grep/grep.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/grep/grep.hla64 -- examples\\tools\\10-windows\\grep\\fixtures\\lines-basic.txt beta",
+                                                                   "expected":  "stdout:\n  beta\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "head",
+                                                                   "label":  "Head",
+                                                                   "path":  "examples/tools/10-windows/head/head.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/head/head.hla64 -- examples\\tools\\10-windows\\head\\fixtures\\lines-basic.txt",
+                                                                   "expected":  "stdout:\n  alpha\nbeta\ngamma\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "hexdump",
+                                                                   "label":  "Hexdump",
+                                                                   "path":  "examples/tools/10-windows/hexdump/hexdump.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/hexdump/hexdump.hla64 -- examples\\tools\\10-windows\\hexdump\\fixtures\\sample-a.txt",
+                                                                   "expected":  "stdout:\n  00000000  61 6c 70 68 61 0a\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "hostname",
+                                                                   "label":  "Hostname",
+                                                                   "path":  "examples/tools/10-windows/hostname/hostname.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/hostname/hostname.hla64",
+                                                                   "expected":  "stdout:\n  hostname:\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "httpget",
+                                                                   "label":  "Httpget",
+                                                                   "path":  "examples/tools/10-windows/httpget/httpget.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/httpget/httpget.hla64 -- 127.0.0.1 \u003cport\u003e",
+                                                                   "expected":  "stdout:\n  HTTP/1.0 200\nexit code: 0",
+                                                                   "note":  "Local-run-required; not fetched from the public internet."
+                                                               },
+                                                               {
+                                                                   "id":  "linecount",
+                                                                   "label":  "Linecount",
+                                                                   "path":  "examples/tools/10-windows/linecount/linecount.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/linecount/linecount.hla64 -- examples\\tools\\10-windows\\linecount\\fixtures\\sample-b.txt",
+                                                                   "expected":  "stdout:\n  lines: 2\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "listfiles",
+                                                                   "label":  "Listfiles",
+                                                                   "path":  "examples/tools/10-windows/listfiles/listfiles.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/listfiles/listfiles.hla64 -- examples\\tools\\10-windows\\listfiles\\fixtures\\*",
+                                                                   "expected":  "stdout:\n  Fixture files:\r\nsample-a.txt  6\r\nsample-b.txt  14\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "loadavg",
+                                                                   "label":  "Loadavg",
+                                                                   "path":  "examples/tools/10-windows/loadavg/loadavg.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/loadavg/loadavg.hla64",
+                                                                   "expected":  "stdout:\n  unsupported\nexit code: 0",
+                                                                   "note":  "Windows: unsupported at runtime; Linux returns load average."
+                                                               },
+                                                               {
+                                                                   "id":  "machine",
+                                                                   "label":  "Machine",
+                                                                   "path":  "examples/tools/10-windows/machine/machine.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/machine/machine.hla64",
+                                                                   "expected":  "stdout:\n  hostname:\npid=\nuptime=\nmem total=\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "machine2",
+                                                                   "label":  "Machine2",
+                                                                   "path":  "examples/tools/10-windows/machine2/machine2.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/machine2/machine2.hla64",
+                                                                   "expected":  "stdout:\n  hostname:\r\npid=\r\ncpus=\r\nrss=\r\ndisk total=\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "meminfo",
+                                                                   "label":  "Meminfo",
+                                                                   "path":  "examples/tools/10-windows/meminfo/meminfo.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/meminfo/meminfo.hla64",
+                                                                   "expected":  "stdout:\n  total=\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "netcheck",
+                                                                   "label":  "Netcheck",
+                                                                   "path":  "examples/tools/10-windows/netcheck/netcheck.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/netcheck/netcheck.hla64 -- 127.0.0.1 \u003cport\u003e",
+                                                                   "expected":  "stdout:\n  PONG\nexit code: 0",
+                                                                   "note":  "Local-run-required; not fetched from the public internet."
+                                                               },
+                                                               {
+                                                                   "id":  "nl",
+                                                                   "label":  "Nl",
+                                                                   "path":  "examples/tools/10-windows/nl/nl.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/nl/nl.hla64 -- examples\\tools\\10-windows\\nl\\fixtures\\lines-basic.txt",
+                                                                   "expected":  "stdout:\n  1 alpha\n2 beta\n3 gamma\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "pid",
+                                                                   "label":  "Pid",
+                                                                   "path":  "examples/tools/10-windows/pid/pid.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/pid/pid.hla64",
+                                                                   "expected":  "stdout:\n  pid=\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "procmem",
+                                                                   "label":  "Procmem",
+                                                                   "path":  "examples/tools/10-windows/procmem/procmem.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/procmem/procmem.hla64",
+                                                                   "expected":  "stdout:\n  rss=\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "strings",
+                                                                   "label":  "Strings",
+                                                                   "path":  "examples/tools/10-windows/strings/strings.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/strings/strings.hla64 -- examples\\tools\\10-windows\\strings\\fixtures\\sample-strings.txt",
+                                                                   "expected":  "stdout:\n  Hello\r\nWorld\r\nHlaX64\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "tcpget",
+                                                                   "label":  "Tcpget",
+                                                                   "path":  "examples/tools/10-windows/tcpget/tcpget.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/tcpget/tcpget.hla64 -- 127.0.0.1 \u003cport\u003e",
+                                                                   "expected":  "stdout:\n  HELLO\nexit code: 0",
+                                                                   "note":  "Local-run-required; not fetched from the public internet."
+                                                               },
+                                                               {
+                                                                   "id":  "tee",
+                                                                   "label":  "Tee",
+                                                                   "path":  "examples/tools/10-windows/tee/tee.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/tee/tee.hla64 -- $OUTPUT",
+                                                                   "expected":  "stdout:\n  hello tee\r\nline two\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "uptime",
+                                                                   "label":  "Uptime",
+                                                                   "path":  "examples/tools/10-windows/uptime/uptime.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/uptime/uptime.hla64",
+                                                                   "expected":  "stdout:\n  uptime=\nexit code: 0"
+                                                               },
+                                                               {
+                                                                   "id":  "wc",
+                                                                   "label":  "Wc",
+                                                                   "path":  "examples/tools/10-windows/wc/wc.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/wc/wc.hla64 -- examples\\tools\\10-windows\\wc\\fixtures\\sample-b.txt",
+                                                                   "expected":  "stdout:\n  lines=2 words=2 bytes=14\nexit code: 0"
+                                                               }
+                                                           ]
+                                          },
+                                          {
+                                              "id":  "12-linux",
+                                              "label":  "12 Linux",
+                                              "examples":  [
+                                                               {
+                                                                   "id":  "cat-linux",
+                                                                   "label":  "Cat",
+                                                                   "path":  "examples/tools/12-linux/cat/cat.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/cat/cat.hla64 -- examples/tools/12-linux/cat/fixtures/sample-cat.txt",
+                                                                   "expected":  "stdout:\n  bravo\r\ncharlie\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "cmp-linux",
+                                                                   "label":  "Cmp",
+                                                                   "path":  "examples/tools/12-linux/cmp/cmp.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/cmp/cmp.hla64 -- examples/tools/12-linux/cmp/fixtures/sample-a.txt examples/tools/12-linux/cmp/fixtures/sample-a.txt",
+                                                                   "expected":  "stdout:\n  identical\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "cp-linux",
+                                                                   "label":  "Cp",
+                                                                   "path":  "examples/tools/12-linux/cp/cp.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/cp/cp.hla64 -- examples/tools/12-linux/cp/fixtures/sample-cp-src.txt $OUTPUT",
+                                                                   "expected":  "exit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "cpucount-linux",
+                                                                   "label":  "Cpucount",
+                                                                   "path":  "examples/tools/12-linux/cpucount/cpucount.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/cpucount/cpucount.hla64",
+                                                                   "expected":  "stdout:\n  cpus=\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "diskfree-linux",
+                                                                   "label":  "Diskfree",
+                                                                   "path":  "examples/tools/12-linux/diskfree/diskfree.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/diskfree/diskfree.hla64 -- .",
+                                                                   "expected":  "stdout:\n  total=\r\navail=\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "dnslookup-linux",
+                                                                   "label":  "Dnslookup",
+                                                                   "path":  "examples/tools/12-linux/dnslookup/dnslookup.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/dnslookup/dnslookup.hla64 -- localhost",
+                                                                   "expected":  "stdout:\n  127.0.0.1\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "exists-linux",
+                                                                   "label":  "Exists",
+                                                                   "path":  "examples/tools/12-linux/exists/exists.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/exists/exists.hla64 -- examples/tools/10-windows/exists/fixtures/sample-a.txt",
+                                                                   "expected":  "stdout:\n  exists\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "filemagic-linux",
+                                                                   "label":  "Filemagic",
+                                                                   "path":  "examples/tools/12-linux/filemagic/filemagic.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/filemagic/filemagic.hla64 -- examples/tools/12-linux/filemagic/fixtures/sample-a.txt",
+                                                                   "expected":  "stdout:\n  type: text\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "filesize-linux",
+                                                                   "label":  "Filesize",
+                                                                   "path":  "examples/tools/12-linux/filesize/filesize.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/filesize/filesize.hla64 -- examples/tools/12-linux/filesize/fixtures/sample-a.txt",
+                                                                   "expected":  "stdout:\n  bytes:\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "fnv1a-linux",
+                                                                   "label":  "Fnv1a",
+                                                                   "path":  "examples/tools/12-linux/fnv1a/fnv1a.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/fnv1a/fnv1a.hla64 -- examples/tools/10-windows/fnv1a/fixtures/sample-a.txt",
+                                                                   "expected":  "stdout:\n  fnv1a=13533948706745587731\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "grep-linux",
+                                                                   "label":  "Grep",
+                                                                   "path":  "examples/tools/12-linux/grep/grep.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/grep/grep.hla64 -- examples/tools/12-linux/grep/fixtures/lines-basic.txt beta",
+                                                                   "expected":  "stdout:\n  beta\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "head-linux",
+                                                                   "label":  "Head",
+                                                                   "path":  "examples/tools/12-linux/head/head.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/head/head.hla64 -- examples/tools/12-linux/head/fixtures/lines-basic.txt",
+                                                                   "expected":  "stdout:\n  alpha\nbeta\ngamma\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "hexdump-linux",
+                                                                   "label":  "Hexdump",
+                                                                   "path":  "examples/tools/12-linux/hexdump/hexdump.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/hexdump/hexdump.hla64 -- examples/tools/12-linux/hexdump/fixtures/sample-a.txt",
+                                                                   "expected":  "stdout:\n  00000000  61 6c 70 68 61 0a\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "hostname-linux",
+                                                                   "label":  "Hostname",
+                                                                   "path":  "examples/tools/12-linux/hostname/hostname.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/hostname/hostname.hla64",
+                                                                   "expected":  "stdout:\n  hostname:\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "httpget-linux",
+                                                                   "label":  "Httpget",
+                                                                   "path":  "examples/tools/12-linux/httpget/httpget.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/httpget/httpget.hla64 -- 127.0.0.1 \u003cport\u003e",
+                                                                   "expected":  "stdout:\n  HTTP/1.0 200\nexit code: 0",
+                                                                   "note":  "Local-run-required; not fetched from the public internet."
+                                                               },
+                                                               {
+                                                                   "id":  "linecount-linux",
+                                                                   "label":  "Linecount",
+                                                                   "path":  "examples/tools/12-linux/linecount/linecount.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/linecount/linecount.hla64 -- examples/tools/10-windows/linecount/fixtures/sample-b.txt",
+                                                                   "expected":  "stdout:\n  lines: 2\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "loadavg-linux",
+                                                                   "label":  "Loadavg",
+                                                                   "path":  "examples/tools/12-linux/loadavg/loadavg.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/loadavg/loadavg.hla64",
+                                                                   "expected":  "stdout:\n  load_milli=\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "machine-linux",
+                                                                   "label":  "Machine",
+                                                                   "path":  "examples/tools/12-linux/machine/machine.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/machine/machine.hla64",
+                                                                   "expected":  "stdout:\n  hostname:\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "machine2-linux",
+                                                                   "label":  "Machine2",
+                                                                   "path":  "examples/tools/12-linux/machine2/machine2.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/machine2/machine2.hla64",
+                                                                   "expected":  "stdout:\n  hostname:\r\npid=\r\ncpus=\r\nrss=\r\ndisk total=\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "meminfo-linux",
+                                                                   "label":  "Meminfo",
+                                                                   "path":  "examples/tools/12-linux/meminfo/meminfo.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/meminfo/meminfo.hla64",
+                                                                   "expected":  "stdout:\n  total=\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "netcheck-linux",
+                                                                   "label":  "Netcheck",
+                                                                   "path":  "examples/tools/12-linux/netcheck/netcheck.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/netcheck/netcheck.hla64 -- 127.0.0.1 \u003cport\u003e",
+                                                                   "expected":  "stdout:\n  PONG\nexit code: 0",
+                                                                   "note":  "Local-run-required; not fetched from the public internet."
+                                                               },
+                                                               {
+                                                                   "id":  "nl-linux",
+                                                                   "label":  "Nl",
+                                                                   "path":  "examples/tools/12-linux/nl/nl.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/nl/nl.hla64 -- examples/tools/12-linux/nl/fixtures/lines-basic.txt",
+                                                                   "expected":  "stdout:\n  1 alpha\n2 beta\n3 gamma\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "pid-linux",
+                                                                   "label":  "Pid",
+                                                                   "path":  "examples/tools/12-linux/pid/pid.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/pid/pid.hla64",
+                                                                   "expected":  "stdout:\n  pid=\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "procmem-linux",
+                                                                   "label":  "Procmem",
+                                                                   "path":  "examples/tools/12-linux/procmem/procmem.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/procmem/procmem.hla64",
+                                                                   "expected":  "stdout:\n  rss=\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "strings-linux",
+                                                                   "label":  "Strings",
+                                                                   "path":  "examples/tools/12-linux/strings/strings.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/strings/strings.hla64 -- examples/tools/12-linux/strings/fixtures/sample-strings.txt",
+                                                                   "expected":  "stdout:\n  Hello\r\nWorld\r\nHlaX64\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "tcpget-linux",
+                                                                   "label":  "Tcpget",
+                                                                   "path":  "examples/tools/12-linux/tcpget/tcpget.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/tcpget/tcpget.hla64 -- 127.0.0.1 \u003cport\u003e",
+                                                                   "expected":  "stdout:\n  HELLO\nexit code: 0",
+                                                                   "note":  "Local-run-required; not fetched from the public internet."
+                                                               },
+                                                               {
+                                                                   "id":  "tee-linux",
+                                                                   "label":  "Tee",
+                                                                   "path":  "examples/tools/12-linux/tee/tee.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/tee/tee.hla64 -- $OUTPUT",
+                                                                   "expected":  "stdout:\n  hello tee\r\nline two\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "uptime-linux",
+                                                                   "label":  "Uptime",
+                                                                   "path":  "examples/tools/12-linux/uptime/uptime.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/uptime/uptime.hla64",
+                                                                   "expected":  "stdout:\n  uptime=\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "wc-linux",
+                                                                   "label":  "Wc",
+                                                                   "path":  "examples/tools/12-linux/wc/wc.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/wc/wc.hla64 -- examples/tools/10-windows/wc/fixtures/sample-b.txt",
+                                                                   "expected":  "stdout:\n  lines=2 words=2 bytes=14\nexit code: 0",
+                                                                   "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               }
+                                                           ]
+                                          }
+                                      ]
+                       },
+                       {
+                           "id":  "project-euler",
+                           "label":  "Project Euler",
+                           "groups":  [
+                                          {
+                                              "id":  "problems",
+                                              "label":  "Problems",
+                                              "examples":  [
+                                                               {
+                                                                   "id":  "euler001",
+                                                                   "label":  "Euler001 Multiples Of 3 And 5 Bruteforce",
+                                                                   "path":  "examples/project-euler/problems/euler001-multiples-of-3-and-5-bruteforce.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler001-multiples-of-3-and-5-bruteforce.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler001-formula",
+                                                                   "label":  "Euler001 Multiples Of 3 And 5 Formula",
+                                                                   "path":  "examples/project-euler/problems/euler001-multiples-of-3-and-5-formula.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler001-multiples-of-3-and-5-formula.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler002",
+                                                                   "label":  "Euler002 Even Fibonacci",
+                                                                   "path":  "examples/project-euler/problems/euler002-even-fibonacci.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler002-even-fibonacci.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler003",
+                                                                   "label":  "Euler003 Largest Prime Factor",
+                                                                   "path":  "examples/project-euler/problems/euler003-largest-prime-factor.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler003-largest-prime-factor.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler004",
+                                                                   "label":  "Euler004 Largest Palindrome Product",
+                                                                   "path":  "examples/project-euler/problems/euler004-largest-palindrome-product.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler004-largest-palindrome-product.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler005",
+                                                                   "label":  "Euler005 Smallest Multiple",
+                                                                   "path":  "examples/project-euler/problems/euler005-smallest-multiple.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler005-smallest-multiple.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler006",
+                                                                   "label":  "Euler006 Sum Square Difference",
+                                                                   "path":  "examples/project-euler/problems/euler006-sum-square-difference.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler006-sum-square-difference.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler007",
+                                                                   "label":  "Euler007 10001St Prime",
+                                                                   "path":  "examples/project-euler/problems/euler007-10001st-prime.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler007-10001st-prime.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler008",
+                                                                   "label":  "Euler008 Largest Product Series",
+                                                                   "path":  "examples/project-euler/problems/euler008-largest-product-series.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler008-largest-product-series.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler009",
+                                                                   "label":  "Euler009 Pythagorean Triplet",
+                                                                   "path":  "examples/project-euler/problems/euler009-pythagorean-triplet.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler009-pythagorean-triplet.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler010",
+                                                                   "label":  "Euler010 Sum Primes Below 2M",
+                                                                   "path":  "examples/project-euler/problems/euler010-sum-primes-below-2m.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler010-sum-primes-below-2m.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler011",
+                                                                   "label":  "Euler011 Largest Product Grid",
+                                                                   "path":  "examples/project-euler/problems/euler011-largest-product-grid.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler011-largest-product-grid.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler012",
+                                                                   "label":  "Euler012 Highly Divisible Triangular",
+                                                                   "path":  "examples/project-euler/problems/euler012-highly-divisible-triangular.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler012-highly-divisible-triangular.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler013",
+                                                                   "label":  "Euler013 Large Sum",
+                                                                   "path":  "examples/project-euler/problems/euler013-large-sum.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler013-large-sum.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler014",
+                                                                   "label":  "Euler014 Longest Collatz Chain",
+                                                                   "path":  "examples/project-euler/problems/euler014-longest-collatz-chain.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler014-longest-collatz-chain.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler015",
+                                                                   "label":  "Euler015 Lattice Paths",
+                                                                   "path":  "examples/project-euler/problems/euler015-lattice-paths.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler015-lattice-paths.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler016",
+                                                                   "label":  "Euler016 Power Digit Sum",
+                                                                   "path":  "examples/project-euler/problems/euler016-power-digit-sum.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler016-power-digit-sum.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler017",
+                                                                   "label":  "Euler017 Number Letter Counts",
+                                                                   "path":  "examples/project-euler/problems/euler017-number-letter-counts.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler017-number-letter-counts.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler018",
+                                                                   "label":  "Euler018 Maximum Path Sum",
+                                                                   "path":  "examples/project-euler/problems/euler018-maximum-path-sum.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler018-maximum-path-sum.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler019",
+                                                                   "label":  "Euler019 Counting Sundays",
+                                                                   "path":  "examples/project-euler/problems/euler019-counting-sundays.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler019-counting-sundays.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler020",
+                                                                   "label":  "Euler020 Factorial Digit Sum",
+                                                                   "path":  "examples/project-euler/problems/euler020-factorial-digit-sum.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler020-factorial-digit-sum.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler021",
+                                                                   "label":  "Euler021 Amicable Numbers",
+                                                                   "path":  "examples/project-euler/problems/euler021-amicable-numbers.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler021-amicable-numbers.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler022",
+                                                                   "label":  "Euler022 Names Scores",
+                                                                   "path":  "examples/project-euler/problems/euler022-names-scores.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler022-names-scores.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler023",
+                                                                   "label":  "Euler023 Non Abundant Sums",
+                                                                   "path":  "examples/project-euler/problems/euler023-non-abundant-sums.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler023-non-abundant-sums.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler024",
+                                                                   "label":  "Euler024 Lexicographic Permutations",
+                                                                   "path":  "examples/project-euler/problems/euler024-lexicographic-permutations.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler024-lexicographic-permutations.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "euler025",
+                                                                   "label":  "Euler025 1000 Digit Fibonacci",
+                                                                   "path":  "examples/project-euler/problems/euler025-1000-digit-fibonacci.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler025-1000-digit-fibonacci.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler026-template",
+                                                                   "label":  "Euler026 Template",
+                                                                   "path":  "examples/project-euler/problems/euler026-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler026-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler027-template",
+                                                                   "label":  "Euler027 Template",
+                                                                   "path":  "examples/project-euler/problems/euler027-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler027-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler028-template",
+                                                                   "label":  "Euler028 Template",
+                                                                   "path":  "examples/project-euler/problems/euler028-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler028-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler029-template",
+                                                                   "label":  "Euler029 Template",
+                                                                   "path":  "examples/project-euler/problems/euler029-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler029-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler030-template",
+                                                                   "label":  "Euler030 Template",
+                                                                   "path":  "examples/project-euler/problems/euler030-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler030-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler031-template",
+                                                                   "label":  "Euler031 Template",
+                                                                   "path":  "examples/project-euler/problems/euler031-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler031-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler032-template",
+                                                                   "label":  "Euler032 Template",
+                                                                   "path":  "examples/project-euler/problems/euler032-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler032-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler033-template",
+                                                                   "label":  "Euler033 Template",
+                                                                   "path":  "examples/project-euler/problems/euler033-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler033-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler034-template",
+                                                                   "label":  "Euler034 Template",
+                                                                   "path":  "examples/project-euler/problems/euler034-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler034-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler035-template",
+                                                                   "label":  "Euler035 Template",
+                                                                   "path":  "examples/project-euler/problems/euler035-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler035-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler036-template",
+                                                                   "label":  "Euler036 Template",
+                                                                   "path":  "examples/project-euler/problems/euler036-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler036-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler037-template",
+                                                                   "label":  "Euler037 Template",
+                                                                   "path":  "examples/project-euler/problems/euler037-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler037-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler038-template",
+                                                                   "label":  "Euler038 Template",
+                                                                   "path":  "examples/project-euler/problems/euler038-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler038-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler039-template",
+                                                                   "label":  "Euler039 Template",
+                                                                   "path":  "examples/project-euler/problems/euler039-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler039-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler040-template",
+                                                                   "label":  "Euler040 Template",
+                                                                   "path":  "examples/project-euler/problems/euler040-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler040-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler041-template",
+                                                                   "label":  "Euler041 Template",
+                                                                   "path":  "examples/project-euler/problems/euler041-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler041-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler042-template",
+                                                                   "label":  "Euler042 Template",
+                                                                   "path":  "examples/project-euler/problems/euler042-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler042-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler043-template",
+                                                                   "label":  "Euler043 Template",
+                                                                   "path":  "examples/project-euler/problems/euler043-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler043-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler044-template",
+                                                                   "label":  "Euler044 Template",
+                                                                   "path":  "examples/project-euler/problems/euler044-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler044-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler045-template",
+                                                                   "label":  "Euler045 Template",
+                                                                   "path":  "examples/project-euler/problems/euler045-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler045-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler046-template",
+                                                                   "label":  "Euler046 Template",
+                                                                   "path":  "examples/project-euler/problems/euler046-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler046-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler047-template",
+                                                                   "label":  "Euler047 Template",
+                                                                   "path":  "examples/project-euler/problems/euler047-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler047-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler048-template",
+                                                                   "label":  "Euler048 Template",
+                                                                   "path":  "examples/project-euler/problems/euler048-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler048-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler049-template",
+                                                                   "label":  "Euler049 Template",
+                                                                   "path":  "examples/project-euler/problems/euler049-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler049-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               },
+                                                               {
+                                                                   "id":  "project-euler-problems-euler050-template",
+                                                                   "label":  "Euler050 Template",
+                                                                   "path":  "examples/project-euler/problems/euler050-template.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/problems/euler050-template.hla64",
+                                                                   "expected":  "Project Euler stub template â€” implement and compare with expected/ answers."
+                                                               }
+                                                           ]
+                                          },
+                                          {
+                                              "id":  "runner",
+                                              "label":  "Runner",
+                                              "examples":  [
+                                                               {
+                                                                   "id":  "project-euler-runner-euler-runner",
+                                                                   "label":  "Euler Runner",
+                                                                   "path":  "examples/project-euler/runner/euler-runner.hla64",
+                                                                   "run":  "hla64 run examples/project-euler/runner/euler-runner.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               }
+                                                           ]
+                                          }
+                                      ]
+                       },
+                       {
+                           "id":  "qa",
+                           "label":  "QA",
+                           "groups":  [
+                                          {
+                                              "id":  "bug-farm",
+                                              "label":  "Bug farm",
+                                              "examples":  [
+                                                               {
+                                                                   "id":  "bug-call-inside-loop-call-inside-loop",
+                                                                   "label":  "Call Inside Loop",
+                                                                   "path":  "examples/qa/bug-farm/call-inside-loop/call-inside-loop.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/call-inside-loop/call-inside-loop.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-deep-nested-if-deep-nested-if",
+                                                                   "label":  "Deep Nested If",
+                                                                   "path":  "examples/qa/bug-farm/deep-nested-if/deep-nested-if.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/deep-nested-if/deep-nested-if.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-idiv-loop-facts-table",
+                                                                   "label":  "Facts Table",
+                                                                   "path":  "examples/qa/bug-farm/idiv-loop/facts-table.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/idiv-loop/facts-table.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-idiv-loop-idiv-loop",
+                                                                   "label":  "Idiv Loop",
+                                                                   "path":  "examples/qa/bug-farm/idiv-loop/idiv-loop.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/idiv-loop/idiv-loop.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-idiv-loop-idiv-mod-chain",
+                                                                   "label":  "Idiv Mod Chain",
+                                                                   "path":  "examples/qa/bug-farm/idiv-loop/idiv-mod-chain.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/idiv-loop/idiv-mod-chain.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-idiv-loop-idiv-only",
+                                                                   "label":  "Idiv Only",
+                                                                   "path":  "examples/qa/bug-farm/idiv-loop/idiv-only.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/idiv-loop/idiv-only.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-idiv-loop-idiv-r11",
+                                                                   "label":  "Idiv R11",
+                                                                   "path":  "examples/qa/bug-farm/idiv-loop/idiv-r11.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/idiv-loop/idiv-r11.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-idiv-loop-idiv-r8",
+                                                                   "label":  "Idiv R8",
+                                                                   "path":  "examples/qa/bug-farm/idiv-loop/idiv-r8.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/idiv-loop/idiv-r8.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-idiv-loop-idiv-then-mod",
+                                                                   "label":  "Idiv Then Mod",
+                                                                   "path":  "examples/qa/bug-farm/idiv-loop/idiv-then-mod.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/idiv-loop/idiv-then-mod.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-idiv-loop-lehmer-indices",
+                                                                   "label":  "Lehmer Indices",
+                                                                   "path":  "examples/qa/bug-farm/idiv-loop/lehmer-indices.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/idiv-loop/lehmer-indices.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-idiv-loop-lehmer-perm",
+                                                                   "label":  "Lehmer Perm",
+                                                                   "path":  "examples/qa/bug-farm/idiv-loop/lehmer-perm.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/idiv-loop/lehmer-perm.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-idiv-loop-mod-only",
+                                                                   "label":  "Mod Only",
+                                                                   "path":  "examples/qa/bug-farm/idiv-loop/mod-only.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/idiv-loop/mod-only.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-idiv-loop-mod-small",
+                                                                   "label":  "Mod Small",
+                                                                   "path":  "examples/qa/bug-farm/idiv-loop/mod-small.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/idiv-loop/mod-small.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-idiv-loop-static-index-loop",
+                                                                   "label":  "Static Index Loop",
+                                                                   "path":  "examples/qa/bug-farm/idiv-loop/static-index-loop.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/idiv-loop/static-index-loop.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-idiv-loop-static-store",
+                                                                   "label":  "Static Store",
+                                                                   "path":  "examples/qa/bug-farm/idiv-loop/static-store.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/idiv-loop/static-store.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-large-static-buffer-large-static-buffer",
+                                                                   "label":  "Large Static Buffer",
+                                                                   "path":  "examples/qa/bug-farm/large-static-buffer/large-static-buffer.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/large-static-buffer/large-static-buffer.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-many-externs-many-externs",
+                                                                   "label":  "Many Externs",
+                                                                   "path":  "examples/qa/bug-farm/many-externs/many-externs.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/many-externs/many-externs.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-many-locals-many-locals",
+                                                                   "label":  "Many Locals",
+                                                                   "path":  "examples/qa/bug-farm/many-locals/many-locals.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/many-locals/many-locals.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-many-procedures-many-procedures",
+                                                                   "label":  "Many Procedures",
+                                                                   "path":  "examples/qa/bug-farm/many-procedures/many-procedures.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/many-procedures/many-procedures.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-many-stdout-args-many-stdout-args",
+                                                                   "label":  "Many Stdout Args",
+                                                                   "path":  "examples/qa/bug-farm/many-stdout-args/many-stdout-args.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/many-stdout-args/many-stdout-args.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-nested-while-nested-while",
+                                                                   "label":  "Nested While",
+                                                                   "path":  "examples/qa/bug-farm/nested-while/nested-while.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/nested-while/nested-while.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               },
+                                                               {
+                                                                   "id":  "bug-register-pressure-register-pressure",
+                                                                   "label":  "Register Pressure",
+                                                                   "path":  "examples/qa/bug-farm/register-pressure/register-pressure.hla64",
+                                                                   "run":  "hla64 run examples/qa/bug-farm/register-pressure/register-pressure.hla64",
+                                                                   "expected":  "(run locally to inspect stdout and exit code)"
+                                                               }
+                                                           ]
+                                          },
+                                          {
+                                              "id":  "invalid",
+                                              "label":  "Invalid (must not compile)",
+                                              "examples":  [
+                                                               {
+                                                                   "id":  "invalid-address-of-register",
+                                                                   "label":  "Address Of Register",
+                                                                   "path":  "examples/qa/invalid/address-of-register/address-of-register.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/address-of-register/address-of-register.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               },
+                                                               {
+                                                                   "id":  "invalid-array-unsupported-type",
+                                                                   "label":  "Array Unsupported Type",
+                                                                   "path":  "examples/qa/invalid/array-unsupported-type/array-unsupported-type.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/array-unsupported-type/array-unsupported-type.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               },
+                                                               {
+                                                                   "id":  "invalid-const-divide-by-zero",
+                                                                   "label":  "Const Divide By Zero",
+                                                                   "path":  "examples/qa/invalid/const-divide-by-zero/const-divide-by-zero.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/const-divide-by-zero/const-divide-by-zero.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               },
+                                                               {
+                                                                   "id":  "invalid-enum-duplicate-member",
+                                                                   "label":  "Enum Duplicate Member",
+                                                                   "path":  "examples/qa/invalid/enum-duplicate-member/enum-duplicate-member.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/enum-duplicate-member/enum-duplicate-member.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               },
+                                                               {
+                                                                   "id":  "invalid-enum-undefined-member",
+                                                                   "label":  "Enum Undefined Member",
+                                                                   "path":  "examples/qa/invalid/enum-undefined-member/enum-undefined-member.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/enum-undefined-member/enum-undefined-member.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               },
+                                                               {
+                                                                   "id":  "invalid-expr-divide-by-zero",
+                                                                   "label":  "Expr Divide By Zero",
+                                                                   "path":  "examples/qa/invalid/expr-divide-by-zero/expr-divide-by-zero.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/expr-divide-by-zero/expr-divide-by-zero.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               },
+                                                               {
+                                                                   "id":  "invalid-expr-invalid-target",
+                                                                   "label":  "Expr Invalid Target",
+                                                                   "path":  "examples/qa/invalid/expr-invalid-target/expr-invalid-target.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/expr-invalid-target/expr-invalid-target.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               },
+                                                               {
+                                                                   "id":  "invalid-index-non-array",
+                                                                   "label":  "Index Non Array",
+                                                                   "path":  "examples/qa/invalid/index-non-array/index-non-array.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/index-non-array/index-non-array.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               },
+                                                               {
+                                                                   "id":  "invalid-memory-ref-literal",
+                                                                   "label":  "Memory Ref Literal",
+                                                                   "path":  "examples/qa/invalid/memory-ref-literal/memory-ref-literal.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/memory-ref-literal/memory-ref-literal.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               },
+                                                               {
+                                                                   "id":  "invalid-mismatched-program-name",
+                                                                   "label":  "Mismatched Program Name",
+                                                                   "path":  "examples/qa/invalid/mismatched-program-name/mismatched-program-name.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/mismatched-program-name/mismatched-program-name.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               },
+                                                               {
+                                                                   "id":  "invalid-missing-return",
+                                                                   "label":  "Missing Return",
+                                                                   "path":  "examples/qa/invalid/missing-return/missing-return.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/missing-return/missing-return.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               },
+                                                               {
+                                                                   "id":  "invalid-record-unknown-field",
+                                                                   "label":  "Record Unknown Field",
+                                                                   "path":  "examples/qa/invalid/record-unknown-field/record-unknown-field.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/record-unknown-field/record-unknown-field.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               },
+                                                               {
+                                                                   "id":  "invalid-static-duplicate",
+                                                                   "label":  "Static Duplicate",
+                                                                   "path":  "examples/qa/invalid/static-duplicate/static-duplicate.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/static-duplicate/static-duplicate.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               },
+                                                               {
+                                                                   "id":  "invalid-unclosed-program",
+                                                                   "label":  "Unclosed Program",
+                                                                   "path":  "examples/qa/invalid/unclosed-program/unclosed-program.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/unclosed-program/unclosed-program.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               },
+                                                               {
+                                                                   "id":  "invalid-unknown-extern-call",
+                                                                   "label":  "Unknown Extern Call",
+                                                                   "path":  "examples/qa/invalid/unknown-extern-call/unknown-extern-call.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/unknown-extern-call/unknown-extern-call.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               },
+                                                               {
+                                                                   "id":  "invalid-unknown-instruction",
+                                                                   "label":  "Unknown Instruction",
+                                                                   "path":  "examples/qa/invalid/unknown-instruction/unknown-instruction.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/unknown-instruction/unknown-instruction.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               },
+                                                               {
+                                                                   "id":  "invalid-unknown-param-type",
+                                                                   "label":  "Unknown Param Type",
+                                                                   "path":  "examples/qa/invalid/unknown-param-type/unknown-param-type.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/unknown-param-type/unknown-param-type.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               },
+                                                               {
+                                                                   "id":  "invalid-unknown-register",
+                                                                   "label":  "Unknown Register",
+                                                                   "path":  "examples/qa/invalid/unknown-register/unknown-register.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/unknown-register/unknown-register.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               },
+                                                               {
+                                                                   "id":  "invalid-unknown-type",
+                                                                   "label":  "Unknown Type",
+                                                                   "path":  "examples/qa/invalid/unknown-type/unknown-type.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/unknown-type/unknown-type.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               },
+                                                               {
+                                                                   "id":  "invalid-variadic-extern",
+                                                                   "label":  "Variadic Extern",
+                                                                   "path":  "examples/qa/invalid/variadic-extern/variadic-extern.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/variadic-extern/variadic-extern.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               },
+                                                               {
+                                                                   "id":  "invalid-wrong-operand-count",
+                                                                   "label":  "Wrong Operand Count",
+                                                                   "path":  "examples/qa/invalid/wrong-operand-count/wrong-operand-count.hla64",
+                                                                   "run":  "hla64 run examples/qa/invalid/wrong-operand-count/wrong-operand-count.hla64",
+                                                                   "expected":  "Expected: compile-time diagnostic(s) in Explain tab (success: false).",
+                                                                   "note":  "Negative example â€” cached explain JSON includes diagnostics, not runnable NASM."
+                                                               }
+                                                           ]
+                                          }
+                                      ]
+                       }
+                   ]
 }

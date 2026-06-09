@@ -1,0 +1,16 @@
+﻿{
+  "schemaVersion": 1,
+  "success": false,
+  "version": "0.2.1-alpha",
+  "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\qa\\invalid\\index-non-array\\index-non-array.hla64",
+  "target": "linux-x64-sysv",
+  "diagnostics": [
+    {
+      "code": "HLAX0026",
+      "severity": "error",
+      "message": "\u0027x\u0027 is not an array; use type[count] in the var or static block",
+      "line": 5,
+      "column": 12
+    }
+  ]
+}

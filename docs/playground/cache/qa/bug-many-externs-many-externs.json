@@ -1,0 +1,15 @@
+﻿{
+  "schemaVersion": 1,
+  "success": true,
+  "version": "0.2.1-alpha",
+  "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\qa\\bug-farm\\many-externs\\many-externs.hla64",
+  "target": "linux-x64-sysv",
+  "diagnostics": [],
+  "ir": [
+    "function _start:\n  entry:\n    Call  [extern:GetCommandLineA]\n    Call v0 [extern:GetModuleHandleA]\n    Call  [extern:GetLastError]\n    Call v1 [extern:SetLastError]\n    Call  [extern:GetCurrentProcess]\n    Call  [extern:GetTickCount]\n    v2 = Move v3"
+  ],
+  "lowered": [
+    "function _start:\n  entry: True, export: False\n  stack frame: 8 bytes\n  externs: GetCommandLineA, GetModuleHandleA, GetLastError, SetLastError, GetCurrentProcess, GetTickCount\n  entry:\n        xor ebx, ebx    ; default exit code = 0 (callee-saved)\n        push rbp\n        mov rbp, rsp\n        sub rsp, 8      ; align stack to 16 bytes\n        sub rsp, 8      ; align stack\r\n    call GetCommandLineA\r\n    add rsp, 8      ; restore stack\n        mov rdi, 0\r\n    sub rsp, 8      ; align stack\r\n    call GetModuleHandleA\r\n    add rsp, 8      ; restore stack\n        sub rsp, 8      ; align stack\r\n    call GetLastError\r\n    add rsp, 8      ; restore stack\n        mov rdi, 0\r\n    sub rsp, 8      ; align stack\r\n    call SetLastError\r\n    add rsp, 8      ; restore stack\n        sub rsp, 8      ; align stack\r\n    call GetCurrentProcess\r\n    add rsp, 8      ; restore stack\n        sub rsp, 8      ; align stack\r\n    call GetTickCount\r\n    add rsp, 8      ; restore stack\n        mov rbx, 0\n        mov rdi, rbx    ; exit code\n        mov rax, 60     ; sys_exit\n        syscall"
+  ],
+  "nasm": "bits 64\r\nextern GetCommandLineA\r\nextern GetModuleHandleA\r\nextern GetLastError\r\nextern SetLastError\r\nextern GetCurrentProcess\r\nextern GetTickCount\r\nsection .text\r\nglobal _start\r\n\r\n_start:\r\n    xor ebx, ebx    ; default exit code = 0 (callee-saved)\r\n    push rbp\r\n    mov rbp, rsp\r\n    sub rsp, 8      ; align stack to 16 bytes\r\n    sub rsp, 8      ; align stack\r\n    call GetCommandLineA\r\n    add rsp, 8      ; restore stack\r\n    mov rdi, 0\r\n    sub rsp, 8      ; align stack\r\n    call GetModuleHandleA\r\n    add rsp, 8      ; restore stack\r\n    sub rsp, 8      ; align stack\r\n    call GetLastError\r\n    add rsp, 8      ; restore stack\r\n    mov rdi, 0\r\n    sub rsp, 8      ; align stack\r\n    call SetLastError\r\n    add rsp, 8      ; restore stack\r\n    sub rsp, 8      ; align stack\r\n    call GetCurrentProcess\r\n    add rsp, 8      ; restore stack\r\n    sub rsp, 8      ; align stack\r\n    call GetTickCount\r\n    add rsp, 8      ; restore stack\r\n    mov rbx, 0\r\n    mov rdi, rbx    ; exit code\r\n    mov rax, 60     ; sys_exit\r\n    syscall\r\n\r\nsection .data\r\nnewline db 0x0A\r\n"
+}

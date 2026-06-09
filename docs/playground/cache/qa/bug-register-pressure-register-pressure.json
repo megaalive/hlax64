@@ -1,0 +1,17 @@
+﻿{
+  "schemaVersion": 1,
+  "success": true,
+  "version": "0.2.1-alpha",
+  "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\qa\\bug-farm\\register-pressure\\register-pressure.hla64",
+  "target": "linux-x64-sysv",
+  "diagnostics": [],
+  "ir": [
+    "function _start:\n  entry:\n    v4 = Move v5\n    v6 = Move v7\n    v8 = Move v9\n    v10 = Move v11\n    Branch  -\u003E while_header_0\n  while_header_0:\n    Compare (LessThanSigned) v4, v10\n    ConditionalBranch (GreaterOrEqualSigned)  -\u003E endwhile_0\n    Branch  -\u003E while_body_0\n  while_body_0:\n    Call v4 [Step]\n    v4 = Add v12\n    v8 = Add v6\n    v8 = Add v13\n    Branch  -\u003E while_header_0\n  endwhile_0:\n    Branch  -\u003E cont_0\n  cont_0:\n    v14 = Move v15",
+    "function Step:\n  entry:\n    v1 = Move v2\n    v3 = Add v1"
+  ],
+  "lowered": [
+    "function _start:\n  entry: True, export: False\n  stack frame: 8 bytes\n  entry:\n        xor ebx, ebx    ; default exit code = 0 (callee-saved)\n        push rbp\n        mov rbp, rsp\n        sub rsp, 8      ; align stack to 16 bytes\n        mov r12, 0\n        mov r13, 0\n        mov r14, 0\n        mov r15, 8\n        jmp while_header_0\n  while_header_0:\n        cmp r12, r15\n        jge endwhile_0\n        jmp while_body_0\n  while_body_0:\n        mov rdi, r12\r\n    sub rsp, 8      ; align stack\r\n    call Step\r\n    add rsp, 8      ; restore stack\n        add r12, 1\n        add r14, r13\n        add r14, 1\n        jmp while_header_0\n  endwhile_0:\n        jmp cont_0\n  cont_0:\n        mov rbx, 0\n        mov rdi, rbx    ; exit code\n        mov rax, 60     ; sys_exit\n        syscall",
+    "function Step:\n  entry: False, export: False\n  stack frame: 16 bytes\n  parameters: n\n  entry:\n        push rbp\n        mov rbp, rsp\n        sub rsp, 16\n        mov qword [rbp-8], rdi\n        mov rax, qword [rbp-8]\n        add 1, rax\n        mov rsp, rbp\n        pop rbp\n        ret"
+  ],
+  "nasm": "bits 64\r\nsection .text\r\nglobal _start\r\n\r\n_start:\r\n    xor ebx, ebx    ; default exit code = 0 (callee-saved)\r\n    push rbp\r\n    mov rbp, rsp\r\n    sub rsp, 8      ; align stack to 16 bytes\r\n    mov r12, 0\r\n    mov r13, 0\r\n    mov r14, 0\r\n    mov r15, 8\r\n    jmp while_header_0\r\nwhile_header_0:\r\n    cmp r12, r15\r\n    jge endwhile_0\r\n    jmp while_body_0\r\nwhile_body_0:\r\n    mov rdi, r12\r\n    sub rsp, 8      ; align stack\r\n    call Step\r\n    add rsp, 8      ; restore stack\r\n    add r12, 1\r\n    add r14, r13\r\n    add r14, 1\r\n    jmp while_header_0\r\nendwhile_0:\r\n    jmp cont_0\r\ncont_0:\r\n    mov rbx, 0\r\n    mov rdi, rbx    ; exit code\r\n    mov rax, 60     ; sys_exit\r\n    syscall\r\n\r\nStep:\r\n    push rbp\r\n    mov rbp, rsp\r\n    sub rsp, 16\r\n    mov qword [rbp-8], rdi\r\n    mov rax, qword [rbp-8]\r\n    add 1, rax\r\n    mov rsp, rbp\r\n    pop rbp\r\n    ret\r\n\r\nsection .data\r\nnewline db 0x0A\r\n"
+}

@@ -1,0 +1,30 @@
+﻿{
+  "schemaVersion": 1,
+  "success": false,
+  "version": "0.2.1-alpha",
+  "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\curriculum\\06-abi\\avx2-intrinsic.hla64",
+  "target": "linux-x64-sysv",
+  "diagnostics": [
+    {
+      "code": "HLAX0070",
+      "severity": "error",
+      "message": "Instruction \u0027vxorpd\u0027 requires CPU feature \u0027avx2\u0027 (enable with --features \u002Bavx2)",
+      "line": 5,
+      "column": 5
+    },
+    {
+      "code": "HLAX0070",
+      "severity": "error",
+      "message": "Instruction \u0027vaddpd\u0027 requires CPU feature \u0027avx2\u0027 (enable with --features \u002Bavx2)",
+      "line": 6,
+      "column": 5
+    },
+    {
+      "code": "HLAX0070",
+      "severity": "error",
+      "message": "Intrinsic \u0027simd.add_f64x4\u0027 requires CPU feature \u0027avx2\u0027 (enable with --features \u002Bavx2)",
+      "line": 0,
+      "column": 0
+    }
+  ]
+}

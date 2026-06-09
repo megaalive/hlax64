@@ -1,0 +1,16 @@
+﻿{
+  "schemaVersion": 1,
+  "success": false,
+  "version": "0.2.1-alpha",
+  "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\qa\\invalid\\unclosed-program\\unclosed-program.hla64",
+  "target": "linux-x64-sysv",
+  "diagnostics": [
+    {
+      "code": "HLAX1000",
+      "severity": "error",
+      "message": "Expected \u0027End\u0027 but got \u0027EndOfFile\u0027 (\u0027\u0027) at line 5, column 1",
+      "line": 5,
+      "column": 1
+    }
+  ]
+}

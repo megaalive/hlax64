@@ -1,0 +1,16 @@
+﻿{
+  "schemaVersion": 1,
+  "success": false,
+  "version": "0.2.1-alpha",
+  "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\qa\\invalid\\static-duplicate\\static-duplicate.hla64",
+  "target": "linux-x64-sysv",
+  "diagnostics": [
+    {
+      "code": "HLAX0045",
+      "severity": "error",
+      "message": "Duplicate static symbol \u0027x\u0027",
+      "line": 4,
+      "column": 5
+    }
+  ]
+}

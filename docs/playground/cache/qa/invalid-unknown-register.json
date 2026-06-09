@@ -1,0 +1,17 @@
+﻿{
+  "schemaVersion": 1,
+  "success": false,
+  "version": "0.2.1-alpha",
+  "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\qa\\invalid\\unknown-register\\unknown-register.hla64",
+  "target": "linux-x64-sysv",
+  "diagnostics": [
+    {
+      "code": "HLAX0012",
+      "severity": "error",
+      "message": "Unknown register \u0027raxz\u0027",
+      "line": 0,
+      "column": 0,
+      "suggestion": "rax"
+    }
+  ]
+}

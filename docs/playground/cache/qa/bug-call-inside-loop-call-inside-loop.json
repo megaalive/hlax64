@@ -1,0 +1,17 @@
+﻿{
+  "schemaVersion": 1,
+  "success": true,
+  "version": "0.2.1-alpha",
+  "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\qa\\bug-farm\\call-inside-loop\\call-inside-loop.hla64",
+  "target": "linux-x64-sysv",
+  "diagnostics": [],
+  "ir": [
+    "function _start:\n  entry:\n    v4 = Move v5\n    v6 = Move v7\n    Branch  -\u003E while_header_0\n  while_header_0:\n    Compare (LessThanSigned) v4, v6\n    ConditionalBranch (GreaterOrEqualSigned)  -\u003E endwhile_0\n    Branch  -\u003E while_body_0\n  while_body_0:\n    Call v4 [Bump]\n    v4 = Add v8\n    Branch  -\u003E while_header_0\n  endwhile_0:\n    Branch  -\u003E cont_0\n  cont_0:\n    v9 = Move v10",
+    "function Bump:\n  entry:\n    v1 = Move v2\n    v3 = Add v1"
+  ],
+  "lowered": [
+    "function _start:\n  entry: True, export: False\n  stack frame: 8 bytes\n  entry:\n        xor ebx, ebx    ; default exit code = 0 (callee-saved)\n        push rbp\n        mov rbp, rsp\n        sub rsp, 8      ; align stack to 16 bytes\n        mov r8, 0\n        mov r10, 16\n        jmp while_header_0\n  while_header_0:\n        cmp r8, r10\n        jge endwhile_0\n        jmp while_body_0\n  while_body_0:\n        mov rdi, r8\r\n    sub rsp, 8      ; align stack\r\n    call Bump\r\n    add rsp, 8      ; restore stack\n        add r8, 1\n        jmp while_header_0\n  endwhile_0:\n        jmp cont_0\n  cont_0:\n        mov rbx, 0\n        mov rdi, rbx    ; exit code\n        mov rax, 60     ; sys_exit\n        syscall",
+    "function Bump:\n  entry: False, export: False\n  stack frame: 16 bytes\n  parameters: n\n  entry:\n        push rbp\n        mov rbp, rsp\n        sub rsp, 16\n        mov qword [rbp-8], rdi\n        mov rax, qword [rbp-8]\n        add 1, rax\n        mov rsp, rbp\n        pop rbp\n        ret"
+  ],
+  "nasm": "bits 64\r\nsection .text\r\nglobal _start\r\n\r\n_start:\r\n    xor ebx, ebx    ; default exit code = 0 (callee-saved)\r\n    push rbp\r\n    mov rbp, rsp\r\n    sub rsp, 8      ; align stack to 16 bytes\r\n    mov r8, 0\r\n    mov r10, 16\r\n    jmp while_header_0\r\nwhile_header_0:\r\n    cmp r8, r10\r\n    jge endwhile_0\r\n    jmp while_body_0\r\nwhile_body_0:\r\n    mov rdi, r8\r\n    sub rsp, 8      ; align stack\r\n    call Bump\r\n    add rsp, 8      ; restore stack\r\n    add r8, 1\r\n    jmp while_header_0\r\nendwhile_0:\r\n    jmp cont_0\r\ncont_0:\r\n    mov rbx, 0\r\n    mov rdi, rbx    ; exit code\r\n    mov rax, 60     ; sys_exit\r\n    syscall\r\n\r\nBump:\r\n    push rbp\r\n    mov rbp, rsp\r\n    sub rsp, 16\r\n    mov qword [rbp-8], rdi\r\n    mov rax, qword [rbp-8]\r\n    add 1, rax\r\n    mov rsp, rbp\r\n    pop rbp\r\n    ret\r\n\r\nsection .data\r\nnewline db 0x0A\r\n"
+}

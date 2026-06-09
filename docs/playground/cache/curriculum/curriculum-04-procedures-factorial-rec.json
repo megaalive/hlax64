@@ -1,0 +1,17 @@
+﻿{
+  "schemaVersion": 1,
+  "success": true,
+  "version": "0.2.1-alpha",
+  "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\curriculum\\04-procedures\\factorial-rec.hla64",
+  "target": "linux-x64-sysv",
+  "diagnostics": [],
+  "ir": [
+    "function _start:\n  entry:\n    Call v8 [Factorial]",
+    "function Factorial:\n  entry:\n    Compare (LessThanSigned) v1, v2\n    ConditionalBranch (LessThanSigned)  -\u003E then_0\n    Branch  -\u003E else_0\n  then_0:\n    v3 = Move v4\n    Branch  -\u003E endif_0\n  else_0:\n    v5 = Move v1\n    v6 = Move v1\n    v6 = Subtract v7\n    Call v6 [Factorial]\n    v3 = Multiply v5\n    Branch  -\u003E endif_0\n  endif_0:\n    Branch  -\u003E cont_0\n  cont_0:"
+  ],
+  "lowered": [
+    "function _start:\n  entry: True, export: False\n  stack frame: 8 bytes\n  entry:\n        xor ebx, ebx    ; default exit code = 0 (callee-saved)\n        push rbp\n        mov rbp, rsp\n        sub rsp, 8      ; align stack to 16 bytes\n        mov rdi, 5\r\n    sub rsp, 8      ; align stack\r\n    call Factorial\r\n    add rsp, 8      ; restore stack\n        mov rdi, rax    ; exit code\n        mov rax, 60     ; sys_exit\n        syscall",
+    "function Factorial:\n  entry: False, export: False\n  stack frame: 16 bytes\n  parameters: n\n  entry:\n        push rbp\n        mov rbp, rsp\n        sub rsp, 16\n        mov qword [rbp-8], rdi\n        cmp qword [rbp-8], 2\n        jl then_0\n        jmp else_0\n  then_0:\n        mov rax, 1\n        jmp endif_0\n  else_0:\n        mov rbx, qword [rbp-8]\n        mov rcx, qword [rbp-8]\n        sub rcx, 1\n        mov rdi, rcx\r\n    sub rsp, 8      ; align stack\r\n    call Factorial\r\n    add rsp, 8      ; restore stack\n        imul rax, rbx\n        jmp endif_0\n  endif_0:\n        jmp cont_0\n  cont_0:\n        mov rsp, rbp\n        pop rbp\n        ret"
+  ],
+  "nasm": "bits 64\r\nsection .text\r\nglobal _start\r\n\r\n_start:\r\n    xor ebx, ebx    ; default exit code = 0 (callee-saved)\r\n    push rbp\r\n    mov rbp, rsp\r\n    sub rsp, 8      ; align stack to 16 bytes\r\n    mov rdi, 5\r\n    sub rsp, 8      ; align stack\r\n    call Factorial\r\n    add rsp, 8      ; restore stack\r\n    mov rdi, rax    ; exit code\r\n    mov rax, 60     ; sys_exit\r\n    syscall\r\n\r\nFactorial:\r\n    push rbp\r\n    mov rbp, rsp\r\n    sub rsp, 16\r\n    mov qword [rbp-8], rdi\r\n    cmp qword [rbp-8], 2\r\n    jl then_0\r\n    jmp else_0\r\nthen_0:\r\n    mov rax, 1\r\n    jmp endif_0\r\nelse_0:\r\n    mov rbx, qword [rbp-8]\r\n    mov rcx, qword [rbp-8]\r\n    sub rcx, 1\r\n    mov rdi, rcx\r\n    sub rsp, 8      ; align stack\r\n    call Factorial\r\n    add rsp, 8      ; restore stack\r\n    imul rax, rbx\r\n    jmp endif_0\r\nendif_0:\r\n    jmp cont_0\r\ncont_0:\r\n    mov rsp, rbp\r\n    pop rbp\r\n    ret\r\n\r\nsection .data\r\nnewline db 0x0A\r\n"
+}

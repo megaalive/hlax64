@@ -15,7 +15,7 @@
       --accent: #238636;
       --accent-hover: #2ea043;
       --link: #58a6ff;
-      --sidebar-w: 220px;
+      --sidebar-w: 260px;
       font-family: system-ui, Segoe UI, sans-serif;
     }
     * { box-sizing: border-box; }
@@ -44,6 +44,7 @@
       flex-shrink: 0;
     }
     nav h2 { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 1rem 0.75rem 0.5rem; }
+    nav h3 { font-size: 0.68rem; font-weight: 600; color: var(--muted); margin: 0.65rem 0.75rem 0.35rem; padding-left: 0.25rem; }
     nav button {
       display: block; width: 100%; text-align: left;
       padding: 0.45rem 0.75rem; border: none; background: transparent;
@@ -250,11 +251,18 @@
     let EXAMPLES = [];
     let exampleById = new Map();
 
+    function categoryExamples(cat) {
+      if (cat.examples?.length) return cat.examples;
+      const out = [];
+      for (const g of cat.groups || []) out.push(...(g.examples || []));
+      return out;
+    }
+
     function flattenManifest(manifest) {
       const flat = [];
       exampleById.clear();
       for (const cat of manifest.categories) {
-        for (const ex of cat.examples) {
+        for (const ex of categoryExamples(cat)) {
           const entry = { ...ex, category: cat.id };
           flat.push(entry);
           exampleById.set(entry.id, entry);
@@ -291,6 +299,15 @@
       setTimeout(() => t.classList.remove('show'), 1800);
     }
 
+    function appendExampleButton(nav, ex) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = ex.label;
+      b.dataset.id = ex.id;
+      b.onclick = () => loadExample(ex.id, true);
+      nav.appendChild(b);
+    }
+
     function buildNav(manifest) {
       const nav = $('nav');
       nav.innerHTML = '';
@@ -298,13 +315,17 @@
         const h = document.createElement('h2');
         h.textContent = cat.label;
         nav.appendChild(h);
-        for (const ex of cat.examples) {
-          const b = document.createElement('button');
-          b.type = 'button';
-          b.textContent = ex.label;
-          b.dataset.id = ex.id;
-          b.onclick = () => loadExample(ex.id, true);
-          nav.appendChild(b);
+        if (cat.groups?.length) {
+          for (const group of cat.groups) {
+            if (cat.groups.length > 1 || group.id !== '_') {
+              const gh = document.createElement('h3');
+              gh.textContent = group.label;
+              nav.appendChild(gh);
+            }
+            for (const ex of group.examples || []) appendExampleButton(nav, ex);
+          }
+        } else {
+          for (const ex of cat.examples || []) appendExampleButton(nav, ex);
         }
       }
     }

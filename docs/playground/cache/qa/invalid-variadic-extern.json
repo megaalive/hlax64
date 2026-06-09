@@ -1,0 +1,16 @@
+﻿{
+  "schemaVersion": 1,
+  "success": false,
+  "version": "0.2.1-alpha",
+  "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\qa\\invalid\\variadic-extern\\variadic-extern.hla64",
+  "target": "linux-x64-sysv",
+  "diagnostics": [
+    {
+      "code": "HLAX0055",
+      "severity": "error",
+      "message": "Variadic float arguments are not yet supported on this target (integer \u002B cstring only)",
+      "line": 0,
+      "column": 0
+    }
+  ]
+}

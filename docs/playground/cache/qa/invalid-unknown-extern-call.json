@@ -1,0 +1,16 @@
+﻿{
+  "schemaVersion": 1,
+  "success": false,
+  "version": "0.2.1-alpha",
+  "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\qa\\invalid\\unknown-extern-call\\unknown-extern-call.hla64",
+  "target": "linux-x64-sysv",
+  "diagnostics": [
+    {
+      "code": "HLAX0054",
+      "severity": "error",
+      "message": "Unknown procedure or extern \u0027NoSuchProc\u0027",
+      "line": 0,
+      "column": 0
+    }
+  ]
+}
