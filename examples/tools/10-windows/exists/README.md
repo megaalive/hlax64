@@ -2,7 +2,7 @@
 
 Checks whether the path at `argv[1]` exists and returns exit code `0` when it does, `1` when missing.
 
-This is the smallest Win32 interop smoke test in the real-tools folder.
+Uses the cross-platform runtime helper `hlax_path_exists` from `stdlib64.hhf` (no raw Win32/Linux `extern` boilerplate).
 
 ## Usage
 
