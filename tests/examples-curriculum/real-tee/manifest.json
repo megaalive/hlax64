@@ -1,0 +1,6 @@
+{
+  "name": "real-tee",
+  "source": "../../../examples/tools/10-windows/tee/tee.hla64",
+  "expectedExitCode": 0,
+  "description": "Real tool: tee stdin to stdout and file via hlax_stdout_write + hlax_file_write (compile-only)"
+}

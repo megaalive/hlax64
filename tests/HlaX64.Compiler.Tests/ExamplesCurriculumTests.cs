@@ -8,7 +8,7 @@ public sealed class ExamplesCurriculumTests
     public void CurriculumManifest_LoadAll_HasExpectedPrograms()
     {
         var manifests = TestManifest.LoadAll("tests/examples-curriculum");
-        Assert.Equal(66, manifests.Count);
+        Assert.Equal(70, manifests.Count);
         Assert.Contains(manifests, m => m.Name == "curriculum-hello");
         Assert.Contains(manifests, m => m.Name == "real-listfiles");
         Assert.Contains(manifests, m => m.Name == "real-filesize");
@@ -19,6 +19,8 @@ public sealed class ExamplesCurriculumTests
         Assert.Contains(manifests, m => m.Name == "real-fnv1a");
         Assert.Contains(manifests, m => m.Name == "real-cat");
         Assert.Contains(manifests, m => m.Name == "real-strings");
+        Assert.Contains(manifests, m => m.Name == "real-cp");
+        Assert.Contains(manifests, m => m.Name == "real-tee");
         Assert.Contains(manifests, m => m.Name == "real-filemagic");
         Assert.Contains(manifests, m => m.Name == "real-cmp");
         Assert.Contains(manifests, m => m.Name == "interop-native-count-lines");
@@ -39,6 +41,8 @@ public sealed class ExamplesCurriculumTests
         Assert.Contains(manifests, m => m.Name == "linux-fnv1a");
         Assert.Contains(manifests, m => m.Name == "linux-cat");
         Assert.Contains(manifests, m => m.Name == "linux-strings");
+        Assert.Contains(manifests, m => m.Name == "linux-cp");
+        Assert.Contains(manifests, m => m.Name == "linux-tee");
         Assert.Contains(manifests, m => m.Name == "curriculum-const-expr");
         Assert.Contains(manifests, m => m.Name == "curriculum-idiv-jmp");
         Assert.Contains(manifests, m => m.Name == "curriculum-dynamic-array");

@@ -23,6 +23,8 @@ public sealed class LinuxRealToolTests
         yield return ["fnv1a"];
         yield return ["cat"];
         yield return ["strings"];
+        yield return ["cp"];
+        yield return ["tee"];
     }
 
     [Theory]
@@ -47,10 +49,11 @@ public sealed class LinuxRealToolTests
 
         var expectedStdout = File.ReadAllText(expectedStdoutPath).Replace("\r\n", "\n").TrimEnd('\n');
         var expectedExit = int.Parse(File.ReadAllText(expectedExitPath).Trim(), System.Globalization.CultureInfo.InvariantCulture);
-        var arg = File.Exists(argumentsPath) ? File.ReadAllText(argumentsPath).Trim() : null;
-        var fixtureArg = arg != null && !Path.IsPathRooted(arg)
-            ? Path.Combine(repoRoot, arg.Replace('\\', '/'))
-            : arg;
+        var stdinPath = Path.Combine(toolDir, "expected.stdin");
+        var expectedOutputPath = Path.Combine(toolDir, "expected.output");
+        var expectedOutput = File.Exists(expectedOutputPath)
+            ? File.ReadAllText(expectedOutputPath).Replace("\r\n", "\n")
+            : null;
 
         var options = CompilationOptions.Default with { Target = TargetTriple.LinuxX64SysV };
         var cache = Path.Combine(Path.GetTempPath(), $"hlax64-linux-{tool}-" + Guid.NewGuid().ToString("N")[..8]);
@@ -61,6 +64,7 @@ public sealed class LinuxRealToolTests
             var nasmFile = Path.Combine(cache, $"{tool}.nasm");
             var objFile = Path.Combine(cache, $"{tool}.o");
             var exeFile = Path.Combine(cache, tool);
+            var outputFile = Path.Combine(cache, $"{tool}-out.txt");
             File.WriteAllText(nasmFile, artifacts.NasmCode);
 
             var nasmTool = new NasmTool(NasmTool.TryFindNasm(out var nasmPath) ? nasmPath : null);
@@ -70,14 +74,28 @@ public sealed class LinuxRealToolTests
             Assert.True(LinkerTool.TryLink(objFile, exeFile, out var linkError, out _, extraLibraries: extras), linkError);
 
             var wslExe = LinkerTool.ToWslPath(exeFile);
-            var wslFixture = fixtureArg != null ? LinkerTool.ToWslPath(fixtureArg) : null;
             var wslCwd = LinkerTool.ToWslPath(repoRoot);
-            var args = wslFixture != null ? $"{wslExe} {wslFixture}" : wslExe;
+            var args = BuildWslArguments(argumentsPath, repoRoot, outputFile);
+
+            string command;
+            if (File.Exists(stdinPath))
+            {
+                var stdinFile = Path.Combine(cache, "stdin.txt");
+                File.WriteAllText(stdinFile, File.ReadAllText(stdinPath).Replace("\r\n", "\n"));
+                var wslStdin = LinkerTool.ToWslPath(stdinFile);
+                command = $"bash -lc \"cd '{wslCwd}' && cat '{wslStdin}' | '{wslExe}' {args}\"";
+            }
+            else
+            {
+                command = string.IsNullOrWhiteSpace(args)
+                    ? $"bash -lc \"cd '{wslCwd}' && '{wslExe}'\""
+                    : $"bash -lc \"cd '{wslCwd}' && '{wslExe}' {args}\"";
+            }
 
             using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
                 FileName = "wsl",
-                Arguments = $"bash -lc \"cd '{wslCwd}' && {args}\"",
+                Arguments = command,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -91,12 +109,43 @@ public sealed class LinuxRealToolTests
             Assert.Equal(expectedExit, process.ExitCode);
             foreach (var line in expectedStdout.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                 Assert.Contains(line, stdout, StringComparison.Ordinal);
+
+            if (expectedOutput != null)
+            {
+                Assert.True(File.Exists(outputFile), $"expected output file missing for {tool}");
+                var actualOutput = File.ReadAllText(outputFile).Replace("\r\n", "\n");
+                Assert.Equal(expectedOutput, actualOutput);
+            }
         }
         finally
         {
             if (Directory.Exists(cache))
                 Directory.Delete(cache, recursive: true);
         }
+    }
+
+    private static string BuildWslArguments(string? argumentsPath, string repoRoot, string outputFile)
+    {
+        if (argumentsPath == null || !File.Exists(argumentsPath))
+            return string.Empty;
+
+        var raw = File.ReadAllText(argumentsPath);
+        var tokens = raw.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (tokens.Length == 0)
+            return string.Empty;
+
+        var resolved = new List<string>();
+        foreach (var token in tokens)
+        {
+            if (token == "$OUTPUT")
+                resolved.Add(LinkerTool.ToWslPath(outputFile));
+            else if (!Path.IsPathRooted(token))
+                resolved.Add(LinkerTool.ToWslPath(Path.Combine(repoRoot, token.Replace('\\', '/'))));
+            else
+                resolved.Add(LinkerTool.ToWslPath(token));
+        }
+
+        return string.Join(' ', resolved.Select(arg => $"'{arg.Replace("'", "'\\''")}'"));
     }
 
     private static string FindRepoRoot()

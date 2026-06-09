@@ -1,0 +1,6 @@
+{
+  "name": "real-cp",
+  "source": "../../../examples/tools/10-windows/cp/cp.hla64",
+  "expectedExitCode": 0,
+  "description": "Real tool: copy file bytes via hlax_file_open_write + hlax_file_write (compile-only)"
+}
