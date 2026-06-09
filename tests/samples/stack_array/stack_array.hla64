@@ -2,14 +2,12 @@ program stack_array;
 
 procedure SumThree; @returns("rax");
 var
-    elem0: int64;
-    elem1: int64;
-    elem2: int64;
+    data: int64[3];
 begin SumThree;
-    mov(10, elem0);
-    mov(20, elem1);
-    mov(30, elem2);
-    mov(&elem0, rcx);
+    mov(10, data[0]);
+    mov(20, data[1]);
+    mov(30, data[2]);
+    mov(&data[0], rcx);
     mov([rcx], rax);
     mov([rcx + 8], rbx);
     add(rbx, rax);

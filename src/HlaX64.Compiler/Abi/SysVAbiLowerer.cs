@@ -251,6 +251,11 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         if (IsMemRef(srcVal))
         {
             var mem = MemoryRefEncoding.Parse(srcVal!);
+            if (StackMemOperandHelper.IsBareMemory(dst))
+            {
+                var load = MemoryRefEncoding.EmitLoad("rax", mem);
+                return new LoweredInstruction($"    {load}\n    {StackMemOperandHelper.EmitMove(dst, "rax")}");
+            }
             return new LoweredInstruction($"    {MemoryRefEncoding.EmitLoad(dst, mem)}");
         }
 
