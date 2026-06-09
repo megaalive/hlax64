@@ -267,6 +267,10 @@
       return `dotnet run --project src/HlaX64.Cli -- ${hla64Run.replace(/^hla64\s+/, '')}`;
     }
 
+    function normalizeText(text) {
+      return (text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    }
+
     function updateRunPanel(ex) {
       $('run-cmd').textContent = ex.run || `hla64 run ${ex.path}`;
       $('run-expected').textContent = ex.expected || '(see source and run locally)';
@@ -333,8 +337,8 @@
       try {
         const cacheJson = await fetchText(`cache/${ex.category}/${ex.id}.json`);
         explainCache = JSON.parse(cacheJson);
-        $('nasm').textContent = explainCache.nasm || '(no NASM in cache)';
-        $('ir').textContent = (explainCache.ir || []).join('\n\n');
+        $('nasm').textContent = normalizeText(explainCache.nasm || '(no NASM in cache)');
+        $('ir').textContent = normalizeText((explainCache.ir || []).join('\n\n'));
         if (explainCache.diagnostics?.length) {
           $('nasm-meta').textContent += ` · ${explainCache.diagnostics.length} diagnostic(s)`;
         }
