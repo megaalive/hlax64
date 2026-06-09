@@ -13,6 +13,7 @@ HlaX64 is **inspired by** the educational ideas of Randall Hyde's High Level Ass
 | Purpose | Assembly education & development | AI-friendly verified native code |
 | Language compatibility | Original HLA | Inspired subset / new language |
 | Platforms | Historically Windows-centric | Linux + Windows |
+| Standard library | HLA Standard Library (large) | Growing subset (`stdout`, argv, heap, file I/O, string/mem) |
 | Interop | Varies by ecosystem | C ABI export, C header + C# P/Invoke generators |
 | Agent tooling | — | MCP server, JSON CLI, test/bench runners |
 

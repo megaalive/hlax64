@@ -194,7 +194,9 @@ else
 endif;
 ```
 
-Supported comparison operators: `=`, `<`, `>`.
+Supported comparison operators: `=`, `==`, `!=`, `<`, `<=`, `>`, `>=`, `<?`, `>?`.
+
+Inside `while` loops you may use `break;` and `continue;`.
 
 ### While
 
@@ -421,7 +423,7 @@ Sections describing **implemented** syntax are normative. Planned features are i
 
 ```text
 program begin end procedure call export var const endconst
-if else endif while endwhile do then
+if else endif while endwhile do then break continue
 mov add sub imul xor and or cmp lea push pop inc dec neg not
 shl shr sar rol ror jmp ret syscall nop int3 hlt
 include pragma target

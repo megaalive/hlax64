@@ -223,6 +223,33 @@ Playground (browser): [megaalive.github.io/hlax64/playground](https://megaalive.
 
 ---
 
+## 13. Stdlib file and string helpers
+
+Link runtime library procedures declared in [`stdlib64.hhf`](../src/HlaX64.Runtime/include/stdlib64.hhf):
+
+| API | Purpose |
+|-----|---------|
+| `hlax_path_exists(path)` | Returns 1 when path exists |
+| `hlax_file_open_read(path)` | Open for read; returns handle/fd or -1 |
+| `hlax_file_read(handle, buf, count)` | Read bytes into buffer |
+| `hlax_file_close(handle)` | Close handle/fd |
+| `hlax_strlen`, `hlax_memcpy`, `hlax_memset`, `hlax_is_space` | String/memory helpers |
+
+Example (`exists` tool):
+
+```hla64
+extern procedure hlax_path_exists(path: cstring): int64;
+call hlax_argv_get(1);
+call hlax_path_exists(rax);
+if(rax = 0) then
+    stdout.put("missing", nl);
+endif;
+```
+
+See `examples/tools/10-windows/exists/` and `examples/tools/12-linux/exists/`.
+
+---
+
 ## 12. Still stuck?
 
 1. `hla64 explain yourfile.hla64` — IR + NASM preview  

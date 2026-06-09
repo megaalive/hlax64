@@ -1,7 +1,7 @@
 ﻿{
   "schemaVersion": 1,
   "success": true,
-  "version": "0.1.0-alpha",
+  "version": "0.2.1-alpha",
   "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\curriculum\\05-memory\\stack-array.hla64",
   "target": "linux-x64-sysv",
   "diagnostics": [],
@@ -11,7 +11,7 @@
   ],
   "lowered": [
     "function _start:\n  entry: True, export: False\n  stack frame: 8 bytes\n  entry:\n        xor ebx, ebx    ; default exit code = 0 (callee-saved)\n        push rbp\n        mov rbp, rsp\n        sub rsp, 8      ; align stack to 16 bytes\n        sub rsp, 8      ; align stack\r\n    call SumThree\r\n    add rsp, 8      ; restore stack\n        mov rdi, rax    ; exit code\n        mov rax, 60     ; sys_exit\n        syscall",
-    "function SumThree:\n  entry: False, export: False\n  stack frame: 32 bytes\n  entry:\n        push rbp\n        mov rbp, rsp\n        sub rsp, 32\n        mov [rbp-8], 10\n        mov [rbp-16], 20\n        mov [rbp-24], 30\n        lea rcx, [rbp-8]\n        mov rax, [rcx]\n        mov rbx, [rcx\u002B8]\n        add rax, rbx\n        mov rbx, [rcx\u002B16]\n        add rax, rbx\n        mov rsp, rbp\n        pop rbp\n        ret"
+    "function SumThree:\n  entry: False, export: False\n  stack frame: 32 bytes\n  entry:\n        push rbp\n        mov rbp, rsp\n        sub rsp, 32\n        mov qword [rbp-8], 10\n        mov qword [rbp-16], 20\n        mov qword [rbp-24], 30\n        lea rcx, [rbp-8]\n        mov rax, qword [rcx]\n        mov rbx, qword [rcx\u002B8]\n        add rax, rbx\n        mov rbx, qword [rcx\u002B16]\n        add rax, rbx\n        mov rsp, rbp\n        pop rbp\n        ret"
   ],
-  "nasm": "bits 64\r\nsection .text\r\nglobal _start\r\n\r\n_start:\r\n    xor ebx, ebx    ; default exit code = 0 (callee-saved)\r\n    push rbp\r\n    mov rbp, rsp\r\n    sub rsp, 8      ; align stack to 16 bytes\r\n    sub rsp, 8      ; align stack\r\n    call SumThree\r\n    add rsp, 8      ; restore stack\r\n    mov rdi, rax    ; exit code\r\n    mov rax, 60     ; sys_exit\r\n    syscall\r\n\r\nSumThree:\r\n    push rbp\r\n    mov rbp, rsp\r\n    sub rsp, 32\r\n    mov [rbp-8], 10\r\n    mov [rbp-16], 20\r\n    mov [rbp-24], 30\r\n    lea rcx, [rbp-8]\r\n    mov rax, [rcx]\r\n    mov rbx, [rcx\u002B8]\r\n    add rax, rbx\r\n    mov rbx, [rcx\u002B16]\r\n    add rax, rbx\r\n    mov rsp, rbp\r\n    pop rbp\r\n    ret\r\n\r\nsection .data\r\nnewline db 0x0A\r\n"
+  "nasm": "bits 64\r\nsection .text\r\nglobal _start\r\n\r\n_start:\r\n    xor ebx, ebx    ; default exit code = 0 (callee-saved)\r\n    push rbp\r\n    mov rbp, rsp\r\n    sub rsp, 8      ; align stack to 16 bytes\r\n    sub rsp, 8      ; align stack\r\n    call SumThree\r\n    add rsp, 8      ; restore stack\r\n    mov rdi, rax    ; exit code\r\n    mov rax, 60     ; sys_exit\r\n    syscall\r\n\r\nSumThree:\r\n    push rbp\r\n    mov rbp, rsp\r\n    sub rsp, 32\r\n    mov qword [rbp-8], 10\r\n    mov qword [rbp-16], 20\r\n    mov qword [rbp-24], 30\r\n    lea rcx, [rbp-8]\r\n    mov rax, qword [rcx]\r\n    mov rbx, qword [rcx\u002B8]\r\n    add rax, rbx\r\n    mov rbx, qword [rcx\u002B16]\r\n    add rax, rbx\r\n    mov rsp, rbp\r\n    pop rbp\r\n    ret\r\n\r\nsection .data\r\nnewline db 0x0A\r\n"
 }

@@ -17,6 +17,18 @@ Stable diagnostic codes help agents, IDE tooling, and contributors reference err
 
 > **Note:** Pre-1.0 codes use a flat `HLAX00xx`/`HLAX02xx` scheme in the semantic analyzer. New diagnostics should follow the category ranges above; existing codes remain stable until 1.0.
 
+## Multi-error reporting (0.2.1+)
+
+Assembly Lab, `hla64 explain`, and the LSP merge **parse** (HLAX1000) and **semantic** diagnostics in one pass.
+
+| Phase | Behavior |
+|-------|----------|
+| **Parse** | Error recovery in `extern procedure` / type-alias parameter lists and in statement bodies (sync to end-of-line, continue). Multiple HLAX1000 entries when several signatures or lines are wrong. |
+| **Semantic** | Always runs after parse (even when HLAX1000 exists) so register/type/name errors appear in the same compile. |
+| **Fatal parse** | Missing `program` / `end` still stops with a single HLAX1000 until fixed. |
+
+The Diagnostics sidebar is **not** debug output — it is live compiler output (~500 ms debounce). Empty panel = zero errors on the last compile.
+
 ## Current diagnostics
 
 ### HLAX0001 — Empty program name
@@ -62,6 +74,26 @@ Stable diagnostic codes help agents, IDE tooling, and contributors reference err
 | **Cause** | Two procedures share the same name |
 | **Fix** | Rename or remove the duplicate declaration |
 
+### HLAX0010 — Program / begin name mismatch
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.1-alpha |
+| **Cause** | `program foo;` but `begin bar;` |
+| **Fix** | Use the same identifier in `program`, `begin`, and `end` |
+
+### HLAX0011 — Begin / end name mismatch
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Error |
+| **Category** | Semantic |
+| **Since** | 0.2.1-alpha |
+| **Cause** | `begin foo;` … `end bar;` |
+| **Fix** | Match `begin` and `end` identifiers |
+
 ### HLAX0012 — Unknown register
 
 | Field | Value |
@@ -81,7 +113,7 @@ Stable diagnostic codes help agents, IDE tooling, and contributors reference err
 | **Category** | Parser |
 | **Since** | 0.1.0-alpha |
 | **Cause** | Source does not match HlaX64 grammar |
-| **Fix** | Correct syntax per [language-spec.md](language-spec.md) |
+| **Fix** | Correct syntax per [language-spec.md](language-spec.md). Multiple HLAX1000 lines may appear when several `extern` signatures or statements are invalid (see [Multi-error reporting](#multi-error-reporting-021)). |
 
 ### HLAX0020 — Unknown type
 

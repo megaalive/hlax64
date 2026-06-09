@@ -1,7 +1,7 @@
 ﻿{
   "schemaVersion": 1,
   "success": true,
-  "version": "0.1.0-alpha",
+  "version": "0.2.1-alpha",
   "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\interop\\07-interop\\extern-puts.hla64",
   "target": "linux-x64-sysv",
   "diagnostics": [],

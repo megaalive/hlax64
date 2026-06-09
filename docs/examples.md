@@ -13,7 +13,7 @@ Top-level categories:
 |----------|------|----------|
 | **Curriculum** | [`curriculum/`](../examples/curriculum/) | `00-getting-started` … `06-abi`, `08-ai-agent` |
 | **Interop** | [`interop/`](../examples/interop/) | `07-interop`, `11-csharp-interop-real` |
-| **Tools** | [`tools/`](../examples/tools/) | `10-windows`, `12-linux` |
+| **Tools** | [`tools/`](../examples/tools/) | `10-windows`, `12-linux` — use `hlax_file_*`, `hlax_path_exists`, `hlax_is_space` stdlib helpers |
 | **Project Euler** | [`project-euler/`](../examples/project-euler/) | PE #1–#50 suite |
 | **Benchmarks** | [`benchmarks/`](../examples/benchmarks/) | Links to `benchmarks/count.json` |
 | **QA** | [`qa/`](../examples/qa/) | `bug-farm`, `invalid` |

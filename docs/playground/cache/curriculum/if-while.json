@@ -1,7 +1,7 @@
 ﻿{
   "schemaVersion": 1,
   "success": true,
-  "version": "0.1.0-alpha",
+  "version": "0.2.1-alpha",
   "source": "D:\\_2025\\Gits\\megaalive\\hlax64\\examples\\curriculum\\03-control-flow\\count.hla64",
   "target": "linux-x64-sysv",
   "diagnostics": [],

@@ -39,10 +39,10 @@ Check **Toolchain** tab: confirms NASM, Windows linker, WSL.
 
 ### Step 3 — Live compile (automatic)
 
-Edit the **Source** tab. After ~400 ms debounce:
+Edit the **Source** tab. After ~500 ms debounce:
 
-- Left **Diagnostics** panel updates
-- **IR**, **NASM**, **ABI** tabs refresh
+- Left **Diagnostics** panel lists all compiler errors/warnings (parse HLAX1000 + semantic HLAX00xx). Multiple issues can appear at once after 0.2.1+ parser recovery (e.g. several bad `extern procedure` parameters). Panel empty = last live compile succeeded with zero diagnostics — not related to Debug menu.
+- **IR**, **NASM**, **ABI** tabs refresh when compile succeeds
 
 You do **not** need to click anything for live compile.
 

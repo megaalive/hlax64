@@ -73,7 +73,7 @@ HlaX64 is an **early multi-platform x64 language toolchain** — not a single-ta
 | Area | Status | Notes |
 |------|--------|-------|
 | Pipeline | ✅ | Lexer → Parser → Semantic → IR → ABI lowerer → NASM |
-| Diagnostics | ✅ | Line/column, codes HLAX00xx, fuzzy suggestions |
+| Diagnostics | ✅ | Line/column, codes HLAX00xx, fuzzy suggestions; multi-error parse recovery (extern signatures, statement bodies) |
 | Bounds warnings | ✅ | `-Wbounds` / HLAX0030 for static array indices |
 | Verification warnings | ✅ | `-Wverify` / HLAX0060–63 (definite assignment, CFG, liveness) |
 | Stack / ABI verify | ✅ | `hla64 verify-stack`, `hla64 verify-abi` |
@@ -239,7 +239,7 @@ Pipeline details: [`docs/compiler-architecture.md`](./docs/compiler-architecture
   reverses it to NASM's `mov dest, source` automatically.
 - **Program structure** mirrors classic HLA:
   `program name; begin name; … end name;`
-- **Standard library** is currently `stdout.put(...)`. More coming.
+- **Standard library** ships file I/O (`hlax_file_*`, `hlax_path_exists`), string/memory helpers, stdout, argv, heap — see [`stdlib64.hhf`](./src/HlaX64.Runtime/include/stdlib64.hhf).
 - **See [`docs/language-spec.md`](./docs/language-spec.md)** for the
   complete reference: types, registers, instructions, control flow,
   procedures, and escape sequences.
