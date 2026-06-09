@@ -96,6 +96,20 @@
           "expected": "stdout: printable runs (length >= 4) one per line via hlax_is_printable."
         },
         {
+          "id": "cp",
+          "label": "cp",
+          "path": "examples/tools/10-windows/cp/cp.hla64",
+          "run": "hla64 run examples/tools/10-windows/cp/cp.hla64 -- src.txt dst.txt",
+          "expected": "stdout: (none)\nexit code: 0\nCopies argv[1] bytes to argv[2] via hlax_file_open_write + hlax_file_write loop."
+        },
+        {
+          "id": "tee",
+          "label": "tee",
+          "path": "examples/tools/10-windows/tee/tee.hla64",
+          "run": "echo hello | hla64 run examples/tools/10-windows/tee/tee.hla64 -- out.txt",
+          "expected": "stdout: stdin bytes echoed\nexit code: 0\nAlso writes the same bytes to argv[1] via hlax_file_write."
+        },
+        {
           "id": "hexdump",
           "label": "hexdump",
           "path": "examples/tools/10-windows/hexdump/hexdump.hla64",

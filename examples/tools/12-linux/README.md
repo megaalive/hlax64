@@ -11,6 +11,8 @@ Linux SysV ports of selected command-line tools using `libc.so` instead of Win32
 | `wc` | Lines / words / bytes | `hlax_file_*`, byte classifiers, calls in loop |
 | `cat` | Copy file bytes to stdout | `hlax_file_read` loop, `hlax_stdout_write` |
 | `strings` | Printable runs (len >= 4) | `hlax_is_printable`, run buffer across reads |
+| `cp` | Copy file to file | `hlax_file_open_write`, read/write loop |
+| `tee` | Stdin to stdout + file | `stdin_fd`, `hlax_stdout_write` + `hlax_file_write` |
 | `fnv1a` | FNV-1a 64-bit file hash | xor/imul loop, **`stdout.putu`** unsigned decimal |
 
 ## Build
