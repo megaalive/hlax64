@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using HlaX64.Cli.Json;
 using HlaX64.Cli.Services;
+using HlaX64.Cli.Toolchain;
 using HlaX64.Compiler;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -27,7 +28,17 @@ public sealed class DoctorCommand : Command<DoctorCommand.Settings>
                 schemaVersion = CliJson.SchemaVersion,
                 success = report.Success,
                 version = report.Version,
-                checks = report.Checks
+                checks = report.Checks.Select(c => new
+                {
+                    name = c.Name,
+                    passed = c.Passed,
+                    status = c.Status,
+                    message = c.Message,
+                    path = c.Path,
+                    source = c.Source,
+                    installHint = c.InstallHint,
+                    remediation = c.InstallHint
+                })
             });
             return report.Success ? 0 : 1;
         }
@@ -46,7 +57,7 @@ public sealed class DoctorCommand : Command<DoctorCommand.Settings>
 
         AnsiConsole.MarkupLine(report.Success
             ? "\n[green]All checks passed.[/]"
-            : "\n[yellow]Some checks failed. See details above.[/]");
+            : $"\n[yellow]Some checks failed. See {ToolchainResolver.InstallGuideRelative} for install steps.[/]");
 
         return report.Success ? 0 : 1;
     }

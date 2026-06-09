@@ -94,6 +94,10 @@ docs/                    Language spec, ABI docs, roadmap
 6. Update documentation (language spec, examples, etc.)
 7. Open a PR against `main`
 
+New contributors: follow [contributing-walkthrough.md](../contributing-walkthrough.md) for a sample docs PR flow.
+
+Track open work in [issue-backlog.md](../issue-backlog.md).
+
 ### PR Checklist (automatically shown in template)
 
 - [ ] Build passes (0 warnings)

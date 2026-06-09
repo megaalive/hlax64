@@ -137,9 +137,24 @@ dotnet tool uninstall --global HlaX64.Cli
 git clone https://github.com/megaalive/hlax64.git
 cd hlax64
 dotnet build
+dotnet test
 dotnet run --project src/HlaX64.Cli -- --version
 dotnet run --project src/HlaX64.Cli -- run examples/curriculum/00-getting-started/hello.hla64
 ```
+
+**Bootstrap scripts** (verify toolchain before first build):
+
+```powershell
+# Windows
+.\scripts\install-windows.ps1
+```
+
+```bash
+# Linux / WSL
+sh ./scripts/install-linux.sh
+```
+
+Both scripts exit non-zero when required tools are missing and run `hla64 doctor` when prerequisites are present.
 
 See [development.md](development.md) for tests, LSP, and MCP setup.
 

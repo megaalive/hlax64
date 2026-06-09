@@ -333,6 +333,7 @@ See [`docs/language-spec.md`](./docs/language-spec.md) for full details.
 - [Install Guide](docs/install.md) — Assembly Lab bundle, CLI archives, and global tool
 - [Development Guide](docs/development.md) — local setup and CI parity
 - [Governance](docs/rules/GOVERNANCE.md) — decision process and labels
+- [Issue backlog](docs/issue-backlog.md) — triaged open/closed GitHub issues
 - [Code of Conduct](docs/rules/CODE_OF_CONDUCT.md) — our community standards
 - [Security Policy](docs/rules/SECURITY.md) — how to report vulnerabilities
 - [Support](docs/rules/SUPPORT.md) — documentation and getting help

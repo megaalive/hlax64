@@ -21,6 +21,8 @@ public sealed record ToolchainResolution(
 
 public sealed class ToolchainResolver
 {
+    public const string InstallGuideRelative = "docs/install.md";
+
     private readonly ToolchainSettings _settings;
     private readonly string _baseDirectory;
 
@@ -100,7 +102,7 @@ public sealed class ToolchainResolver
             return Found("NASM", "wsl|nasm", ToolchainSource.Wsl);
 
         return Missing("NASM", "NASM not found. Install NASM or set NASM path in Assembly Lab settings.",
-            OperatingSystem.IsWindows() ? "winget install -e --id NASM.NASM" : "sudo apt install nasm");
+            FormatInstallHint(OperatingSystem.IsWindows() ? "winget install -e --id NASM.NASM" : "sudo apt install nasm"));
     }
 
     public ToolchainResolution ResolveWindowsLinker()
@@ -136,7 +138,7 @@ public sealed class ToolchainResolver
         }
 
         return Missing("Windows linker", "No lld-link or MSVC link.exe found.",
-            "winget install -e --id LLVM.LLVM");
+            FormatInstallHint("winget install -e --id LLVM.LLVM"));
     }
 
     public ToolchainResolution ResolveLinuxLinker()
@@ -161,9 +163,9 @@ public sealed class ToolchainResolver
             return Found("Linux linker", "wsl|gcc", ToolchainSource.Wsl);
 
         return Missing("Linux linker", "No gcc/ld linker found.",
-            OperatingSystem.IsWindows()
+            FormatInstallHint(OperatingSystem.IsWindows()
                 ? "wsl --install -d Ubuntu"
-                : "sudo apt install build-essential");
+                : "sudo apt install build-essential"));
     }
 
     public IReadOnlyList<ToolchainResolution> ResolveAll() =>
@@ -237,6 +239,9 @@ public sealed class ToolchainResolver
 
     private static ToolchainResolution Missing(string name, string message, string? hint = null) =>
         new(name, false, null, ToolchainSource.Missing, message, hint);
+
+    private static string FormatInstallHint(string command)
+        => $"{command} — see {InstallGuideRelative}";
 
     private static bool TryExistingFile(string? path, out string resolved)
     {
