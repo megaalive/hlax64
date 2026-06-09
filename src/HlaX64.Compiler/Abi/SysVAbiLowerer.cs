@@ -301,7 +301,7 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         if (srcVal?.Name?.StartsWith("proc:", StringComparison.Ordinal) == true)
             return new LoweredInstruction($"    lea {dst}, [rel {srcVal.Name[5..]}]");
 
-        if (IsAddrRef(srcVal))
+        if (IsAddrRef(srcVal) && srcVal is not null)
         {
             var varName = AddrVariable(srcVal);
             if (_globalData.ContainsKey(varName))

@@ -1,0 +1,75 @@
+; HlaX64 Runtime - File helpers (Windows x64 / MS ABI)
+; Wraps GetFileAttributesA, CreateFileA, ReadFile, CloseHandle (kernel32).
+
+bits 64
+default rel
+
+%define GENERIC_READ            0x80000000
+%define FILE_SHARE_READ         1
+%define OPEN_EXISTING           3
+%define FILE_ATTRIBUTE_NORMAL   0x80
+%define INVALID_FILE_ATTRIBUTES 0xFFFFFFFF
+
+extern GetFileAttributesA
+extern CreateFileA
+extern ReadFile
+extern CloseHandle
+
+section .text
+
+global hlax_path_exists
+global hlax_file_open_read
+global hlax_file_read
+global hlax_file_close
+
+; rcx = path -> rax = 1 exists, 0 missing
+hlax_path_exists:
+    sub rsp, 40
+    call GetFileAttributesA
+    cmp eax, INVALID_FILE_ATTRIBUTES
+    je .missing
+    mov rax, 1
+    add rsp, 40
+    ret
+.missing:
+    xor rax, rax
+    add rsp, 40
+    ret
+
+; rcx = path -> rax = handle or -1
+hlax_file_open_read:
+    sub rsp, 64
+    mov r8d, FILE_SHARE_READ
+    mov edx, GENERIC_READ
+    xor r9d, r9d
+    mov qword [rsp+32], OPEN_EXISTING
+    mov qword [rsp+40], FILE_ATTRIBUTE_NORMAL
+    mov qword [rsp+48], 0
+    call CreateFileA
+    add rsp, 64
+    ret
+
+; rcx = handle, rdx = buffer, r8 = count -> rax = bytes read or -1
+hlax_file_read:
+    sub rsp, 48
+    mov qword [rsp+40], 0
+    lea r9, [rsp+40]
+    mov qword [rsp+32], 0
+    call ReadFile
+    test eax, eax
+    jz .fail
+    mov rax, [rsp+40]
+    add rsp, 48
+    ret
+.fail:
+    mov rax, -1
+    add rsp, 48
+    ret
+
+; rcx = handle -> rax = 0
+hlax_file_close:
+    sub rsp, 40
+    call CloseHandle
+    xor eax, eax
+    add rsp, 40
+    ret

@@ -25,9 +25,13 @@ registers dan stack alignment).
 | `hla64_stdout_put_i64` | `conversion.nasm` + `stdout.nasm` | cetak int64 desimal | MVP |
 | `hla64_stdout_put_u64` | `conversion.nasm` + `stdout.nasm` | cetak uint64 desimal | planned |
 | `hla64_i64_to_str`     | `conversion.nasm`            | integer → ascii buffer | planned |
-| `hla64_str_len`        | `stdout.nasm`                | panjang string (nol-terminated) | planned |
-| `hla64_memcpy`         | `mem.nasm`                   | salin byte | planned (Fase 9.5) |
-| `hla64_memset`         | `mem.nasm`                   | isi byte | planned (Fase 9.5) |
+| `hla64_str_len`        | `mem.nasm`                   | panjang string (nol-terminated) | shipped (`hlax_strlen`) |
+| `hla64_memcpy`         | `mem.nasm`                   | salin byte | shipped (`hlax_memcpy`) |
+| `hla64_memset`         | `mem.nasm`                   | isi byte | shipped (`hlax_memset`) |
+| `hlax_path_exists`     | `file.nasm`                  | cek path ada | shipped |
+| `hlax_file_open_read`  | `file.nasm`                  | buka file read-only | shipped |
+| `hlax_file_read`       | `file.nasm`                  | baca chunk ke buffer | shipped |
+| `hlax_file_close`      | `file.nasm`                  | tutup handle/fd | shipped |
 | `hla64_exit`           | `startup.nasm`               | syscall `exit(rdi)` | MVP |
 
 Tambahan akan muncul seiring Fase 9.5 → 10 → 11. Setiap entry baru

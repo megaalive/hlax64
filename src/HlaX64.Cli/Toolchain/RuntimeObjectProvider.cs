@@ -25,6 +25,16 @@ public static class RuntimeObjectProvider
         "hlax_malloc", "hlax_realloc", "hlax_free"
     }.ToFrozenSet();
 
+    private static readonly FrozenSet<string> FileSymbols = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "hlax_path_exists", "hlax_file_open_read", "hlax_file_read", "hlax_file_close"
+    }.ToFrozenSet();
+
+    private static readonly FrozenSet<string> MemSymbols = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "hlax_strlen", "hlax_memcpy", "hlax_memset", "hlax_is_space"
+    }.ToFrozenSet();
+
     public static bool TryGetLinuxRuntimeObjects(
         IEnumerable<string> requiredExterns,
         string cacheDirectory,
@@ -39,9 +49,11 @@ public static class RuntimeObjectProvider
         bool needConversion = externs.Any(ConversionSymbols.Contains);
         bool needArgv = externs.Any(ArgvSymbols.Contains);
         bool needHeap = externs.Any(HeapSymbols.Contains);
+        bool needFile = externs.Any(FileSymbols.Contains);
+        bool needMem = externs.Any(MemSymbols.Contains);
         if (needStdout)
             needConversion = true;
-        if (!needStdout && !needConversion && !needArgv && !needHeap)
+        if (!needStdout && !needConversion && !needArgv && !needHeap && !needFile && !needMem)
             return true;
 
         var runtimeDir = FindRuntimeDirectory();
@@ -86,6 +98,22 @@ public static class RuntimeObjectProvider
             objects.Add(heapObj);
         }
 
+        if (needFile)
+        {
+            var nasm = Path.Combine(runtimeDir, "linux-x64", "file.nasm");
+            if (!TryAssembleRuntime(nasm, cacheDirectory, "hlax64-runtime-file", "elf64", out var fileObj, out error))
+                return false;
+            objects.Add(fileObj);
+        }
+
+        if (needMem)
+        {
+            var nasm = Path.Combine(runtimeDir, "linux-x64", "mem.nasm");
+            if (!TryAssembleRuntime(nasm, cacheDirectory, "hlax64-runtime-mem", "elf64", out var memObj, out error))
+                return false;
+            objects.Add(memObj);
+        }
+
         objectFiles = objects;
         return true;
     }
@@ -104,10 +132,12 @@ public static class RuntimeObjectProvider
         bool needConversion = externs.Any(ConversionSymbols.Contains);
         bool needArgv = externs.Any(ArgvSymbols.Contains);
         bool needHeap = externs.Any(HeapSymbols.Contains);
+        bool needFile = externs.Any(FileSymbols.Contains);
+        bool needMem = externs.Any(MemSymbols.Contains);
         // stdout.nasm references int_to_str for stdout_put_int — assemble conversion too.
         if (needStdout)
             needConversion = true;
-        if (!needStdout && !needConversion && !needArgv && !needHeap)
+        if (!needStdout && !needConversion && !needArgv && !needHeap && !needFile && !needMem)
             return true;
 
         var runtimeDir = FindRuntimeDirectory();
@@ -152,6 +182,22 @@ public static class RuntimeObjectProvider
             objects.Add(heapObj);
         }
 
+        if (needFile)
+        {
+            var nasm = Path.Combine(runtimeDir, "windows-x64", "file.nasm");
+            if (!TryAssembleRuntime(nasm, cacheDirectory, "hlax64-runtime-file", "win64", out var fileObj, out error))
+                return false;
+            objects.Add(fileObj);
+        }
+
+        if (needMem)
+        {
+            var nasm = Path.Combine(runtimeDir, "windows-x64", "mem.nasm");
+            if (!TryAssembleRuntime(nasm, cacheDirectory, "hlax64-runtime-mem", "win64", out var memObj, out error))
+                return false;
+            objects.Add(memObj);
+        }
+
         objectFiles = objects;
         return true;
     }
@@ -171,6 +217,7 @@ public static class RuntimeObjectProvider
         linkExtras = result.LinkLibraries.ToList();
         var externs = CollectRequiredExterns(result.LoweredFunctions);
         bool needHeap = externs.Any(HeapSymbols.Contains);
+        bool needFile = externs.Any(FileSymbols.Contains);
         if (isWindows)
         {
             if (!TryGetWindowsRuntimeObjects(externs, cacheDirectory, out var runtimeObjs, out error))
@@ -178,7 +225,8 @@ public static class RuntimeObjectProvider
             linkExtras.AddRange(runtimeObjs);
             if (isSharedLibrary)
             {
-                if (!TryAssembleRuntimeDllMain(cacheDirectory, out var dllMainObj, out error))
+                if (!TryAssembleRuntimeDllMain(cacheDirectory, out var dllMainObj, out error) ||
+                    string.IsNullOrEmpty(dllMainObj))
                     return false;
                 linkExtras.Add(dllMainObj);
             }
@@ -188,7 +236,7 @@ public static class RuntimeObjectProvider
             if (!TryGetLinuxRuntimeObjects(externs, cacheDirectory, out var runtimeObjs, out error))
                 return false;
             linkExtras.AddRange(runtimeObjs);
-            if (needHeap && !linkExtras.Contains("-lc", StringComparer.OrdinalIgnoreCase))
+            if ((needHeap || needFile) && !linkExtras.Contains("-lc", StringComparer.OrdinalIgnoreCase))
                 linkExtras.Add("-lc");
         }
 
@@ -255,13 +303,13 @@ public static class RuntimeObjectProvider
 
     public static string? FindRuntimeDirectory()
     {
-        var resolved = ToolchainResolver.Default.ResolveRuntimeDirectory();
-        if (resolved.Found && !string.IsNullOrWhiteSpace(resolved.Path))
-            return resolved.Path;
-
         var env = Environment.GetEnvironmentVariable("HLAX64_RUNTIME_DIR");
         if (!string.IsNullOrWhiteSpace(env) && Directory.Exists(env))
             return Path.GetFullPath(env);
+
+        var resolved = ToolchainResolver.Default.ResolveRuntimeDirectory();
+        if (resolved.Found && !string.IsNullOrWhiteSpace(resolved.Path))
+            return resolved.Path;
 
         foreach (var start in EnumerateSearchRoots())
         {

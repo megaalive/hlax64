@@ -8,6 +8,13 @@ namespace HlaX64.Compiler.Tests;
 
 public sealed class LinuxRealToolTests
 {
+    public LinuxRealToolTests()
+    {
+        var repoRoot = FindRepoRoot();
+        Environment.SetEnvironmentVariable("HLAX64_RUNTIME_DIR",
+            Path.Combine(repoRoot, "src", "HlaX64.Runtime"));
+    }
+
     public static IEnumerable<object[]> LinuxRealToolCases()
     {
         yield return ["linecount"];
@@ -28,7 +35,7 @@ public sealed class LinuxRealToolTests
             return;
 
         var repoRoot = FindRepoRoot();
-        var toolDir = Path.Combine(repoRoot, "examples", "12-real-tools-linux", tool);
+        var toolDir = Path.Combine(repoRoot, "examples", "tools", "12-linux", tool);
         var sourcePath = Path.Combine(toolDir, $"{tool}.hla64");
         var expectedStdoutPath = Path.Combine(toolDir, "expected.stdout");
         var expectedExitPath = Path.Combine(toolDir, "expected.exitcode");

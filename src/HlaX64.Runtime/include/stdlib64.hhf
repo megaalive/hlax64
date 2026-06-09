@@ -79,6 +79,38 @@ procedure hlax_realloc(ptr:ptr; size:uint64); @returns("rax");
 procedure hlax_free(ptr:ptr): void;
 
 // =====================================================================
+// File I/O (linux-x64/file.nasm, windows-x64/file.nasm)
+// =====================================================================
+
+// Return 1 when path exists, 0 when missing.
+procedure hlax_path_exists(path: cstring): int64;
+
+// Open path for read-only access. Returns handle/fd, or -1 on failure.
+procedure hlax_file_open_read(path: cstring): int64;
+
+// Read up to count bytes into buffer. Returns bytes read, or -1 on failure.
+procedure hlax_file_read(handle: int64; buffer: ptr; count: uint64): int64;
+
+// Close handle/fd opened with hlax_file_open_read.
+procedure hlax_file_close(handle: int64): int64;
+
+// =====================================================================
+// String / memory (linux-x64/mem.nasm, windows-x64/mem.nasm)
+// =====================================================================
+
+// Length of NUL-terminated UTF-8/ANSI cstring (bytes before NUL).
+procedure hlax_strlen(buf: cstring): uint64;
+
+// Copy count bytes from src to dst. Returns dst.
+procedure hlax_memcpy(dst: ptr; src: ptr; count: uint64): ptr;
+
+// Fill count bytes at dst with low byte of value. Returns dst.
+procedure hlax_memset(dst: ptr; value: uint64; count: uint64): ptr;
+
+// Return 1 for space/tab/LF/CR, else 0.
+procedure hlax_is_space(ch: uint64): int64;
+
+// =====================================================================
 // Conversion (defined in linux-x64/conversion.nasm)
 // =====================================================================
 
