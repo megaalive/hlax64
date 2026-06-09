@@ -29,7 +29,7 @@ Top-level categories:
 | [`06-abi/`](../examples/curriculum/06-abi/) | stack-alignment, callee-saved, … | ABI edge cases |
 | [`07-interop/`](../examples/interop/07-interop/) | `export-lib` | Shared library export |
 | [`08-ai-agent/`](../examples/curriculum/08-ai-agent/) | `smoke-test` | Agent workflow |
-| [`10-real-tools/`](../examples/tools/10-windows/) | `listfiles`, `filesize`, `exists`, `linecount`, `hexdump`, `wc`, `cat`, `strings`, `cp`, `tee`, `head`, `nl`, `grep`, `cmp`, `fnv1a`, `filemagic` | Daily-use Win32 tools; each tool has `fixtures/`, `expected.stdout`, native Windows regression |
+| [`10-real-tools/`](../examples/tools/10-windows/) | `listfiles`, `filesize`, `exists`, … `machine`, `netcheck`, `tcpget`, `httpget`, `dnslookup`, `cpucount`, `diskfree`, `procmem`, `loadavg`, `machine2` | Daily-use tools; systems introspection + TCP/HTTP (local fixture tests) |
 | [`11-csharp-interop-real/`](../examples/interop/11-csharp-interop-real/) | `native_count_lines`, `native_fnv1a`, `native_sum_bytes` | HlaX64 DLL + C# P/Invoke caller with expected output |
 | [`98-bug-farm/`](../examples/qa/bug-farm/) | (planned) | Compiler stress cases |
 | [`99-invalid/`](../examples/qa/invalid/) | (planned) | Negative examples with expected diagnostics |
@@ -37,6 +37,25 @@ Top-level categories:
 Tutorial for memory: [tutorials/05-memory.md](tutorials/05-memory.md).
 
 Each folder has a README with build/run commands.
+
+### Playground catalog
+
+Every `.hla64` under `examples/` is listed in [playground/manifest.json](playground/manifest.json), grouped like this tree:
+
+| Playground category | Groups | Count |
+|---------------------|--------|------:|
+| Curriculum | `00-getting-started` … `08-ai-agent` | 46 |
+| Interop | `07-interop`, `11-csharp-interop-real` | 6 |
+| Tools | `10-windows`, `12-linux` | 66 |
+| Project Euler | `problems`, `runner` | 51 |
+| QA | `bug-farm`, `invalid` | 37 |
+
+Open [playground/index.html](playground/index.html) or regenerate cache:
+
+```bash
+./scripts/generate-playground-manifest.ps1
+./scripts/generate-playground-cache.ps1
+```
 
 ---
 
@@ -54,7 +73,7 @@ Includes Level 3: `pointer_load_store`, `stack_array`, `string_length`, `array_s
 
 ## 2b. Curriculum manifests (`tests/examples-curriculum/`)
 
-79 manifests reference structured programs under `examples/`:
+96 manifests reference structured programs under `examples/`:
 
 ```bash
 hla64 test tests/examples-curriculum/

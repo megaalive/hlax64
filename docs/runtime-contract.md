@@ -36,9 +36,48 @@ registers dan stack alignment).
 | `hlax_file_close`      | `file.nasm`                  | tutup handle/fd | shipped |
 | `hlax_stdout_write`    | `file.nasm`                  | tulis raw bytes ke stdout | shipped |
 | `hlax_is_printable`    | `mem.nasm`                   | ASCII printable 0x20..0x7E | shipped |
+| `hlax_getpid`          | `sys.nasm`                   | current process id | shipped |
+| `hlax_hostname`        | `sys.nasm`                   | machine hostname into buffer | shipped |
+| `hlax_uptime_secs`     | `sys.nasm`                   | seconds since boot | shipped |
+| `hlax_mem_total`       | `sys.nasm`                   | total physical RAM bytes | shipped |
+| `hlax_mem_avail`       | `sys.nasm`                   | available physical RAM bytes | shipped |
+| `hlax_file_size`       | `sys.nasm`                   | file size bytes for path | shipped |
+| `hlax_os_last_error`   | `sys.nasm`                   | last OS error (`errno` / `GetLastError`) | shipped |
+| `hlax_cpu_count`       | `sys.nasm`                   | online CPU count | shipped |
+| `hlax_disk_total_bytes`| `sys.nasm`                   | total disk bytes for mount of path | shipped |
+| `hlax_disk_avail_bytes`| `sys.nasm`                   | available disk bytes for mount of path | shipped |
+| `hlax_self_rss_bytes`  | `sys.nasm`                   | current process RSS bytes | shipped (Windows: `psapi.lib`) |
+| `hlax_load_avg_milli`  | `sys.nasm`                   | 1-minute load ×1000 (Linux only) | shipped (Windows: `-1`) |
+| `hlax_net_init`        | `net.nasm`                   | Winsock startup (Windows) / no-op (Linux) | shipped |
+| `hlax_net_last_error`  | `net.nasm`                   | last socket error (`errno` / `WSAGetLastError`) | shipped |
+| `hlax_dns_resolve_v4`  | `net.nasm`                   | resolve hostname → dotted IPv4 string | shipped |
+| `hlax_tcp_connect`     | `net.nasm`                   | TCP connect IPv4 literal host | shipped |
+| `hlax_tcp_connect_name`| `net.nasm`                   | TCP connect via DNS (IPv4) | shipped |
+| `hlax_tcp_connect_timeout` | `net.nasm`               | connect with timeout (ms) | shipped |
+| `hlax_tcp_set_timeouts_ms` | `net.nasm`               | recv/send socket timeouts (ms) | shipped |
+| `hlax_tcp_write`       | `net.nasm`                   | send bytes on socket | shipped |
+| `hlax_tcp_write_all`   | `net.nasm`                   | send all bytes (partial send loop) | shipped |
+| `hlax_tcp_read`        | `net.nasm`                   | recv bytes from socket | shipped |
+| `hlax_tcp_read_once`   | `net.nasm`                   | explicit alias of recv | shipped |
+| `hlax_tcp_close`       | `net.nasm`                   | close socket (`0` ok, `-1` fail) | shipped |
 | `hla64_exit`           | `startup.nasm`               | syscall `exit(rdi)` | MVP |
 
 Windows `hlax_file_read` accepts handle `0` (`stdin_fd`) and reads from `GetStdHandle(STD_INPUT_HANDLE)` so `tee` works with piped stdin.
+
+**System runtime (`sys.nasm`)** — Linux uses libc (`getpid`, `gethostname`, `sysinfo`, `stat`, `sysconf`, `statvfs`, `getrusage`); Windows uses `kernel32` + `psapi` for RSS. Uptime on Windows is tick-based (`GetTickCount64 / 1000`), not wall-clock boot time. `hlax_load_avg_milli` returns `-1` on Windows (unsupported).
+
+**Network runtime (`net.nasm`)** — IPv4 literal and DNS hostname connect, socket timeouts, reliable `write_all`. Linux links libc socket/DNS functions; Windows links `ws2_32.lib`. TLS, ICMP, and IPv6 are out of scope.
+
+### Tool exit-code convention (examples/tools)
+
+| Exit | Meaning |
+|------|---------|
+| `0` | success |
+| `1` | usage / bad argv |
+| `2` | OS/system failure (`hlax_os_last_error`) |
+| `3` | network failure (`hlax_net_last_error`) |
+
+On failure, tools print `err=<code>` when a last-error helper applies. Runtime helpers still return `-1` on failure; see `HLAX_ERR_*` constants in `stdlib64.hhf`.
 
 Tambahan akan muncul seiring Fase 9.5 → 10 → 11. Setiap entry baru
 harus terdaftar di tabel ini dan di `src/HlaX64.Runtime/abi-contract.md`.

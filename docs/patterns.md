@@ -234,6 +234,9 @@ Link runtime library procedures declared in [`stdlib64.hhf`](../src/HlaX64.Runti
 | `hlax_file_read(handle, buf, count)` | Read bytes into buffer |
 | `hlax_file_close(handle)` | Close handle/fd |
 | `hlax_strlen`, `hlax_memcpy`, `hlax_memset`, `hlax_is_space` | String/memory helpers |
+| `hlax_getpid`, `hlax_hostname`, `hlax_mem_*`, `hlax_file_size` | Systems introspection — [`runtime-contract.md`](runtime-contract.md) |
+| `hlax_os_last_error`, `hlax_cpu_count`, `hlax_disk_*`, `hlax_self_rss_bytes` | Resource reporting |
+| `hlax_net_*`, `hlax_dns_resolve_v4`, `hlax_tcp_*` | IPv4 TCP/DNS (local fixture tests) — [`07-systems-networking.md`](tutorials/07-systems-networking.md) |
 
 Example (`exists` tool):
 

@@ -28,6 +28,13 @@ hla64 test tests/examples-curriculum --filter real- --compile-only
 hla64 run examples/project-euler/problems/euler013-large-sum.hla64
 ```
 
-**Playground:** [docs/playground/index.html](../docs/playground/index.html) — sidebar grouped by category; cache under `docs/playground/cache/<category>/`.
+**Playground:** [docs/playground/index.html](../docs/playground/index.html) — sidebar mirrors this tree (5 categories, nested groups, **206** programs); cache under `docs/playground/cache/<category>/`.
+
+Regenerate after adding examples:
+
+```bash
+./scripts/generate-playground-manifest.ps1
+./scripts/generate-playground-cache.ps1
+```
 
 See [docs/examples.md](../docs/examples.md). **Patterns & build troubleshooting:** [docs/patterns.md](../docs/patterns.md).

@@ -131,8 +131,8 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 
 | Item | Status | Catatan |
 |------|--------|---------|
-| Playground example picker (12 contoh kurikulum + real-tools) | ✅ Done | `docs/playground/index.html`, `?example=wc` |
-| Generated NASM pane (cached `explain --json`) | ✅ Done | `docs/playground/cache/`, `scripts/generate-playground-cache.ps1` |
+| Playground example picker (206 programs, nested by `examples/` category) | ✅ Done | `docs/playground/manifest.json`, `?example=wc` |
+| Generated NASM pane (cached `explain --json`) | ✅ Done | `docs/playground/cache/`, `scripts/generate-playground-{manifest,cache}.ps1` |
 | Explain-this-line (heuristic tutor) | ✅ Done | Klik baris + tab penjelasan |
 | Copy AI Debug / Explain / Optimize prompt | ✅ Done | Playground tab AI |
 | Live explain API (edit source → fresh NASM) | 🔜 Planned | `playground-design.md` Phase 2 |

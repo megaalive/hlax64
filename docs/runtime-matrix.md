@@ -47,3 +47,10 @@ hla64 emit-nasm program.hla64
 | Run | Native or WSL | `dlopen` consumer | Native | LoadLibrary consumer |
 
 Run `hla64 doctor` to verify toolchain availability on your machine.
+
+## Runtime link extras (sys / net)
+
+| Symbol set | Linux link extra | Windows link extra |
+|------------|------------------|-------------------|
+| `hlax_sys_*` | `-lc` (when not already linked for file/heap) | `kernel32` (default); `psapi.lib` when `hlax_self_rss_bytes` is used |
+| `hlax_net_*` | `-lc` | `ws2_32.lib` (auto-added by `RuntimeObjectProvider`) |

@@ -17,7 +17,7 @@
 
 Inspect HlaX64 source, **generated NASM**, line notes, IR summary, and **AI debug / explain / optimize** prompts — no install required.
 
-The browser playground uses **cached compile artifacts** for each example (pre-generated with `hla64 explain --json`). Editing source in the browser does not recompile; use the **Run locally** command in the playground or the CLI below for live builds.
+The browser playground uses **cached compile artifacts** for **206** curated examples (pre-generated with `hla64 explain --json`). Editing source in the browser does not recompile; use the **Run locally** command in the playground or the CLI below for live builds.
 
 ### Try examples in browser
 
