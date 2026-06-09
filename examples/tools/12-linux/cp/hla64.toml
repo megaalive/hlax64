@@ -1,0 +1,4 @@
+name = "cp"
+version = "0.1.0"
+target = "linux-x64-sysv"
+main = "cp.hla64"
