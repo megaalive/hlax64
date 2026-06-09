@@ -27,12 +27,13 @@ public static class RuntimeObjectProvider
 
     private static readonly FrozenSet<string> FileSymbols = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "hlax_path_exists", "hlax_file_open_read", "hlax_file_read", "hlax_file_close"
+        "hlax_path_exists", "hlax_file_open_read", "hlax_file_open_write",
+        "hlax_file_read", "hlax_file_write", "hlax_file_close", "hlax_stdout_write"
     }.ToFrozenSet();
 
     private static readonly FrozenSet<string> MemSymbols = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "hlax_strlen", "hlax_memcpy", "hlax_memset", "hlax_is_space"
+        "hlax_strlen", "hlax_memcpy", "hlax_memset", "hlax_is_space", "hlax_is_printable"
     }.ToFrozenSet();
 
     public static bool TryGetLinuxRuntimeObjects(

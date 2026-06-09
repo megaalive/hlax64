@@ -91,8 +91,17 @@ procedure hlax_file_open_read(path: cstring): int64;
 // Read up to count bytes into buffer. Returns bytes read, or -1 on failure.
 procedure hlax_file_read(handle: int64; buffer: ptr; count: uint64): int64;
 
-// Close handle/fd opened with hlax_file_open_read.
+// Close handle/fd opened with hlax_file_open_read or hlax_file_open_write.
 procedure hlax_file_close(handle: int64): int64;
+
+// Open path for write (truncate/create). Returns handle/fd, or -1 on failure.
+procedure hlax_file_open_write(path: cstring): int64;
+
+// Write up to count bytes from buffer. Returns bytes written, or -1 on failure.
+procedure hlax_file_write(handle: int64; buffer: ptr; count: uint64): int64;
+
+// Write up to count bytes to stdout. Returns bytes written, or -1 on failure.
+procedure hlax_stdout_write(buffer: ptr; count: uint64): int64;
 
 // =====================================================================
 // String / memory (linux-x64/mem.nasm, windows-x64/mem.nasm)
@@ -109,6 +118,9 @@ procedure hlax_memset(dst: ptr; value: uint64; count: uint64): ptr;
 
 // Return 1 for space/tab/LF/CR, else 0.
 procedure hlax_is_space(ch: uint64): int64;
+
+// Return 1 for ASCII printable (0x20..0x7E), else 0.
+procedure hlax_is_printable(ch: uint64): int64;
 
 // =====================================================================
 // Conversion (defined in linux-x64/conversion.nasm)

@@ -9,6 +9,7 @@ global hlax_strlen
 global hlax_memcpy
 global hlax_memset
 global hlax_is_space
+global hlax_is_printable
 
 ; rdi = cstring -> rax = length (bytes before NUL)
 hlax_strlen:
@@ -67,4 +68,17 @@ hlax_is_space:
     ret
 .yes:
     mov rax, 1
+    ret
+
+; rdi = byte value -> rax = 1 if ASCII printable (0x20..0x7E), else 0
+hlax_is_printable:
+    mov rax, rdi
+    cmp rax, 32
+    jl .no
+    cmp rax, 126
+    jg .no
+    mov rax, 1
+    ret
+.no:
+    xor rax, rax
     ret
