@@ -1,0 +1,82 @@
+// tcpget.hla64 - connect to host:port, send argv[3], print first response chunk.
+
+program tcpget;
+
+#include("stdlib64.hhf")
+
+extern procedure hlax_argv_init(): int64;
+extern procedure hlax_argv_count(): int64;
+extern procedure hlax_argv_get(index:int64): ptr;
+extern procedure hlax_net_init(): int64;
+extern procedure hlax_net_last_error(): int64;
+extern procedure hlax_tcp_connect(host: cstring; port: uint64): int64;
+extern procedure hlax_tcp_write(socket: int64; buffer: ptr; count: uint64): int64;
+extern procedure hlax_tcp_read(socket: int64; buffer: ptr; count: uint64): int64;
+extern procedure hlax_tcp_close(socket: int64): int64;
+extern procedure hlax_stdout_write(buffer: ptr; count: uint64): int64;
+extern procedure hlax_strlen(buf: cstring): uint64;
+
+static
+    readBuf: byte[256];
+endstatic;
+
+procedure ParsePort(str: ptr); @returns("rax");
+begin ParsePort;
+    mov(0, rax);
+    mov(str, r10);
+    mov(0, r15);
+    while(r15 < 6) do
+        mov([r10].byte, r9);
+        if(r9 = 0) then
+            mov(6, r15);
+        else
+            imul(10, rax);
+            sub(48, r9);
+            add(r9, rax);
+            add(1, r10);
+            add(1, r15);
+        endif;
+    endwhile;
+end ParsePort;
+
+begin tcpget;
+    call hlax_argv_init();
+    call hlax_argv_count();
+
+    if(rax < 4) then
+        stdout.put("usage: tcpget <host> <port> <message>", nl);
+        mov(1, rbx);
+    else
+        call hlax_net_init();
+        if(rax != 0) then
+            call hlax_net_last_error();
+            stdout.put("err=", rax, nl);
+            mov(3, rbx);
+        else
+            call hlax_argv_get(2);
+            call ParsePort(rax);
+            mov(rax, r13);
+            call hlax_argv_get(1);
+            mov(rax, r12);
+            call hlax_tcp_connect(r12, r13);
+
+            if(rax < 0) then
+                call hlax_net_last_error();
+                stdout.put("err=", rax, nl);
+                mov(3, rbx);
+            else
+                mov(rax, r14);
+                call hlax_argv_get(3);
+                mov(rax, r15);
+                call hlax_strlen(r15);
+                call hlax_tcp_write(r14, r15, rax);
+                call hlax_tcp_read(r14, &readBuf, 256);
+                if(rax > 0) then
+                    call hlax_stdout_write(&readBuf, rax);
+                endif;
+                call hlax_tcp_close(r14);
+                mov(0, rbx);
+            endif;
+        endif;
+    endif;
+end tcpget;

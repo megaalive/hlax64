@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "real-httpget",
+    "source":  "../../../examples/tools/10-windows/httpget/httpget.hla64",
+    "description":  "Real tool: HTTP/1.0 GET client"
+}

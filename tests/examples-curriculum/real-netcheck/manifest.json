@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "real-netcheck",
+    "source":  "../../../examples/tools/10-windows/netcheck/netcheck.hla64",
+    "description":  "Real tool: loopback TCP ping check"
+}

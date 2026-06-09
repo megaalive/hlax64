@@ -1,0 +1,4 @@
+name = "dnslookup"
+version = "0.1.0"
+target = "windows-x64-msabi"
+main = "dnslookup.hla64"

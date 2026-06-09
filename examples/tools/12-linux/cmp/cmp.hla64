@@ -16,6 +16,8 @@ extern procedure hlax_file_close(handle: int64): int64;
 static
     buffer1: byte[256];
     buffer2: byte[256];
+    read1: int64;
+    read2: int64;
 endstatic;
 
 procedure CompareChunk(n: int64; baseOffset: int64); @returns("rax");
@@ -51,15 +53,15 @@ begin CompareLoop;
             mov(-1, rax);
             mov(1, r13);
         else
-            mov(rax, r10);
+            mov(rax, read1);
             call hlax_file_read(h2, &buffer2, 256);
             if(rax < 0) then
                 mov(-1, rax);
                 mov(1, r13);
             else
-                mov(rax, r11);
-                if(r10 = 0) then
-                    if(r11 = 0) then
+                mov(rax, read2);
+                if(read1 = 0) then
+                    if(read2 = 0) then
                         stdout.put("identical", nl);
                         mov(0, rax);
                         mov(1, r13);
@@ -69,16 +71,18 @@ begin CompareLoop;
                         mov(1, r13);
                     endif;
                 else
+                    mov(read1, r10);
+                    mov(read2, r11);
                     if(r10 != r11) then
                         stdout.put("differ: size", nl);
                         mov(1, rax);
                         mov(1, r13);
                     else
-                        call CompareChunk(r10, r12);
+                        call CompareChunk(read1, r12);
                         if(rax != 0) then
                             mov(1, r13);
                         else
-                            add(r10, r12);
+                            add(read1, r12);
                         endif;
                     endif;
                 endif;

@@ -39,7 +39,7 @@ begin ProcessByte;
         mov(&run, r10);
         mov(runLen, r11);
         add(r11, r10);
-        mov([r11].byte, b);
+        mov(b, [r10].byte);
         add(1, runLen);
     else
         call FlushRun();
@@ -49,13 +49,14 @@ end ProcessByte;
 
 procedure ProcessBuffer(n: int64); @returns("rax");
 begin ProcessBuffer;
-    mov(&buffer, r14);
-    mov(0, r8);
-    while(r8 < n) do
+    mov(0, r12);
+    mov(n, r13);
+    while(r12 < r13) do
+        mov(&buffer, r14);
+        add(r12, r14);
         mov([r14].byte, r9);
         call ProcessByte(r9);
-        add(1, r14);
-        add(1, r8);
+        add(1, r12);
     endwhile;
     call FlushRun();
     mov(0, rax);

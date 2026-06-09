@@ -1,0 +1,4 @@
+name = "dnslookup"
+version = "0.1.0"
+target = "linux-x64-sysv"
+main = "dnslookup.hla64"

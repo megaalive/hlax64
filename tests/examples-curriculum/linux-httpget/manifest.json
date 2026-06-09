@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "linux-httpget",
+    "source":  "../../../examples/tools/12-linux/httpget/httpget.hla64",
+    "description":  "Linux tool: HTTP/1.0 GET client"
+}

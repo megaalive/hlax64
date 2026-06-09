@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "linux-procmem",
+    "source":  "../../../examples/tools/12-linux/procmem/procmem.hla64",
+    "description":  "Linux tool: print process RSS"
+}

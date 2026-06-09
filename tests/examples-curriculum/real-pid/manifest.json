@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "real-pid",
+    "source":  "../../../examples/tools/10-windows/pid/pid.hla64",
+    "description":  "Real tool: print process id"
+}

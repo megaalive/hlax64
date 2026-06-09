@@ -1,0 +1,21 @@
+// cpucount.hla64 - print online CPU count.
+
+program cpucount;
+
+#include("stdlib64.hhf")
+
+extern procedure hlax_cpu_count(): int64;
+extern procedure hlax_os_last_error(): int64;
+
+begin cpucount;
+    call hlax_cpu_count();
+
+    if(rax < 0) then
+        call hlax_os_last_error();
+        stdout.put("err=", rax, nl);
+        mov(2, rbx);
+    else
+        stdout.put("cpus=", rax, nl);
+        mov(0, rbx);
+    endif;
+end cpucount;

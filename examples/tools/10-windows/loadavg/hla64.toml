@@ -1,0 +1,4 @@
+name = "loadavg"
+version = "0.1.0"
+target = "windows-x64-msabi"
+main = "loadavg.hla64"

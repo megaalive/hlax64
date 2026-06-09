@@ -1,0 +1,19 @@
+// uptime.hla64 - print seconds since boot.
+
+program uptime;
+
+#include("stdlib64.hhf")
+
+extern procedure hlax_uptime_secs(): int64;
+
+begin uptime;
+    call hlax_uptime_secs();
+
+    if(rax < 0) then
+        stdout.put("uptime failed", nl);
+        mov(1, rbx);
+    else
+        stdout.put("uptime=", rax, nl);
+        mov(0, rbx);
+    endif;
+end uptime;

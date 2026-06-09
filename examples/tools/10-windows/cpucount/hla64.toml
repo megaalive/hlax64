@@ -1,0 +1,4 @@
+name = "cpucount"
+version = "0.1.0"
+target = "windows-x64-msabi"
+main = "cpucount.hla64"

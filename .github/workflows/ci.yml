@@ -43,8 +43,11 @@ jobs:
         if: runner.os == 'Linux'
         run: dotnet publish src/HlaX64.AssemblyLab/HlaX64.AssemblyLab.csproj -c Release -r linux-x64 --self-contained false -o publish/assembly-lab-smoke
 
-      - name: Test
-        run: dotnet test
+      - name: Test (fast)
+        run: dotnet test --filter "Category!=Integration" --no-build
+
+      - name: Test (integration, serial)
+        run: dotnet test --filter "Category=Integration" --no-build -- xUnit.parallelizeAssembly false
 
       - name: Doctor
         run: dotnet run --project src/HlaX64.Cli -- doctor

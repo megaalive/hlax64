@@ -1,0 +1,48 @@
+// machine2.hla64 - extended machine summary with cpu, rss, and disk.
+
+program machine2;
+
+#include("stdlib64.hhf")
+
+extern procedure hlax_getpid(): int64;
+extern procedure hlax_hostname(buffer: ptr; capacity: uint64): int64;
+extern procedure hlax_cpu_count(): int64;
+extern procedure hlax_self_rss_bytes(): int64;
+extern procedure hlax_disk_total_bytes(path: cstring): int64;
+extern procedure hlax_disk_avail_bytes(path: cstring): int64;
+extern procedure hlax_os_last_error(): int64;
+
+static
+    nameBuf: byte[256];
+    dotPath: byte[4];
+endstatic;
+
+begin machine2;
+    mov(&dotPath, r10);
+    mov(46, r9);
+    mov([r10].byte, r9);
+    add(1, r10);
+    mov(0, r9);
+    mov([r10].byte, r9);
+
+    call hlax_hostname(&nameBuf, 256);
+    if(rax < 0) then
+        call hlax_os_last_error();
+        stdout.put("err=", rax, nl);
+        mov(2, rbx);
+    else
+        stdout.put("hostname: ", &nameBuf, nl);
+        call hlax_getpid();
+        stdout.put("pid=", rax, nl);
+        call hlax_cpu_count();
+        stdout.put("cpus=", rax, nl);
+        call hlax_self_rss_bytes();
+        mov(rax, r12);
+        call hlax_disk_total_bytes(&dotPath);
+        mov(rax, r13);
+        call hlax_disk_avail_bytes(&dotPath);
+        stdout.put("rss=", r12, nl);
+        stdout.put("disk total=", r13, " avail=", rax, nl);
+        mov(0, rbx);
+    endif;
+end machine2;

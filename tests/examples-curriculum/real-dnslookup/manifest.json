@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "real-dnslookup",
+    "source":  "../../../examples/tools/10-windows/dnslookup/dnslookup.hla64",
+    "description":  "Real tool: DNS lookup IPv4"
+}

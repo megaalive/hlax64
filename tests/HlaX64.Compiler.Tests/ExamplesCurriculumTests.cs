@@ -8,7 +8,7 @@ public sealed class ExamplesCurriculumTests
     public void CurriculumManifest_LoadAll_HasExpectedPrograms()
     {
         var manifests = TestManifest.LoadAll("tests/examples-curriculum");
-        Assert.Equal(79, manifests.Count);
+        Assert.Equal(108, manifests.Count);
         Assert.Contains(manifests, m => m.Name == "curriculum-hello");
         Assert.Contains(manifests, m => m.Name == "real-listfiles");
         Assert.Contains(manifests, m => m.Name == "real-filesize");
@@ -26,6 +26,20 @@ public sealed class ExamplesCurriculumTests
         Assert.Contains(manifests, m => m.Name == "real-grep");
         Assert.Contains(manifests, m => m.Name == "real-filemagic");
         Assert.Contains(manifests, m => m.Name == "real-cmp");
+        Assert.Contains(manifests, m => m.Name == "real-pid");
+        Assert.Contains(manifests, m => m.Name == "real-hostname");
+        Assert.Contains(manifests, m => m.Name == "real-uptime");
+        Assert.Contains(manifests, m => m.Name == "real-meminfo");
+        Assert.Contains(manifests, m => m.Name == "real-machine");
+        Assert.Contains(manifests, m => m.Name == "real-netcheck");
+        Assert.Contains(manifests, m => m.Name == "real-tcpget");
+        Assert.Contains(manifests, m => m.Name == "real-httpget");
+        Assert.Contains(manifests, m => m.Name == "real-dnslookup");
+        Assert.Contains(manifests, m => m.Name == "real-cpucount");
+        Assert.Contains(manifests, m => m.Name == "real-diskfree");
+        Assert.Contains(manifests, m => m.Name == "real-procmem");
+        Assert.Contains(manifests, m => m.Name == "real-loadavg");
+        Assert.Contains(manifests, m => m.Name == "real-machine2");
         Assert.Contains(manifests, m => m.Name == "interop-native-count-lines");
         Assert.Contains(manifests, m => m.Name == "interop-native-fnv1a");
         Assert.Contains(manifests, m => m.Name == "interop-native-sum-bytes");
@@ -52,6 +66,21 @@ public sealed class ExamplesCurriculumTests
         Assert.Contains(manifests, m => m.Name == "linux-cmp");
         Assert.Contains(manifests, m => m.Name == "linux-hexdump");
         Assert.Contains(manifests, m => m.Name == "linux-filemagic");
+        Assert.Contains(manifests, m => m.Name == "linux-pid");
+        Assert.Contains(manifests, m => m.Name == "linux-hostname");
+        Assert.Contains(manifests, m => m.Name == "linux-uptime");
+        Assert.Contains(manifests, m => m.Name == "linux-meminfo");
+        Assert.Contains(manifests, m => m.Name == "linux-filesize");
+        Assert.Contains(manifests, m => m.Name == "linux-machine");
+        Assert.Contains(manifests, m => m.Name == "linux-netcheck");
+        Assert.Contains(manifests, m => m.Name == "linux-tcpget");
+        Assert.Contains(manifests, m => m.Name == "linux-httpget");
+        Assert.Contains(manifests, m => m.Name == "linux-dnslookup");
+        Assert.Contains(manifests, m => m.Name == "linux-cpucount");
+        Assert.Contains(manifests, m => m.Name == "linux-diskfree");
+        Assert.Contains(manifests, m => m.Name == "linux-procmem");
+        Assert.Contains(manifests, m => m.Name == "linux-loadavg");
+        Assert.Contains(manifests, m => m.Name == "linux-machine2");
         Assert.Contains(manifests, m => m.Name == "curriculum-const-expr");
         Assert.Contains(manifests, m => m.Name == "curriculum-idiv-jmp");
         Assert.Contains(manifests, m => m.Name == "curriculum-dynamic-array");

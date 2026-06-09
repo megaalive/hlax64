@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "linux-netcheck",
+    "source":  "../../../examples/tools/12-linux/netcheck/netcheck.hla64",
+    "description":  "Linux tool: loopback TCP ping check"
+}

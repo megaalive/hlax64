@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "linux-machine2",
+    "source":  "../../../examples/tools/12-linux/machine2/machine2.hla64",
+    "description":  "Linux tool: extended machine summary"
+}

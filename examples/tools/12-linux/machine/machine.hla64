@@ -1,0 +1,34 @@
+// machine.hla64 - print hostname, pid, uptime, and memory summary.
+
+program machine;
+
+#include("stdlib64.hhf")
+
+extern procedure hlax_getpid(): int64;
+extern procedure hlax_hostname(buffer: ptr; capacity: uint64): int64;
+extern procedure hlax_uptime_secs(): int64;
+extern procedure hlax_mem_total(): int64;
+extern procedure hlax_mem_avail(): int64;
+
+static
+    nameBuf: byte[256];
+endstatic;
+
+begin machine;
+    call hlax_hostname(&nameBuf, 256);
+    if(rax < 0) then
+        stdout.put("hostname failed", nl);
+        mov(1, rbx);
+    else
+        stdout.put("hostname: ", &nameBuf, nl);
+        call hlax_getpid();
+        stdout.put("pid=", rax, nl);
+        call hlax_uptime_secs();
+        stdout.put("uptime=", rax, nl);
+        call hlax_mem_total();
+        mov(rax, r12);
+        call hlax_mem_avail();
+        stdout.put("mem total=", r12, " avail=", rax, nl);
+        mov(0, rbx);
+    endif;
+end machine;

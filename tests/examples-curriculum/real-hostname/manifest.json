@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "real-hostname",
+    "source":  "../../../examples/tools/10-windows/hostname/hostname.hla64",
+    "description":  "Real tool: print hostname"
+}

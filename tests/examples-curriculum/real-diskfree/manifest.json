@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "real-diskfree",
+    "source":  "../../../examples/tools/10-windows/diskfree/diskfree.hla64",
+    "description":  "Real tool: print disk free space"
+}

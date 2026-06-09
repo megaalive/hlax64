@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "linux-pid",
+    "source":  "../../../examples/tools/12-linux/pid/pid.hla64",
+    "description":  "Linux tool: print process id"
+}

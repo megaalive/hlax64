@@ -1,0 +1,5 @@
+name = "netcheck"
+version = "0.1.0"
+target = "windows-x64-msabi"
+main = "netcheck.hla64"
+

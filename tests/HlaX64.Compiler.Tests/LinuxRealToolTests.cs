@@ -3,14 +3,17 @@ using HlaX64.Cli.Commands;
 using HlaX64.Cli.Toolchain;
 using HlaX64.Compiler;
 using HlaX64.Compiler.Options;
+using HlaX64.TestSupport;
 
 namespace HlaX64.Compiler.Tests;
 
+[Collection("Integration")]
+[Trait("Category", "Integration")]
 public sealed class LinuxRealToolTests
 {
     public LinuxRealToolTests()
     {
-        var repoRoot = FindRepoRoot();
+        var repoRoot = RealToolTestHarness.FindRepoRoot();
         Environment.SetEnvironmentVariable("HLAX64_RUNTIME_DIR",
             Path.Combine(repoRoot, "src", "HlaX64.Runtime"));
     }
@@ -31,6 +34,21 @@ public sealed class LinuxRealToolTests
         yield return ["cmp"];
         yield return ["hexdump"];
         yield return ["filemagic"];
+        yield return ["pid"];
+        yield return ["hostname"];
+        yield return ["uptime"];
+        yield return ["meminfo"];
+        yield return ["filesize"];
+        yield return ["machine"];
+        yield return ["netcheck"];
+        yield return ["tcpget"];
+        yield return ["httpget"];
+        yield return ["dnslookup"];
+        yield return ["cpucount"];
+        yield return ["diskfree"];
+        yield return ["procmem"];
+        yield return ["loadavg"];
+        yield return ["machine2"];
     }
 
     [Theory]
@@ -44,7 +62,7 @@ public sealed class LinuxRealToolTests
         if (!NasmTool.TryFindNasm(out _))
             return;
 
-        var repoRoot = FindRepoRoot();
+        var repoRoot = RealToolTestHarness.FindRepoRoot();
         var toolDir = Path.Combine(repoRoot, "examples", "tools", "12-linux", tool);
         var sourcePath = Path.Combine(toolDir, $"{tool}.hla64");
         var expectedStdoutPath = Path.Combine(toolDir, "expected.stdout");
@@ -79,9 +97,11 @@ public sealed class LinuxRealToolTests
                 artifacts.Result, isWindows: false, cache, out var extras, out var runtimeError), runtimeError);
             Assert.True(LinkerTool.TryLink(objFile, exeFile, out var linkError, out _, extraLibraries: extras), linkError);
 
+            using var tcpFixture = LocalTcpFixture.TryStart(toolDir);
             var wslExe = LinkerTool.ToWslPath(exeFile);
             var wslCwd = LinkerTool.ToWslPath(repoRoot);
-            var args = BuildWslArguments(argumentsPath, repoRoot, outputFile);
+            var wslHostIp = WslHostResolver.TryGetHostIpForWsl();
+            var args = RealToolTestHarness.BuildWslArguments(argumentsPath, repoRoot, outputFile, tcpFixture?.Port ?? 0, wslHostIp);
 
             string command;
             if (File.Exists(stdinPath))
@@ -98,23 +118,16 @@ public sealed class LinuxRealToolTests
                     : $"bash -lc \"cd '{wslCwd}' && '{wslExe}' {args}\"";
             }
 
-            using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            var result = ProcessRunner.Run(new System.Diagnostics.ProcessStartInfo
             {
                 FileName = "wsl",
-                Arguments = command,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            });
-            Assert.NotNull(process);
-            var stdout = process!.StandardOutput.ReadToEnd();
-            var stderr = process.StandardError.ReadToEnd();
-            Assert.True(process.WaitForExit(20000), $"linux {tool} did not exit within 20s\n{stderr}");
+                Arguments = command
+            }, TimeSpan.FromSeconds(20));
 
-            Assert.Equal(expectedExit, process.ExitCode);
+            Assert.False(result.TimedOut, $"linux {tool} did not exit within 20s\n{result.Stderr}");
+            Assert.Equal(expectedExit, result.ExitCode);
             foreach (var line in expectedStdout.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-                Assert.Contains(line, stdout, StringComparison.Ordinal);
+                Assert.Contains(line, result.Stdout, StringComparison.Ordinal);
 
             if (expectedOutput != null)
             {
@@ -122,6 +135,8 @@ public sealed class LinuxRealToolTests
                 var actualOutput = File.ReadAllText(outputFile).Replace("\r\n", "\n");
                 Assert.Equal(expectedOutput, actualOutput);
             }
+
+            tcpFixture?.WaitForCompletion();
         }
         finally
         {
@@ -129,40 +144,5 @@ public sealed class LinuxRealToolTests
                 Directory.Delete(cache, recursive: true);
         }
     }
-
-    private static string BuildWslArguments(string? argumentsPath, string repoRoot, string outputFile)
-    {
-        if (argumentsPath == null || !File.Exists(argumentsPath))
-            return string.Empty;
-
-        var raw = File.ReadAllText(argumentsPath);
-        var tokens = raw.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (tokens.Length == 0)
-            return string.Empty;
-
-        var resolved = new List<string>();
-        foreach (var token in tokens)
-        {
-            if (token == "$OUTPUT")
-                resolved.Add(LinkerTool.ToWslPath(outputFile));
-            else if (!Path.IsPathRooted(token))
-                resolved.Add(LinkerTool.ToWslPath(Path.Combine(repoRoot, token.Replace('\\', '/'))));
-            else
-                resolved.Add(LinkerTool.ToWslPath(token));
-        }
-
-        return string.Join(' ', resolved.Select(arg => $"'{arg.Replace("'", "'\\''")}'"));
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "HlaX64.slnx")))
-                return dir.FullName;
-            dir = dir.Parent;
-        }
-        throw new DirectoryNotFoundException("Could not locate repo root");
-    }
 }
+

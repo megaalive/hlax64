@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "linux-diskfree",
+    "source":  "../../../examples/tools/12-linux/diskfree/diskfree.hla64",
+    "description":  "Linux tool: print disk free space"
+}

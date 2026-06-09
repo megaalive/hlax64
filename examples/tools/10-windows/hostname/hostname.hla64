@@ -1,0 +1,23 @@
+// hostname.hla64 - print machine hostname.
+
+program hostname;
+
+#include("stdlib64.hhf")
+
+extern procedure hlax_hostname(buffer: ptr; capacity: uint64): int64;
+
+static
+    nameBuf: byte[256];
+endstatic;
+
+begin hostname;
+    call hlax_hostname(&nameBuf, 256);
+
+    if(rax < 0) then
+        stdout.put("hostname failed", nl);
+        mov(1, rbx);
+    else
+        stdout.put("hostname: ", &nameBuf, nl);
+        mov(0, rbx);
+    endif;
+end hostname;

@@ -1,0 +1,13 @@
+// pid.hla64 - print current process id.
+
+program pid;
+
+#include("stdlib64.hhf")
+
+extern procedure hlax_getpid(): int64;
+
+begin pid;
+    call hlax_getpid();
+    stdout.put("pid=", rax, nl);
+    mov(0, rbx);
+end pid;

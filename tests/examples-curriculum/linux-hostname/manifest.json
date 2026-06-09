@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "linux-hostname",
+    "source":  "../../../examples/tools/12-linux/hostname/hostname.hla64",
+    "description":  "Linux tool: print hostname"
+}

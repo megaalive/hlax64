@@ -25,7 +25,7 @@ endstatic;
 procedure WriteByte(b: int64); @returns("rax");
 begin WriteByte;
     mov(&oneByte, r10);
-    mov([r10].byte, b);
+    mov(b, [r10].byte);
     call hlax_stdout_write(&oneByte, 1);
     mov(0, rax);
 end WriteByte;
@@ -33,13 +33,14 @@ end WriteByte;
 procedure ProcessBuffer(data: ptr; n: int64; limit: int64); @returns("rax");
 begin ProcessBuffer;
     mov(limit, r10);
-    mov(data, r14);
-    mov(n, r15);
-    mov(0, r8);
-    while(r8 < r15) do
+    mov(n, r13);
+    mov(0, r12);
+    while(r12 < r13) do
         if(headDone != 0) then
-            mov(r15, r8);
+            mov(r13, r12);
         else
+            mov(data, r14);
+            add(r12, r14);
             mov([r14].byte, r9);
             call WriteByte(r9);
             if(r9 = 10) then
@@ -48,8 +49,7 @@ begin ProcessBuffer;
                     mov(1, headDone);
                 endif;
             endif;
-            add(1, r8);
-            add(1, r14);
+            add(1, r12);
         endif;
     endwhile;
     mov(headDone, rax);

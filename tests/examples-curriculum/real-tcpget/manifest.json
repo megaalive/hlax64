@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "real-tcpget",
+    "source":  "../../../examples/tools/10-windows/tcpget/tcpget.hla64",
+    "description":  "Real tool: TCP client send/read"
+}

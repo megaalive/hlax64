@@ -19,6 +19,15 @@ Linux SysV ports of selected command-line tools using `libc.so` instead of Win32
 | `cmp` | Byte-compare two files | dual `hlax_file_*`, streaming compare |
 | `hexdump` | Hex dump first chunk | nibble formatting |
 | `filemagic` | Magic-byte classifier | `hlax_is_printable` text fallback |
+| `pid` | Print process id | `hlax_getpid` |
+| `hostname` | Print hostname | `hlax_hostname` |
+| `uptime` | Seconds since boot | `hlax_uptime_secs` |
+| `meminfo` | Total/available RAM | `hlax_mem_total`, `hlax_mem_avail` |
+| `filesize` | File size in bytes | `hlax_file_size` |
+| `machine` | Hostname/pid/uptime/mem summary | combined `hlax_sys_*` |
+| `netcheck` | TCP loopback ping | `hlax_net_*`, `$PORT` harness |
+| `tcpget` | TCP send/receive chunk | `hlax_tcp_*` |
+| `httpget` | HTTP/1.0 GET client | request builder + `hlax_tcp_*` |
 | `fnv1a` | FNV-1a 64-bit file hash | xor/imul loop, **`stdout.putu`** unsigned decimal |
 
 ## Build

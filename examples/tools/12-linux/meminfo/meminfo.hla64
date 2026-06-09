@@ -1,0 +1,22 @@
+// meminfo.hla64 - print total and available physical memory.
+
+program meminfo;
+
+#include("stdlib64.hhf")
+
+extern procedure hlax_mem_total(): int64;
+extern procedure hlax_mem_avail(): int64;
+
+begin meminfo;
+    call hlax_mem_total();
+    mov(rax, r12);
+    call hlax_mem_avail();
+
+    if(r12 < 0) then
+        stdout.put("meminfo failed", nl);
+        mov(1, rbx);
+    else
+        stdout.put("total=", r12, " avail=", rax, nl);
+        mov(0, rbx);
+    endif;
+end meminfo;

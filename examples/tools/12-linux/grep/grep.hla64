@@ -34,7 +34,7 @@ begin AppendByte;
         mov(&line, r10);
         mov(lineLen, r11);
         add(r11, r10);
-        mov([r11].byte, b);
+        mov(b, [r10].byte);
         add(1, lineLen);
     endif;
     mov(0, rax);
@@ -99,14 +99,14 @@ end ProcessByte;
 
 procedure ProcessBuffer(n: int64; needle: ptr; needleLen: int64); @returns("rax");
 begin ProcessBuffer;
-    mov(&buffer, r14);
-    mov(0, r8);
-    mov(n, r15);
-    while(r8 < r15) do
+    mov(0, r12);
+    mov(n, r13);
+    while(r12 < r13) do
+        mov(&buffer, r14);
+        add(r12, r14);
         mov([r14].byte, r9);
         call ProcessByte(r9, needle, needleLen);
-        add(1, r8);
-        add(1, r14);
+        add(1, r12);
     endwhile;
     mov(0, rax);
 end ProcessBuffer;
@@ -144,7 +144,7 @@ begin grep;
         call hlax_argv_get(2);
         mov(rax, r12);
         call hlax_strlen(r12);
-        mov(rax, r11);
+        mov(rax, r13);
         call hlax_argv_get(1);
         mov(rax, r12);
         call hlax_file_open_read(r12);
@@ -156,7 +156,7 @@ begin grep;
             mov(rax, r15);
             call hlax_argv_get(2);
             mov(rax, r14);
-            call GrepLoop(r15, r14, r11);
+            call GrepLoop(r15, r14, r13);
             if(rax < 0) then
                 stdout.put("read failed", nl);
                 call hlax_file_close(r15);

@@ -1,0 +1,4 @@
+name = "procmem"
+version = "0.1.0"
+target = "linux-x64-sysv"
+main = "procmem.hla64"

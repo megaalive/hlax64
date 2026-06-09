@@ -1,0 +1,5 @@
+name = "httpget"
+version = "0.1.0"
+target = "linux-x64-sysv"
+main = "httpget.hla64"
+

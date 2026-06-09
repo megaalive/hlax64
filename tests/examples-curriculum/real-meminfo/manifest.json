@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "real-meminfo",
+    "source":  "../../../examples/tools/10-windows/meminfo/meminfo.hla64",
+    "description":  "Real tool: print memory totals"
+}

@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "linux-meminfo",
+    "source":  "../../../examples/tools/12-linux/meminfo/meminfo.hla64",
+    "description":  "Linux tool: print memory totals"
+}

@@ -1,0 +1,48 @@
+// diskfree.hla64 - print total and available disk bytes for a path.
+
+program diskfree;
+
+#include("stdlib64.hhf")
+
+extern procedure hlax_argv_init(): int64;
+extern procedure hlax_argv_count(): int64;
+extern procedure hlax_argv_get(index:int64): ptr;
+extern procedure hlax_disk_total_bytes(path: cstring): int64;
+extern procedure hlax_disk_avail_bytes(path: cstring): int64;
+extern procedure hlax_os_last_error(): int64;
+
+static
+    dotPath: byte[4];
+endstatic;
+
+begin diskfree;
+    mov(&dotPath, r10);
+    mov(46, r9);
+    mov([r10].byte, r9);
+    add(1, r10);
+    mov(0, r9);
+    mov([r10].byte, r9);
+
+    call hlax_argv_init();
+    call hlax_argv_count();
+
+    if(rax >= 2) then
+        call hlax_argv_get(1);
+        mov(rax, r12);
+    else
+        mov(&dotPath, r12);
+    endif;
+
+    call hlax_disk_total_bytes(r12);
+    mov(rax, r13);
+    call hlax_disk_avail_bytes(r12);
+
+    if(r13 < 0) then
+        call hlax_os_last_error();
+        stdout.put("err=", rax, nl);
+        mov(2, rbx);
+    else
+        stdout.put("total=", r13, " avail=", rax, nl);
+        mov(0, rbx);
+    endif;
+end diskfree;

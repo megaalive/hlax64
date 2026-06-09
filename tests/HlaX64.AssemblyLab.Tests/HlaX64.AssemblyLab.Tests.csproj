@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\HlaX64.AssemblyLab\HlaX64.AssemblyLab.csproj" />
+    <ProjectReference Include="..\HlaX64.TestSupport\HlaX64.TestSupport.csproj" />
   </ItemGroup>
 
   <ItemGroup>

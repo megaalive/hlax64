@@ -1,0 +1,5 @@
+name = "hostname"
+version = "0.1.0"
+target = "linux-x64-sysv"
+main = "hostname.hla64"
+

@@ -1,0 +1,5 @@
+name = "tcpget"
+version = "0.1.0"
+target = "windows-x64-msabi"
+main = "tcpget.hla64"
+

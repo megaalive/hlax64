@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "real-cpucount",
+    "source":  "../../../examples/tools/10-windows/cpucount/cpucount.hla64",
+    "description":  "Real tool: print CPU count"
+}

@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "real-loadavg",
+    "source":  "../../../examples/tools/10-windows/loadavg/loadavg.hla64",
+    "description":  "Real tool: print load average"
+}

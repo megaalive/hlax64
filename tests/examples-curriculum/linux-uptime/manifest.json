@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "linux-uptime",
+    "source":  "../../../examples/tools/12-linux/uptime/uptime.hla64",
+    "description":  "Linux tool: print uptime seconds"
+}

@@ -1,0 +1,5 @@
+name = "httpget"
+version = "0.1.0"
+target = "windows-x64-msabi"
+main = "httpget.hla64"
+

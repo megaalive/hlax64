@@ -1,0 +1,19 @@
+// loadavg.hla64 - print one-minute load average in milli-units.
+
+program loadavg;
+
+#include("stdlib64.hhf")
+
+extern procedure hlax_load_avg_milli(): int64;
+
+begin loadavg;
+    call hlax_load_avg_milli();
+
+    if(rax < 0) then
+        stdout.put("unsupported", nl);
+        mov(0, rbx);
+    else
+        stdout.put("load_milli=", rax, nl);
+        mov(0, rbx);
+    endif;
+end loadavg;

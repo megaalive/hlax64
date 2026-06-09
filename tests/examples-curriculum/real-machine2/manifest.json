@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "real-machine2",
+    "source":  "../../../examples/tools/10-windows/machine2/machine2.hla64",
+    "description":  "Real tool: extended machine summary"
+}

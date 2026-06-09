@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "real-procmem",
+    "source":  "../../../examples/tools/10-windows/procmem/procmem.hla64",
+    "description":  "Real tool: print process RSS"
+}

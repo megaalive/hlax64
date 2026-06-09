@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "real-uptime",
+    "source":  "../../../examples/tools/10-windows/uptime/uptime.hla64",
+    "description":  "Real tool: print uptime seconds"
+}
