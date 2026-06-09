@@ -15,14 +15,23 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="..\HlaX64.Runtime\**\*.*" Link="runtime\%(RecursiveDir)%(Filename)%(Extension)">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Override Avalonia.FreeDesktop transitive; GHSA-xrw6-gwf8-vvr9 fixed in 0.22+ -->
     <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.3.0" />
     <PackageReference Include="AvaloniaEdit.TextMate" Version="11.3.0" />
+    <PackageReference Include="AvaloniaTerminal" Version="1.0.0-alpha.11" />
+    <PackageReference Include="Porta.Pty" Version="1.0.7" />
     <PackageReference Include="Tmds.DBus.Protocol" Version="0.94.1" />
-    <PackageReference Include="Avalonia" Version="11.3.2" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.3.2" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.2" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.2" />
+    <PackageReference Include="Avalonia" Version="11.3.12" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.12" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.12" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.12" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
   </ItemGroup>
 
@@ -46,6 +55,12 @@
   </Target>
 
   <ItemGroup>
+    <None Include="Assets\hla64.cmd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Assets\hla64.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="..\..\editors\vscode\syntaxes\hla64.tmLanguage.json" Link="Assets\syntax\hla64\syntaxes\hla64.tmLanguage.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

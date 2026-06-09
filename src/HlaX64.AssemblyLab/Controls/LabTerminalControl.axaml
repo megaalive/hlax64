@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:terminal="using:AvaloniaTerminal"
+             x:Class="HlaX64.AssemblyLab.Controls.LabTerminalControl">
+    <Grid Background="Transparent">
+        <terminal:TerminalControl x:Name="TerminalView"
+                                  HorizontalAlignment="Stretch"
+                                  VerticalAlignment="Stretch"
+                                  RightClickAction="CopyOrPaste"
+                                  FontFamily="Cascadia Code,Consolas,Courier New,monospace"
+                                  FontSize="13"
+                                  CaretBrush="Transparent"/>
+        <Canvas x:Name="CaretOverlay"
+                IsHitTestVisible="False"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch">
+            <Rectangle x:Name="OverlayCaret"
+                       Width="8"
+                       Height="18"
+                       Fill="#AEAFAD"
+                       IsVisible="False"/>
+        </Canvas>
+    </Grid>
+</UserControl>

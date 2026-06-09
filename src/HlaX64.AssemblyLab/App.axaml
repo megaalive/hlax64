@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="HlaX64.AssemblyLab.App"
              xmlns:local="using:HlaX64.AssemblyLab"
+             xmlns:terminal="using:AvaloniaTerminal"
              RequestedThemeVariant="Dark">
 
     <Application.DataTemplates>
@@ -11,6 +12,12 @@
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
+        <StyleInclude Source="avares://AvaloniaTerminal/Styles/Colors.axaml"/>
+
+        <!-- Hide broken built-in terminal caret; LabTerminalControl draws its own overlay. -->
+        <Style Selector="terminal|TerminalControl">
+            <Setter Property="CaretBrush" Value="Transparent"/>
+        </Style>
 
         <!-- Window -->
         <Style Selector="Window">
@@ -167,6 +174,20 @@
             <Setter Property="Padding" Value="8,6"/>
             <Setter Property="FontFamily" Value="Cascadia Code,Consolas,Courier New,monospace"/>
             <Setter Property="FontSize" Value="12"/>
+        </Style>
+
+        <!-- Terminal command input -->
+        <Style Selector="TextBox.terminal-command">
+            <Setter Property="Background" Value="#3c3c3c"/>
+            <Setter Property="Foreground" Value="#eeeeee"/>
+            <Setter Property="BorderBrush" Value="#555555"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CaretBrush" Value="#aeafad"/>
+            <Setter Property="SelectionBrush" Value="#264f78"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="FontFamily" Value="Cascadia Code,Consolas,Courier New,monospace"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="MinHeight" Value="28"/>
         </Style>
 
         <!-- ComboBox -->
