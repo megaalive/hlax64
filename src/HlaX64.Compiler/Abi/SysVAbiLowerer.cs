@@ -294,7 +294,7 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         if (AddressRefEncoding.IsStringRef(srcVal))
         {
             var label = EnsureStringLabel(AddressRefEncoding.DecodeString(srcVal!));
-            return new LoweredInstruction($"    lea {dst}, [{label}]");
+            return new LoweredInstruction($"    lea {dst}, [rel {label}]");
         }
 
         if (srcVal?.Name?.StartsWith("proc:", StringComparison.Ordinal) == true)

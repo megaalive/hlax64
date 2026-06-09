@@ -346,7 +346,7 @@ begin t;
     mov(0, rax);
 end t;";
         var nasm = Emit(source);
-        Assert.Contains("lea rcx, [str_", nasm);
+        Assert.Contains("lea rcx, [rel str_", nasm);
         Assert.Contains("movzx", nasm);
         Assert.Contains("byte [rcx]", nasm);
     }

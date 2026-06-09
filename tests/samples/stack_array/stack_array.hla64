@@ -7,11 +7,10 @@ begin SumThree;
     mov(10, data[0]);
     mov(20, data[1]);
     mov(30, data[2]);
-    mov(&data[0], rcx);
-    mov([rcx], rax);
-    mov([rcx + 8], rbx);
+    mov(data[0], rax);
+    mov(data[1], rbx);
     add(rbx, rax);
-    mov([rcx + 16], rbx);
+    mov(data[2], rbx);
     add(rbx, rax);
 end SumThree;
 

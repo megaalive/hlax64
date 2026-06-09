@@ -2,5 +2,5 @@
   "name": "stack_array",
   "source": "stack_array.hla64",
   "expectedExitCode": 60,
-  "description": "Level 3: stack array via base pointer and [reg+offset]"
+  "description": "Level 3: stack array sum via indexed locals"
 }
