@@ -1012,69 +1012,221 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+function span(cls, text) {
+  return `<span class="${cls}">${escapeHtml(text)}</span>`;
+}
+
+const HLA_KEYWORDS = new Set([
+  'program', 'procedure', 'begin', 'end', 'var', 'static', 'const',
+  'if', 'then', 'else', 'endif', 'while', 'endwhile', 'for', 'endfor',
+  'repeat', 'until', 'break', 'continue', 'return', 'extern', 'include',
+  'namespace', 'endnamespace', 'type', 'record', 'union', 'enum', 'mov', 'call',
+]);
+
+const HLA_BUILTINS = [
+  'stdout.putln', 'stdout.putu', 'stdout.puti', 'stdout.putb', 'stdout.putc', 'stdout.put',
+  'stdin.getu', 'stdin.geti', 'stdin.get',
+  'file.open', 'file.close', 'file.read', 'file.write',
+  'malloc', 'free', 'strlen', 'strcpy', 'strcat', 'strcmp', 'printf',
+];
+
+const NASM_KEYWORDS = new Set(['global', 'extern', 'section', 'bits', 'default', 'rel', 'abs']);
+const NASM_SECTIONS = new Set(['.text', '.data', '.bss', '.rodata', '.section']);
+const NASM_INSTRS = new Set(
+  'mov movzx movsx add sub mul imul div idiv inc dec neg and or xor not shl shr sal sar rol ror cmp test push pop lea jmp je jne jz jnz jg jl jge jle ja jb jae jbe call ret int syscall leave enter nop hlt db dq dd dw resb resd resq equ times'.split(' ')
+);
+const NASM_REGS = new Set(
+  'rax rbx rcx rdx rsi rdi rbp rsp r8 r9 r10 r11 r12 r13 r14 r15 eax ebx ecx edx esi edi ebp esp r8d r9d r10d r11d r12d r13d r14d r15d ax bx cx dx si di bp sp ah al bh bl ch cl dh dl cs ds es fs gs ss rip eip'.split(' ')
+);
+
+function isIdentStart(ch) {
+  return /[A-Za-z_@.]/.test(ch);
+}
+
+function isIdentPart(ch) {
+  return /[A-Za-z0-9_@.]/.test(ch);
+}
+
+function readString(code, i) {
+  const quote = code[i];
+  if (quote !== '"' && quote !== "'") return null;
+  let j = i + 1;
+  while (j < code.length) {
+    if (code[j] === '\\') { j += 2; continue; }
+    if (code[j] === quote) return code.slice(i, j + 1);
+    j++;
+  }
+  return code.slice(i);
+}
+
+function readWord(code, i) {
+  if (!isIdentStart(code[i])) return null;
+  let j = i + 1;
+  while (j < code.length && isIdentPart(code[j])) j++;
+  return code.slice(i, j);
+}
+
+function readNumber(code, i) {
+  if (code[i] === '0' && (code[i + 1] === 'x' || code[i + 1] === 'X')) {
+    let j = i + 2;
+    while (j < code.length && /[0-9A-Fa-f]/.test(code[j])) j++;
+    return j > i + 2 ? code.slice(i, j) : null;
+  }
+  if (!/\d/.test(code[i])) return null;
+  let j = i;
+  while (j < code.length && /\d/.test(code[j])) j++;
+  return code.slice(i, j);
+}
+
+function highlightHla64(code) {
+  const out = [];
+  let i = 0;
+  while (i < code.length) {
+    const ch = code[i];
+
+    if (ch === '\r') { i++; continue; }
+
+    if (ch === '/' && code[i + 1] === '/') {
+      const end = code.indexOf('\n', i);
+      const part = end === -1 ? code.slice(i) : code.slice(i, end);
+      out.push(span('hl-comment', part));
+      i += part.length;
+      continue;
+    }
+    if (ch === '#') {
+      const end = code.indexOf('\n', i);
+      const part = end === -1 ? code.slice(i) : code.slice(i, end);
+      out.push(span('hl-comment', part));
+      i += part.length;
+      continue;
+    }
+    if (ch === '(' && code[i + 1] === '*') {
+      const end = code.indexOf('*)', i + 2);
+      const part = end === -1 ? code.slice(i) : code.slice(i, end + 2);
+      out.push(span('hl-comment', part));
+      i += part.length;
+      continue;
+    }
+
+    const str = readString(code, i);
+    if (str) {
+      out.push(span('hl-string', str));
+      i += str.length;
+      continue;
+    }
+
+    let builtin = null;
+    for (const name of HLA_BUILTINS) {
+      if (code.startsWith(name, i) && !isIdentPart(code[i + name.length] || '')) {
+        builtin = name;
+        break;
+      }
+    }
+    if (builtin) {
+      out.push(span('hl-builtin', builtin));
+      i += builtin.length;
+      continue;
+    }
+
+    const word = readWord(code, i);
+    if (word) {
+      const lower = word.toLowerCase();
+      if (HLA_KEYWORDS.has(lower)) out.push(span('hl-keyword', word));
+      else if (lower === 'true' || lower === 'false') out.push(span('hl-literal', word));
+      else if (code[i + word.length] === ':') out.push(span('hl-label', word));
+      else out.push(escapeHtml(word));
+      i += word.length;
+      continue;
+    }
+
+    const num = readNumber(code, i);
+    if (num) {
+      out.push(span('hl-number', num));
+      i += num.length;
+      continue;
+    }
+
+    if (/[+\-*/=<>!&|^~%,()\[\]{}:]/.test(ch)) {
+      out.push(span('hl-op', ch));
+      i++;
+      continue;
+    }
+
+    out.push(escapeHtml(ch));
+    i++;
+  }
+  return out.join('');
+}
+
+function highlightNasmCode(code) {
+  const out = [];
+  let i = 0;
+  while (i < code.length) {
+    const ch = code[i];
+
+    if (ch === '\r') { i++; continue; }
+
+    if (ch === ';') {
+      const end = code.indexOf('\n', i);
+      const part = end === -1 ? code.slice(i) : code.slice(i, end);
+      out.push(span('hl-comment', part));
+      i += part.length;
+      continue;
+    }
+
+    const str = readString(code, i);
+    if (str) {
+      out.push(span('hl-string', str));
+      i += str.length;
+      continue;
+    }
+
+    const word = readWord(code, i);
+    if (word) {
+      const lower = word.toLowerCase();
+      if (NASM_SECTIONS.has(lower) || (word.startsWith('.') && word.length > 1)) out.push(span('hl-section', word));
+      else if (NASM_KEYWORDS.has(lower)) out.push(span('hl-keyword', word));
+      else if (NASM_INSTRS.has(lower)) out.push(span('hl-instr', word));
+      else if (NASM_REGS.has(lower)) out.push(span('hl-register', word));
+      else if (code[i + word.length] === ':') out.push(span('hl-label', word));
+      else out.push(escapeHtml(word));
+      i += word.length;
+      continue;
+    }
+
+    const num = readNumber(code, i);
+    if (num) {
+      out.push(span('hl-number', num));
+      i += num.length;
+      continue;
+    }
+
+    if (/[+\-*/=<>!&|^~%,()\[\]{}]/.test(ch)) {
+      out.push(span('hl-op', ch));
+      i++;
+      continue;
+    }
+
+    out.push(escapeHtml(ch));
+    i++;
+  }
+  return out.join('');
+}
+
+function highlightCode(code, language) {
+  const text = normalizeText(code || '');
+  return language === 'nasm' ? highlightNasmCode(text) : highlightHla64(text);
+}
+
 function updateLineNumbers(containerId, lineCount) {
   const el = $(containerId);
   if (!el) return;
   el.innerHTML = '';
   for (let i = 1; i <= lineCount; i++) {
-    const span = document.createElement('span');
-    span.textContent = i;
-    el.appendChild(span);
+    const line = document.createElement('span');
+    line.textContent = i;
+    el.appendChild(line);
   }
-}
-
-// Custom syntax highlighter for HLA64/Assembly
-function highlightCode(code, language) {
-  // Escape HTML first
-  let html = escapeHtml(code);
-
-  if (language === 'nasm') {
-    // NASM Assembly highlighting
-    // Comments (semicolon to end of line)
-    html = html.replace(/;.*$/gm, '<span class="hl-comment">$&</span>');
-    // Labels (words ending with colon)
-    html = html.replace(/^(\s*)([A-Za-z_][A-Za-z0-9_]*):/gm, '$1<span class="hl-label">$2</span>:');
-    // Section directives (.section, .data, .text, etc.)
-    html = html.replace(/^(\s*)(\.[a-z_][a-z0-9_]*)/gim, '$1<span class="hl-section">$2</span>');
-    // Global/Extern directives
-    html = html.replace(/^(global|extern|section|data|text|bss|rodata)\b/gi, '<span class="hl-keyword">$1</span>');
-    // Instructions (common x86)
-    const instrs = 'mov|movzx|movsx|add|sub|mul|imul|div|idiv|inc|dec|neg|and|or|xor|not|shl|shr|sal|sar|rol|ror|cmp|test|push|pop|lea|jmp|je|jne|jz|jnz|jg|jl|jge|jle|ja|jb|jae|jbe|call|ret|int|syscall|leave|enter|nop|hlt|cli|sti|cld|std';
-    html = html.replace(new RegExp(`\\b(${instrs})\\b`, 'gi'), '<span class="hl-instr">$1</span>');
-    // Registers
-    const regs = 'rax|rbx|rcx|rdx|rsi|rdi|rbp|rsp|r8|r9|r10|r11|r12|r13|r14|r15|eax|ebx|ecx|edx|esi|edi|ebp|esp|r8d|r9d|r10d|r11d|r12d|r13d|r14d|r15d|ax|bx|cx|dx|si|di|bp|sp|ah|al|bh|bl|ch|cl|dh|dl|cs|ds|es|fs|gs|ss|rip|eip';
-    html = html.replace(new RegExp(`\\b(${regs})\\b`, 'gi'), '<span class="hl-register">$1</span>');
-    // Numbers (hex, decimal)
-    html = html.replace(/\b(0x[0-9A-Fa-f]+|[0-9]+)\b/g, '<span class="hl-number">$1</span>');
-    // Strings
-    html = html.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g, '<span class="hl-string">$&</span>');
-    // Operators
-    html = html.replace(/([+\-*/=<>!&|^~%,()\[\]{}])/g, '<span class="hl-op">$1</span>');
-  } else {
-    // HLA64/Generic highlighting
-    // Comments (// and # style)
-    html = html.replace(/(\/\/|#).*$/gm, '<span class="hl-comment">$&</span>');
-    // Block comments (* ... *)
-    html = html.replace(/(\(\*|\*\/)/g, '<span class="hl-comment">$1</span>');
-    // Keywords
-    const keywords = 'program|procedure|begin|end|var|static|const|if|then|else|endif|while|endwhile|for|endfor|repeat|until|break|continue|return|extern|include|namespace|endnamespace|type|record|union|enum';
-    html = html.replace(new RegExp(`\\b(${keywords})\\b`, 'gi'), '<span class="hl-keyword">$1</span>');
-    // Built-in functions
-    const builtins = 'stdout.put|stdout.putu|stdout.puti|stdout.putb|stdout.putc|stdout.putln|stdin.get|stdin.getu|stdin.geti|file.open|file.close|file.read|file.write|malloc|free|strlen|strcpy|strcat|strcmp|printf';
-    html = html.replace(new RegExp(`\\b(${builtins})\\b`, 'gi'), '<span class="hl-builtin">$1</span>');
-    // String literals
-    html = html.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g, '<span class="hl-string">$&</span>');
-    // Numbers
-    html = html.replace(/\b(0x[0-9A-Fa-f]+|[0-9]+)\b/g, '<span class="hl-number">$1</span>');
-    // Boolean literals
-    html = html.replace(/\b(true|false)\b/gi, '<span class="hl-literal">$1</span>');
-    // Labels in jumps
-    html = html.replace(/(\bcall\s+)([A-Za-z_][A-Za-z0-9_]*)/gi, '$1<span class="hl-func">$2</span>');
-    // Operators
-    html = html.replace(/([+\-*/=<>!&|^~%,()\[\]{}:])/g, '<span class="hl-op">$1</span>');
-  }
-
-  return html;
 }
 
 function highlightSource(code) {
