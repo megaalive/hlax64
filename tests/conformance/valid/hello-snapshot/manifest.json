@@ -1,0 +1,16 @@
+{
+  "source": "source.hla64",
+  "expectNasmContains": [
+    "bits 64",
+    "section .text",
+    "section .data",
+    "global _start",
+    "_start:",
+    "syscall",
+    "str_0 db \"Hello from HlaX64\", 0",
+    "newline db 0x0A",
+    "lea rsi, [str_0]",
+    "; RUNTIME: stdout_put_str",
+    "; RUNTIME: stdout_put_nl"
+  ]
+}
