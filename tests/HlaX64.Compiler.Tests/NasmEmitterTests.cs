@@ -128,10 +128,10 @@ public class NasmEmitterTests
         Assert.Contains("AddTwo:", nasm);
         Assert.Contains("push rbp", nasm);
         Assert.Contains("mov rbp, rsp", nasm);
-        Assert.Contains("mov [rbp-8], rdi", nasm);
-        Assert.Contains("mov [rbp-16], rsi", nasm);
-        Assert.Contains("mov rax, [rbp-8]", nasm);
-        Assert.Contains("add rax, [rbp-16]", nasm);
+        Assert.Contains("mov qword [rbp-8], rdi", nasm);
+        Assert.Contains("mov qword [rbp-16], rsi", nasm);
+        Assert.Contains("mov rax, qword [rbp-8]", nasm);
+        Assert.Contains("add rax, qword [rbp-16]", nasm);
         Assert.Contains("pop rbp", nasm);
         Assert.Contains("ret", nasm);
     }
@@ -142,8 +142,8 @@ public class NasmEmitterTests
         var source = "program test;\nprocedure Foo(x:int64); @returns(\"rax\");\nvar\n    total:int64;\nbegin Foo;\n    mov(x, rax);\nend Foo;\nbegin test;\n    mov(1, rax);\nend test;";
         var nasm = Emit(source);
         Assert.Contains("push rbp", nasm);
-        Assert.Contains("mov [rbp-8], rdi", nasm);
-        Assert.Contains("mov rax, [rbp-8]", nasm);
+        Assert.Contains("mov qword [rbp-8], rdi", nasm);
+        Assert.Contains("mov rax, qword [rbp-8]", nasm);
         Assert.Contains("ret", nasm);
     }
 
@@ -153,10 +153,10 @@ public class NasmEmitterTests
         var source = "program test;\nprocedure Sum(a:int64; b:int64); @returns(\"rax\");\nvar\n    result:int64;\nbegin Sum;\n    mov(a, rax);\n    add(b, rax);\nend Sum;\nbegin test;\n    mov(1, rax);\nend test;";
         var nasm = Emit(source);
         Assert.Contains("Sum:", nasm);
-        Assert.Contains("mov [rbp-8], rdi", nasm);
-        Assert.Contains("mov [rbp-16], rsi", nasm);
-        Assert.Contains("mov rax, [rbp-8]", nasm);
-        Assert.Contains("add rax, [rbp-16]", nasm);
+        Assert.Contains("mov qword [rbp-8], rdi", nasm);
+        Assert.Contains("mov qword [rbp-16], rsi", nasm);
+        Assert.Contains("mov rax, qword [rbp-8]", nasm);
+        Assert.Contains("add rax, qword [rbp-16]", nasm);
         Assert.Contains("ret", nasm);
     }
 
@@ -173,11 +173,11 @@ begin test;
     call Sum8(1, 2, 3, 4, 5, 6, 7, 8);
 end test;";
         var nasm = Emit(source);
-        Assert.Contains("mov [rbp-48], r9", nasm);
-        Assert.Contains("mov rax, [rbp+16]", nasm);
-        Assert.Contains("mov [rbp-56], rax", nasm);
-        Assert.Contains("mov rax, [rbp+24]", nasm);
-        Assert.Contains("mov [rbp-64], rax", nasm);
+        Assert.Contains("mov qword [rbp-48], r9", nasm);
+        Assert.Contains("mov rax, qword [rbp+16]", nasm);
+        Assert.Contains("mov qword [rbp-56], rax", nasm);
+        Assert.Contains("mov rax, qword [rbp+24]", nasm);
+        Assert.Contains("mov qword [rbp-64], rax", nasm);
     }
 
     [Fact]
@@ -448,10 +448,10 @@ public class WindowsMsAbiLowererTests
         Assert.Contains("AddTwo:", nasm);
         Assert.Contains("push rbp", nasm);
         Assert.Contains("mov rbp, rsp", nasm);
-        Assert.Contains("mov [rbp-8], rcx", nasm);
-        Assert.Contains("mov [rbp-16], rdx", nasm);
-        Assert.Contains("mov rax, [rbp-8]", nasm);
-        Assert.Contains("add rax, [rbp-16]", nasm);
+        Assert.Contains("mov qword [rbp-8], rcx", nasm);
+        Assert.Contains("mov qword [rbp-16], rdx", nasm);
+        Assert.Contains("mov rax, qword [rbp-8]", nasm);
+        Assert.Contains("add rax, qword [rbp-16]", nasm);
         Assert.Contains("ret", nasm);
     }
 
@@ -461,8 +461,8 @@ public class WindowsMsAbiLowererTests
         var source = "program test;\nprocedure Foo(x:int64; y:int64); @returns(\"rax\");\nbegin Foo;\n    mov(x, rax);\nend Foo;\nbegin test;\n    mov(1, rax);\nend test;";
         var nasm = EmitForWindows(source);
         Assert.Contains("Foo:", nasm);
-        Assert.Contains("mov [rbp-8], rcx", nasm);
-        Assert.Contains("mov [rbp-16], rdx", nasm);
+        Assert.Contains("mov qword [rbp-8], rcx", nasm);
+        Assert.Contains("mov qword [rbp-16], rdx", nasm);
         Assert.Contains("ret", nasm);
     }
 
@@ -507,10 +507,10 @@ begin test;
 end test;";
         var nasm = EmitForWindows(source);
         Assert.Contains("Sum:", nasm);
-        Assert.Contains("mov [rbp-8], rcx", nasm);
-        Assert.Contains("mov [rbp-16], rdx", nasm);
-        Assert.Contains("mov rax, [rbp-8]", nasm);
-        Assert.Contains("add rax, [rbp-16]", nasm);
+        Assert.Contains("mov qword [rbp-8], rcx", nasm);
+        Assert.Contains("mov qword [rbp-16], rdx", nasm);
+        Assert.Contains("mov rax, qword [rbp-8]", nasm);
+        Assert.Contains("add rax, qword [rbp-16]", nasm);
         Assert.Contains("ret", nasm);
     }
 
@@ -564,9 +564,9 @@ begin test;
     call Sum5(1, 2, 3, 4, 5);
 end test;";
         var nasm = EmitForWindows(source);
-        Assert.Contains("mov [rbp-32], r9", nasm);
-        Assert.Contains("mov rax, [rbp+48]", nasm);
-        Assert.Contains("mov [rbp-40], rax", nasm);
+        Assert.Contains("mov qword [rbp-32], r9", nasm);
+        Assert.Contains("mov rax, qword [rbp+48]", nasm);
+        Assert.Contains("mov qword [rbp-40], rax", nasm);
     }
 
     [Fact]

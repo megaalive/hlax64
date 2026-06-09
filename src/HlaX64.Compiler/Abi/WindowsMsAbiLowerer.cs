@@ -81,7 +81,7 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
                 foreach (var (param, gpr) in gprAssign)
                 {
                     if (_valueMap.TryGetValue(param.Name, out var slot))
-                        loweredBlock.Instructions.Add(new LoweredInstruction($"    mov {slot}, {gpr}"));
+                        loweredBlock.Instructions.Add(new LoweredInstruction($"    {StackMemOperandHelper.EmitMove(slot, gpr)}"));
                 }
 
                 foreach (var (param, xmm) in xmmAssign)
@@ -106,7 +106,8 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
                     if (_valueMap.TryGetValue(param.Name!, out var slot))
                     {
                         var src = ProcedureStackMap.StackParamSource(i, ArgumentRegisters.Count, firstStackArgOffset: 48);
-                        loweredBlock.Instructions.Add(new LoweredInstruction($"    mov rax, {src}\n    mov {slot}, rax"));
+                        loweredBlock.Instructions.Add(new LoweredInstruction(
+                            $"    mov rax, {StackMemOperandHelper.FormatSizedMem(src)}\n    {StackMemOperandHelper.EmitMove(slot, "rax")}"));
                     }
                 }
             }
@@ -281,19 +282,19 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
             if (_valueMap.TryGetValue(varName, out var slot))
             {
                 if (dst.StartsWith("[rbp", StringComparison.Ordinal))
-                    return new LoweredInstruction($"    lea rax, {slot}\n    mov {dst}, rax");
+                    return new LoweredInstruction($"    lea rax, {slot}\n    {StackMemOperandHelper.EmitMove(dst, "rax")}");
                 return new LoweredInstruction($"    lea {dst}, {slot}");
             }
         }
 
-        return new LoweredInstruction($"    mov {dst}, {src}");
+        return new LoweredInstruction($"    {StackMemOperandHelper.EmitMove(dst, src)}");
     }
 
     private LoweredInstruction LowerBinaryRmw(IrInstruction inst, string asmMnemonic)
     {
         var dst = ResolveOperand(inst.Destination);
         var src = inst.Operands.Count > 0 ? ResolveOperand(inst.Operands[0]) : dst;
-        return new LoweredInstruction($"    {asmMnemonic} {dst}, {src}");
+        return new LoweredInstruction($"    {StackMemOperandHelper.EmitBinary(asmMnemonic, dst, src)}");
     }
 
     private LoweredInstruction LowerDivide(IrInstruction inst)
@@ -366,7 +367,7 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
         };
 
         var sb = new System.Text.StringBuilder();
-        sb.AppendLine($"    cmp {left}, {right}");
+        sb.AppendLine($"    {StackMemOperandHelper.EmitCompare(left, right)}");
         sb.AppendLine($"    {setcc} al");
         if (string.Equals(dst, "rax", StringComparison.OrdinalIgnoreCase))
             sb.Append("    movzx rax, al");
@@ -401,7 +402,7 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
     {
         var left = inst.Operands.Count > 0 ? ResolveOperand(inst.Operands[0]) : "0";
         var right = inst.Operands.Count > 1 ? ResolveOperand(inst.Operands[1]) : "0";
-        return new LoweredInstruction($"    cmp {left}, {right}");
+        return new LoweredInstruction($"    {StackMemOperandHelper.EmitCompare(left, right)}");
     }
 
     private LoweredInstruction LowerConditionalBranch(IrInstruction inst)

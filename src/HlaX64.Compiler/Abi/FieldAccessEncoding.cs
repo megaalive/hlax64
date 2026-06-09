@@ -34,7 +34,7 @@ internal static class FieldAccessEncoding
             1 => $"movzx {destination}, byte {mem}",
             2 => $"movzx {destination}, word {mem}",
             4 => $"mov {destination}, dword {mem}",
-            _ => $"mov {destination}, {mem}",
+            _ => $"mov {destination}, qword {mem}",
         };
 
     internal static string EmitStore(string mem, string source, int sizeBits)
@@ -43,6 +43,6 @@ internal static class FieldAccessEncoding
             1 => $"mov byte {mem}, {source}",
             2 => $"mov word {mem}, {source}",
             4 => $"mov dword {mem}, {source}",
-            _ => $"mov {mem}, {source}",
+            _ => $"mov qword {mem}, {source}",
         };
 }

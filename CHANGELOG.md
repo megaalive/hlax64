@@ -22,6 +22,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 - Test paths aligned with `examples/curriculum/` and `examples/tools/` layout
 - `ToolchainResolverTests` isolates `HLAX64_RUNTIME_DIR` on Linux CI
+- Stack and parameter memory operands emit explicit `qword`/`dword`/… sizes for strict NASM on Linux
+- GNU `link` on Linux PATH no longer mistaken for MSVC Windows linker
 
 ## [0.2.0-alpha] - 2026-06-08
 

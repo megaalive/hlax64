@@ -1,8 +1,8 @@
 {
   "source": "source.hla64",
   "expectNasmContains": [
-    "mov rax, [rbp+16]",
-    "mov rax, [rbp+24]",
+    "mov rax, qword [rbp+16]",
+    "mov rax, qword [rbp+24]",
     "push 8",
     "push 7"
   ]
