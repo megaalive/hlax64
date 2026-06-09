@@ -11,6 +11,7 @@ default rel
 %define CREATE_ALWAYS           2
 %define FILE_ATTRIBUTE_NORMAL   0x80
 %define INVALID_FILE_ATTRIBUTES 0xFFFFFFFF
+%define STD_INPUT_HANDLE        -10
 %define STD_OUTPUT_HANDLE       -11
 
 extern GetFileAttributesA
@@ -57,8 +58,15 @@ hlax_file_open_read:
     add rsp, 64
     ret
 
-; rcx = handle, rdx = buffer, r8 = count -> rax = bytes read or -1
+; rcx = handle (0 = stdin), rdx = buffer, r8 = count -> rax = bytes read or -1
 hlax_file_read:
+    push rbx
+    test rcx, rcx
+    jnz .have_handle
+    mov ecx, STD_INPUT_HANDLE
+    call GetStdHandle
+    mov rcx, rax
+.have_handle:
     sub rsp, 48
     mov qword [rsp+40], 0
     lea r9, [rsp+40]
@@ -68,10 +76,12 @@ hlax_file_read:
     jz .fail
     mov rax, [rsp+40]
     add rsp, 48
+    pop rbx
     ret
 .fail:
     mov rax, -1
     add rsp, 48
+    pop rbx
     ret
 
 ; rcx = path -> rax = handle or -1
