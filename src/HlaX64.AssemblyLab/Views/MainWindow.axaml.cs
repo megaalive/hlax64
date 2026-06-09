@@ -35,6 +35,20 @@ public partial class MainWindow : Window
 
         vm.StorageProvider = StorageProvider;
 
+        var labTerminal = this.FindControl<Controls.LabTerminalControl>("LabTerminal");
+        if (labTerminal != null)
+            vm.AttachTerminalHost(labTerminal);
+
+        var bottomTabs = this.FindControl<TabControl>("BottomTabControl");
+        if (bottomTabs != null)
+        {
+            bottomTabs.SelectionChanged += (_, _) =>
+            {
+                if (bottomTabs.SelectedIndex == 1)
+                    labTerminal?.FocusTerminal();
+            };
+        }
+
         _sourceEditor = this.FindControl<TextEditor>("SourceEditor");
         _irEditor = this.FindControl<TextEditor>("IrEditor");
         _nasmEditor = this.FindControl<TextEditor>("NasmEditor");

@@ -9,6 +9,8 @@ using CommunityToolkit.Mvvm.Input;
 using HlaX64.AssemblyLab.Models;
 using HlaX64.AssemblyLab.Services;
 using HlaX64.Cli.Project;
+using HlaX64.Cli.Services;
+using HlaX64.Cli.Toolchain;
 using HlaX64.Compiler.Debug;
 using HlaX64.DebugAdapter;
 
@@ -19,6 +21,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly AssemblyLabBackend _backend = new();
     private readonly DebugSessionHost _debugHost = new();
     private readonly McpSessionHost _mcpHost = new();
+    private ToolchainSettings _toolchainSettings = ToolchainSettings.Load();
     private readonly string _repoRoot = FindRepoRoot();
 
     private CancellationTokenSource? _debounceCts;
@@ -45,11 +48,18 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private string _mcpText = "";
     [ObservableProperty] private string _planText = "";
     [ObservableProperty] private string _diffText = "";
+    [ObservableProperty] private string _settingsHla64Path = "";
+    [ObservableProperty] private string _settingsRuntimeDirectory = "";
+    [ObservableProperty] private string _settingsNasmPath = "";
+    [ObservableProperty] private string _settingsWindowsLinkerPath = "";
+    [ObservableProperty] private string _settingsLinuxLinkerPath = "";
+    [ObservableProperty] private string _settingsStatusText = "";
     [ObservableProperty] private string _statusText = "Ready";
     [ObservableProperty] private string _openModeText = "Mode: unsaved source";
     [ObservableProperty] private string _buildOutputDir = "(save file first)";
     [ObservableProperty] private string _windowTitle = "HlaX64 Assembly Lab";
     [ObservableProperty] private int _selectedTabIndex;
+    [ObservableProperty] private int _selectedBottomTabIndex;
     [ObservableProperty] private int _highlightedNasmLine;
     [ObservableProperty] private bool _strictPlanGate;
     [ObservableProperty] private bool _planApproved = true;
@@ -72,6 +82,10 @@ public partial class MainWindowViewModel : ViewModelBase
     public IReadOnlyList<string> TargetChoices => AssemblyLabBackend.TargetChoices;
 
     public IStorageProvider? StorageProvider { get; set; }
+
+    public ILabTerminalHost? TerminalHost { get; set; }
+
+    public string TerminalWorkingDirectory => ResolveTerminalWorkingDirectory();
 
     private bool _suppressDebugStopEvents;
 
@@ -97,7 +111,10 @@ public partial class MainWindowViewModel : ViewModelBase
         _mcpHost.MessageReceived += msg =>
             Dispatcher.UIThread.Post(() => McpText += msg + Environment.NewLine);
 
+        LoadToolchainSettingsToProperties();
+        ApplyToolchainSettings();
         RefreshToolchainInfo();
+        RefreshSettingsStatus();
         RefreshBuildOutputDir();
         RefreshWindowTitle();
         NotifyDebugCommandsChanged();
@@ -105,6 +122,12 @@ public partial class MainWindowViewModel : ViewModelBase
         if (!AssemblyLabFeatures.DebugEnabled)
             StatusText = AssemblyLabFeatures.DebugDisabledMessage;
         _ = DebouncedCompileAsync();
+    }
+
+    public void AttachTerminalHost(ILabTerminalHost host)
+    {
+        TerminalHost = host;
+        host.Configure(TerminalWorkingDirectory, _repoRoot);
     }
 
     private bool CanExecuteGatedActions() => !StrictPlanGate || PlanApproved;
@@ -140,7 +163,10 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         RefreshBuildOutputDir();
         RefreshWindowTitle();
+        NotifyTerminalContextChanged();
     }
+
+    partial void OnProjectFolderChanged(string value) => NotifyTerminalContextChanged();
 
     partial void OnIsDirtyChanged(bool value)
     {
@@ -746,6 +772,113 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private void TerminalRestart()
+    {
+        TerminalHost?.Restart();
+        StatusText = "Terminal restarted";
+    }
+
+    [RelayCommand]
+    private void TerminalStopShell()
+    {
+        TerminalHost?.StopShell();
+        StatusText = "Terminal shell stopped";
+    }
+
+    [RelayCommand]
+    private void TerminalPresetBuild()
+    {
+        if (!TryGetTerminalSourcePath(out var path))
+            return;
+
+        InjectTerminalLine(CliExecutableResolver.FormatHla64Command("build", path, SelectedTarget));
+    }
+
+    [RelayCommand]
+    private void TerminalPresetRun()
+    {
+        if (!TryGetTerminalSourcePath(out var path))
+            return;
+
+        InjectTerminalLine(CliExecutableResolver.FormatHla64Command("run", path, SelectedTarget));
+    }
+
+    [RelayCommand]
+    private void TerminalPresetDoctor()
+    {
+        InjectTerminalLine("hla64 doctor");
+    }
+
+    [RelayCommand]
+    private void AutoDetectToolchain()
+    {
+        var resolver = new ToolchainResolver(ToolchainSettings.Empty);
+        SettingsHla64Path = resolver.ResolveHla64().Path ?? "";
+        SettingsRuntimeDirectory = resolver.ResolveRuntimeDirectory().Path ?? "";
+        SettingsNasmPath = resolver.ResolveNasm().Path ?? "";
+        SettingsWindowsLinkerPath = resolver.ResolveWindowsLinker().Path ?? "";
+        SettingsLinuxLinkerPath = resolver.ResolveLinuxLinker().Path ?? "";
+        SaveToolchainSettings();
+        StatusText = "Toolchain auto-detect completed";
+    }
+
+    [RelayCommand]
+    private void SaveToolchainSettings()
+    {
+        _toolchainSettings = new ToolchainSettings
+        {
+            Hla64Path = EmptyToNull(SettingsHla64Path),
+            RuntimeDirectory = EmptyToNull(SettingsRuntimeDirectory),
+            NasmPath = EmptyToNull(SettingsNasmPath),
+            WindowsLinkerPath = EmptyToNull(SettingsWindowsLinkerPath),
+            LinuxLinkerPath = EmptyToNull(SettingsLinuxLinkerPath)
+        };
+        _toolchainSettings.Save();
+        ApplyToolchainSettings();
+        RefreshToolchainInfo();
+        RefreshSettingsStatus();
+        NotifyTerminalContextChanged();
+        StatusText = "Toolchain settings saved";
+    }
+
+    [RelayCommand]
+    private void ResetToolchainSettings()
+    {
+        SettingsHla64Path = "";
+        SettingsRuntimeDirectory = "";
+        SettingsNasmPath = "";
+        SettingsWindowsLinkerPath = "";
+        SettingsLinuxLinkerPath = "";
+        SaveToolchainSettings();
+        StatusText = "Toolchain settings reset to auto/bundled detection";
+    }
+
+    [RelayCommand]
+    private void TestToolchainSettings()
+    {
+        SaveToolchainSettings();
+        var report = DoctorReport.Run();
+        SettingsStatusText = FormatDoctorReport(report);
+        ToolchainText = SettingsStatusText;
+        StatusText = report.Success ? "Toolchain OK" : "Toolchain needs attention";
+    }
+
+    [RelayCommand]
+    private async Task BrowseHla64Path() => await BrowseFileSettingAsync(value => SettingsHla64Path = value, "Select hla64 executable");
+
+    [RelayCommand]
+    private async Task BrowseRuntimeDirectory() => await BrowseFolderSettingAsync(value => SettingsRuntimeDirectory = value, "Select HlaX64 runtime directory");
+
+    [RelayCommand]
+    private async Task BrowseNasmPath() => await BrowseFileSettingAsync(value => SettingsNasmPath = value, "Select NASM executable");
+
+    [RelayCommand]
+    private async Task BrowseWindowsLinkerPath() => await BrowseFileSettingAsync(value => SettingsWindowsLinkerPath = value, "Select Windows linker");
+
+    [RelayCommand]
+    private async Task BrowseLinuxLinkerPath() => await BrowseFileSettingAsync(value => SettingsLinuxLinkerPath = value, "Select Linux linker");
+
+    [RelayCommand]
     private void ExplainRepair()
     {
         if (!EnsureOpenFileForBuild())
@@ -985,7 +1118,83 @@ public partial class MainWindowViewModel : ViewModelBase
     private void RefreshToolchainInfo()
     {
         var info = LabToolchainService.Detect();
-        ToolchainText = LabToolchainService.Summarize(info);
+        ToolchainText = LabToolchainService.Summarize(info)
+                        + Environment.NewLine
+                        + Environment.NewLine
+                        + FormatDoctorReport(DoctorReport.Run());
+    }
+
+    private void LoadToolchainSettingsToProperties()
+    {
+        SettingsHla64Path = _toolchainSettings.Hla64Path ?? "";
+        SettingsRuntimeDirectory = _toolchainSettings.RuntimeDirectory ?? "";
+        SettingsNasmPath = _toolchainSettings.NasmPath ?? "";
+        SettingsWindowsLinkerPath = _toolchainSettings.WindowsLinkerPath ?? "";
+        SettingsLinuxLinkerPath = _toolchainSettings.LinuxLinkerPath ?? "";
+    }
+
+    private void ApplyToolchainSettings()
+    {
+        new ToolchainResolver(_toolchainSettings).ApplyToEnvironment();
+    }
+
+    private void RefreshSettingsStatus()
+    {
+        SettingsStatusText = FormatDoctorReport(DoctorReport.Run());
+    }
+
+    private async Task BrowseFileSettingAsync(Action<string> assign, string title)
+    {
+        var storage = StorageProvider;
+        if (storage == null)
+            return;
+
+        var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = title,
+            AllowMultiple = false
+        });
+
+        var file = files.FirstOrDefault();
+        if (file != null)
+            assign(file.Path.LocalPath);
+    }
+
+    private async Task BrowseFolderSettingAsync(Action<string> assign, string title)
+    {
+        var storage = StorageProvider;
+        if (storage == null)
+            return;
+
+        var folders = await storage.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = title,
+            AllowMultiple = false
+        });
+
+        var folder = folders.FirstOrDefault();
+        if (folder != null)
+            assign(folder.Path.LocalPath);
+    }
+
+    private static string? EmptyToNull(string value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static string FormatDoctorReport(DoctorReport report)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"HlaX64 Doctor v{report.Version}");
+        foreach (var check in report.Checks)
+        {
+            var marker = check.Passed ? "[ok]" : "[missing]";
+            var source = string.IsNullOrWhiteSpace(check.Source) ? "" : $" ({check.Source})";
+            sb.AppendLine($"{marker} {check.Name}{source}: {check.Message}");
+            if (!string.IsNullOrWhiteSpace(check.InstallHint))
+                sb.AppendLine($"    fix: {check.InstallHint}");
+        }
+
+        sb.AppendLine(report.Success ? "All checks passed." : "Some checks need attention.");
+        return sb.ToString().TrimEnd();
     }
 
     private void RefreshDisasmText()
@@ -1021,6 +1230,56 @@ public partial class MainWindowViewModel : ViewModelBase
         OutputText = string.IsNullOrEmpty(OutputText)
             ? text
             : OutputText + Environment.NewLine + text;
+    }
+
+    private void InjectTerminalLine(string commandLine)
+    {
+        if (TerminalHost == null)
+        {
+            StatusText = "Terminal not ready";
+            return;
+        }
+
+        SelectedBottomTabIndex = 1;
+        if (CliExecutableResolver.TryResolveTerminalCommand(commandLine, _repoRoot, out var resolved))
+            commandLine = resolved;
+
+        TerminalHost.FocusTerminal();
+        TerminalHost.SendLine(commandLine);
+        StatusText = $"Terminal: {commandLine}";
+    }
+
+    private void NotifyTerminalContextChanged()
+    {
+        OnPropertyChanged(nameof(TerminalWorkingDirectory));
+        if (TerminalHost != null)
+            TerminalHost.Configure(TerminalWorkingDirectory, _repoRoot);
+    }
+
+    private string ResolveTerminalWorkingDirectory()
+    {
+        if (!string.IsNullOrWhiteSpace(ProjectFolder) && Directory.Exists(ProjectFolder))
+            return ProjectFolder;
+
+        if (TryGetTerminalSourcePath(out var path, quiet: true))
+            return Path.GetDirectoryName(path) ?? _repoRoot;
+
+        return _repoRoot;
+    }
+
+    private bool TryGetTerminalSourcePath(out string path, bool quiet = false)
+    {
+        path = SourcePath;
+        if (SourcePath is "(unsaved)" or "" || !File.Exists(SourcePath))
+        {
+            if (!quiet)
+                StatusText = "Save file before running hla64 build/run in Terminal";
+
+            path = "";
+            return false;
+        }
+
+        return true;
     }
 
     private static string FormatAgentExplain(string json)
