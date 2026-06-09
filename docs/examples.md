@@ -13,7 +13,7 @@ Top-level categories:
 |----------|------|----------|
 | **Curriculum** | [`curriculum/`](../examples/curriculum/) | `00-getting-started` … `06-abi`, `08-ai-agent` |
 | **Interop** | [`interop/`](../examples/interop/) | `07-interop`, `11-csharp-interop-real` |
-| **Tools** | [`tools/`](../examples/tools/) | `10-windows`, `12-linux` — use `hlax_file_*`, `hlax_path_exists`, `hlax_is_space` stdlib helpers |
+| **Tools** | [`tools/`](../examples/tools/) | `10-windows`, `12-linux` — use `hlax_file_*`, `hlax_stdout_write`, `hlax_path_exists`, `hlax_is_space`, `hlax_is_printable` stdlib helpers |
 | **Project Euler** | [`project-euler/`](../examples/project-euler/) | PE #1–#50 suite |
 | **Benchmarks** | [`benchmarks/`](../examples/benchmarks/) | Links to `benchmarks/count.json` |
 | **QA** | [`qa/`](../examples/qa/) | `bug-farm`, `invalid` |
@@ -29,7 +29,7 @@ Top-level categories:
 | [`06-abi/`](../examples/curriculum/06-abi/) | stack-alignment, callee-saved, … | ABI edge cases |
 | [`07-interop/`](../examples/interop/07-interop/) | `export-lib` | Shared library export |
 | [`08-ai-agent/`](../examples/curriculum/08-ai-agent/) | `smoke-test` | Agent workflow |
-| [`10-real-tools/`](../examples/tools/10-windows/) | `listfiles`, `filesize`, `exists`, `linecount`, `hexdump`, `wc`, `fnv1a`, `filemagic`, `cmp` | Daily-use Win32 tools; each tool has `fixtures/`, `expected.stdout`, native Windows regression |
+| [`10-real-tools/`](../examples/tools/10-windows/) | `listfiles`, `filesize`, `exists`, `linecount`, `hexdump`, `wc`, `cat`, `strings`, `fnv1a`, `filemagic`, `cmp` | Daily-use Win32 tools; each tool has `fixtures/`, `expected.stdout`, native Windows regression |
 | [`11-csharp-interop-real/`](../examples/interop/11-csharp-interop-real/) | `native_count_lines`, `native_fnv1a`, `native_sum_bytes` | HlaX64 DLL + C# P/Invoke caller with expected output |
 | [`98-bug-farm/`](../examples/qa/bug-farm/) | (planned) | Compiler stress cases |
 | [`99-invalid/`](../examples/qa/invalid/) | (planned) | Negative examples with expected diagnostics |

@@ -82,6 +82,20 @@
           "expected": "stdout (example):\n  lines: …  words: …  bytes: …\nargv[1] = file to count."
         },
         {
+          "id": "cat",
+          "label": "cat",
+          "path": "examples/tools/10-windows/cat/cat.hla64",
+          "run": "hla64 run examples/tools/10-windows/cat/cat.hla64 -- README.md",
+          "expected": "stdout: raw file bytes copied via hlax_file_read + hlax_stdout_write loop."
+        },
+        {
+          "id": "strings",
+          "label": "strings",
+          "path": "examples/tools/10-windows/strings/strings.hla64",
+          "run": "hla64 run examples/tools/10-windows/strings/strings.hla64 -- README.md",
+          "expected": "stdout: printable runs (length >= 4) one per line via hlax_is_printable."
+        },
+        {
           "id": "hexdump",
           "label": "hexdump",
           "path": "examples/tools/10-windows/hexdump/hexdump.hla64",

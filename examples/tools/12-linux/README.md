@@ -8,7 +8,9 @@ Linux SysV ports of selected command-line tools using `libc.so` instead of Win32
 |------|--------------|---------------|
 | `linecount` | Count `\n` bytes in `argv[1]` | Linux argv runtime, `open`/`read`/`close`, while+if |
 | `exists` | Exit 0 when path exists | `access(path, F_OK)`, exit code |
-| `wc` | Lines / words / bytes | Byte classifiers, calls in loop, multi-arg `stdout.put` |
+| `wc` | Lines / words / bytes | `hlax_file_*`, byte classifiers, calls in loop |
+| `cat` | Copy file bytes to stdout | `hlax_file_read` loop, `hlax_stdout_write` |
+| `strings` | Printable runs (len >= 4) | `hlax_is_printable`, run buffer across reads |
 | `fnv1a` | FNV-1a 64-bit file hash | xor/imul loop, **`stdout.putu`** unsigned decimal |
 
 ## Build

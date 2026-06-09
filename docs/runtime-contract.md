@@ -30,8 +30,12 @@ registers dan stack alignment).
 | `hla64_memset`         | `mem.nasm`                   | isi byte | shipped (`hlax_memset`) |
 | `hlax_path_exists`     | `file.nasm`                  | cek path ada | shipped |
 | `hlax_file_open_read`  | `file.nasm`                  | buka file read-only | shipped |
+| `hlax_file_open_write` | `file.nasm`                  | buka file write (create/truncate) | shipped |
 | `hlax_file_read`       | `file.nasm`                  | baca chunk ke buffer | shipped |
+| `hlax_file_write`      | `file.nasm`                  | tulis chunk dari buffer | shipped |
 | `hlax_file_close`      | `file.nasm`                  | tutup handle/fd | shipped |
+| `hlax_stdout_write`    | `file.nasm`                  | tulis raw bytes ke stdout | shipped |
+| `hlax_is_printable`    | `mem.nasm`                   | ASCII printable 0x20..0x7E | shipped |
 | `hla64_exit`           | `startup.nasm`               | syscall `exit(rdi)` | MVP |
 
 Tambahan akan muncul seiring Fase 9.5 → 10 → 11. Setiap entry baru
