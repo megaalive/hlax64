@@ -14,7 +14,7 @@ Top-level categories:
 | **Curriculum** | [`curriculum/`](../examples/curriculum/) | `00-getting-started` … `06-abi`, `08-ai-agent` |
 | **Interop** | [`interop/`](../examples/interop/) | `07-interop`, `11-csharp-interop-real` |
 | **Tools** | [`tools/`](../examples/tools/) | `10-windows`, `12-linux` — use `hlax_file_*`, `hlax_stdout_write`, `hlax_path_exists`, `hlax_is_space`, `hlax_is_printable` stdlib helpers |
-| **Project Euler** | [`project-euler/`](../examples/project-euler/) | PE #1–#50 suite |
+| **Project Euler** | [`project-euler/`](../examples/project-euler/) | PE #1–#25 verified + runner (#26–#50 stubs stay in repo, not in playground) |
 | **Benchmarks** | [`benchmarks/`](../examples/benchmarks/) | Links to `benchmarks/count.json` |
 | **QA** | [`qa/`](../examples/qa/) | `bug-farm`, `invalid` |
 
@@ -47,7 +47,7 @@ Every `.hla64` under `examples/` is listed in [playground/manifest.json](playgro
 | Curriculum | `00-getting-started` … `08-ai-agent` | 46 |
 | Interop | `07-interop`, `11-csharp-interop-real` | 6 |
 | Tools | `10-windows`, `12-linux` | 66 |
-| Project Euler | `problems`, `runner` | 51 |
+| Project Euler | `problems`, `runner` | 26 |
 | QA | `bug-farm`, `invalid` | 37 |
 
 Open [playground/index.html](playground/index.html) or regenerate cache:

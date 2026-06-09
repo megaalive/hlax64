@@ -28,7 +28,7 @@ hla64 test tests/examples-curriculum --filter real- --compile-only
 hla64 run examples/project-euler/problems/euler013-large-sum.hla64
 ```
 
-**Playground:** [docs/playground/index.html](../docs/playground/index.html) — sidebar mirrors this tree (5 categories, nested groups, **206** programs); cache under `docs/playground/cache/<category>/`.
+**Playground:** [docs/playground/index.html](../docs/playground/index.html) — sidebar mirrors this tree (5 categories, nested groups, **181** programs); cache under `docs/playground/cache/<category>/`. Stub templates (`*-template.hla64`) are excluded from the playground catalog.
 
 Regenerate after adding examples:
 

@@ -162,6 +162,8 @@ foreach ($top in $categoryMeta.Keys) {
 
 Get-ChildItem -Path $examplesRoot -Recurse -Filter '*.hla64' | Sort-Object FullName | ForEach-Object {
     $rel = $_.FullName.Substring($examplesRoot.Length + 1).Replace('\', '/')
+    if ($rel -match '-template\.hla64$') { return }
+
     $parts = $rel -split '/'
     $top = $parts[0]
     if ($categoryMeta.Keys -notcontains $top) { return }

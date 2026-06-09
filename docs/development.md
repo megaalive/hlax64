@@ -113,7 +113,7 @@ See [editors/vscode/README.md](../editors/vscode/README.md).
 
 Open [docs/playground/index.html](../docs/playground/index.html) (GitHub Pages compatible).
 
-The sidebar follows [`examples/`](../examples/) — five top-level categories with nested groups (206 programs). Manifest and cache:
+The sidebar follows [`examples/`](../examples/) — five top-level categories with nested groups (181 programs; Euler stub templates excluded). Manifest and cache:
 
 ```bash
 ./scripts/generate-playground-manifest.ps1   # docs/playground/manifest.json

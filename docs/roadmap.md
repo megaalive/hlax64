@@ -131,7 +131,7 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 
 | Item | Status | Catatan |
 |------|--------|---------|
-| Playground example picker (206 programs, nested by `examples/` category) | ✅ Done | `docs/playground/manifest.json`, `?example=wc` |
+| Playground example picker (181 programs, nested by `examples/` category) | ✅ Done | `docs/playground/manifest.json`, `?example=wc` |
 | Generated NASM pane (cached `explain --json`) | ✅ Done | `docs/playground/cache/`, `scripts/generate-playground-{manifest,cache}.ps1` |
 | Explain-this-line (heuristic tutor) | ✅ Done | Klik baris + tab penjelasan |
 | Copy AI Debug / Explain / Optimize prompt | ✅ Done | Playground tab AI |
