@@ -38,16 +38,22 @@ jobs:
         run: dotnet publish src/HlaX64.McpServer/HlaX64.McpServer.csproj -c Release -r ${{ matrix.rid }} --self-contained false -o publish/${{ matrix.rid }}/mcp
 
       - name: Publish Assembly Lab
-        run: dotnet publish src/HlaX64.AssemblyLab/HlaX64.AssemblyLab.csproj -c Release -r ${{ matrix.rid }} --self-contained false -o publish/${{ matrix.rid }}/assembly-lab
+        shell: pwsh
+        run: ./scripts/publish-assembly-lab.ps1 -Rids ${{ matrix.rid }} -Configuration Release -OutputRoot publish/assembly-lab
 
       - name: Bundle legal and readme
         shell: bash
         run: |
           cp LICENSE publish/${{ matrix.rid }}/
           cp README.md publish/${{ matrix.rid }}/
+          cp -r src/HlaX64.Runtime publish/${{ matrix.rid }}/runtime
 
       - name: Generate dependency SBOM
         run: dotnet list src/HlaX64.Cli/HlaX64.Cli.csproj package --include-transitive --format json > sbom-deps.json
+
+      - name: Smoke Assembly Lab bundle
+        shell: pwsh
+        run: ./scripts/smoke-assembly-lab-bundle.ps1 -BundleDir publish/assembly-lab/${{ matrix.rid }}
 
       - name: Pack Linux archive
         if: runner.os == 'Linux'
@@ -55,7 +61,7 @@ jobs:
           cd publish/linux-x64
           tar czf ../../${{ matrix.archive }} .
           cd ../..
-          tar czf ${{ matrix.lab_archive }} -C publish/linux-x64/assembly-lab .
+          tar czf ${{ matrix.lab_archive }} -C publish/assembly-lab/linux-x64 .
           sha256sum ${{ matrix.archive }} ${{ matrix.lab_archive }} > checksums.txt
 
       - name: Pack Windows archive
@@ -63,7 +69,7 @@ jobs:
         shell: pwsh
         run: |
           Compress-Archive -Path publish/win-x64/* -DestinationPath ${{ matrix.archive }}
-          Compress-Archive -Path publish/win-x64/assembly-lab/* -DestinationPath ${{ matrix.lab_archive }}
+          Compress-Archive -Path publish/assembly-lab/win-x64/* -DestinationPath ${{ matrix.lab_archive }}
           $hashes = @(
             (Get-FileHash ${{ matrix.archive }} -Algorithm SHA256).Hash.ToLower() + "  ${{ matrix.archive }}",
             (Get-FileHash ${{ matrix.lab_archive }} -Algorithm SHA256).Hash.ToLower() + "  ${{ matrix.lab_archive }}"
