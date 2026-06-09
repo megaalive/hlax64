@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "linux-cmp",
+    "source":  "../../../examples/tools/12-linux/cmp/cmp.hla64",
+    "description":  "Linux real tool: portable cmp via hlax_file_*"
+}

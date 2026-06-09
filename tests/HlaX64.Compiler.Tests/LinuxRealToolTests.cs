@@ -25,6 +25,12 @@ public sealed class LinuxRealToolTests
         yield return ["strings"];
         yield return ["cp"];
         yield return ["tee"];
+        yield return ["head"];
+        yield return ["nl"];
+        yield return ["grep"];
+        yield return ["cmp"];
+        yield return ["hexdump"];
+        yield return ["filemagic"];
     }
 
     [Theory]

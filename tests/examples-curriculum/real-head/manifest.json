@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "real-head",
+    "source":  "../../../examples/tools/10-windows/head/head.hla64",
+    "description":  "Real tool: print first 10 lines via hlax_file_read loop"
+}

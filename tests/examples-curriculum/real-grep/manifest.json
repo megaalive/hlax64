@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "real-grep",
+    "source":  "../../../examples/tools/10-windows/grep/grep.hla64",
+    "description":  "Real tool: fixed-string line grep via hlax_strlen"
+}

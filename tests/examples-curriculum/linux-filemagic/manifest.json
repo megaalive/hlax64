@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "linux-filemagic",
+    "source":  "../../../examples/tools/12-linux/filemagic/filemagic.hla64",
+    "description":  "Linux real tool: filemagic via hlax_file_* and hlax_is_printable"
+}

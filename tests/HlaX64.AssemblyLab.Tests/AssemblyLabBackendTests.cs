@@ -514,13 +514,15 @@ public class AssemblyLabBackendTests
 
             var toolDir = Path.Combine(repoRoot, "examples", "tools", "10-windows", tool);
             var argumentsPath = Path.Combine(toolDir, "expected.arguments");
-            var arguments = File.Exists(argumentsPath)
-                ? File.ReadAllText(argumentsPath).Trim()
+            var stdinPath = Path.Combine(toolDir, "expected.stdin");
+            var expectedOutputPath = Path.Combine(toolDir, "expected.output");
+            var expectedOutput = File.Exists(expectedOutputPath)
+                ? File.ReadAllText(expectedOutputPath).Replace("\r\n", "\n")
                 : null;
+            var outputFile = Path.Combine(outDir, $"{tool}-out.txt");
+            var arguments = BuildWindowsArguments(argumentsPath, repoRoot, outputFile);
 
-            // Run the executable with the repo root as the working directory so
-            // relative fixture paths in expected.arguments resolve.
-            using var process = System.Diagnostics.Process.Start(new ProcessStartInfo
+            var startInfo = new ProcessStartInfo
             {
                 FileName = build.OutputFile!,
                 Arguments = arguments,
@@ -529,8 +531,18 @@ public class AssemblyLabBackendTests
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
-            });
+            };
+            if (File.Exists(stdinPath))
+                startInfo.RedirectStandardInput = true;
+
+            using var process = System.Diagnostics.Process.Start(startInfo);
             Assert.NotNull(process);
+            if (File.Exists(stdinPath))
+            {
+                process!.StandardInput.Write(File.ReadAllText(stdinPath).Replace("\r\n", "\n"));
+                process.StandardInput.Close();
+            }
+
             var stdout = process!.StandardOutput.ReadToEnd();
             if (!process.WaitForExit(15000))
             {
@@ -541,6 +553,13 @@ public class AssemblyLabBackendTests
             Assert.Equal(expectedExit, process.ExitCode);
             foreach (var line in expectedStdout.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                 Assert.Contains(line, stdout, StringComparison.Ordinal);
+
+            if (expectedOutput != null)
+            {
+                Assert.True(File.Exists(outputFile), $"expected output file missing for {tool}");
+                var actualOutput = File.ReadAllText(outputFile).Replace("\r\n", "\n");
+                Assert.Equal(expectedOutput, actualOutput);
+            }
         }
         finally
         {
@@ -679,6 +698,30 @@ public class AssemblyLabBackendTests
             if (Directory.Exists(buildDir))
                 Directory.Delete(buildDir, recursive: true);
         }
+    }
+
+    private static string BuildWindowsArguments(string? argumentsPath, string repoRoot, string outputFile)
+    {
+        if (argumentsPath == null || !File.Exists(argumentsPath))
+            return string.Empty;
+
+        var raw = File.ReadAllText(argumentsPath);
+        var tokens = raw.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (tokens.Length == 0)
+            return string.Empty;
+
+        var resolved = new List<string>();
+        foreach (var token in tokens)
+        {
+            if (token == "$OUTPUT")
+                resolved.Add(outputFile);
+            else if (!Path.IsPathRooted(token))
+                resolved.Add(Path.Combine(repoRoot, token));
+            else
+                resolved.Add(token);
+        }
+
+        return string.Join(' ', resolved.Select(arg => arg.Contains(' ') ? $"\"{arg}\"" : arg));
     }
 
     private static string FindRepoRoot()

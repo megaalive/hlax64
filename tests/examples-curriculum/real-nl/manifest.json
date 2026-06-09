@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "real-nl",
+    "source":  "../../../examples/tools/10-windows/nl/nl.hla64",
+    "description":  "Real tool: number lines via stdout.put + hlax_stdout_write"
+}
