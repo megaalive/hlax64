@@ -6,6 +6,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+## [0.2.2-alpha] - 2026-06-10
+
+**Assembly Lab Win32 debug** — native stepping without MinGW GDB, HLA line mapping, debug args prompt, keyboard shortcuts.
+
+### Added
+
+- Win32 debug API backend (`Win32DebugBackend`) with instruction Step Over/Into/Out, call-site line mapping, and shutdown auto-continue
+- Assembly Lab debug args dialog, F5/F10/F11/Shift+F11 shortcuts, DAP user-action logging
+- `tests/HlaX64.DebugAdapter.Tests` (21 tests)
+
+### Fixed
+
+- Linux `sys.nasm` assemble on CI NASM (`mul` vs `imul`, SysV register widths)
+- Windows `netcheck` calls `hlax_net_init()` before TCP connect (parity with Linux)
+
 ## [0.2.1-alpha] - 2026-06-08
 
 **Assembly Lab bundle & terminal polish** — installable just-work archives, embedded PTY terminal, toolchain settings, conformance drift guards.

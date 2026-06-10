@@ -53,7 +53,8 @@ global hlax_load_avg_milli
 ; returns: rax = process id
 
 hlax_getpid:
-    jmp getpid
+    call getpid
+    ret
 
 ; rdi = buffer, rsi = capacity -> rax = hostname length or -1
 hlax_hostname:
@@ -136,7 +137,7 @@ hlax_os_last_error:
 
 ; -> rax = online processor count or -1
 hlax_cpu_count:
-    mov edi, SC_NPROCESSORS_ONLN
+    mov rdi, SC_NPROCESSORS_ONLN
     call sysconf
     cmp rax, 0
     jl .fail
@@ -155,8 +156,8 @@ hlax_disk_total_bytes:
     js .fail
     mov rax, [statvfs_buf + STATVFS_F_BLOCKS]
     mov rcx, [statvfs_buf + STATVFS_F_BSIZE]
-    imul rcx, rax
-    mov rax, rcx
+    xor rdx, rdx
+    mul rcx
     ret
 .fail:
     mov rax, -1
@@ -172,8 +173,8 @@ hlax_disk_avail_bytes:
     js .fail
     mov rax, [statvfs_buf + STATVFS_F_BAVAIL]
     mov rcx, [statvfs_buf + STATVFS_F_BSIZE]
-    imul rcx, rax
-    mov rax, rcx
+    xor rdx, rdx
+    mul rcx
     ret
 .fail:
     mov rax, -1
@@ -182,9 +183,9 @@ hlax_disk_avail_bytes:
 ; -> rax = resident set bytes (self) or -1
 hlax_self_rss_bytes:
     push rbx
-    mov edi, RUSAGE_SELF
+    mov rdi, RUSAGE_SELF
     mov rsi, rusage_buf
-    xor edx, edx
+    xor rdx, rdx
     call getrusage
     pop rbx
     test eax, eax
