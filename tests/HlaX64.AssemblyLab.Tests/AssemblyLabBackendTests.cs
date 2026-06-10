@@ -12,6 +12,13 @@ namespace HlaX64.AssemblyLab.Tests;
 
 public class AssemblyLabBackendTests
 {
+    public AssemblyLabBackendTests()
+    {
+        var repoRoot = FindRepoRoot();
+        Environment.SetEnvironmentVariable("HLAX64_RUNTIME_DIR",
+            Path.Combine(repoRoot, "src", "HlaX64.Runtime"));
+    }
+
     private static string HelloPath =>
         Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "examples", "curriculum", "00-getting-started", "hello.hla64"));
 
@@ -594,17 +601,19 @@ public class AssemblyLabBackendTests
                 CreateNoWindow = true
             });
             Assert.NotNull(process);
-            var stdout = process!.StandardOutput.ReadToEnd();
-            var stderr = process.StandardError.ReadToEnd();
-            if (!process.WaitForExit(15000))
+            if (!process!.WaitForExit(15000))
             {
                 process.Kill(entireProcessTree: true);
-                Assert.Fail($"{example} caller did not exit within 15s\nstderr: {stderr}");
+                Assert.Fail($"{example} caller did not exit within 15s\nstderr: {process.StandardError.ReadToEnd()}");
             }
+
+            var stdout = process.StandardOutput.ReadToEnd();
+            var stderr = process.StandardError.ReadToEnd();
 
             Assert.Equal(expectedExit, process.ExitCode);
             foreach (var line in expectedStdout.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-                Assert.Contains(line, stdout, StringComparison.Ordinal);
+                Assert.True(stdout.Contains(line, StringComparison.Ordinal),
+                    $"{example} stdout mismatch.\nExpected substring: {line}\nActual stdout: {stdout}\nStderr: {stderr}");
         }
         finally
         {

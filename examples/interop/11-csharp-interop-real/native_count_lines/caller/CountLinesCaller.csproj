@@ -10,7 +10,7 @@
 
   <Target Name="CopyNativeDll" AfterTargets="Build">
     <PropertyGroup>
-      <NativeDllSource>$(MSBuildThisFileDirectory)..\..\..\..\build\native_count_lines\libnative_count_lines.dll</NativeDllSource>
+      <NativeDllSource>$(MSBuildThisFileDirectory)..\..\..\..\..\build\native_count_lines\libnative_count_lines.dll</NativeDllSource>
     </PropertyGroup>
     <Copy SourceFiles="$(NativeDllSource)"
           DestinationFiles="$(OutputPath)native_count_lines.dll"

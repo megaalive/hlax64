@@ -4,6 +4,8 @@
 # NASM source files
 *.nasm linguist-language=Assembly
 src/HlaX64.Runtime/linux-x64/** text eol=lf
+examples/**/fixtures/** text eol=lf
+examples/interop/**/expected.* text eol=lf
 *.asm linguist-language=Assembly
 *.inc linguist-language=Assembly
 
