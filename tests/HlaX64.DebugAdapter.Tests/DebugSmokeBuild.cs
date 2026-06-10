@@ -17,6 +17,12 @@ internal static class DebugSmokeBuild
             mov(4, rdx);
             mov(5, rsi);
             mov(6, rdi);
+            mov(7, r8);
+            mov(8, r9);
+            mov(9, r10);
+            mov(10, r11);
+            mov(11, r12);
+            mov(12, r13);
         end dbgstep;
         """;
 
