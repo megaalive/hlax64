@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text;
 using HlaX64.Compiler.Debug;
+using HlaX64.DebugAdapter;
 
 namespace HlaX64.Cli.Services;
 
@@ -17,7 +18,9 @@ public static class DisasmService
                 continue;
 
             var entry = map?.LookupByNasmLine(i + 1);
-            if (entry?.SourceLine != null)
+            if (entry?.SourceLine != null
+                && entry.NasmLine == i + 1
+                && PeDebugAddressMap.IsTrustedSourceMapNasmLine(map, i + 1))
                 sb.AppendLine($"; src:{entry.SourceLine,3} | {line}");
             else
                 sb.AppendLine(line);
@@ -26,7 +29,7 @@ public static class DisasmService
         return sb.ToString().TrimEnd();
     }
 
-    public static string FormatBinaryDisasm(string binaryPath, SourceMapDocument? map)
+    public static string FormatBinaryDisasm(string binaryPath, SourceMapDocument? map, string? nasmPath = null)
     {
         if (!File.Exists(binaryPath))
             return $"Binary not found: {binaryPath}";
@@ -34,20 +37,22 @@ public static class DisasmService
         if (!TryObjdump(binaryPath, out var objdumpLines))
             return "objdump not available (install binutils or LLVM objdump on PATH).";
 
+        IReadOnlyDictionary<ulong, int>? sourceByAddress = null;
+        if (map != null && !string.IsNullOrWhiteSpace(nasmPath) && File.Exists(nasmPath))
+            sourceByAddress = PeDebugAddressMap.GetOrBuild(binaryPath, nasmPath, map).SourceByAddress;
+
         var sb = new StringBuilder();
         foreach (var line in objdumpLines)
         {
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 
-            if (map != null && TryParseObjdumpAddress(line, out _))
+            if (sourceByAddress != null
+                && TryParseObjdumpAddress(line, out var addr)
+                && PeDebugAddressMap.LookupSourceLine((ulong)addr, sourceByAddress) is int srcLine)
             {
-                var near = map.Entries.FirstOrDefault(e => e.NasmLine != null);
-                if (near != null)
-                {
-                    sb.AppendLine($"; src:{near.SourceLine,3} | {line.TrimEnd()}");
-                    continue;
-                }
+                sb.AppendLine($"; src:{srcLine,3} | {line.TrimEnd()}");
+                continue;
             }
 
             sb.AppendLine(line.TrimEnd());
@@ -56,11 +61,11 @@ public static class DisasmService
         return sb.ToString().TrimEnd();
     }
 
-    public static string FormatDisasm(string? nasmText, SourceMapDocument? map, string? binaryPath)
+    public static string FormatDisasm(string? nasmText, SourceMapDocument? map, string? binaryPath, string? nasmPath = null)
     {
         if (!string.IsNullOrEmpty(binaryPath) && File.Exists(binaryPath))
         {
-            var binary = FormatBinaryDisasm(binaryPath, map);
+            var binary = FormatBinaryDisasm(binaryPath, map, nasmPath);
             if (!binary.StartsWith("objdump not available", StringComparison.OrdinalIgnoreCase))
                 return binary;
         }
