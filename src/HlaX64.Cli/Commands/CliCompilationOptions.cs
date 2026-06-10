@@ -66,6 +66,19 @@ internal static class CliCompilationOptions
 
 public static class CompilePipeline
 {
+    public static CompilationOptions InferFromSourcePath(string sourcePath)
+    {
+        var normalized = sourcePath.Replace('\\', '/');
+        if (normalized.Contains("/12-linux/", StringComparison.OrdinalIgnoreCase))
+            return CompilationOptions.Default with { Target = TargetTriple.LinuxX64SysV };
+
+        if (OperatingSystem.IsWindows() &&
+            normalized.Contains("/10-windows/", StringComparison.OrdinalIgnoreCase))
+            return CompilationOptions.Default with { Target = TargetTriple.WindowsX64MsAbi };
+
+        return CompilationOptions.Default;
+    }
+
     public static string EmitNasm(string sourcePath, string sourceText, CompilationOptions? options = null)
         => Compile(sourcePath, sourceText, options).NasmCode;
 

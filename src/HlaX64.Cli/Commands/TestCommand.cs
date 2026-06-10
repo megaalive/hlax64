@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using HlaX64.Cli.Json;
 using HlaX64.Cli.Toolchain;
 using HlaX64.Compiler;
+using HlaX64.Compiler.Options;
 using Spectre.Console.Cli;
 
 namespace HlaX64.Cli.Commands;
@@ -91,9 +92,9 @@ public sealed class TestCommand : Command<TestCommand.Settings>
             {
                 bool requiresWsl = linkerPath == "wsl";
 
-                linkerRunner = (objFile, exeFile) =>
+                linkerRunner = (objFile, exeFile, extraLibraries) =>
                 {
-                    if (LinkerTool.TryLink(objFile, exeFile, out var error, out var wsl))
+                    if (LinkerTool.TryLink(objFile, exeFile, out var error, out var wsl, extraLibraries: extraLibraries))
                         return (true, "", wsl);
                     return (false, error, wsl);
                 };
@@ -188,11 +189,25 @@ public sealed class TestCommand : Command<TestCommand.Settings>
             Console.WriteLine();
         }
 
-        Func<string, string> compileFunc = source =>
-            CompilePipeline.EmitNasm("(test)", source);
+        TestRunner.CompileWithResult compileWithResult = (sourcePath, sourceText) =>
+        {
+            var artifacts = CompilePipeline.Compile(sourcePath, sourceText, CompilePipeline.InferFromSourcePath(sourcePath));
+            return (artifacts.NasmCode, artifacts.Result);
+        };
+
+        TestRunner.LinkExtrasBuilder linkExtrasBuilder = (compilationResult, cacheDir, sourcePath) =>
+        {
+            var isWindows = CompilePipeline.InferFromSourcePath(sourcePath).Target == TargetTriple.WindowsX64MsAbi;
+            if (!RuntimeObjectProvider.TryBuildLinkExtras(
+                    compilationResult, isWindows, cacheDir, out var extras, out var error))
+                return (false, Array.Empty<string>(), error);
+
+            return (true, extras, null);
+        };
 
         var runner = new TestRunner(
-            compileFunc: compileFunc,
+            compileWithResultFunc: compileWithResult,
+            linkExtrasBuilder: linkExtrasBuilder,
             nasmPath: nasmPath,
             skipExecution: settings.CompileOnly,
             linkerRunner: linkerRunner,

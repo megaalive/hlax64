@@ -218,9 +218,9 @@ public class HlaX64Tools
             if (LinkerTool.TryFindLinker(out var linkerPath, out _, out _))
             {
                 bool requiresWsl = linkerPath == "wsl";
-                linkerRunner = (objF, exeF) =>
+                linkerRunner = (objF, exeF, extraLibraries) =>
                 {
-                    if (LinkerTool.TryLink(objF, exeF, out var err, out var wsl))
+                    if (LinkerTool.TryLink(objF, exeF, out var err, out var wsl, extraLibraries: extraLibraries))
                         return (true, "", wsl);
                     return (false, err, wsl);
                 };
@@ -248,7 +248,20 @@ public class HlaX64Tools
         var manifests = TestManifest.LoadAll(dir);
         var results = new List<object>();
         var runner = new TestRunner(
-            compileFunc: src => CompilePipeline.EmitNasm("(test)", src),
+            compileWithResultFunc: (sourcePath, sourceText) =>
+            {
+                var artifacts = CompilePipeline.Compile(
+                    sourcePath, sourceText, CompilePipeline.InferFromSourcePath(sourcePath));
+                return (artifacts.NasmCode, artifacts.Result);
+            },
+            linkExtrasBuilder: (compilationResult, cacheDir, sourcePath) =>
+            {
+                var isWindows = CompilePipeline.InferFromSourcePath(sourcePath).Target == TargetTriple.WindowsX64MsAbi;
+                if (!RuntimeObjectProvider.TryBuildLinkExtras(
+                        compilationResult, isWindows, cacheDir, out var extras, out var error))
+                    return (false, Array.Empty<string>(), error);
+                return (true, extras, null);
+            },
             nasmPath: nasmPath,
             skipExecution: compileOnly == true,
             linkerRunner: linkerRunner,

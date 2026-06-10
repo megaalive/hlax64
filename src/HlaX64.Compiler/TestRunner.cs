@@ -10,6 +10,8 @@ public sealed class TestRunner
     private readonly string? _nasmPath;
     private readonly bool _skipExecution;
     private readonly Func<string, string>? _compileFunc;
+    private readonly CompileWithResult? _compileWithResultFunc;
+    private readonly LinkExtrasBuilder? _linkExtrasBuilder;
     private readonly LinkerRunner? _linkerRunner;
     private readonly BinaryExecutor? _binaryExecutor;
 
@@ -26,7 +28,23 @@ public sealed class TestRunner
     /// implementation is responsible for choosing the right toolchain
     /// (native gcc, WSL gcc, MinGW, etc.).
     /// </summary>
-    public delegate (bool Ok, string Error, bool RequiresWsl) LinkerRunner(string objFile, string exeFile);
+    public delegate (bool Ok, string Error, bool RequiresWsl) LinkerRunner(
+        string objFile,
+        string exeFile,
+        IReadOnlyList<string>? extraLibraries = null);
+
+    /// <summary>
+    /// Builds runtime/cache link extras (e.g. hlax64-runtime-file *.o and -lc).
+    /// </summary>
+    public delegate (bool Ok, IReadOnlyList<string> Extras, string? Error) LinkExtrasBuilder(
+        CompilationResult result,
+        string buildDir,
+        string sourcePath);
+
+    /// <summary>
+    /// Compiles source to NASM plus a <see cref="CompilationResult"/> for runtime linking.
+    /// </summary>
+    public delegate (string Nasm, CompilationResult Result) CompileWithResult(string sourcePath, string sourceText);
 
     /// <summary>
     /// Delegate that runs an executable and returns its exit code, stdout,
@@ -38,18 +56,24 @@ public sealed class TestRunner
     /// Creates a TestRunner that can compile and optionally execute HLA-X64 programs.
     /// </summary>
     /// <param name="compileFunc">Function that takes HLA source text and returns NASM code.</param>
+    /// <param name="compileWithResultFunc">Like compileFunc but also returns the compilation result.</param>
+    /// <param name="linkExtrasBuilder">Optional runtime link extras builder (requires compileWithResultFunc).</param>
     /// <param name="nasmPath">Path to NASM binary. If null, assembly steps are skipped.</param>
     /// <param name="skipExecution">If true, only compile (no assemble/link/run).</param>
     /// <param name="linkerRunner">Delegate that invokes the linker (e.g. WSL gcc).</param>
     /// <param name="binaryExecutor">Delegate that runs the linked executable (e.g. WSL exec).</param>
     public TestRunner(
         Func<string, string>? compileFunc = null,
+        CompileWithResult? compileWithResultFunc = null,
+        LinkExtrasBuilder? linkExtrasBuilder = null,
         string? nasmPath = null,
         bool skipExecution = false,
         LinkerRunner? linkerRunner = null,
         BinaryExecutor? binaryExecutor = null)
     {
         _compileFunc = compileFunc;
+        _compileWithResultFunc = compileWithResultFunc;
+        _linkExtrasBuilder = linkExtrasBuilder;
         _nasmPath = nasmPath;
         _skipExecution = skipExecution;
         _linkerRunner = linkerRunner;
@@ -78,7 +102,7 @@ public sealed class TestRunner
 
             var sourceText = File.ReadAllText(sourcePath);
 
-            if (_compileFunc == null)
+            if (_compileFunc == null && _compileWithResultFunc == null)
             {
                 result.Passed = false;
                 result.ErrorMessage = "No compile function provided";
@@ -86,9 +110,17 @@ public sealed class TestRunner
             }
 
             string nasmCode;
+            CompilationResult? compilationResult = null;
             try
             {
-                nasmCode = _compileFunc(sourceText);
+                if (_compileWithResultFunc != null)
+                {
+                    (nasmCode, compilationResult) = _compileWithResultFunc(sourcePath, sourceText);
+                }
+                else
+                {
+                    nasmCode = _compileFunc!(sourceText);
+                }
             }
             catch (Exception ex)
             {
@@ -156,7 +188,28 @@ public sealed class TestRunner
                 result.ErrorMessage = "No linker runner provided; cannot link object file";
                 return result;
             }
-            var (linkOk, linkErr, _) = _linkerRunner(objFile, exeFile);
+            IReadOnlyList<string>? linkExtras = null;
+            if (_linkExtrasBuilder != null)
+            {
+                if (compilationResult == null)
+                {
+                    result.Passed = false;
+                    result.ErrorMessage = "Link extras builder requires compileWithResultFunc";
+                    return result;
+                }
+
+                var (extrasOk, extras, extrasErr) = _linkExtrasBuilder(compilationResult, buildDir, sourcePath);
+                if (!extrasOk)
+                {
+                    result.Passed = false;
+                    result.ErrorMessage = extrasErr ?? "Failed to build runtime link extras";
+                    return result;
+                }
+
+                linkExtras = extras;
+            }
+
+            var (linkOk, linkErr, _) = _linkerRunner(objFile, exeFile, linkExtras);
             if (!linkOk)
             {
                 result.Passed = false;
