@@ -107,6 +107,18 @@ Opcodes include `Move`, `Add`, `Subtract`, `Multiply`, `Divide`, `Compare`, `Bra
 | Variadic printf | Windows MS ABI + float variadic in AL/xmm |
 | Differential run on Windows | WSL or native link in CI |
 
+### Future backends (multi-architecture)
+
+Not scheduled for 0.1.x / 0.2.x. Documented so IR and ABI boundaries do not accrue x86-only debt.
+
+| Backend | Role |
+|---------|------|
+| `NasmEmitter` (current) | x86-64 text → `nasm` → COFF/ELF |
+| Future GNU/Clang `.s` | AArch64 text → `clang`/`gcc` — preferred for Assembly Lab parity |
+| Future LLVM IR / MC | Production-grade option; weaker default for “see every instruction” teaching |
+
+Shared across backends: front end, IR, diagnostics, MCP/LSP, manifest test runner, `hlax_*` API surface. Per backend: ABI lowerer, emitter, runtime NASM/GAS sources, debugger adapter, link extras.
+
 ---
 
 ## IR sketch (implemented)

@@ -1,37 +1,37 @@
 # HlaX64 — Roadmap
 
-> **Status dokumen**: Aktif · selaras dengan `HlaX64_Project_Plan.md` (konsolidasi lokal)
-> **Bahasa**: `HlaX64` v0.1 (Draft Language Reference)
-> **Target aktif**: `linux-x64-sysv`
+> **Document status**: Active · aligned with `HlaX64_Project_Plan.md` (local consolidation)
+> **Language**: `HlaX64` v0.1 (Draft Language Reference)
+> **Active target**: `linux-x64-sysv`
 
-Dokumen ini adalah ringkasan eksekusi yang bisa dibaca cepat. Untuk
-detail lengkap (rationale, deliverable, acceptance criteria), lihat
-[`HlaX64_Project_Plan.md`](../HlaX64_Project_Plan.md) bila tersedia di clone lokal.
+This document is a quick-read execution summary. For full detail (rationale,
+deliverables, acceptance criteria), see [`HlaX64_Project_Plan.md`](../HlaX64_Project_Plan.md)
+when available in your local clone.
 
-### Legenda status
+### Status legend
 
-| Label | Arti |
-|-------|------|
-| **✅ Done** | Scope fase selesai; ada di toolchain dan contoh/tes. |
-| **✅ Hardened** | MVP fase sudah shipped; dilanjutkan hardening (lookup, stub, CI, docs). |
-| **🔜 Deferred** | Belum dikerjakan; lihat [§6 Backlog terbuka](#6-backlog-terbuka-deferred). |
+| Label | Meaning |
+|-------|---------|
+| **✅ Done** | Phase scope complete; shipped in toolchain and examples/tests. |
+| **✅ Hardened** | Phase MVP shipped; followed by hardening (lookup, stubs, CI, docs). |
+| **🔜 Deferred** | Not started yet; see [§6 Open backlog](#6-open-backlog-deferred). |
 
-> **Catatan:** Istilah *MVP* di RFC/commit lama hanya berarti *scope minimum yang
-> pernah dijanjikan*, bukan “masih belum ada”. Jika sprint tercantum **(done)**,
-> fiturnya sudah ada meski belum “versi final”.
+> **Note:** *MVP* in older RFCs/commits means *minimum scope that was promised*,
+> not “still missing”. If a sprint is marked **(done)**, the feature exists even
+> if it is not the “final version”.
 
 ---
 
-## 1. Peta fase
+## 1. Phase map
 
-| Fase | Nama | Status | Ringkasan |
+| Phase | Name | Status | Summary |
 |------|------|--------|-----------|
 | 0 | Foundation & repo setup | ✅ Done | repo, solution, CLI `--version` |
 | 1 | Lexer & Parser | ✅ Done | program, procedure, call |
-| 2 | NASM Backend | ✅ Done | NASM x64 valid, operand order |
+| 2 | NASM Backend | ✅ Done | valid NASM x64, operand order |
 | 3 | Toolchain build Linux x64 | ✅ Done | `hla64 build`, `hla64 run` |
 | 4 | Runtime `stdout.put` | ✅ Done | syscall / library write |
-| 5 | Semantic Analyzer | ✅ Done | register, instruksi, scope |
+| 5 | Semantic Analyzer | ✅ Done | registers, instructions, scope |
 | 6 | Procedure & SysV ABI | ✅ Done | `rdi..r9`, return `rax` |
 | 7 | Control flow | ✅ Done | `if/else/endif`, `while/endwhile` |
 | 8 | Local variables & stack frame | ✅ Done | `var`, `[rbp-N]` |
@@ -53,15 +53,15 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 | 23 | Verified executable workflow | ✅ Hardened | proof bundle, capabilities, diff/plan |
 | 24 | Debugger & Assembly Lab | ✅ Hardened | DAP, Lab debug/MCP integration |
 
-**Semua fase 0–24 sudah minimal Done/Hardened.** Pekerjaan lanjutan hanya item **Deferred** (§6).
+**All phases 0–24 are at least Done/Hardened.** Further work is **Deferred** items only (§6).
 
 ---
 
-## 2. Catatan sprint (riwayat — semua shipped)
+## 2. Sprint notes (history — all shipped)
 
 ### Phase 15 — Assembly Lab
 
-- **15.1–15.6 (done):** shell Avalonia, IR/NASM/ABI tabs, build/run, source map, DAP panel, proof bundle, RFC + tutorial
+- **15.1–15.6 (done):** Avalonia shell, IR/NASM/ABI tabs, build/run, source map, DAP panel, proof bundle, RFC + tutorial
 - **Batch 3–4 (done):** gdb/lldb DAP, Explain/Agent tab, Apply Fix, MI registers, MCP tab
 
 ### Phase 16 — Language core
@@ -110,106 +110,106 @@ detail lengkap (rationale, deliverable, acceptance criteria), lihat
 
 ---
 
-## 3. Snapshot saat ini
+## 3. Current snapshot
 
 | Area | Status |
 |------|--------|
-| Fase compiler 0–24 | ✅ Done / Hardened (lihat §1) |
-| Kurikulum contoh | 58 manifest di `tests/examples-curriculum/` + real-tools / bug-farm / invalid |
-| Tes otomatis | 400+ (`dotnet test` — compiler + AssemblyLab) |
-| Target build | Linux SysV + Windows MS ABI |
-| Dokumentasi produk | `docs/language-spec.md`, tutorials, RFC 0001–0024 |
+| Compiler phases 0–24 | ✅ Done / Hardened (see §1) |
+| Curriculum examples | 58 manifests in `tests/examples-curriculum/` + real-tools / bug-farm / invalid |
+| Automated tests | 400+ (`dotnet test` — compiler + AssemblyLab) |
+| Build targets | Linux SysV + Windows MS ABI |
+| Product docs | `docs/language-spec.md`, tutorials, RFC 0001–0024 |
 
-**Fokus berikutnya:** **v0.2.0-alpha** (§5) — onboarding & playground, bukan fitur bahasa baru.
+**Next focus:** **v0.2.0-alpha** (§5) — onboarding & playground, not new language features.
 
 ---
 
 ## 5. v0.2.0-alpha — Useful Assembly Tools & Onboarding
 
-> **Tema release:** Playground sebagai produk utama GitHub Pages — orang buka link →
-> coba contoh → lihat NASM → paham manfaat → baru clone repo.
+> **Release theme:** Playground as the main GitHub Pages product — open link →
+> try an example → see NASM → understand the value → then clone the repo.
 
-| Item | Status | Catatan |
+| Item | Status | Notes |
 |------|--------|---------|
 | Playground example picker (181 programs, nested by `examples/` category) | ✅ Done | `docs/playground/manifest.json`, `?example=wc` |
 | Generated NASM pane (cached `explain --json`) | ✅ Done | `docs/playground/cache/`, `scripts/generate-playground-{manifest,cache}.ps1` |
-| Explain-this-line (heuristic tutor) | ✅ Done | Klik baris + tab penjelasan |
-| Copy AI Debug / Explain / Optimize prompt | ✅ Done | Playground tab AI |
+| Explain-this-line (heuristic tutor) | ✅ Done | Line click + explanation tab |
+| Copy AI Debug / Explain / Optimize prompt | ✅ Done | Playground AI tab |
 | Live explain API (edit source → fresh NASM) | 🔜 Planned | `playground-design.md` Phase 2 |
 | Monaco + syntax highlighting | 🔜 Planned | Reuse `hla64.tmLanguage.json` |
-| Gallery deep links dari README | ✅ Done | `/playground?example=hexdump`, dll. |
-| GitHub Pages sebagai “produk” (Home / Playground / Course / …) | ✅ Done | `docs/index.html` nav |
-| Contoh `cat`, `strings`, `printf` di kurikulum | 🔜 Planned | `wc`/`hexdump`/`filemagic` sudah ada |
-| Tutorial argv + file I/O path | 🔜 Planned | Perluas tutorials / course doc |
-| Assembly Lab parity di browser (build/run) | 🔜 Deferred | Lab desktop tetap surface penuh |
+| Gallery deep links from README | ✅ Done | `/playground?example=hexdump`, etc. |
+| GitHub Pages as “product” (Home / Playground / Course / …) | ✅ Done | `docs/index.html` nav |
+| `cat`, `strings`, `printf` curriculum examples | 🔜 Planned | `wc`/`hexdump`/`filemagic` already exist |
+| Tutorial argv + file I/O path | 🔜 Planned | Extend tutorials / course doc |
+| Assembly Lab parity in browser (build/run) | 🔜 Deferred | Desktop Lab remains full surface |
 
-**Sudah ada (jangan duplikasi):** Assembly Lab (IR/NASM live, Explain, Agent, DAP), MCP
-`explain`, 58 manifest kurikulum, real-tools Windows + Linux ports.
+**Already shipped (do not duplicate):** Assembly Lab (live IR/NASM, Explain, Agent, DAP), MCP
+`explain`, 58 curriculum manifests, real-tools Windows + Linux ports.
 
-**Non-goals v0.2:** macro, LLVM, `ptr<T>`, per-file `#pragma target` — tetap §6.
+**Non-goals v0.2:** macro, LLVM, `ptr<T>`, per-file `#pragma target` — remain in §6.
 
 ---
 
-## 4. Tier eksekusi (historis)
+## 4. Execution tiers (historical)
 
-Tier ini mencatat milestone awal proyek; semua sudah ✅.
+These tiers record early project milestones; all are ✅.
 
-### Tier 1 — Dokumentasi
+### Tier 1 — Documentation
 
 - [x] `docs/roadmap.md`, `docs/compiler-architecture.md`, `docs/runtime-contract.md`, `docs/examples.md`
-- [x] `README.md` — fase 0–24 Done/Hardened (bukan hanya 0–13)
+- [x] `README.md` — phases 0–24 Done/Hardened (not only 0–13)
 
-### Tier 2 — Sample & kurikulum
+### Tier 2 — Samples & curriculum
 
 - [x] Native integration tests (`tests/samples/`, `tests/examples-curriculum/`)
 - [x] Real-tools, bug-farm, invalid mirrors, Linux ports
 
-### Tier 3 — CLI utilitas
+### Tier 3 — CLI utilities
 
 - [x] `hla64 explain-abi`, `explain`, `verify-*`, `bench`, MCP tools
 
 ---
 
-## 5. Prioritas fitur (ringkas)
+## 5. Feature priorities (summary)
 
-| Tier | Isi | Status |
-|------|-----|--------|
-| **P0** | parser, emitter, CLI, test runner, stabilisasi 9.5 | ✅ |
+| Tier | Scope | Status |
+|------|-------|--------|
+| **P0** | parser, emitter, CLI, test runner, phase 9.5 stabilization | ✅ |
 | **P1** | control flow, types, IR/ABI, Windows, C# interop | ✅ |
 | **P2** | MCP, LSP, benchmark, Assembly Lab | ✅ |
 | **P3 / Deferred** | macro, LLVM, OSDev, full HLA compat, JIT, self-hosting, §6 | 🔜 |
 
-Detail prioritas lama: Plan Section 10 (lokal).
+Legacy priority detail: Plan Section 10 (local).
 
 ---
 
-## 6. Backlog terbuka (Deferred)
+## 6. Open backlog (Deferred)
 
-Satu-satunya pekerjaan yang **belum** di roadmap aktif:
+The only work **not** on the active roadmap:
 
 ### Debug & explainability (19)
 
-- Full DWARF debug info di **Windows**
+- Full DWARF debug info on **Windows**
 - Runtime trace sink (beyond `--trace` / `int3` stub)
 
 ### Optimization (20)
 
 - `--register-mode assisted`
 - Global dead-code elimination
-- Propagation / optimization lanjutan
+- Further propagation / optimization
 
 ### CPU & SIMD (21)
 
 - Typed `f64x4` vectors
-- `cmpxchg` atomics penuh
+- Full `cmpxchg` atomics
 - Windows ymm callee-save / restore
 
 ### Debugger & Lab (24)
 
-- Full MI **memory** view di DAP
-- Parity MCP tools Lab UI ↔ CLI (semua perintah)
+- Full MI **memory** view in DAP
+- Parity MCP tools Lab UI ↔ CLI (all commands)
 
-### Language / memory (lintas-fase, lihat `docs/memory-model.md`)
+### Language / memory (cross-phase, see `docs/memory-model.md`)
 
 - `ptr<T>`, `slice<T>`, checked indexing
 - **Runtime heap helpers (shipped):** `hlax_malloc`, `hlax_realloc`, `hlax_free` — [`dynamic-array-heap.hla64`](../examples/curriculum/05-memory/dynamic-array-heap.hla64); static-backed [`dynamic-array.hla64`](../examples/curriculum/05-memory/dynamic-array.hla64) for fixed-capacity vectors
@@ -218,8 +218,46 @@ Satu-satunya pekerjaan yang **belum** di roadmap aktif:
 
 ---
 
-## 7. Risiko
+## 7. CPU outlook & multi-architecture (informative)
 
-- **Risiko 6 (termitigasi):** pertumbuhan fitur sebelum fondasi stabil → Fase 9.5 + native tests selesai.
+**Not an implementation priority** — design guidance so HlaX64 does not lock
+everything to NASM/x86 as AArch64 grows in importance.
 
-Lihat Plan Section 11 untuk risiko lengkap (lokal).
+### Market outlook (realistic)
+
+| Architecture | Expected role through the late 2030s |
+|--------------|-------------------------------------|
+| **AArch64** | First-class: mobile, Mac, embedded, much of cloud |
+| **x86-64** | Still strong: Windows desktop, gaming, workstations, industrial systems, legacy software/drivers |
+
+Both coexist. x86 binary compatibility is a burden and a strength — many organizations still run stacks that are decades old.
+
+### HlaX64 position
+
+- **Primary focus stays x86-64** — Windows + Linux, NASM, Assembly Lab, `linux-x64` / `windows-x64` runtime trees.
+- **Keep the product name** — do not rebrand to a generic “Hla64” compiler; the x86 teaching identity is intentional.
+- **Compiler architecture already separates layers:** source → IR → ABI lowerer → backend → link. An ARM backend should be a sibling project (e.g. HlaArm64) or a plug-in backend pack, not a repo pivot.
+
+### Future targets (not scheduled)
+
+1. **Now:** Linux x64, Windows x64 (✅)
+2. **Optional:** macOS x64 (legacy)
+3. **Later:** Linux AArch64, macOS AArch64, Windows ARM64
+
+An ARM backend **cannot** use NASM. Reasonable options later: GNU/Clang assembly text, LLVM IR, or object emission via LLVM MC. For assembly lab teaching, **emit `.s` + clang/gcc link** best matches today’s philosophy.
+
+### Design steps without writing an ARM backend
+
+- Document `LoweredFunction` + [runtime-contract.md](runtime-contract.md) as the cross-backend contract.
+- Reduce x86 register assumptions above the ABI lowerer where possible.
+- New runtime APIs: specify `hlax_*` first, implement per ISA in separate runtime trees.
+
+See also: [architecture.md](architecture.md) § Multi-architecture strategy, [compiler-architecture.md](compiler-architecture.md) § Future backends.
+
+---
+
+## 8. Risks
+
+- **Risk 6 (mitigated):** feature growth before a stable foundation → Phase 9.5 + native tests completed.
+
+Full risk list: Plan Section 11 (local).
