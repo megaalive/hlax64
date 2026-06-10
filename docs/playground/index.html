@@ -737,6 +737,16 @@
       display: block;
       padding: 0 0.5rem;
     }
+    .line-numbers span.selected {
+      background: rgba(14, 99, 156, 0.35);
+      color: var(--text-bright);
+    }
+    #source-highlight.view-mode .line-numbers span {
+      cursor: pointer;
+    }
+    #source-highlight.view-mode .code-content {
+      cursor: text;
+    }
     .code-content {
       flex: 1;
       min-height: 0;
@@ -1254,6 +1264,7 @@ let exampleById = new Map();
 let current = null;
 let explainCache = null;
 let sourceDirty = false;
+let activeSourceLine = 1;
 
 /* ── Manifest helpers ────────────────────────────────────────────── */
 function categoryExamples(cat) {
@@ -1559,6 +1570,7 @@ async function loadExample(id, pushUrl) {
     // Update highlighted source view
     highlightSource(sourceText);
     updateLineNumbers('source-lines', sourceText.split('\n').length);
+    $('source-highlight')?.classList.add('view-mode');
   } catch {
     const errMsg = `// Tidak bisa memuat ${ex.path}\n// Buka repo lokal atau periksa koneksi.`;
     $('source').value = errMsg;
@@ -1568,21 +1580,78 @@ async function loadExample(id, pushUrl) {
 
   $('line-explain').textContent = ex.note || '';
   $('explain-hint').textContent = 'Klik baris di source editor, lalu tekan Explain.';
+  activeSourceLine = 1;
+  updateSelectedLineVisual(1);
   updateRunPanel(ex);
   updateAiPreview('debug');
 }
 
 /* ── Explain line ────────────────────────────────────────────────── */
+function getSourceText() {
+  return normalizeText($('source').value || '');
+}
+
+function updateSelectedLineVisual(lineNo) {
+  const nums = $('source-lines');
+  if (!nums) return;
+  [...nums.children].forEach((el, i) => {
+    el.classList.toggle('selected', i + 1 === lineNo);
+  });
+}
+
+function pickSourceLineFromEvent(event) {
+  const text = getSourceText();
+  const lineCount = Math.max(1, text.split('\n').length);
+  const content = document.querySelector('#source-highlight .code-content');
+  if (!content) return 1;
+
+  const pre = content.querySelector('pre') || content;
+  const style = window.getComputedStyle(pre);
+  const lineHeight = parseFloat(style.lineHeight);
+  if (!lineHeight || Number.isNaN(lineHeight)) return activeSourceLine || 1;
+
+  const rect = content.getBoundingClientRect();
+  const y = event.clientY - rect.top + content.scrollTop;
+  const lineNo = Math.floor(y / lineHeight) + 1;
+  return Math.max(1, Math.min(lineCount, lineNo));
+}
+
+function pickSourceLineFromLineNumbers(event) {
+  const span = event.target.closest('#source-lines span');
+  if (!span) return activeSourceLine || 1;
+  const spans = [...$('source-lines').children];
+  const idx = spans.indexOf(span);
+  return idx >= 0 ? idx + 1 : (activeSourceLine || 1);
+}
+
+function onSourceLinePicked(lineNo, autoExplain = true) {
+  const text = getSourceText();
+  const lineCount = Math.max(1, text.split('\n').length);
+  activeSourceLine = Math.max(1, Math.min(lineCount, lineNo));
+  updateSelectedLineVisual(activeSourceLine);
+  if (autoExplain) runExplainLine();
+}
+
 function selectedLine() {
-  const ta = $('source');
-  const start = ta.selectionStart;
-  const text = ta.value;
-  const lineStart = text.lastIndexOf('\n', start - 1) + 1;
-  let lineEnd = text.indexOf('\n', start);
-  if (lineEnd === -1) lineEnd = text.length;
-  const line = text.slice(lineStart, lineEnd);
-  const lineNo = text.slice(0, lineStart).split('\n').length;
-  return { line: line.trim(), lineNo, raw: line };
+  const text = getSourceText();
+  const lines = text.split('\n');
+
+  if (isEditingSource) {
+    const ta = $('source');
+    const start = ta.selectionStart ?? 0;
+    const lineStart = text.lastIndexOf('\n', Math.max(0, start - 1)) + 1;
+    let lineEnd = text.indexOf('\n', start);
+    if (lineEnd === -1) lineEnd = text.length;
+    const raw = text.slice(lineStart, lineEnd);
+    const lineNo = text.slice(0, lineStart).split('\n').length;
+    activeSourceLine = lineNo;
+    updateSelectedLineVisual(lineNo);
+    return { line: raw.trim(), lineNo, raw };
+  }
+
+  const lineNo = Math.max(1, Math.min(lines.length, activeSourceLine || 1));
+  const raw = lines[lineNo - 1] ?? '';
+  return { line: raw.trim(), lineNo, raw };
 }
 
 function explainLineHeuristic(line) {
@@ -1619,14 +1688,16 @@ function explainLineHeuristic(line) {
 }
 
 function runExplainLine() {
-  const { line, lineNo } = selectedLine();
-  if (!line) {
+  const { line, lineNo, raw } = selectedLine();
+  if (!lineNo) {
     $('line-explain').textContent = 'Posisikan kursor pada baris yang ingin dijelaskan terlebih dahulu.';
     return;
   }
-  let out = `Baris ${lineNo}: ${line}\n\n${explainLineHeuristic(line)}`;
+  const display = line || '(kosong)';
+  let out = `Baris ${lineNo}: ${display}\n\n${explainLineHeuristic(line || raw)}`;
   if (sourceDirty) out += '\n\n⚠ Source telah diedit — pane NASM sudah lama (stale) sampai Anda menjalankan hla64 explain lokal.';
   $('line-explain').textContent = out;
+  $('explain-hint').textContent = `Baris ${lineNo} dipilih — klik baris lain atau tekan Explain lagi.`;
 }
 
 /* ── AI prompts ──────────────────────────────────────────────────── */
@@ -1673,11 +1744,7 @@ document.querySelectorAll('.tab-bar button').forEach(btn => {
 
 $('explain-line').onclick = () => {
   runExplainLine();
-  // Switch to explain tab if not already there
-  document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelector('[data-tab="explain"]').classList.add('active');
-  $('tab-explain').classList.add('active');
+  showExplainTab();
 };
 
 $('explain-clear').onclick = () => {
@@ -1721,21 +1788,61 @@ function toggleEditMode() {
     btn.textContent = 'View';
     btn.classList.add('active');
     ta.classList.add('visible');
+    hl.classList.remove('view-mode');
     hl.style.display = 'none';
     ta.focus();
+    updateSelectedLineVisual(selectedLine().lineNo);
   } else {
     btn.textContent = 'Edit';
     btn.classList.remove('active');
     ta.classList.remove('visible');
     hl.style.display = 'flex';
+    hl.classList.add('view-mode');
     // Update highlighted view with current source
     const sourceText = ta.value;
     highlightSource(sourceText);
     updateLineNumbers('source-lines', sourceText.split('\n').length);
+    updateSelectedLineVisual(activeSourceLine || 1);
   }
 }
 
 $('edit-source-btn').onclick = toggleEditMode;
+
+const sourceCodeContent = document.querySelector('#source-highlight .code-content');
+if (sourceCodeContent) {
+  sourceCodeContent.addEventListener('click', (e) => {
+    if (isEditingSource) return;
+    onSourceLinePicked(pickSourceLineFromEvent(e));
+    showExplainTab();
+  });
+}
+
+const sourceLineNumbers = $('source-lines');
+if (sourceLineNumbers) {
+  sourceLineNumbers.addEventListener('click', (e) => {
+    if (isEditingSource) return;
+    onSourceLinePicked(pickSourceLineFromLineNumbers(e));
+    showExplainTab();
+  });
+}
+
+function showExplainTab() {
+  document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('[data-tab="explain"]')?.classList.add('active');
+  $('tab-explain')?.classList.add('active');
+}
+
+$('source').addEventListener('click', () => {
+  if (!isEditingSource) return;
+  runExplainLine();
+  showExplainTab();
+});
+
+$('source').addEventListener('keyup', () => {
+  if (!isEditingSource) return;
+  updateSelectedLineVisual(selectedLine().lineNo);
+});
 
 // Sync scroll between textarea and line numbers in edit mode
 $('source').addEventListener('scroll', () => {
