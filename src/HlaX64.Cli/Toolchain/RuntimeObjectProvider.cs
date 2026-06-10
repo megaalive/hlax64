@@ -351,7 +351,7 @@ public static class RuntimeObjectProvider
             var nasmTool = new NasmTool(nasmPath);
             if (!nasmTool.TryAssemble(nasmFile, objFile, out var nasmError, format: format))
             {
-                error = $"Failed to assemble runtime {Path.GetFileName(nasmSource)}: {nasmError}";
+                error = $"Failed to assemble runtime {Path.GetFileName(nasmSource)} from {nasmSource} (sha256={sourceHash}): {nasmError}";
                 return false;
             }
         }

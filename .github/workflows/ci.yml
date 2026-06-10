@@ -34,6 +34,13 @@ jobs:
       - name: Build
         run: dotnet build
 
+      - name: Verify Linux runtime NASM
+        if: runner.os == 'Linux'
+        run: |
+          sha256sum src/HlaX64.Runtime/linux-x64/sys.nasm
+          nasm -v
+          nasm -f elf64 -o /tmp/hlax64-sys-smoke.o src/HlaX64.Runtime/linux-x64/sys.nasm
+
       - name: Conformance manifests (NASM/IR snapshots)
         run: dotnet test tests/HlaX64.Compiler.Tests/HlaX64.Compiler.Tests.csproj --filter "FullyQualifiedName~ConformanceTests" --no-build
 
