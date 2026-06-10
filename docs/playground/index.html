@@ -826,8 +826,8 @@
   <button id="mobile-nav-toggle" title="Toggle examples">&#9776;</button>
   <h1><a href="../index.html"><span>HlaX64</span></a> Playground</h1>
   <p class="subtitle">
-    <strong>Cached output</strong> dari <code>hla64 explain --json</code> — bukan kompilasi live.
-    Edit source, copy AI prompt, lalu <strong>jalankan lokal</strong>.
+    <strong>Cached output</strong> from <code>hla64 explain --json</code> — not live compilation in the browser.
+    Edit source, copy AI prompts, then <strong>run locally</strong>.
   </p>
   <a class="hdr-btn" href="../index.html">Docs</a>
 </div>
@@ -844,13 +844,13 @@
       <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" opacity="0.7">
         <path d="M1 2.5A1.5 1.5 0 012.5 1h3A1.5 1.5 0 017 2.5v3A1.5 1.5 0 015.5 7h-3A1.5 1.5 0 011 5.5v-3zm8 0A1.5 1.5 0 0110.5 1h3A1.5 1.5 0 0115 2.5v3A1.5 1.5 0 0113.5 7h-3A1.5 1.5 0 019 5.5v-3zm-8 8A1.5 1.5 0 012.5 9h3A1.5 1.5 0 017 10.5v3A1.5 1.5 0 015.5 15h-3A1.5 1.5 0 011 13.5v-3zm8 0A1.5 1.5 0 0110.5 9h3A1.5 1.5 0 0115 10.5v3A1.5 1.5 0 0113.5 15h-3A1.5 1.5 0 019 13.5v-3z"/>
       </svg>
-      Contoh
+      Examples
     </div>
     <button id="nav-back-btn" type="button">
       <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
         <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 010 .708L5.707 8l5.647 5.646a.5.5 0 01-.708.708l-6-6a.5.5 0 010-.708l6-6a.5.5 0 01.708 0z"/>
       </svg>
-      <span id="nav-back-label">Semua kategori</span>
+      <span id="nav-back-label">All categories</span>
     </button>
     <div id="nav-viewport">
       <div class="nav-view active" id="nav-root"></div>
@@ -884,7 +884,7 @@
               </div>
             </div>
             <!-- Plain textarea for editing (shown when editing) -->
-            <textarea id="source" spellcheck="false" autocorrect="off" autocapitalize="off" placeholder="Klik tombol Edit untuk mengedit source..."></textarea>
+            <textarea id="source" spellcheck="false" autocorrect="off" autocapitalize="off" placeholder="Click Edit to modify source..."></textarea>
           </div>
         </div>
 
@@ -919,15 +919,15 @@
     <!-- Run panel -->
     <div id="run-panel">
       <div class="run-col">
-        <div class="run-label">Jalankan lokal</div>
+        <div class="run-label">Run locally</div>
         <pre class="run-cmd" id="run-cmd"></pre>
         <div class="run-actions">
-          <button class="btn" type="button" id="copy-run">Salin perintah hla64</button>
-          <button class="btn" type="button" id="copy-clone">Salin dotnet run</button>
+          <button class="btn" type="button" id="copy-run">Copy hla64 command</button>
+          <button class="btn" type="button" id="copy-clone">Copy dotnet run</button>
         </div>
       </div>
       <div class="run-col">
-        <div class="run-label">Output yang diharapkan</div>
+        <div class="run-label">Expected output</div>
         <pre class="run-expected" id="run-expected"></pre>
       </div>
     </div>
@@ -942,13 +942,13 @@
 
       <!-- Explain tab -->
       <div id="tab-explain" class="tab-panel active">
-        <div class="hint" id="explain-hint">Klik baris di source editor, lalu tekan Explain.</div>
+        <div class="hint" id="explain-hint">Click a line in the source editor, then press Explain.</div>
         <div class="out-scroll">
           <pre class="out" id="line-explain"></pre>
         </div>
         <div class="toolbar">
-          <button class="btn primary" type="button" id="explain-line">Explain baris terpilih</button>
-          <button class="btn ghost" type="button" id="explain-clear">Bersihkan</button>
+          <button class="btn primary" type="button" id="explain-line">Explain selected line</button>
+          <button class="btn ghost" type="button" id="explain-clear">Clear</button>
         </div>
       </div>
 
@@ -961,11 +961,11 @@
 
       <!-- AI prompts tab -->
       <div id="tab-ai" class="tab-panel">
-        <div class="hint">Prompt siap pakai — paste ke Cursor, Copilot, atau AI agent manapun.</div>
+        <div class="hint">Ready-made prompts — paste into Cursor, Copilot, or any AI agent.</div>
         <div class="toolbar top">
-          <button class="btn" type="button" data-prompt="debug">Salin: Debug</button>
-          <button class="btn" type="button" data-prompt="explain">Salin: Explain</button>
-          <button class="btn" type="button" data-prompt="optimize">Salin: Optimize</button>
+          <button class="btn" type="button" data-prompt="debug">Copy: Debug</button>
+          <button class="btn" type="button" data-prompt="explain">Copy: Explain</button>
+          <button class="btn" type="button" data-prompt="optimize">Copy: Optimize</button>
         </div>
         <div class="out-scroll">
           <pre class="out" id="ai-preview"></pre>
@@ -1360,7 +1360,7 @@ function openCategoryView(cat, manifest) {
   });
 
   $('nav-back-btn').classList.add('visible');
-  $('nav-back-label').textContent = 'Semua kategori';
+  $('nav-back-label').textContent = 'All categories';
   navCurrentView = cat.id;
 }
 
@@ -1517,7 +1517,7 @@ function cloneRunCmd(hla64Run) {
 function updateRunPanel(ex) {
   const cmd = ex.run || `hla64 run ${ex.path}`;
   $('run-cmd').textContent = cmd;
-  $('run-expected').textContent = ex.expected || '(lihat source dan jalankan lokal)';
+  $('run-expected').textContent = ex.expected || '(see source and run locally)';
   $('copy-run').dataset.cmd = cmd;
   $('copy-clone').dataset.cmd = cloneRunCmd(cmd);
 }
@@ -1544,7 +1544,7 @@ async function loadExample(id, pushUrl) {
   try {
     const json = await fetchText(`cache/${ex.category}/${ex.id}.json`);
     explainCache = JSON.parse(json);
-    const nasmText = normalizeText(explainCache.nasm || '(tidak ada NASM dalam cache)');
+    const nasmText = normalizeText(explainCache.nasm || '(no NASM in cache)');
     // Update highlighted NASM view
     highlightNasm(nasmText);
     updateLineNumbers('nasm-lines', nasmText.split('\n').length);
@@ -1556,7 +1556,7 @@ async function loadExample(id, pushUrl) {
     }
   } catch {
     explainCache = null;
-    const errMsg = 'Tidak ada NASM cache.\nJalankan: scripts/generate-playground-cache.ps1';
+    const errMsg = 'No cached NASM.\nRun: scripts/generate-playground-cache.ps1';
     highlightNasm(errMsg);
     updateLineNumbers('nasm-lines', errMsg.split('\n').length);
     $('nasm').textContent = errMsg;
@@ -1572,14 +1572,14 @@ async function loadExample(id, pushUrl) {
     updateLineNumbers('source-lines', sourceText.split('\n').length);
     $('source-highlight')?.classList.add('view-mode');
   } catch {
-    const errMsg = `// Tidak bisa memuat ${ex.path}\n// Buka repo lokal atau periksa koneksi.`;
+    const errMsg = `// Could not fetch ${ex.path}\n// Open the repo locally or check your network.`;
     $('source').value = errMsg;
     highlightSource(errMsg);
     updateLineNumbers('source-lines', errMsg.split('\n').length);
   }
 
   $('line-explain').textContent = ex.note || '';
-  $('explain-hint').textContent = 'Klik baris di source editor, lalu tekan Explain.';
+  $('explain-hint').textContent = 'Click a line in the source editor, then press Explain.';
   activeSourceLine = 1;
   updateSelectedLineVisual(1);
   updateRunPanel(ex);
@@ -1656,48 +1656,48 @@ function selectedLine() {
 
 function explainLineHeuristic(line) {
   const L = line.trim();
-  if (!L || L.startsWith('//')) return 'Komentar atau baris kosong — tidak ada lowering.';
-  if (/^program\s/i.test(L)) return 'Deklarasi program — memberi nama translation unit, harus cocok dengan begin/end.';
-  if (/^#include/i.test(L)) return 'Direktif include — menyertakan konstanta header (misalnya nl dari stdlib64.hhf).';
-  if (/^begin\s|^end\s/i.test(L)) return 'Batas blok program atau prosedur.';
-  if (/^procedure\s|^end\s+\w/i.test(L)) return 'Deklarasi atau akhir prosedur — mendefinisikan stack frame dan kontrak ABI.';
-  if (/^extern\s/i.test(L)) return 'Simbol eksternal — linker resolve terhadap libc, kernel32, atau runtime .o.';
-  if (/^static|^endstatic/i.test(L)) return 'Bagian data statis/global — diturunkan ke .data atau .bss.';
-  if (/^const|^endconst|^enum|^record|^struct/i.test(L)) return 'Deklarasi compile-time atau layout — dievaluasi sebelum code generation.';
+  if (!L || L.startsWith('//')) return 'Comment or blank line — no lowering.';
+  if (/^program\s/i.test(L)) return 'Program declaration — names the translation unit; must match begin/end.';
+  if (/^#include/i.test(L)) return 'Include directive — pulls in header constants (e.g. nl from stdlib64.hhf).';
+  if (/^begin\s|^end\s/i.test(L)) return 'Program or procedure block boundary.';
+  if (/^procedure\s|^end\s+\w/i.test(L)) return 'Procedure declaration or end — defines stack frame and ABI contract.';
+  if (/^extern\s/i.test(L)) return 'External symbol — linker resolves against libc, kernel32, or runtime .o.';
+  if (/^static|^endstatic/i.test(L)) return 'Static/global data section — lowers to .data or .bss.';
+  if (/^const|^endconst|^enum|^record|^struct/i.test(L)) return 'Compile-time or layout declaration — evaluated before code generation.';
   if (/stdout\.putu\s*\(/i.test(L)) {
-    return `Baris ini diturunkan menjadi:\n• sys_write (Linux) atau stdout_put_uint (Windows)\n• String literal → rodata (label str_N)\n• Arg register/literal → format desimal (unsigned)\n• nl → byte newline (0x0A)`;
+    return `This line lowers into:\n• sys_write (Linux) or stdout_put_uint (Windows)\n• String literals → rodata (str_N labels)\n• Register/literal args → decimal formatting (unsigned)\n• nl → newline byte (0x0A)`;
   }
   if (/stdout\.put\s*\(/i.test(L)) {
-    return `Baris ini diturunkan menjadi:\n• String literal di .data (NUL-terminated)\n• stdout_put_str / sys_write per fragmen string\n• Integer register/literal → stdout_put_int\n• nl → satu newline write`;
+    return `This line lowers into:\n• String literals in .data (NUL-terminated)\n• stdout_put_str / sys_write for each string fragment\n• Register or literal integers → stdout_put_int\n• nl → single newline write`;
   }
   if (/^call\s/i.test(L)) {
     const m = L.match(/^call\s+(\w+)/i);
     const name = m ? m[1] : 'target';
-    return `Call ${name}:\n• Argumen integer di register ABI (lihat @returns pada callee)\n• Compiler emit CALL rel atau indirect sesuai kebutuhan\n• Return value umumnya di rax`;
+    return `Call ${name}:\n• Integer args in ABI registers (see @returns on callee)\n• Compiler emits CALL rel or indirect as needed\n• Return value typically in rax`;
   }
   if (/^(if|while|endif|endwhile|else|then|do)/i.test(L)) {
-    return 'Konstruksi control-flow — diturunkan ke cmp/test + jump kondisional atau tak bersyarat (je, jne, jg, jl, jmp).';
+    return 'Control-flow construct — lowers to cmp/test + conditional or unconditional jumps (je, jne, jg, jl, jmp).';
   }
   if (/^(mov|add|sub|imul|xor|and|or|cmp|lea|push|pop|idiv|div|jmp)\s*\(/i.test(L)) {
     const op = L.match(/^(\w+)/)[1];
-    return `${op}(…) — urutan operand HLA (source, dest); backend NASM emit Intel mov dest, src.`;
+    return `${op}(…) — HLA operand order (source, dest); NASM backend emits Intel mov dest, src.`;
   }
-  if (/:=\s/.test(L)) return 'Assignment runtime — ekspresi dievaluasi ke rax/rbx scratch, lalu disimpan ke lokal atau register.';
-  if (/^var\s/.test(L)) return 'Lokal stack — mengalokasikan slot 8-byte di frame prosedur ([rbp-N]).';
-  return `Baris: ${L}\n\nTidak ada aturan spesifik yang cocok.\nJalankan lokal:\nhla64 explain --json <file.hla64>`;
+  if (/:=\s/.test(L)) return 'Runtime assignment — expression evaluated into rax/rbx scratch, then stored to local or register.';
+  if (/^var\s/.test(L)) return 'Stack local — allocates an 8-byte slot in the procedure frame ([rbp-N]).';
+  return `Line: ${L}\n\nNo specific rule matched.\nRun locally:\nhla64 explain --json <file.hla64>`;
 }
 
 function runExplainLine() {
   const { line, lineNo, raw } = selectedLine();
   if (!lineNo) {
-    $('line-explain').textContent = 'Posisikan kursor pada baris yang ingin dijelaskan terlebih dahulu.';
+    $('line-explain').textContent = 'Place the cursor on the line you want explained first.';
     return;
   }
-  const display = line || '(kosong)';
-  let out = `Baris ${lineNo}: ${display}\n\n${explainLineHeuristic(line || raw)}`;
-  if (sourceDirty) out += '\n\n⚠ Source telah diedit — pane NASM sudah lama (stale) sampai Anda menjalankan hla64 explain lokal.';
+  const display = line || '(empty)';
+  let out = `Line ${lineNo}: ${display}\n\n${explainLineHeuristic(line || raw)}`;
+  if (sourceDirty) out += '\n\n⚠ Source edited — NASM pane is stale until you run hla64 explain locally.';
   $('line-explain').textContent = out;
-  $('explain-hint').textContent = `Baris ${lineNo} dipilih — klik baris lain atau tekan Explain lagi.`;
+  $('explain-hint').textContent = `Line ${lineNo} selected — click another line or press Explain again.`;
 }
 
 /* ── AI prompts ──────────────────────────────────────────────────── */
@@ -1705,10 +1705,10 @@ function buildAiPrompt(kind) {
   const source = $('source').value;
   const diag   = explainCache?.diagnostics?.length
     ? JSON.stringify(explainCache.diagnostics, null, 2)
-    : '(tidak ada dalam compile cache)';
+    : '(none in cached compile)';
   const nasm = $('nasm').textContent.slice(0, 12000);
   const path = current?.path || 'program.hla64';
-  const stale = sourceDirty ? '\nCatatan: source editor berbeda dengan NASM cache di bawah.\n' : '';
+  const stale = sourceDirty ? '\nNote: editor source differs from cached NASM below.\n' : '';
 
   if (kind === 'debug') {
     return `You are helping debug HlaX64 code.\n\nTarget: linux-x64-sysv\nFile: ${path}\n${stale}\nSource:\n\`\`\`hla64\n${source}\n\`\`\`\n\nDiagnostics:\n${diag}\n\nGenerated NASM (cached):\n\`\`\`nasm\n${nasm}\n\`\`\`\n\nExplain the problem and suggest a minimal fix.`;
@@ -1726,7 +1726,7 @@ function updateAiPreview(kind) {
 
 async function copyPrompt(kind) {
   await navigator.clipboard.writeText(buildAiPrompt(kind));
-  toast('Prompt disalin ke clipboard');
+  toast('Copied to clipboard');
 }
 
 /* ── Event wiring ────────────────────────────────────────────────── */
@@ -1749,12 +1749,12 @@ $('explain-line').onclick = () => {
 
 $('explain-clear').onclick = () => {
   $('line-explain').textContent = '';
-  $('explain-hint').textContent = 'Klik baris di source editor, lalu tekan Explain.';
+  $('explain-hint').textContent = 'Click a line in the source editor, then press Explain.';
 };
 
 $('source').addEventListener('input', () => {
   sourceDirty = true;
-  $('nasm-meta').textContent = 'linux-x64-sysv · stale (diedit)';
+  $('nasm-meta').textContent = 'linux-x64-sysv · stale (edited)';
   $('source-status').className = 'status-dot stale';
   $('nasm-status').className = 'status-dot stale';
   // Update line numbers in highlight view
@@ -1768,11 +1768,11 @@ document.querySelectorAll('[data-prompt]').forEach(btn => {
 
 $('copy-run').onclick = async (e) => {
   await navigator.clipboard.writeText(e.currentTarget.dataset.cmd || '');
-  toast('Perintah hla64 disalin');
+  toast('Copied hla64 command');
 };
 $('copy-clone').onclick = async (e) => {
   await navigator.clipboard.writeText(e.currentTarget.dataset.cmd || '');
-  toast('Perintah dotnet run disalin');
+  toast('Copied dotnet run command');
 };
 
 /* ── Edit mode toggle ────────────────────────────────────────────── */
@@ -1874,8 +1874,8 @@ async function init() {
     const initial = exampleById.has(param) ? param : (EXAMPLES[0]?.id || 'hello');
     await loadExample(initial, false);
   } catch (err) {
-    $('source').value = `// Gagal memuat manifest playground: ${err.message}\n// Pastikan manifest.json tersedia.`;
-    $('nasm').textContent = 'Jalankan scripts/generate-playground-cache.ps1 dan serve docs/playground lokal.';
+    $('source').value = `// Failed to load playground manifest: ${err.message}\n// Ensure manifest.json is available.`;
+    $('nasm').textContent = 'Run scripts/generate-playground-cache.ps1 and serve docs/playground locally.';
   }
 }
 
