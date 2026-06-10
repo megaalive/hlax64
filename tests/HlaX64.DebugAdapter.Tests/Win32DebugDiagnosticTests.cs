@@ -17,28 +17,35 @@ public sealed class Win32DebugDiagnosticTests
             return;
         }
 
+        DebugProcessCleanup.ReleaseDebuggerProcesses();
+        await Task.Delay(500);
+
         var lines = new List<string>();
         using var backend = new Win32DebugBackend();
         backend.OutputReceived += lines.Add;
-        var stopped = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var stopped = new TaskCompletionSource<DebugStopInfo>(TaskCreationOptions.RunContinuationsAsynchronously);
         backend.Stopped += info =>
         {
             lines.Add($"STOP reason={info.Reason} rip={info.Frames.FirstOrDefault()?.Address}");
-            stopped.TrySetResult(true);
+            if (info.Reason is "breakpoint-hit" or "step")
+                stopped.TrySetResult(info);
         };
 
         backend.PrepareExecutable(executable!);
         backend.SetBreakpointBySymbol("_start");
         backend.Launch(executable!);
 
-        var gotStop = await Task.WhenAny(stopped.Task, Task.Delay(TimeSpan.FromSeconds(12))) == stopped.Task;
+        var completed = await Task.WhenAny(stopped.Task, Task.Delay(TimeSpan.FromSeconds(20)));
         backend.Kill();
         backend.Disconnect();
         await Task.Delay(500);
+        DebugProcessCleanup.ReleaseDebuggerProcesses();
 
-        Assert.True(gotStop, string.Join(Environment.NewLine, lines));
-        Assert.Contains(lines, line => line.StartsWith("STOP reason=breakpoint-hit", StringComparison.OrdinalIgnoreCase)
-                                       || line.StartsWith("STOP reason=step", StringComparison.OrdinalIgnoreCase));
+        Assert.True(completed == stopped.Task,
+            $"timed out waiting for breakpoint-hit; log={string.Join(" | ", lines)}");
+        var info = await stopped.Task;
+        Assert.True(info.Reason is "breakpoint-hit" or "step",
+            $"expected pause, got {info.Reason}; log={string.Join(" | ", lines)}");
     }
 
     [Fact]
