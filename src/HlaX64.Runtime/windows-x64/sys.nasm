@@ -48,7 +48,7 @@ global hlax_load_avg_milli
 hlax_getpid:
     sub rsp, 40
     call GetCurrentProcessId
-    movzx rax, eax
+    mov eax, eax
     add rsp, 40
     ret
 
@@ -146,7 +146,7 @@ hlax_file_size:
 hlax_os_last_error:
     sub rsp, 40
     call GetLastError
-    movzx rax, eax
+    mov eax, eax
     add rsp, 40
     ret
 
