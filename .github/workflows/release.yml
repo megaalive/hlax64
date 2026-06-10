@@ -22,6 +22,8 @@ jobs:
             archive: hla64-win-x64.zip
             lab_archive: assembly-lab-win-x64.zip
     runs-on: ${{ matrix.os }}
+    env:
+      HLAX64_RUNTIME_DIR: ${{ github.workspace }}/src/HlaX64.Runtime
 
     steps:
       - uses: actions/checkout@v4

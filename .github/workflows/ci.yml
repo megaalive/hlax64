@@ -12,6 +12,8 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    env:
+      HLAX64_RUNTIME_DIR: ${{ github.workspace }}/src/HlaX64.Runtime
 
     steps:
       - uses: actions/checkout@v4
