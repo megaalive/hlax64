@@ -136,7 +136,18 @@ After **Build**, double-click a diagnostic. **NASM** tab highlights the line (`>
 
 ### Debug
 
-**Debug** builds, spawns `hla64 debug --stdio`, sets breakpoints from gutter. Linux: gdb; Windows: lldb.
+**Debug** builds a shadow executable, attaches the in-process debugger backend, and stops at `_start` (or gutter breakpoints).
+
+| Platform | Backend | Stepping |
+|----------|---------|----------|
+| **Windows** | Win32 debug API (direct; no MinGW GDB required) | Instruction-level: **F5** Continue, **F10** Step Over (skips `call`), **F11** Step Into, **Shift+F11** Step Out |
+| **Linux** | GDB (`gdb` on PATH) | Line-level `-exec-next` / `-exec-step` / `-exec-finish` |
+
+When the program uses `hlax_argv_*` or the example folder has `expected.arguments`, Lab prompts for command-line args before launch (defaults from `expected.arguments`).
+
+The green source indicator maps PE instruction addresses to HLA lines (prologue, IR anchors, runtime call sites). During shutdown (`ExitProcess`), the last user line stays visible.
+
+Optional CLI path: `hla64 debug --stdio` (DAP over stdio).
 
 ### Proof bundle
 

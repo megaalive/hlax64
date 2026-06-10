@@ -177,6 +177,8 @@ See [compiler-architecture.md](compiler-architecture.md) for the full pipeline.
 | Inspect lowering | `hla64 explain file.hla64` |
 | Check formatting | `hla64 format examples --check` |
 | Inspect ABI | `hla64 explain-abi --target linux-x64-sysv` |
+| Assembly Lab debug (Windows) | Toolbar **Debug** → Win32 backend; F5/F10/F11/Shift+F11 when paused |
+| Assembly Lab debug (Linux) | Requires `gdb` on PATH; GDB MI backend |
 | Machine-readable test results | `hla64 test tests/samples --json` |
 | Benchmark | `hla64 bench benchmarks/count.json` |
 
