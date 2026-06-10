@@ -26,11 +26,15 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private CancellationTokenSource? _debounceCts;
     private SourceMapDocument? _sourceMap;
+    private int _lastUserDebugLine;
+    private bool _debugInShutdown;
     private string _rawNasmText = "";
     private string? _lastBuiltOutputFile;
+    private string? _lastNasmFile;
     private string _diffBaselineText = "";
     private string _lastAgentJson = "";
     private bool _suppressDirty;
+    private readonly Dictionary<string, string> _debugArgumentsBySource = new(StringComparer.OrdinalIgnoreCase);
 
     [ObservableProperty] private string _sourceText = "// Open a .hla64 file or hla64.toml project\n";
     [ObservableProperty] private string _sourcePath = "(unsaved)";
@@ -82,6 +86,8 @@ public partial class MainWindowViewModel : ViewModelBase
     public IReadOnlyList<string> TargetChoices => AssemblyLabBackend.TargetChoices;
 
     public IStorageProvider? StorageProvider { get; set; }
+
+    public Func<DebugArgumentsRequest, Task<string?>>? RequestDebugArgumentsAsync { get; set; }
 
     public ILabTerminalHost? TerminalHost { get; set; }
 
@@ -393,6 +399,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
         ReleaseDebugSessionForBuild();
         DapText = "";
+        _debugInShutdown = false;
+        _lastUserDebugLine = 0;
+        _debugHost.LogUserAction("Debug clicked", "building...");
         StatusText = "Building for debug...";
         var build = await Task.Run(() => _backend.Build(SourcePath, SourceText, SelectedTarget));
         ApplyBuildArtifacts(build);
@@ -402,6 +411,34 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             StatusText = "Debug aborted (build failed)";
             return;
+        }
+
+        string[]? launchArgs = null;
+        if (ProgramLaunchArguments.ShouldPrompt(SourceText, SourcePath, ProjectFolder))
+        {
+            var defaultArgs = _debugArgumentsBySource.TryGetValue(SourcePath, out var remembered)
+                ? remembered
+                : ProgramLaunchArguments.GetDefaultArgumentsText(SourcePath, ProjectFolder, _repoRoot);
+
+            var entered = RequestDebugArgumentsAsync == null
+                ? defaultArgs
+                : await RequestDebugArgumentsAsync.Invoke(new DebugArgumentsRequest(
+                    Path.GetFileName(build.OutputFile),
+                    defaultArgs,
+                    ProgramLaunchArguments.GetPromptHint(SourceText)));
+
+            if (entered == null)
+            {
+                StatusText = "Debug cancelled";
+                _debugHost.LogUserAction("Debug cancelled", "arguments dialog dismissed");
+                return;
+            }
+
+            _debugArgumentsBySource[SourcePath] = entered;
+            launchArgs = ProgramLaunchArguments.Parse(entered);
+            _debugHost.LogUserAction(
+                "Debug arguments confirmed",
+                launchArgs.Length == 0 ? "args: (none)" : $"args: {string.Join(' ', launchArgs)}");
         }
 
         if (!_debugHost.StartDirectBackend())
@@ -431,11 +468,17 @@ public partial class MainWindowViewModel : ViewModelBase
             resolved = DebugBreakpointResolver.Resolve(BreakpointLines, SourcePath, build.NasmFile, null);
         }
 
+        if (build.OutputFile != null && build.NasmFile != null)
+            PeDebugAddressMap.GetOrBuild(build.OutputFile, build.NasmFile, sourceMap);
+
         StatusText = "Starting debugger...";
         var stopped = await _debugHost.LaunchAndWaitForInitialStopAsync(
             build.OutputFile,
             resolved,
-            TimeSpan.FromSeconds(15));
+            TimeSpan.FromSeconds(15),
+            launchArgs,
+            build.NasmFile,
+            sourceMap);
 
         if ((stopped || IsPausedAfterLaunch(_debugHost.LastStopInfo))
             && !DebugStopClassifier.IsProgramEnded(_debugHost.LastStopInfo))
@@ -447,7 +490,13 @@ public partial class MainWindowViewModel : ViewModelBase
         }
         else if (stopped && DebugStopClassifier.IsProgramEnded(_debugHost.LastStopInfo))
         {
-            EndDebugSessionAfterTerminalStop("Debug ended — program finished before breakpoint (restart and use Step Over from entry)");
+            var reason = _debugHost.LastStopInfo?.Reason;
+            EndDebugSessionAfterTerminalStop(reason switch
+            {
+                "exited-signalled" =>
+                    "Debug crashed (access violation). Rebuild and retry — if it persists, set breakpoint on begin and use Step Over from entry.",
+                _ => "Debug ended — program finished before breakpoint (restart and use Step Over from entry)"
+            });
         }
         else if (_debugHost.IsDirectBackendAlive)
         {
@@ -517,6 +566,8 @@ public partial class MainWindowViewModel : ViewModelBase
         _suppressDebugStopEvents = false;
         IsDebugPaused = false;
         CurrentDebugLine = 0;
+        _lastUserDebugLine = 0;
+        _debugInShutdown = false;
         StatusText = "Debug stopped";
         NotifyDebugCommandsChanged();
     }
@@ -537,14 +588,90 @@ public partial class MainWindowViewModel : ViewModelBase
                   ?? _debugHost.GetCurrentInstructionPointer();
         if (rip != null)
         {
-            var loc = DebugLocationMapper.MapRip(rip.Value, DisasmText, _sourceMap, _rawNasmText);
-            if (loc.SourceLine is > 0)
-                CurrentDebugLine = loc.SourceLine.Value;
-            else if (BreakpointLines.Count > 0)
+            var loc = DebugLocationMapper.MapRip(
+                rip.Value,
+                DisasmText,
+                _sourceMap,
+                _rawNasmText,
+                _lastBuiltOutputFile,
+                _lastNasmFile);
+            var sourceLineCount = CountSourceLines();
+            var callSiteLine = _debugHost.TryResolveUserCallSiteSourceLine(
+                _lastBuiltOutputFile ?? "",
+                _lastNasmFile ?? "",
+                _sourceMap);
+            var inShutdown = loc.IsProgramShutdown
+                               || _debugHost.IsProgramShutdownPhase(
+                                   rip.Value,
+                                   _lastBuiltOutputFile ?? "",
+                                   _lastNasmFile ?? "",
+                                   _sourceMap);
+            if (inShutdown)
+                _debugInShutdown = true;
+
+            if (info.Reason is "breakpoint-hit" && BreakpointLines.Count > 0)
+            {
                 CurrentDebugLine = BreakpointLines.Min();
-            if (loc.NasmLine is > 0)
+                _lastUserDebugLine = CurrentDebugLine;
+            }
+            else if (_debugInShutdown && _lastUserDebugLine > 0)
+            {
+                CurrentDebugLine = _lastUserDebugLine;
+            }
+            else if (loc.IsRuntimeCode)
+            {
+                if (callSiteLine is > 0 && callSiteLine <= sourceLineCount)
+                {
+                    CurrentDebugLine = callSiteLine.Value;
+                    _lastUserDebugLine = callSiteLine.Value;
+                }
+                else if (_lastUserDebugLine > 0)
+                {
+                    CurrentDebugLine = _lastUserDebugLine;
+                }
+            }
+            else if (!loc.IsRuntimeCode && loc.SourceLine is > 0 && loc.SourceLine <= sourceLineCount)
+            {
+                CurrentDebugLine = loc.SourceLine.Value;
+                _lastUserDebugLine = loc.SourceLine.Value;
+            }
+            else if (!loc.InMainModule && _lastUserDebugLine > 0)
+            {
+                CurrentDebugLine = _lastUserDebugLine;
+            }
+            else if (!loc.InMainModule)
+            {
+                CurrentDebugLine = 0;
+            }
+
+            if (loc.InMainModule && loc.NasmLine is > 0 && !loc.IsRuntimeCode)
                 HighlightedNasmLine = loc.NasmLine.Value;
-            if (!string.IsNullOrWhiteSpace(loc.Instruction))
+            else if (!loc.InMainModule || loc.IsRuntimeCode)
+                HighlightedNasmLine = 0;
+
+            if (_debugInShutdown)
+            {
+                var lineHint = _lastUserDebugLine;
+                var snippet = lineHint > 0 ? TrimSourceLineSnippet(lineHint) : null;
+                StatusText = snippet == null
+                    ? "Program finishing — stepper stays on last line; press Continue (F5) to end"
+                    : $"Program finishing (≈ line {lineHint}: {snippet}) — press Continue (F5) to end debug";
+            }
+            else if (!loc.InMainModule)
+            {
+                StatusText = _lastUserDebugLine > 0
+                    ? $"Paused in system DLL @ 0x{rip.Value:x} — stepper on line {_lastUserDebugLine}; Continue (F5) recommended"
+                    : $"Paused in system/runtime code @ 0x{rip.Value:x} — Step Over to return";
+            }
+            else if (loc.IsRuntimeCode)
+            {
+                var lineHint = CurrentDebugLine > 0 ? CurrentDebugLine : _lastUserDebugLine;
+                var snippet = lineHint > 0 ? TrimSourceLineSnippet(lineHint) : null;
+                StatusText = snippet == null
+                    ? $"Paused in HLA runtime @ 0x{rip.Value:x} — Step Over skips calls"
+                    : $"Paused in HLA runtime (≈ line {lineHint}: {snippet}) @ 0x{rip.Value:x} — Step Over skips calls";
+            }
+            else if (!string.IsNullOrWhiteSpace(loc.Instruction))
                 StatusText = $"Paused @ 0x{rip.Value:x} — {loc.Instruction}";
         }
         else if (string.Equals(frame?.Name, "_start", StringComparison.OrdinalIgnoreCase)
@@ -558,9 +685,14 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             IsDebugPaused = false;
             CurrentDebugLine = 0;
-            var msg = info.Reason == "exited"
-                ? "Debug ended — step failed (program exited). Restart Debug and use Step Over again."
-                : "Debug ended — program finished (use Step Over from entry on next run)";
+            var msg = info.Reason switch
+            {
+                "exited-signalled" =>
+                    "Debug crashed (access violation). Restart Debug; use Step Over from entry after stop.",
+                "exited" =>
+                    "Debug ended — step failed (program exited). Restart Debug and use Step Over again.",
+                _ => "Debug ended — program finished (use Step Over from entry on next run)"
+            };
             EndDebugSessionAfterTerminalStop(msg);
             return;
         }
@@ -581,18 +713,20 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private async Task WaitForDebugStopAsync()
     {
-        var stopped = await _debugHost.WaitForStopAsync(TimeSpan.FromSeconds(15));
-        if (stopped && !DebugStopClassifier.IsProgramEnded(_debugHost.LastStopInfo))
-        {
-            if (_debugHost.LastStopInfo != null)
-                ApplyDebugStopState(_debugHost.LastStopInfo);
-        }
-        else if (stopped && DebugStopClassifier.IsProgramEnded(_debugHost.LastStopInfo))
-            EndDebugSessionAfterTerminalStop("Debug ended — program finished");
-        else if (!_debugHost.IsDirectBackendAlive)
+        await _debugHost.WaitForStopAsync(TimeSpan.FromSeconds(15));
+
+        if (!_debugHost.IsDirectBackendAlive)
         {
             IsDebugPaused = false;
             StatusText = "Debug session ended";
+        }
+        else if (_debugHost.LastStopInfo != null && DebugStopClassifier.IsProgramEnded(_debugHost.LastStopInfo))
+        {
+            EndDebugSessionAfterTerminalStop("Debug ended — program finished");
+        }
+        else if (_debugHost.LastStopInfo != null)
+        {
+            IsDebugPaused = _debugHost.IsDirectBackendAlive;
         }
         else
         {
@@ -600,6 +734,27 @@ public partial class MainWindowViewModel : ViewModelBase
         }
 
         NotifyDebugCommandsChanged();
+    }
+
+    private int CountSourceLines()
+    {
+        if (string.IsNullOrEmpty(SourceText))
+            return 0;
+
+        return SourceText.Replace("\r\n", "\n").Split('\n').Length;
+    }
+
+    private string? TrimSourceLineSnippet(int line)
+    {
+        var lines = SourceText.Replace("\r\n", "\n").Split('\n');
+        if (line < 1 || line > lines.Length)
+            return null;
+
+        var text = lines[line - 1].Trim();
+        if (text.Length == 0)
+            return null;
+
+        return text.Length <= 56 ? text : text[..53] + "...";
     }
 
     private void EndDebugSessionAfterTerminalStop(string statusText)
@@ -615,6 +770,8 @@ public partial class MainWindowViewModel : ViewModelBase
         _debugHost.Stop();
         IsDebugPaused = false;
         CurrentDebugLine = 0;
+        _lastUserDebugLine = 0;
+        _debugInShutdown = false;
         StatusText = statusText;
         NotifyDebugCommandsChanged();
     }
@@ -649,6 +806,8 @@ public partial class MainWindowViewModel : ViewModelBase
         _debugHost.Stop();
         IsDebugPaused = false;
         CurrentDebugLine = 0;
+        _lastUserDebugLine = 0;
+        _debugInShutdown = false;
         NotifyDebugCommandsChanged();
     }
 
@@ -1112,6 +1271,8 @@ public partial class MainWindowViewModel : ViewModelBase
             _sourceMap = _backend.LoadSourceMap(result.SourceMapFile);
 
         _lastBuiltOutputFile = result.OutputFile;
+        _lastNasmFile = result.NasmFile;
+        PeDebugAddressMap.InvalidateCache();
         RefreshDisasmText();
     }
 
@@ -1200,7 +1361,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private void RefreshDisasmText()
     {
         var binaryPath = AssemblyLabBackend.ResolveOutputBinary(SourcePath, SelectedTarget, _lastBuiltOutputFile);
-        var next = _backend.GetDisasmText(_rawNasmText, _sourceMap, binaryPath, SourcePath, SelectedTarget);
+        var nasmPath = AssemblyLabBackend.ResolveOutputNasm(SourcePath, _lastNasmFile);
+        var next = _backend.GetDisasmText(_rawNasmText, _sourceMap, binaryPath, SourcePath, SelectedTarget, nasmPath);
         if (next != DisasmText)
             DisasmText = next;
     }

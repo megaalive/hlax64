@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using HlaX64.Compiler.Debug;
 using HlaX64.DebugAdapter;
 
 namespace HlaX64.AssemblyLab.Services;
@@ -18,7 +19,7 @@ public sealed class DebugSessionHost : IDisposable
 
     public void StartInProcess(Action<string> onDapMessage)
     {
-        onDapMessage("DAP: in-process host ready (gdb preferred on Windows and Linux).");
+        onDapMessage("DAP: in-process host ready (win32 on Windows, gdb on Linux).");
         onDapMessage($"Capabilities: {JsonSerializer.Serialize(DebugAdapterHost.Capabilities)}");
     }
 
@@ -54,10 +55,7 @@ public sealed class DebugSessionHost : IDisposable
     }
 
     public void PrepareDirect(string program)
-    {
-        if (_directBackend is GdbBackend gdb)
-            gdb.PrepareExecutable(program);
-    }
+        => DebugBackendFactory.PrepareExecutable(_directBackend!, program);
 
     private static string FormatStoppedSummary(DebugStopInfo info)
     {
@@ -110,15 +108,57 @@ public sealed class DebugSessionHost : IDisposable
     }
 
     public ulong? GetCurrentInstructionPointer()
-        => _directBackend is GdbBackend gdb ? gdb.TryGetCurrentRip() : null;
+        => _directBackend == null ? null : DebugBackendFactory.TryGetCurrentRip(_directBackend);
 
-    public void LaunchDirect(string program) => _directBackend?.Launch(program);
+    public int? TryResolveUserCallSiteSourceLine(
+        string executablePath,
+        string nasmPath,
+        SourceMapDocument? sourceMap)
+        => _directBackend == null
+            ? null
+            : DebugBackendFactory.TryResolveUserCallSiteSourceLine(
+                _directBackend,
+                executablePath,
+                nasmPath,
+                sourceMap);
+
+    public bool IsProgramShutdownPhase(
+        ulong rip,
+        string executablePath,
+        string nasmPath,
+        SourceMapDocument? sourceMap)
+        => _directBackend != null
+           && DebugBackendFactory.IsProgramShutdownPhase(
+               _directBackend,
+               rip,
+               executablePath,
+               nasmPath,
+               sourceMap);
+
+    public void LogUserAction(string action, string? detail = null)
+    {
+        MessageReceived?.Invoke(detail == null
+            ? $"→ USER {action}"
+            : $"→ USER {action}  {detail}");
+    }
+
+    public void LaunchDirect(string program, string[]? args = null)
+    {
+        var argsText = args is { Length: > 0 }
+            ? $"args: {Win32ProcessCommandLine.FormatArgsForLog(args)}"
+            : "args: (none)";
+        LogUserAction("Debug Start", argsText);
+        _directBackend?.Launch(program, args);
+    }
 
     /// <summary>Registers for the initial stop event before launching (avoids missing int3 trap stop).</summary>
     public async Task<bool> LaunchAndWaitForInitialStopAsync(
         string program,
         IEnumerable<ResolvedDebugBreakpoint> breakpoints,
-        TimeSpan timeout)
+        TimeSpan timeout,
+        string[]? args = null,
+        string? nasmPath = null,
+        SourceMapDocument? sourceMap = null)
     {
         if (_directBackend == null)
             return false;
@@ -138,9 +178,9 @@ public sealed class DebugSessionHost : IDisposable
         {
             await Task.Run(() =>
             {
-                PrepareDirect(program);
+                DebugBackendFactory.PrepareExecutable(_directBackend!, program, nasmPath, sourceMap);
                 ApplyResolvedBreakpoints(breakpoints);
-                LaunchDirect(program);
+                LaunchDirect(program, args);
             }).ConfigureAwait(true);
 
             if (tcs.Task.IsCompleted)
@@ -169,15 +209,35 @@ public sealed class DebugSessionHost : IDisposable
         return frame != null;
     }
 
-    public void ContinueDirect() => _directBackend?.Continue();
+    public void ContinueDirect()
+    {
+        LogUserAction("Continue");
+        _directBackend?.Continue();
+    }
 
-    public void StepOverDirect() => _directBackend?.StepOver();
+    public void StepOverDirect()
+    {
+        LogUserAction("Step Over");
+        _directBackend?.StepOver();
+    }
 
-    public void StepIntoDirect() => _directBackend?.StepInto();
+    public void StepIntoDirect()
+    {
+        LogUserAction("Step Into");
+        _directBackend?.StepInto();
+    }
 
-    public void StepOutDirect() => _directBackend?.StepOut();
+    public void StepOutDirect()
+    {
+        LogUserAction("Step Out");
+        _directBackend?.StepOut();
+    }
 
-    public void KillDirect() => _directBackend?.Kill();
+    public void KillDirect()
+    {
+        LogUserAction("Stop Debug");
+        _directBackend?.Kill();
+    }
 
     public bool IsDirectBackendAlive => _directBackend?.IsEngineAlive == true;
 

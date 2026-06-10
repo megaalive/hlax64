@@ -1,0 +1,47 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="HlaX64.AssemblyLab.Views.DebugArgumentsDialog"
+        Title="Debug program arguments"
+        Width="520"
+        Height="260"
+        MinWidth="420"
+        MinHeight="220"
+        WindowStartupLocation="CenterOwner"
+        Background="#1e1e1e"
+        CanResize="False">
+    <Border Padding="16" Background="#252526">
+        <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="10">
+            <TextBlock x:Name="ProgramText"
+                       Foreground="#cccccc"
+                       FontWeight="SemiBold"
+                       TextWrapping="Wrap"/>
+            <TextBlock x:Name="HintText"
+                       Foreground="#9cdcfe"
+                       TextWrapping="Wrap"/>
+            <TextBlock Text="Arguments"
+                       Foreground="#808080"
+                       FontSize="11"/>
+            <TextBox x:Name="ArgumentsBox"
+                     AcceptsReturn="True"
+                     MinHeight="72"
+                     Watermark="e.g. localhost   or   file.txt &quot;path with spaces&quot;"
+                     Background="#1e1e1e"
+                     Foreground="#d4d4d4"
+                     BorderBrush="#3f3f46"/>
+            <StackPanel Grid.Row="4"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="8">
+                <Button x:Name="CancelButton"
+                        Content="Cancel"
+                        MinWidth="88"
+                        Click="OnCancelClick"/>
+                <Button x:Name="OkButton"
+                        Content="Start debug"
+                        MinWidth="108"
+                        Classes="accent"
+                        Click="OnOkClick"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

@@ -205,11 +205,33 @@ public class AssemblyLabBackendTests
     [Fact]
     public void ToggleBreakpoint_is_noop_when_debug_disabled()
     {
+        if (AssemblyLabFeatures.DebugEnabled)
+            return;
+
         Assert.False(AssemblyLabFeatures.DebugEnabled);
         var vm = new MainWindowViewModel();
         vm.ToggleBreakpoint(3);
         Assert.Empty(vm.BreakpointLines);
-        Assert.Contains("disabled", vm.StatusText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("unavailable", vm.StatusText, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void DebugEnabled_when_native_backend_available_or_env_forced()
+    {
+        var expected = AssemblyLabFeatures.IsDebugEnvForced
+                       || (!AssemblyLabFeatures.IsDebugEnvDisabled
+                           && DebugBackendFactory.IsDefaultBackendAvailable());
+        Assert.Equal(expected, AssemblyLabFeatures.DebugEnabled);
+    }
+
+    [Fact]
+    public void DebugBackendFactory_default_backend_available_on_windows()
+    {
+        if (!OperatingSystem.IsWindows())
+            return;
+
+        Assert.True(DebugBackendFactory.IsDefaultBackendAvailable());
+        Assert.True(AssemblyLabFeatures.DebugEnabled);
     }
 
     [Fact]
@@ -313,12 +335,7 @@ public class AssemblyLabBackendTests
         if (OperatingSystem.IsLinux())
             Assert.IsType<GdbBackend>(backend);
         else if (OperatingSystem.IsWindows())
-        {
-            if (backend.IsAvailable)
-                Assert.True(backend is GdbBackend or LldbBackend);
-            else
-                Assert.IsType<GdbBackend>(backend);
-        }
+            Assert.IsType<Win32DebugBackend>(backend);
         backend.Dispose();
     }
 

@@ -14,6 +14,13 @@
         Background="#1e1e1e"
         x:Name="RootWindow">
 
+    <Window.KeyBindings>
+        <KeyBinding Gesture="F5"         Command="{Binding DebugContinueCommand}"/>
+        <KeyBinding Gesture="F10"        Command="{Binding DebugStepOverCommand}"/>
+        <KeyBinding Gesture="F11"        Command="{Binding DebugStepIntoCommand}"/>
+        <KeyBinding Gesture="Shift+F11"   Command="{Binding DebugStepOutCommand}"/>
+    </Window.KeyBindings>
+
     <Design.DataContext>
         <vm:MainWindowViewModel/>
     </Design.DataContext>

@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using AvaloniaEdit;
 using HlaX64.AssemblyLab.Controls;
 using HlaX64.AssemblyLab.Models;
@@ -36,6 +37,7 @@ public partial class MainWindow : Window
             return;
 
         vm.StorageProvider = StorageProvider;
+        vm.RequestDebugArgumentsAsync = request => DebugArgumentsDialog.ShowAsync(this, request);
 
         var labTerminal = this.FindControl<Controls.LabTerminalControl>("LabTerminal");
         var terminalHostPanel = this.FindControl<DockPanel>("TerminalHostPanel");
@@ -130,6 +132,8 @@ public partial class MainWindow : Window
 
         Title = vm.WindowTitle;
 
+        AddHandler(KeyDownEvent, OnDebugShortcutKeyDown, RoutingStrategies.Tunnel);
+
         _sourceEditor.KeyDown += (_, e) =>
         {
             if (e.Key == Avalonia.Input.Key.S && e.KeyModifiers.HasFlag(Avalonia.Input.KeyModifiers.Control))
@@ -175,6 +179,36 @@ public partial class MainWindow : Window
         editor.TextArea.Caret.Line = line;
         editor.TextArea.Caret.Column = 0;
         editor.ScrollToLine(Math.Max(1, line - 3));
+    }
+
+    private void OnDebugShortcutKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel vm)
+            return;
+
+        switch (e.Key)
+        {
+            case Key.F5 when vm.DebugContinueCommand.CanExecute(null):
+                vm.DebugContinueCommand.Execute(null);
+                e.Handled = true;
+                break;
+            case Key.F10 when vm.DebugStepOverCommand.CanExecute(null):
+                vm.DebugStepOverCommand.Execute(null);
+                e.Handled = true;
+                break;
+            case Key.F11 when e.KeyModifiers.HasFlag(KeyModifiers.Shift):
+                if (vm.DebugStepOutCommand.CanExecute(null))
+                {
+                    vm.DebugStepOutCommand.Execute(null);
+                    e.Handled = true;
+                }
+
+                break;
+            case Key.F11 when vm.DebugStepIntoCommand.CanExecute(null):
+                vm.DebugStepIntoCommand.Execute(null);
+                e.Handled = true;
+                break;
+        }
     }
 
     private void Diagnostics_DoubleTapped(object? sender, TappedEventArgs e)

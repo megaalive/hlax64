@@ -348,10 +348,25 @@ public sealed class AssemblyLabBackend
     }
 
     public string GetDisasmText(string? nasmText, SourceMapDocument? map, string? binaryPath = null,
-        string? sourcePath = null, string? target = null)
+        string? sourcePath = null, string? target = null, string? nasmPath = null)
     {
         binaryPath = ResolveOutputBinary(sourcePath, target, binaryPath);
-        return DisasmService.FormatDisasm(nasmText, map, binaryPath);
+        nasmPath ??= ResolveOutputNasm(sourcePath, nasmPath);
+        return DisasmService.FormatDisasm(nasmText, map, binaryPath, nasmPath);
+    }
+
+    public static string? ResolveOutputNasm(string? sourcePath, string? lastBuilt = null)
+    {
+        if (!string.IsNullOrEmpty(lastBuilt) && File.Exists(lastBuilt))
+            return lastBuilt;
+
+        if (string.IsNullOrWhiteSpace(sourcePath) || sourcePath is "(unsaved)")
+            return null;
+
+        var dir = GetBuildOutputDir(sourcePath);
+        var name = Path.GetFileNameWithoutExtension(sourcePath);
+        var path = Path.Combine(dir, name + ".nasm");
+        return File.Exists(path) ? path : null;
     }
 
     public static string? ResolveOutputBinary(string? sourcePath, string? target, string? lastBuilt = null)
