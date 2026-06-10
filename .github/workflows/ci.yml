@@ -23,7 +23,7 @@ jobs:
 
       - name: Install NASM (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y nasm gcc
+        run: sudo apt-get update && sudo apt-get install -y nasm gcc gdb
 
       - name: Install NASM (Windows)
         if: runner.os == 'Windows'

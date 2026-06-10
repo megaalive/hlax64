@@ -12,5 +12,6 @@
   <Folder Name="/tests/">
     <Project Path="tests/HlaX64.Compiler.Tests/HlaX64.Compiler.Tests.csproj" />
     <Project Path="tests/HlaX64.AssemblyLab.Tests/HlaX64.AssemblyLab.Tests.csproj" />
+    <Project Path="tests/HlaX64.DebugAdapter.Tests/HlaX64.DebugAdapter.Tests.csproj" />
   </Folder>
 </Solution>

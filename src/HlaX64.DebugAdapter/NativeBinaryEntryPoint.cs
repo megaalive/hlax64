@@ -23,6 +23,121 @@ public static class NativeBinaryEntryPoint
         }
     }
 
+    public static bool TryGetPeEntryRva(string path, out uint entryRva)
+    {
+        entryRva = 0;
+        if (!File.Exists(path))
+            return false;
+
+        try
+        {
+            using var stream = File.OpenRead(path);
+            return TryReadPeEntryRva(stream, out entryRva);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public static bool TryResolvePeEntryPoint(string path, ulong loadedImageBase, out ulong entryPoint)
+    {
+        entryPoint = 0;
+        if (loadedImageBase == 0 || !TryGetPeEntryRva(path, out var entryRva) || entryRva == 0)
+            return false;
+
+        entryPoint = loadedImageBase + entryRva;
+        return true;
+    }
+
+    public static bool TryGetPePreferredImageBase(string path, out ulong imageBase)
+    {
+        imageBase = 0;
+        if (!File.Exists(path))
+            return false;
+
+        try
+        {
+            using var stream = File.OpenRead(path);
+            return TryReadPeImageBase(stream, out imageBase);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public static bool TryGetPeSizeOfImage(string path, out uint sizeOfImage)
+    {
+        sizeOfImage = 0;
+        if (!File.Exists(path))
+            return false;
+
+        try
+        {
+            using var stream = File.OpenRead(path);
+            return TryReadPeSizeOfImage(stream, out sizeOfImage);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool TryReadPeImageBase(Stream stream, out ulong imageBase)
+    {
+        imageBase = 0;
+        using var reader = new BinaryReader(stream, System.Text.Encoding.UTF8, leaveOpen: true);
+        if (stream.Length < 0x40 || reader.ReadUInt16() != 0x5A4D)
+            return false;
+
+        stream.Seek(0x3C, SeekOrigin.Begin);
+        var peOffset = reader.ReadInt32();
+        if (peOffset <= 0 || peOffset + 0x40 > stream.Length)
+            return false;
+
+        stream.Seek(peOffset, SeekOrigin.Begin);
+        if (reader.ReadUInt32() != 0x00004550)
+            return false;
+
+        var optionalOffset = peOffset + 24;
+        stream.Seek(optionalOffset, SeekOrigin.Begin);
+        var magic = reader.ReadUInt16();
+        if (magic is not (0x10b or 0x20b))
+            return false;
+
+        imageBase = magic switch
+        {
+            0x10b => ReadUInt32At(stream, optionalOffset + 0x1C),
+            0x20b => ReadUInt64At(stream, optionalOffset + 0x18),
+            _ => 0
+        };
+
+        return imageBase != 0;
+    }
+
+    private static bool TryReadPeSizeOfImage(Stream stream, out uint sizeOfImage)
+    {
+        sizeOfImage = 0;
+        using var reader = new BinaryReader(stream, System.Text.Encoding.UTF8, leaveOpen: true);
+        if (stream.Length < 0x40 || reader.ReadUInt16() != 0x5A4D)
+            return false;
+
+        stream.Seek(0x3C, SeekOrigin.Begin);
+        var peOffset = reader.ReadInt32();
+        if (peOffset <= 0 || peOffset + 0x40 > stream.Length)
+            return false;
+
+        stream.Seek(peOffset, SeekOrigin.Begin);
+        if (reader.ReadUInt32() != 0x00004550)
+            return false;
+
+        var optionalOffset = peOffset + 24;
+        stream.Seek(optionalOffset + 0x38, SeekOrigin.Begin);
+        sizeOfImage = reader.ReadUInt32();
+        return sizeOfImage != 0;
+    }
+
     private static bool TryReadPeEntry(Stream stream, out ulong address)
     {
         address = 0;
@@ -60,6 +175,33 @@ public static class NativeBinaryEntryPoint
 
         address = imageBase + entryRva;
         return true;
+    }
+
+    private static bool TryReadPeEntryRva(Stream stream, out uint entryRva)
+    {
+        entryRva = 0;
+        using var reader = new BinaryReader(stream, System.Text.Encoding.UTF8, leaveOpen: true);
+        if (stream.Length < 0x40 || reader.ReadUInt16() != 0x5A4D)
+            return false;
+
+        stream.Seek(0x3C, SeekOrigin.Begin);
+        var peOffset = reader.ReadInt32();
+        if (peOffset <= 0 || peOffset + 0x40 > stream.Length)
+            return false;
+
+        stream.Seek(peOffset, SeekOrigin.Begin);
+        if (reader.ReadUInt32() != 0x00004550)
+            return false;
+
+        var optionalOffset = peOffset + 24;
+        stream.Seek(optionalOffset, SeekOrigin.Begin);
+        var magic = reader.ReadUInt16();
+        if (magic is not (0x10b or 0x20b))
+            return false;
+
+        stream.Seek(optionalOffset + 0x10, SeekOrigin.Begin);
+        entryRva = reader.ReadUInt32();
+        return entryRva != 0;
     }
 
     private static bool TryReadElfEntry(Stream stream, out ulong address)

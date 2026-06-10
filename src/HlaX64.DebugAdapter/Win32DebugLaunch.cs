@@ -7,6 +7,7 @@ namespace HlaX64.DebugAdapter;
 internal static class Win32DebugLaunch
 {
     private const uint CreateSuspended = 0x00000004;
+    private const uint CreateNoWindow = 0x08000000;
 
     public static bool TryStartWithEntryTrap(
         string executable,
@@ -31,7 +32,7 @@ internal static class Win32DebugLaunch
                 nint.Zero,
                 nint.Zero,
                 false,
-                CreateSuspended,
+                CreateSuspended | CreateNoWindow,
                 nint.Zero,
                 null,
                 ref si,

@@ -163,6 +163,7 @@ public sealed class GdbBackend : DebugEngineSession
         if (OperatingSystem.IsWindows())
         {
             TerminateInferior();
+            TryKillEngineProcess();
             return;
         }
 
@@ -174,8 +175,13 @@ public sealed class GdbBackend : DebugEngineSession
     public override void Disconnect()
     {
         TerminateInferior();
-        try { Process?.Kill(entireProcessTree: true); } catch { /* ignore */ }
+        TryKillEngineProcess();
         Process?.WaitForExit(500);
+    }
+
+    private void TryKillEngineProcess()
+    {
+        try { Process?.Kill(entireProcessTree: true); } catch { /* ignore */ }
     }
 
     private void TerminateInferior()
