@@ -19,6 +19,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 ### Fixed
 
 - Linux `sys.nasm` assemble on CI NASM (`mul` vs `imul`, SysV register widths)
+- Linux runtime NASM sources normalized to LF line endings (fixes Ubuntu NASM `\r` token errors)
 - Windows `netcheck` calls `hlax_net_init()` before TCP connect (parity with Linux)
 
 ## [0.2.1-alpha] - 2026-06-08
