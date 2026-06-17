@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "real-curl",
+    "source":  "../../../examples/tools/10-windows/curl/curl.hla64",
+    "description":  "Real tool: minimal HTTP GET client (curl-like, body-only)"
+}

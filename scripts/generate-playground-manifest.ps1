@@ -111,7 +111,7 @@ function Get-Note([string]$relFromExamples) {
     if ($relFromExamples -like 'qa/invalid/*') {
         return 'Negative example — cached explain JSON includes diagnostics, not runnable NASM.'
     }
-    if ($relFromExamples -match '/netcheck/' -or $relFromExamples -match '/httpget/' -or $relFromExamples -match '/tcpget/') {
+    if ($relFromExamples -match '/netcheck/' -or $relFromExamples -match '/httpget/' -or $relFromExamples -match '/tcpget/' -or $relFromExamples -match '/curl/') {
         return 'Local-run-required; not fetched from the public internet.'
     }
     if ($relFromExamples -like 'interop/11-csharp-interop-real/*') {

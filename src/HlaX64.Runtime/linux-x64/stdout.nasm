@@ -92,6 +92,7 @@ stdout_put_nl:
 ;   caller-rsp-mod-16 == 0 on entry
 ; notes:
 ;   Converts rdi to decimal via int_to_str, then prints via stdout_put_str.
+extern int_to_str
 global stdout_put_int
 stdout_put_int:
     lea  rsi, [rel intbuf]

@@ -69,6 +69,9 @@ public static class RealToolTestHarness
         return string.Join(' ', resolved.Select(arg => $"'{arg.Replace("'", "'\\''")}'"));
     }
 
+    internal static string ResolveRepoRelativeArgumentPublic(string token, string repoRoot) =>
+        ResolveRepoRelativeArgument(token, repoRoot);
+
     private static string ResolveRepoRelativeArgument(string token, string repoRoot)
     {
         if (Path.IsPathRooted(token))

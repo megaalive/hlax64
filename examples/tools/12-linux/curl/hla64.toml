@@ -1,0 +1,4 @@
+name = "curl"
+version = "0.1.0"
+target = "linux-x64-sysv"
+main = "curl.hla64"

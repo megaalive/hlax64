@@ -36,8 +36,7 @@ public sealed class NasmEmitter
         globalData ??= Array.Empty<GlobalDataSymbol>();
 
         AppendLine("bits 64");
-        if (_options.IsWindowsTarget)
-            AppendLine("default rel");
+        AppendLine("default rel");
 
         var allExterns = functions.SelectMany(f => f.RequiredExterns).Distinct().ToList();
         foreach (var ext in allExterns)
@@ -109,7 +108,7 @@ public sealed class NasmEmitter
             EmitDataGlobal(g);
 
         foreach (var sl in stringLiterals)
-            AppendLine($"{sl.Label} db \"{EscapeString(sl.Value)}\", 0");
+            AppendLine($"{sl.Label} db {EscapeString(sl.Value)}, 0");
 
         return _sb.ToString();
     }
@@ -218,10 +217,43 @@ public sealed class NasmEmitter
 
     private static string EscapeString(string s)
     {
-        return s.Replace("\\", "\\\\")
-                .Replace("\"", "\\\"")
-                .Replace("\n", "\\n")
-                .Replace("\r", "\\r")
-                .Replace("\t", "\\t");
+        var sb = new StringBuilder();
+        var run = new StringBuilder();
+
+        void FlushRun()
+        {
+            if (run.Length == 0)
+                return;
+            if (sb.Length > 0)
+                sb.Append(", ");
+            sb.Append('"');
+            sb.Append(run.ToString().Replace("\\", "\\\\").Replace("\"", "\\\""));
+            sb.Append('"');
+            run.Clear();
+        }
+
+        foreach (var c in s)
+        {
+            if (c is '\n' or '\r' or '\t' || (int)c < 32 || (int)c > 126)
+            {
+                FlushRun();
+                if (sb.Length > 0)
+                    sb.Append(", ");
+                sb.Append(c switch
+                {
+                    '\n' => "0x0A",
+                    '\r' => "0x0D",
+                    '\t' => "0x09",
+                    _ => $"0x{(int)c:X2}"
+                });
+            }
+            else
+            {
+                run.Append(c);
+            }
+        }
+
+        FlushRun();
+        return sb.Length == 0 ? "\"\"" : sb.ToString();
     }
 }

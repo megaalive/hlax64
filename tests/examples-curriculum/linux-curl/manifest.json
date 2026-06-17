@@ -1,0 +1,6 @@
+{
+    "expectedExitCode":  0,
+    "name":  "linux-curl",
+    "source":  "../../../examples/tools/12-linux/curl/curl.hla64",
+    "description":  "Linux real tool: minimal HTTP GET client (curl-like)"
+}

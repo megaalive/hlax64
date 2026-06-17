@@ -29,9 +29,13 @@ hla64 run examples/tools/10-windows/dnslookup/dnslookup.hla64 -- localhost
 
 ## Network tools (local fixture required)
 
-`netcheck`, `tcpget`, and `httpget` connect to `host:port` from argv. Integration
-tests start a **local TCP fixture** on `$PORT` (see `expected.server` in each tool
-directory). They are not playground-safe without that server.
+`netcheck`, `tcpget`, `httpget`, and `curl` connect to `host:port` from argv.
+Integration tests start a **local TCP fixture** on `$PORT` (see `expected.server`
+in each tool directory). They are not playground-safe without that server.
+
+`curl` is the richest networking slice: DNS resolve (`hlax_dns_resolve_v4`), TCP connect,
+HTTP request builder, optional `-i` (include headers), and body-only output by
+default (skips the `\n\n` header block like real curl).
 
 Example harness tokens in `expected.arguments`:
 

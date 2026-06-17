@@ -29,8 +29,8 @@ hlax_memcpy:
     test rcx, rcx
     jz .done
 .copy:
-    mov al, [rsi]
-    mov [rdi], al
+    mov r11b, byte [rsi]
+    mov byte [rdi], r11b
     inc rsi
     inc rdi
     dec rcx

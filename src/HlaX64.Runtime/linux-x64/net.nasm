@@ -86,8 +86,8 @@ hlax_dns_resolve_v4:
     mov [rdi], al
     inc rdi
     loop .clear
-    mov dword [dns_hints], AF_INET
-    mov dword [dns_hints + 4], SOCK_STREAM
+    mov dword [dns_hints + 4], AF_INET
+    mov dword [dns_hints + 8], SOCK_STREAM
 
     mov rdi, r12
     xor esi, esi
@@ -384,6 +384,7 @@ hlax_tcp_set_timeouts_ms:
     ret
 
 hlax_tcp_write:
+    xor ecx, ecx
     jmp send
 
 ; rdi=sock, rsi=buf, rdx=count
@@ -406,6 +407,7 @@ hlax_tcp_write_all:
     add rsi, r14
     mov rdx, r13
     sub rdx, r14
+    xor ecx, ecx
     call send
     test rax, rax
     js .fail
@@ -431,9 +433,11 @@ hlax_tcp_write_all:
     ret
 
 hlax_tcp_read:
+    xor ecx, ecx
     jmp recv
 
 hlax_tcp_read_once:
+    xor ecx, ecx
     jmp recv
 
 ; rdi=sock -> 0 or -1

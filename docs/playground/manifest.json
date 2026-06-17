@@ -476,6 +476,14 @@
                                                                    "expected":  "stdout:\n  cpus=\nexit code: 0"
                                                                },
                                                                {
+                                                                   "id":  "curl",
+                                                                   "label":  "Curl",
+                                                                   "path":  "examples/tools/10-windows/curl/curl.hla64",
+                                                                   "run":  "hla64 run examples/tools/10-windows/curl/curl.hla64 -- 127.0.0.1 \u003cport\u003e",
+                                                                   "expected":  "stdout:\n  OK\nexit code: 0",
+                                                                   "note":  "Local-run-required; not fetched from the public internet."
+                                                               },
+                                                               {
                                                                    "id":  "diskfree",
                                                                    "label":  "Diskfree",
                                                                    "path":  "examples/tools/10-windows/diskfree/diskfree.hla64",
@@ -698,6 +706,14 @@
                                                                    "run":  "hla64 run examples/tools/12-linux/cpucount/cpucount.hla64",
                                                                    "expected":  "stdout:\n  cpus=\nexit code: 0",
                                                                    "note":  "Linux SysV build â€” run on Linux or WSL."
+                                                               },
+                                                               {
+                                                                   "id":  "curl-linux",
+                                                                   "label":  "Curl",
+                                                                   "path":  "examples/tools/12-linux/curl/curl.hla64",
+                                                                   "run":  "hla64 run examples/tools/12-linux/curl/curl.hla64 -- 127.0.0.1 \u003cport\u003e",
+                                                                   "expected":  "stdout:\n  OK\nexit code: 0",
+                                                                   "note":  "Local-run-required; not fetched from the public internet."
                                                                },
                                                                {
                                                                    "id":  "diskfree-linux",

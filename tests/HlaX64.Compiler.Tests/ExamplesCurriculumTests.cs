@@ -8,7 +8,7 @@ public sealed class ExamplesCurriculumTests
     public void CurriculumManifest_LoadAll_HasExpectedPrograms()
     {
         var manifests = TestManifest.LoadAll("tests/examples-curriculum");
-        Assert.Equal(108, manifests.Count);
+        Assert.Equal(110, manifests.Count);
         Assert.Contains(manifests, m => m.Name == "curriculum-hello");
         Assert.Contains(manifests, m => m.Name == "real-listfiles");
         Assert.Contains(manifests, m => m.Name == "real-filesize");
@@ -34,6 +34,7 @@ public sealed class ExamplesCurriculumTests
         Assert.Contains(manifests, m => m.Name == "real-netcheck");
         Assert.Contains(manifests, m => m.Name == "real-tcpget");
         Assert.Contains(manifests, m => m.Name == "real-httpget");
+        Assert.Contains(manifests, m => m.Name == "real-curl");
         Assert.Contains(manifests, m => m.Name == "real-dnslookup");
         Assert.Contains(manifests, m => m.Name == "real-cpucount");
         Assert.Contains(manifests, m => m.Name == "real-diskfree");
@@ -75,6 +76,7 @@ public sealed class ExamplesCurriculumTests
         Assert.Contains(manifests, m => m.Name == "linux-netcheck");
         Assert.Contains(manifests, m => m.Name == "linux-tcpget");
         Assert.Contains(manifests, m => m.Name == "linux-httpget");
+        Assert.Contains(manifests, m => m.Name == "linux-curl");
         Assert.Contains(manifests, m => m.Name == "linux-dnslookup");
         Assert.Contains(manifests, m => m.Name == "linux-cpucount");
         Assert.Contains(manifests, m => m.Name == "linux-diskfree");

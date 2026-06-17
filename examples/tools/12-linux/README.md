@@ -28,6 +28,7 @@ Linux SysV ports of selected command-line tools using `libc.so` instead of Win32
 | `netcheck` | TCP loopback ping | `hlax_net_*`, `$PORT` harness |
 | `tcpget` | TCP send/receive chunk | `hlax_tcp_*` |
 | `httpget` | HTTP/1.0 GET client | request builder + `hlax_tcp_*` |
+| `curl` | HTTP GET via DNS, body-only (`-i` for headers) | `hlax_dns_resolve_v4`, header/body split, read loop |
 | `fnv1a` | FNV-1a 64-bit file hash | xor/imul loop, **`stdout.putu`** unsigned decimal |
 
 ## Build

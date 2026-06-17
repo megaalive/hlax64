@@ -119,13 +119,23 @@ begin cmp;
             else
                 mov(rax, r15);
                 call CompareLoop(r14, r15);
+                mov(rbx, rax);
                 call hlax_file_close(r14);
-                call hlax_file_close(r15);
                 if(rax < 0) then
                     stdout.put("io failed", nl);
+                    call hlax_file_close(r15);
                     mov(1, rbx);
                 else
-                    mov(rax, rbx);
+                    call hlax_file_close(r15);
+                    if(rax < 0) then
+                        stdout.put("io failed", nl);
+                        mov(1, rbx);
+                    else
+                        if(rbx < 0) then
+                            stdout.put("io failed", nl);
+                            mov(1, rbx);
+                        endif;
+                    endif;
                 endif;
             endif;
         endif;

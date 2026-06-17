@@ -13,6 +13,7 @@ extern procedure hlax_file_open_read(path: cstring): int64;
 extern procedure hlax_file_read(handle: int64; buffer: ptr; count: uint64): int64;
 extern procedure hlax_file_close(handle: int64): int64;
 extern procedure hlax_is_printable(ch: uint64): int64;
+extern procedure hlax_is_space(ch: uint64): int64;
 
 static
     buffer: byte[256];
@@ -83,8 +84,14 @@ begin ClassifyBuffer;
             mov([r11].byte, r9);
             call hlax_is_printable(r9);
             if(rax = 0) then
-                mov(0, r13);
-                mov(r15, r8);
+                call hlax_is_space(r9);
+                if(rax = 0) then
+                    mov(0, r13);
+                    mov(r15, r8);
+                else
+                    add(1, r8);
+                    add(1, r11);
+                endif;
             else
                 add(1, r8);
                 add(1, r11);

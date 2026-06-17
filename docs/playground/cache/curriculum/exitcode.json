@@ -11,5 +11,5 @@
   "lowered": [
     "function _start:\n  entry: True, export: False\n  stack frame: 8 bytes\n  entry:\n        xor ebx, ebx    ; default exit code = 0 (callee-saved)\n        push rbp\n        mov rbp, rsp\n        sub rsp, 8      ; align stack to 16 bytes\n        mov rbx, 42\n        mov rax, rbx\n        mov rdi, rbx    ; exit code\n        mov rax, 60     ; sys_exit\n        syscall"
   ],
-  "nasm": "bits 64\r\nsection .text\r\nglobal _start\r\n\r\n_start:\r\n    xor ebx, ebx    ; default exit code = 0 (callee-saved)\r\n    push rbp\r\n    mov rbp, rsp\r\n    sub rsp, 8      ; align stack to 16 bytes\r\n    mov rbx, 42\r\n    mov rax, rbx\r\n    mov rdi, rbx    ; exit code\r\n    mov rax, 60     ; sys_exit\r\n    syscall\r\n\r\nsection .data\r\nnewline db 0x0A\r\n"
+  "nasm": "bits 64\r\ndefault rel\r\nsection .text\r\nglobal _start\r\n\r\n_start:\r\n    xor ebx, ebx    ; default exit code = 0 (callee-saved)\r\n    push rbp\r\n    mov rbp, rsp\r\n    sub rsp, 8      ; align stack to 16 bytes\r\n    mov rbx, 42\r\n    mov rax, rbx\r\n    mov rdi, rbx    ; exit code\r\n    mov rax, 60     ; sys_exit\r\n    syscall\r\n\r\nsection .data\r\nnewline db 0x0A\r\n"
 }

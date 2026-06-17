@@ -202,6 +202,22 @@ public sealed class Lexer
                 Advance(); // skip closing quote
                 break;
             }
+            if (ch == '\\' && _pos + 1 < _source.Length)
+            {
+                Advance();
+                var esc = Peek();
+                switch (esc)
+                {
+                    case 'n': sb.Append('\n'); break;
+                    case 'r': sb.Append('\r'); break;
+                    case 't': sb.Append('\t'); break;
+                    case '\\': sb.Append('\\'); break;
+                    case '"': sb.Append('"'); break;
+                    default: sb.Append(esc); break;
+                }
+                Advance();
+                continue;
+            }
             if (ch == '\n')
             {
                 // Unterminated string — stop at newline

@@ -43,6 +43,7 @@ public sealed class LinuxRealToolTests
         yield return ["netcheck"];
         yield return ["tcpget"];
         yield return ["httpget"];
+        yield return ["curl"];
         yield return ["dnslookup"];
         yield return ["cpucount"];
         yield return ["diskfree"];
@@ -97,14 +98,20 @@ public sealed class LinuxRealToolTests
                 artifacts.Result, isWindows: false, cache, out var extras, out var runtimeError), runtimeError);
             Assert.True(LinkerTool.TryLink(objFile, exeFile, out var linkError, out _, extraLibraries: extras), linkError);
 
-            using var tcpFixture = LocalTcpFixture.TryStart(toolDir);
+            using var wslTcpFixture = WslLocalTcpFixture.TryStart(toolDir);
+            using var winTcpFixture = wslTcpFixture == null ? LocalTcpFixture.TryStart(toolDir) : null;
             var wslExe = LinkerTool.ToWslPath(exeFile);
             var wslCwd = LinkerTool.ToWslPath(repoRoot);
-            var wslHostIp = WslHostResolver.TryGetHostIpForWsl();
-            var args = RealToolTestHarness.BuildWslArguments(argumentsPath, repoRoot, outputFile, tcpFixture?.Port ?? 0, wslHostIp);
+            var wslHostIp = wslTcpFixture?.Host ?? WslHostResolver.TryGetHostIpForWsl();
+            var args = RealToolTestHarness.BuildWslArguments(
+                argumentsPath, repoRoot, outputFile, wslTcpFixture == null ? winTcpFixture?.Port ?? 0 : 0, wslHostIp);
 
             string command;
-            if (File.Exists(stdinPath))
+            if (wslTcpFixture != null)
+            {
+                command = wslTcpFixture.BuildCombinedCommand(wslExe, argumentsPath, repoRoot, outputFile, wslCwd);
+            }
+            else if (File.Exists(stdinPath))
             {
                 var stdinFile = Path.Combine(cache, "stdin.txt");
                 File.WriteAllText(stdinFile, File.ReadAllText(stdinPath).Replace("\r\n", "\n"));
@@ -125,18 +132,24 @@ public sealed class LinuxRealToolTests
             }, TimeSpan.FromSeconds(20));
 
             Assert.False(result.TimedOut, $"linux {tool} did not exit within 20s\n{result.Stderr}");
-            Assert.Equal(expectedExit, result.ExitCode);
-            foreach (var line in expectedStdout.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-                Assert.Contains(line, result.Stdout, StringComparison.Ordinal);
+            Assert.True(
+                expectedExit == result.ExitCode,
+                $"linux {tool} exit {result.ExitCode} (expected {expectedExit})\nstdout:\n{result.Stdout}\nstderr:\n{result.Stderr}");
 
             if (expectedOutput != null)
             {
-                Assert.True(File.Exists(outputFile), $"expected output file missing for {tool}");
+                Assert.True(File.Exists(outputFile), $"expected output file missing for {tool}\nstdout:\n{result.Stdout}\nstderr:\n{result.Stderr}");
                 var actualOutput = File.ReadAllText(outputFile).Replace("\r\n", "\n");
                 Assert.Equal(expectedOutput, actualOutput);
             }
+            else
+            {
+                foreach (var line in expectedStdout.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                    Assert.Contains(line, result.Stdout, StringComparison.Ordinal);
+            }
 
-            tcpFixture?.WaitForCompletion();
+            wslTcpFixture?.WaitForCompletion();
+            winTcpFixture?.WaitForCompletion();
         }
         finally
         {

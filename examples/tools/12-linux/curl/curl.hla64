@@ -1,0 +1,271 @@
+// curl.hla64 - minimal HTTP GET client (body-only by default; -i includes headers).
+//
+// Stress: DNS connect, request builder, header/body split, read loop.
+
+program curl;
+
+#include("stdlib64.hhf")
+
+extern procedure hlax_argv_init(): int64;
+extern procedure hlax_argv_count(): int64;
+extern procedure hlax_argv_get(index:int64): ptr;
+extern procedure hlax_net_init(): int64;
+extern procedure hlax_net_last_error(): int64;
+extern procedure hlax_dns_resolve_v4(host: cstring; out_buf: ptr; capacity: uint64): int64;
+extern procedure hlax_tcp_connect(host: cstring; port: uint64): int64;
+extern procedure hlax_tcp_set_timeouts_ms(socket: int64; recv_ms: uint64; send_ms: uint64): int64;
+extern procedure hlax_tcp_write_all(socket: int64; buffer: ptr; count: uint64): int64;
+extern procedure hlax_tcp_read(socket: int64; buffer: ptr; count: uint64): int64;
+extern procedure hlax_tcp_close(socket: int64): int64;
+extern procedure hlax_stdout_write(buffer: ptr; count: uint64): int64;
+extern procedure hlax_strlen(buf: cstring): uint64;
+extern procedure hlax_memcpy(dst: ptr; src: ptr; count: uint64): ptr;
+
+static
+    reqBuf: byte[512];
+    reqLen: int64;
+    readBuf: byte[256];
+    ipBuf: byte[64];
+    showHeaders: int64;
+    headersDone: int64;
+    prevByte: int64;
+    readDone: int64;
+endstatic;
+
+procedure ParsePort(str: ptr); @returns("rax");
+begin ParsePort;
+    mov(0, rax);
+    mov(str, r10);
+    mov(0, r15);
+    while(r15 < 6) do
+        mov([r10].byte, r9);
+        if(r9 = 0) then
+            mov(6, r15);
+        else
+            imul(10, rax);
+            sub(48, r9);
+            add(r9, rax);
+            add(1, r10);
+            add(1, r15);
+        endif;
+    endwhile;
+end ParsePort;
+
+procedure AppendStr(src: ptr); @returns("rax");
+begin AppendStr;
+    call hlax_strlen(src);
+    mov(rax, r9);
+    mov(reqLen, r11);
+    mov(&reqBuf, r12);
+    add(r11, r12);
+    call hlax_memcpy(r12, src, r9);
+    add(r9, reqLen);
+    mov(0, rax);
+end AppendStr;
+
+procedure BuildRequest(host: ptr; path: ptr); @returns("rax");
+begin BuildRequest;
+    mov(0, reqLen);
+    call AppendStr("GET ");
+    call AppendStr(path);
+    call AppendStr(" HTTP/1.0\nHost: ");
+    call AppendStr(host);
+    call AppendStr("\n\n");
+    mov(reqLen, rax);
+end BuildRequest;
+
+procedure IsDashI(str: ptr); @returns("rax");
+begin IsDashI;
+    mov(str, r10);
+    mov([r10].byte, r9);
+    if(r9 != 45) then
+        mov(0, rax);
+    else
+        add(1, r10);
+        mov([r10].byte, r9);
+        if(r9 != 105) then
+            mov(0, rax);
+        else
+            add(1, r10);
+            mov([r10].byte, r9);
+            if(r9 != 0) then
+                mov(0, rax);
+            else
+                mov(1, rax);
+            endif;
+        endif;
+    endif;
+end IsDashI;
+
+procedure WriteSpan(data: ptr; start: int64; count: int64); @returns("rax");
+begin WriteSpan;
+    if(count <= 0) then
+        mov(0, rax);
+    else
+        mov(data, r10);
+        add(start, r10);
+        call hlax_stdout_write(r10, count);
+        mov(0, rax);
+    endif;
+end WriteSpan;
+
+procedure ProcessChunk(data: ptr; n: int64); @returns("rax");
+begin ProcessChunk;
+    mov(showHeaders, r11);
+    if(r11 != 0) then
+        call WriteSpan(data, 0, n);
+        mov(0, rax);
+    else
+        mov(headersDone, r11);
+        if(r11 != 0) then
+            call WriteSpan(data, 0, n);
+            mov(0, rax);
+        else
+            mov(n, r13);
+            mov(data, r14);
+            mov(prevByte, r15);
+            mov(0, r12);
+            while(r12 < r13) do
+                mov(r14, r10);
+                add(r12, r10);
+                mov([r10].byte, r9);
+                if(r15 = 10) then
+                    if(r9 = 10) then
+                        mov(1, headersDone);
+                        mov(r13, r11);
+                        sub(r12, r11);
+                        sub(1, r11);
+                        add(1, r12);
+                        call WriteSpan(r14, r12, r11);
+                        mov(r13, r12);
+                    endif;
+                endif;
+                mov(r9, r15);
+                add(1, r12);
+            endwhile;
+            mov(0, rax);
+        endif;
+    endif;
+end ProcessChunk;
+
+procedure ReadLoop(sock: int64); @returns("rax");
+begin ReadLoop;
+    mov(0, prevByte);
+    mov(0, readDone);
+    while(readDone = 0) do
+        call hlax_tcp_read(sock, &readBuf, 256);
+        if(rax <= 0) then
+            mov(0, rax);
+            mov(1, readDone);
+        else
+            mov(rax, r12);
+            call ProcessChunk(&readBuf, r12);
+        endif;
+    endwhile;
+end ReadLoop;
+
+begin curl;
+    mov(0, showHeaders);
+    mov(0, headersDone);
+    call hlax_argv_init();
+    call hlax_argv_count();
+
+    if(rax < 2) then
+        stdout.put("usage: curl [-i] <host> <port> <path>", nl);
+        mov(1, rbx);
+    else
+        call hlax_argv_get(1);
+        call IsDashI(rax);
+
+        if(rax != 0) then
+            mov(1, showHeaders);
+            call hlax_argv_count();
+            if(rax < 5) then
+                stdout.put("usage: curl [-i] <host> <port> <path>", nl);
+                mov(1, rbx);
+            else
+                call hlax_net_init();
+                if(rax != 0) then
+                    call hlax_net_last_error();
+                    stdout.put("err=", rax, nl);
+                    mov(3, rbx);
+                else
+                    call hlax_argv_get(3);
+                    call ParsePort(rax);
+                    mov(rax, r13);
+                    call hlax_argv_get(2);
+                    mov(rax, r12);
+                    call hlax_argv_get(4);
+                    mov(rax, r11);
+                    call BuildRequest(r12, r11);
+                    call hlax_argv_get(2);
+                    mov(rax, r12);
+                    call hlax_dns_resolve_v4(r12, &ipBuf, 64);
+
+                    if(rax < 0) then
+                        call hlax_tcp_connect(r12, r13);
+                    else
+                        call hlax_tcp_connect(&ipBuf, r13);
+                    endif;
+
+                    if(rax < 0) then
+                        call hlax_net_last_error();
+                        stdout.put("err=", rax, nl);
+                        mov(3, rbx);
+                    else
+                        mov(rax, r14);
+                        call hlax_tcp_set_timeouts_ms(r14, 5000, 5000);
+                        call hlax_tcp_write_all(r14, &reqBuf, reqLen);
+                        call ReadLoop(r14);
+                        call hlax_tcp_close(r14);
+                        mov(0, rbx);
+                    endif;
+                endif;
+            endif;
+        else
+            call hlax_argv_count();
+            if(rax < 4) then
+                stdout.put("usage: curl [-i] <host> <port> <path>", nl);
+                mov(1, rbx);
+            else
+                call hlax_net_init();
+                if(rax != 0) then
+                    call hlax_net_last_error();
+                    stdout.put("err=", rax, nl);
+                    mov(3, rbx);
+                else
+                    call hlax_argv_get(2);
+                    call ParsePort(rax);
+                    mov(rax, r13);
+                    call hlax_argv_get(1);
+                    mov(rax, r12);
+                    call hlax_argv_get(3);
+                    mov(rax, r11);
+                    call BuildRequest(r12, r11);
+                    call hlax_argv_get(1);
+                    mov(rax, r12);
+                    call hlax_dns_resolve_v4(r12, &ipBuf, 64);
+
+                    if(rax < 0) then
+                        call hlax_tcp_connect(r12, r13);
+                    else
+                        call hlax_tcp_connect(&ipBuf, r13);
+                    endif;
+
+                    if(rax < 0) then
+                        call hlax_net_last_error();
+                        stdout.put("err=", rax, nl);
+                        mov(3, rbx);
+                    else
+                        mov(rax, r14);
+                        call hlax_tcp_set_timeouts_ms(r14, 5000, 5000);
+                        call hlax_tcp_write_all(r14, &reqBuf, reqLen);
+                        call ReadLoop(r14);
+                        call hlax_tcp_close(r14);
+                        mov(0, rbx);
+                    endif;
+                endif;
+            endif;
+        endif;
+    endif;
+end curl;

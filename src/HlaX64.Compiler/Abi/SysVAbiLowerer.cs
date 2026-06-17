@@ -748,8 +748,8 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         if (name.StartsWith("addr:", StringComparison.Ordinal))
         {
             var varName = name[5..];
-            if (_globalData.ContainsKey(varName))
-                return varName;
+        if (_globalData.ContainsKey(varName))
+            return varName;
             if (_valueMap.TryGetValue(varName, out var slot))
             {
                 if (slot.StartsWith('[') && slot.EndsWith(']'))

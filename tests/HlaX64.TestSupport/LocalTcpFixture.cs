@@ -27,7 +27,8 @@ public sealed class LocalTcpFixture : IDisposable
             return null;
 
         var template = File.ReadAllText(serverPath).Replace("\r\n", "\n").Replace("`n", "\n");
-        var listener = new TcpListener(IPAddress.Loopback, 0);
+        // Listen on all interfaces so WSL clients can reach the fixture via the Windows host IP.
+        var listener = new TcpListener(IPAddress.Any, 0);
         listener.Start();
         var port = ((IPEndPoint)listener.LocalEndpoint).Port;
         var echoMode = template.Trim() == "$ECHO";
