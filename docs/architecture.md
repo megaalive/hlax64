@@ -113,6 +113,30 @@ See [compiler-architecture.md](compiler-architecture.md) (Planned backends) and 
 
 See [mcp-tools.md](mcp-tools.md) and [tutorials/04-mcp-agent.md](tutorials/04-mcp-agent.md).
 
+## Downstream verification (SemASM / VAA)
+
+HlaX64 is an **authoring** layer: it emits NASM for SysV or Microsoft x64. It does
+**not** own behavioral verification status or evidence seals.
+
+Downstream consumers (sibling repos under `megaalive/`):
+
+| Tool | Role |
+|------|------|
+| **SemASM** | Contract + oracle + `VerificationReport` 0.4 (`semasm agent verify`) |
+| **VAA** | Fail-closed controller: task lock, `vaa ingest` / `vaa verify`, seal chain |
+
+Bridge leaf (first): `examples/interop/semasm-vaa/sum_i64/` — export `sum_i64`,
+emit Win64 NASM, drop into VAA as `--generator hlax64`.
+
+```bash
+hla64 emit-nasm examples/interop/semasm-vaa/sum_i64/sum_i64.hla64 \
+  --target windows-x64-msabi \
+  -o ../vaa/fixtures/ingest/hlax64_sum_i64/candidate.asm
+```
+
+Honesty: HlaX64 `-Wverify` / `verify-abi` are compile-time checks, not SemASM
+`verified`. VAA Gate-1 (`execution_denied` → Incomplete) is not a verified slice.
+
 ## Related docs
 
 - [language-spec.md](language-spec.md)
