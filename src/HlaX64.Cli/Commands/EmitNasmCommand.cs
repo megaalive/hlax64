@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using HlaX64.Compiler.Debug;
+using HlaX64.Compiler.Options;
 using Spectre.Console.Cli;
 
 namespace HlaX64.Cli.Commands;
@@ -23,6 +24,10 @@ public sealed class EmitNasmCommand : Command<EmitNasmCommand.Settings>
         [Description("Target triple: linux-x64-sysv (default) or windows-x64-msabi")]
         [CommandOption("--target")]
         public string? Target { get; set; }
+
+        [Description("Output kind: executable (default) or shared-library (omit program entry)")]
+        [CommandOption("--output-kind")]
+        public string? OutputKind { get; set; }
 
         [Description("Emit source map sidecar (.hlamap.json)")]
         [CommandOption("--source-map")]
@@ -75,6 +80,9 @@ public sealed class EmitNasmCommand : Command<EmitNasmCommand.Settings>
             settings.WarnDefinite, settings.WarnUnreachable, settings.WarnLiveness, settings.WarnVerify,
             settings.Optimize, settings.SourceMap, settings.DebugInfo,
             features: settings.Features, cpu: settings.Cpu);
+
+        if (settings.OutputKind?.Equals("shared-library", StringComparison.OrdinalIgnoreCase) == true)
+            options = options with { OutputKind = OutputKind.SharedLibrary };
 
         try
         {

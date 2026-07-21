@@ -38,7 +38,11 @@ public sealed class NasmEmitter
         AppendLine("bits 64");
         AppendLine("default rel");
 
-        var allExterns = functions.SelectMany(f => f.RequiredExterns).Distinct().ToList();
+        var emitted = functions
+            .Where(f => !(f.IsEntryPoint && _options.IsSharedLibrary))
+            .ToList();
+
+        var allExterns = emitted.SelectMany(f => f.RequiredExterns).Distinct().ToList();
         foreach (var ext in allExterns)
             AppendLine($"extern {ext}");
 
