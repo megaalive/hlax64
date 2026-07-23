@@ -1,0 +1,5 @@
+build/
+*.dll
+*.obj
+*.exe
+*.so
