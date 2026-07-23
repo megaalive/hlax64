@@ -1,21 +1,34 @@
-# HlaX64 — HLA-Inspired x64 Assembly Layer for Vibe Coding
+# HlaX64 — HLA-Inspired x64 Assembly Layer
 
-> **AI-friendly x64 assembly source layer for verified executable vibe coding.**
-> Write low-level x64 with a cleaner HLA-inspired syntax. Compile to NASM,
-> assemble, link, and run — all from a single `hla64` CLI.
+> **Experimental early-alpha x64 assembly source layer.** Write low-level x64 with
+> HLA-inspired syntax; compile to NASM, assemble, link, and run from a single
+> `hla64` CLI. Many gaps remain — see [Known limits](#known-limits--not-claimed) below.
 
-[![Status](https://img.shields.io/badge/HlaX64%200.2%20Alpha-green)](./docs/roadmap.md)
-[![Tests](https://img.shields.io/badge/tests-CI%20verified-2ea44f)](https://github.com/megaalive/hlax64/actions)
+[![Status](https://img.shields.io/badge/status-experimental%20%2F%200.2%20alpha-orange)](./docs/roadmap.md)
+[![Tests](https://img.shields.io/badge/tests-CI%20on%20push-lightgrey)](https://github.com/megaalive/hlax64/actions)
 [![Target](https://img.shields.io/badge/target-linux--x64--sysv%20|%20windows--x64--msabi-1f6feb)](#targets)
 [![Language](https://img.shields.io/badge/language-v0.1%20Draft-blueviolet)](#language-reference)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](#license)
 [![Pages](https://img.shields.io/badge/docs-GitHub%20Pages-2ea44f)](https://megaalive.github.io/hlax64/)
 
+## Known limits / not claimed
+
+HlaX64 is **not** production-ready and **does not** offer formal proof of correctness.
+
+| Topic | What we do **not** claim |
+|-------|--------------------------|
+| Maturity | Early alpha with incomplete language coverage; roadmap items still open (typed pointers, `slice<T>`, full Windows DWARF, …). |
+| Verification | `-Wverify`, `verify-stack`, and `verify-abi` are **compiler heuristics** — not SemASM-style `verified`, not a safety certificate. |
+| SemASM / VAA bridge | `examples/interop/semasm-vaa/` emits Win64 NASM for external ingest. **HlaX64 compile / `-Wverify` ≠ SemASM `verified`.** VAA Gate-2 needs SemASM on PATH. |
+| Crypto / HSM paths | No SoftHSM, CryptOpt, or PKCS#11 integration — out of scope for this repo. |
+| Playground | Browser UI shows **cached** compile artifacts; editing source there does not recompile. |
+| CI | GitHub Actions run tests on push; green CI means **tests passed**, not “verified executable” or production sign-off. |
+
+See [`docs/roadmap.md`](./docs/roadmap.md) for planned work and [`docs/compatibility.md`](./docs/compatibility.md) for stability expectations.
+
 ## Try it now
 
-👉 **[Open HlaX64 Playground](https://megaalive.github.io/hlax64/playground/index.html?example=argv)**
-
-Inspect HlaX64 source, **generated NASM**, line notes, IR summary, and **AI debug / explain / optimize** prompts — no install required.
+**[Open HlaX64 Playground](https://megaalive.github.io/hlax64/playground/index.html?example=argv)** — inspect HlaX64 source, generated NASM, line notes, and IR summary (no install). Optional explain/debug prompts are helpers, not guarantees.
 
 The browser playground uses **cached compile artifacts** for **181** curated examples (pre-generated with `hla64 explain --json`). Editing source in the browser does not recompile; use the **Run locally** command in the playground or the CLI below for live builds.
 
@@ -39,7 +52,7 @@ hla64 explain examples/tools/10-windows/exists/exists.hla64 --json
 
 ## Install
 
-New users should start with the **Assembly Lab** bundle: desktop UI, embedded terminal, CLI, runtime files, examples, and toolchain Settings in one package. CLI-only archives, global tool, or clone workflows are also documented in **[docs/install.md](docs/install.md)**.
+New users can start with the **Assembly Lab** bundle: desktop UI, embedded terminal, CLI, runtime files, examples, and toolchain Settings in one package. CLI-only archives, global tool, or clone workflows are also documented in **[docs/install.md](docs/install.md)**.
 
 Tutorials: [Getting started](docs/tutorials/01-getting-started.md) · [**Patterns & cookbook**](docs/patterns.md) · [Native routines](docs/tutorials/02-native-routines.md) · [Memory & pointers](docs/tutorials/05-memory.md) · [C# interop](docs/tutorials/03-csharp-interop.md) · [MCP agents](docs/tutorials/04-mcp-agent.md) · [Assembly Lab](docs/tutorials/06-assembly-lab.md)
 
@@ -47,9 +60,9 @@ Tutorials: [Getting started](docs/tutorials/01-getting-started.md) · [**Pattern
 
 ---
 
-## Current Capabilities — HlaX64 0.2 Alpha
+## Current capabilities (0.2 alpha)
 
-HlaX64 is an **early multi-platform x64 language toolchain** — not a single-target MVP. Release [`v0.2.1-alpha`](https://github.com/megaalive/hlax64/releases/tag/v0.2.1-alpha) ships pre-built CLI and Assembly Lab archives; CI verifies every push.
+What works today in the **experimental** multi-platform x64 toolchain. Release [`v0.2.1-alpha`](https://github.com/megaalive/hlax64/releases/tag/v0.2.1-alpha) ships pre-built CLI and Assembly Lab archives; CI runs the test matrix on every push (see [Actions](https://github.com/megaalive/hlax64/actions) for current status).
 
 ### Language
 
@@ -75,8 +88,8 @@ HlaX64 is an **early multi-platform x64 language toolchain** — not a single-ta
 | Pipeline | ✅ | Lexer → Parser → Semantic → IR → ABI lowerer → NASM |
 | Diagnostics | ✅ | Line/column, codes HLAX00xx, fuzzy suggestions; multi-error parse recovery (extern signatures, statement bodies) |
 | Bounds warnings | ✅ | `-Wbounds` / HLAX0030 for static array indices |
-| Verification warnings | ✅ | `-Wverify` / HLAX0060–63 (definite assignment, CFG, liveness) |
-| Stack / ABI verify | ✅ | `hla64 verify-stack`, `hla64 verify-abi` |
+| Verification warnings | ⚠️ | `-Wverify` / HLAX0060–63 (definite assignment, CFG, liveness) — **heuristic, not proof** |
+| Stack / ABI verify | ⚠️ | `hla64 verify-stack`, `hla64 verify-abi` — best-effort checks |
 | Format | ✅ | `hla64 format` via `AstFormatter` |
 
 ### Targets
@@ -93,20 +106,21 @@ HlaX64 is an **early multi-platform x64 language toolchain** — not a single-ta
 | C ABI `export procedure` | ✅ |
 | `hla64 generate-header` | ✅ |
 | `hla64 generate-pinvoke` | ✅ |
+| SemASM / VAA NASM emit (`examples/interop/semasm-vaa/`) | ⚠️ emit-only; verification is external |
 
 ### Tooling
 
 | Area | Status |
 |------|--------|
 | CLI (`build`, `run`, `test`, `bench`, `explain`, `doctor`, `disasm`, `diff`, `plan`, …) | ✅ |
-| **Assembly Lab** (Avalonia desktop — source, IR/NASM/ABI, build/run, proof bundle, **embedded PTY terminal**, toolchain **Settings**) | ✅ |
-| Source maps / proof bundle / `--optimize O0-O2` / CPU+AVX2 / `simd.*`+`atomic.*` / dependency restore / DAP debug / `test-differential` | ✅ |
+| **Assembly Lab** (Avalonia desktop — source, IR/NASM/ABI, build/run, proof bundle, embedded PTY terminal, toolchain **Settings**) | ✅ (alpha UI) |
+| Source maps / proof bundle / `--optimize O0-O2` / CPU+AVX2 / `simd.*`+`atomic.*` / dependency restore / DAP debug / `test-differential` | ✅ (coverage varies) |
 | MCP server (12 tools, stdio JSON-RPC) | ✅ |
 | Benchmark runner + JSON manifests | ✅ |
 
-### Agent integration
+### Agent / editor integration
 
-Designed for verified vibe coding: explicit syntax, structured diagnostics, annotated NASM (`; RUNTIME:`), JSON CLI schemas, MCP compile/build/run/test tools. See [tutorials/04-mcp-agent.md](docs/tutorials/04-mcp-agent.md).
+Structured syntax, diagnostics, annotated NASM (`; RUNTIME:`), JSON CLI output, and MCP compile/build/run/test tools can help agents and editors — but HlaX64 is still alpha software with known gaps. See [tutorials/04-mcp-agent.md](docs/tutorials/04-mcp-agent.md).
 
 ### Editor support
 
@@ -124,11 +138,11 @@ Designed for verified vibe coding: explicit syntax, structured diagnostics, anno
 | Example compile guards | Every `examples/**/*.hla64` must emit NASM |
 | Curriculum manifests | Structured learning path under `examples/` |
 
-All suites run in [GitHub Actions CI](https://github.com/megaalive/hlax64/actions).
+All suites run in [GitHub Actions CI](https://github.com/megaalive/hlax64/actions). Passing CI is regression signal, not a correctness proof.
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # 1. Build everything
@@ -156,7 +170,7 @@ dotnet run --project src/HlaX64.AssemblyLab
 
 ---
 
-## 📚 Example Programs
+## Example Programs
 
 ### Hello world
 
@@ -233,7 +247,7 @@ Pipeline details: [`docs/compiler-architecture.md`](./docs/compiler-architecture
 
 ---
 
-## 📖 Language at a Glance
+## Language at a Glance
 
 - **Operand order** follows HLA: `mov(source, dest)`. The NASM backend
   reverses it to NASM's `mov dest, source` automatically.
@@ -257,9 +271,9 @@ CI runs the full matrix on every push; see the [Actions tab](https://github.com/
 
 ---
 
-## 🗺 Roadmap
+## Roadmap
 
-Phases are summarized in [`docs/roadmap.md`](./docs/roadmap.md).
+Phases are summarized in [`docs/roadmap.md`](./docs/roadmap.md). ✅ marks shipped work; many areas are still rough or incomplete in practice.
 
 | Fase | Description                          | Status |
 |------|--------------------------------------|--------|
@@ -278,21 +292,21 @@ Phases are summarized in [`docs/roadmap.md`](./docs/roadmap.md).
 | 11   | Windows x64 backend                  | ✅      |
 | 12   | C ABI & C# interop generator         | ✅      |
 | 13   | MCP server (for AI agents)           | ✅      |
-| 14   | LSP & editor tooling                 | ✅ Hardened |
-| 15   | AI Assembly Lab (Avalonia desktop)   | ✅ Done |
-| 16   | Language core (const, expr, enum, record, static) | ✅ Done |
-| 17   | ABI & FFI (extern, fn ptr, float, struct param) | ✅ Done |
-| 18   | Compiler verification                | ✅ Done |
-| 19   | Debug & explainability               | ✅ Hardened |
-| 20   | Optimization (O1/O2)                 | ✅ Hardened |
-| 21   | CPU & SIMD                           | ✅ Hardened |
-| 22   | Modules & packages                   | ✅ Hardened |
-| 23   | Verified executable workflow         | ✅ Hardened |
-| 24   | Debugger & Assembly Lab integration  | ✅ Hardened |
+| 14   | LSP & editor tooling                 | ✅      |
+| 15   | AI Assembly Lab (Avalonia desktop)   | ✅      |
+| 16   | Language core (const, expr, enum, record, static) | ✅      |
+| 17   | ABI & FFI (extern, fn ptr, float, struct param) | ✅      |
+| 18   | Compiler verification                | ✅ (heuristic `-Wverify`) |
+| 19   | Debug & explainability               | ✅      |
+| 20   | Optimization (O1/O2)                 | ✅      |
+| 21   | CPU & SIMD                           | ✅      |
+| 22   | Modules & packages                   | ✅      |
+| 23   | Proof bundle / diff workflow         | ✅ (tooling; not formal verification) |
+| 24   | Debugger & Assembly Lab integration  | ✅      |
 
-Detail per sprint: [`docs/roadmap.md`](./docs/roadmap.md). Yang masih **planned** (bukan fase 16 inti) — typed pointers, `slice<T>`, `idiv`/`jmp` sebagai instruksi sumber, full DWARF Windows.
+Detail per sprint: [`docs/roadmap.md`](./docs/roadmap.md). Still **planned** — typed pointers, `slice<T>`, `idiv`/`jmp` as source instructions, full DWARF on Windows.
 
-### 📚 Dokumentasi tambahan
+### Dokumentasi tambahan
 
 - [`docs/roadmap.md`](./docs/roadmap.md) — peta fase + Tier eksekusi aktif.
 - [`docs/compiler-architecture.md`](./docs/compiler-architecture.md) — diagram pipeline IR + 7 workstream.
@@ -308,11 +322,11 @@ Detail per sprint: [`docs/roadmap.md`](./docs/roadmap.md). Yang masih **planned*
 
 ---
 
-## 🤖 AI-Friendly Design
+## Tooling-oriented design
 
-HlaX64 is built **for** AI coding agents:
+HlaX64 favors explicit, consistent syntax and machine-readable compiler output — useful for editors and coding agents, but not a substitute for review or testing:
 
-- **Explicit, consistent syntax** — no alternative forms to guess between.
+- **Explicit, consistent syntax** — fewer alternative forms to guess between.
 - **Operand order is HLA-style** (`source, dest`) which is more natural
   to read.
 - **Diagnostics carry line + column** and include "Did you mean …?"
@@ -321,13 +335,13 @@ HlaX64 is built **for** AI coding agents:
   every runtime call site so agents and humans can trace what the
   compiler emitted.
 - **Runtime is split** between inline MVP syscalls and a stable library
-  so Fase 6+ can switch to calls without changing user source.
+  so later phases can switch to calls without changing user source.
 
 See [`docs/language-spec.md`](./docs/language-spec.md) for full details.
 
 ---
 
-## 🤝 Community
+## Community
 
 - [Contributing Guide](docs/rules/CONTRIBUTING.md) — how to build, test, and submit changes
 - [Install Guide](docs/install.md) — Assembly Lab bundle, CLI archives, and global tool
@@ -342,6 +356,6 @@ See [`docs/language-spec.md`](./docs/language-spec.md) for full details.
 - [MCP Tools](docs/mcp-tools.md) — agent tool catalog
 - [Changelog](CHANGELOG.md) — release history
 
-## 📄 License
+## License
 
 MIT

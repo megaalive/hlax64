@@ -17,7 +17,7 @@ examples/
 | [curriculum/](curriculum/) | `00-getting-started` … `06-abi`, `08-ai-agent` | hello, arithmetic, control flow, procedures, memory, ABI |
 | [interop/](interop/) | `07-interop`, `11-csharp-interop-real` | extern puts, native DLL + C# callers |
 | [tools/](tools/) | `10-windows`, `12-linux` | listfiles, wc, hexdump, fnv1a, … |
-| [project-euler/](project-euler/) | problems, runner, data, expected | PE #1–#25 verified, #26–#50 stubs |
+| [project-euler/](project-euler/) | problems, runner, data, expected | PE #1–#25 with expected-output checks (`hla64 run`); #26–#50 stubs |
 | [benchmarks/](benchmarks/) | README | Links to `benchmarks/count.json` |
 | [qa/](qa/) | `bug-farm`, `invalid` | Stress cases + must-not-compile catalog |
 
