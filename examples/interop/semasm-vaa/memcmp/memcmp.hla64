@@ -3,7 +3,8 @@
 // Downstream: emit Win64 NASM → vaa ingest --generator hlax64
 // Contract shape: (ptr<const u8>, ptr<const u8>, usize) -> isize  (builtin.buffer.memcmp_i8)
 // Honesty: HlaX64 emit / -Wverify ≠ SemASM verified.
-// Prefer sub(1, rax) after xor-zero for -1 (avoid raw mov imm -1).
+// Win64: only volatile regs (rax/rcx/rdx/r8-r11) — no r12–r15 clobber.
+// Prefer sub(1, rax) after zero for -1 (avoid raw mov imm -1).
 
 program memcmp;
 
@@ -12,13 +13,13 @@ begin memcmp;
     mov(0, rax);
     mov(0, r9);
     mov(a, r10);
-    mov(b, r14);
+    mov(b, r11);
 
     while(r9 < length) do
-        mov([r10].byte, r11);
-        mov([r14].byte, r12);
-        if(r11 != r12) then
-            if(r11 < r12) then
+        mov([r10].byte, r8);
+        mov([r11].byte, rdx);
+        if(r8 != rdx) then
+            if(r8 < rdx) then
                 mov(0, rax);
                 sub(1, rax);
             else
@@ -28,7 +29,7 @@ begin memcmp;
         else
             add(1, r9);
             add(1, r10);
-            add(1, r14);
+            add(1, r11);
         endif;
     endwhile;
 end memcmp;
