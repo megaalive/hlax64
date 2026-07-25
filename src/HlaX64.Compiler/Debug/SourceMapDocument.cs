@@ -58,6 +58,9 @@ public sealed class SourceMapDocument
                 ["assembly_line"] = (long)e.NasmLine.Value,
                 ["hla_source"] = hla,
                 ["ir_node"] = ir,
+                // Backend lower/emit locus for repair packets (plan §13).
+                // Approximate but real repo paths — not a DWARF line table.
+                ["compiler_source"] = CompilerSourceFor(e.IrOpcode),
             });
         }
 
@@ -76,6 +79,30 @@ public sealed class SourceMapDocument
         {
             WriteIndented = true,
         });
+    }
+
+    /// <summary>
+    /// Map IR opcode → HlaX64 ABI/backend source locus for VAA repair join.
+    /// Honesty: coarse file+anchor, not instruction-precise DWARF.
+    /// </summary>
+    internal static string CompilerSourceFor(string? irOpcode)
+    {
+        var op = irOpcode ?? "";
+        // Memory / field / array lowering helpers.
+        if (op.Contains("Load", StringComparison.OrdinalIgnoreCase)
+            || op.Contains("Store", StringComparison.OrdinalIgnoreCase)
+            || op.Contains("Move", StringComparison.OrdinalIgnoreCase))
+            return "src/HlaX64.Compiler/Abi/MemoryRefEncoding.cs:EmitLoad";
+        if (op.Contains("Call", StringComparison.OrdinalIgnoreCase)
+            || op.Contains("Ret", StringComparison.OrdinalIgnoreCase))
+            return "src/HlaX64.Compiler/Abi/AbiCallLoweringHelper.cs";
+        if (op.Contains("Field", StringComparison.OrdinalIgnoreCase))
+            return "src/HlaX64.Compiler/Abi/FieldAccessEncoding.cs";
+        if (op.Contains("Array", StringComparison.OrdinalIgnoreCase)
+            || op.Contains("Index", StringComparison.OrdinalIgnoreCase))
+            return "src/HlaX64.Compiler/Abi/ArrayIndexEncoding.cs";
+        // Default: NASM emit of lowered AsmText (shared by all targets).
+        return "src/HlaX64.Backend.Nasm/Emitters/NasmEmitter.cs:EmitFunction";
     }
 
     public SourceMapEntry? LookupBySource(int line, int? column = null)
