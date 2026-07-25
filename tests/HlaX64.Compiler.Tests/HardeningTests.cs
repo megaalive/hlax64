@@ -40,6 +40,13 @@ public sealed class HardeningTests
 
         var byIr = map.LookupByIrId(entry.IrId);
         Assert.NotNull(byIr);
+
+        var vaaJson = map.ToVaaCandidateMapJson();
+        Assert.Contains("\"schema_version\": \"0.1\"", vaaJson);
+        Assert.Contains("\"hla_source\"", vaaJson);
+        Assert.Contains("\"assembly_line\"", vaaJson);
+        Assert.Contains("\"ir_node\"", vaaJson);
+        Assert.DoesNotContain("\"nasmLine\"", vaaJson);
     }
 
     [Fact]

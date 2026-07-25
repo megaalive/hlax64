@@ -29,6 +29,55 @@ public sealed class SourceMapDocument
         });
     }
 
+    /// <summary>
+    /// Emit VAA plan §13 <c>candidate.map.json</c> (schema 0.1).
+    /// Uses HlaX64 pack key aliases (<c>hla_source</c>, <c>compiler_source</c>,
+    /// <c>compiler_revision</c>) that VAA's source-map join accepts.
+    /// </summary>
+    public string ToVaaCandidateMapJson()
+    {
+        var sourceName = string.IsNullOrEmpty(Source)
+            ? "input.hla64"
+            : Path.GetFileName(Source);
+
+        var entries = new List<object>();
+        foreach (var e in Entries)
+        {
+            if (e.NasmLine is null)
+                continue;
+
+            var hla = e.SourceColumn is int col
+                ? $"{sourceName}:{e.SourceLine}:{col}"
+                : $"{sourceName}:{e.SourceLine}";
+            var ir = string.IsNullOrEmpty(e.IrOpcode)
+                ? $"Ir#{e.IrId}"
+                : $"{e.IrOpcode}#{e.IrId}";
+
+            entries.Add(new Dictionary<string, object?>
+            {
+                ["assembly_line"] = (long)e.NasmLine.Value,
+                ["hla_source"] = hla,
+                ["ir_node"] = ir,
+            });
+        }
+
+        var doc = new Dictionary<string, object?>
+        {
+            ["schema_version"] = "0.1",
+            ["compiler_revision"] = string.IsNullOrEmpty(CompilerVersion)
+                ? "hlax64:unknown"
+                : CompilerVersion.StartsWith("git:", StringComparison.Ordinal)
+                    ? CompilerVersion
+                    : $"hlax64:{CompilerVersion}",
+            ["entries"] = entries,
+        };
+
+        return System.Text.Json.JsonSerializer.Serialize(doc, new System.Text.Json.JsonSerializerOptions
+        {
+            WriteIndented = true,
+        });
+    }
+
     public SourceMapEntry? LookupBySource(int line, int? column = null)
     {
         SourceMapEntry? best = null;

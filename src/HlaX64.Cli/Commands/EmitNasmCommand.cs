@@ -105,6 +105,14 @@ public sealed class EmitNasmCommand : Command<EmitNasmCommand.Settings>
                     : Path.ChangeExtension(settings.Source, ".hlamap.json");
                 File.WriteAllText(mapPath, artifacts.SourceMap.ToJson());
                 Console.WriteLine($"Source map written to: {mapPath}");
+
+                // VAA pack path (plan §13): candidate.asm → candidate.map.json
+                if (settings.OutputPath != null)
+                {
+                    var vaaMapPath = Path.ChangeExtension(settings.OutputPath, ".map.json");
+                    File.WriteAllText(vaaMapPath, artifacts.SourceMap.ToVaaCandidateMapJson());
+                    Console.WriteLine($"VAA candidate map written to: {vaaMapPath}");
+                }
             }
 
             return 0;
