@@ -476,7 +476,7 @@ public sealed class SysVAbiLowerer : IAbiLowerer
             CompareKind.LessThanUnsigned => "jb",
             CompareKind.LessOrEqualSigned => "jle",
             CompareKind.LessOrEqualUnsigned => "jbe",
-            CompareKind.GreaterThanSigned => "jl", // deliberate repair defect
+            CompareKind.GreaterThanSigned => "jg",
             CompareKind.GreaterThanUnsigned => "ja",
             CompareKind.GreaterOrEqualSigned => "jge",
             CompareKind.GreaterOrEqualUnsigned => "jae",
