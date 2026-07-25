@@ -439,7 +439,7 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
             CompareKind.LessThanUnsigned => "jb",
             CompareKind.LessOrEqualSigned => "jle",
             CompareKind.LessOrEqualUnsigned => "jbe",
-            CompareKind.GreaterThanSigned => "jg",
+            CompareKind.GreaterThanSigned => "jl", // deliberate repair defect
             CompareKind.GreaterThanUnsigned => "ja",
             CompareKind.GreaterOrEqualSigned => "jge",
             CompareKind.GreaterOrEqualUnsigned => "jae",
