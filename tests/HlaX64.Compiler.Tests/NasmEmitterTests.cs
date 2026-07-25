@@ -363,6 +363,32 @@ public class NasmEmitterTests
     }
 
     [Fact]
+    public void Emit_Win64FramedProc_DoesNotClobberRbxUnsaved()
+    {
+        // Regression for live-repair ABI_CALLEE_SAVED_001: framed stack-local
+        // leaf must not write rbx without a matching push rbx.
+        const string source = """
+            program stack_local;
+            export procedure stack_local(x: int64); @returns("rax");
+            var
+                tmp: int64;
+            begin stack_local;
+                mov(x, tmp);
+                mov(tmp, rax);
+            end stack_local;
+            begin stack_local;
+            end stack_local;
+            """;
+
+        var nasm = Emit(source);
+        var exportIdx = nasm.IndexOf("stack_local:", StringComparison.Ordinal);
+        Assert.True(exportIdx >= 0);
+        var body = nasm[exportIdx..];
+        Assert.DoesNotContain("xor rbx", body, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("mov rbx", body, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Emit_WhileLoop_GeneratesLabels()
     {
         var nasm = Emit("program test;\nbegin test;\nwhile(rax < 10) do\n    add(1, rax);\nendwhile;\nend test;");
