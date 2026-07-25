@@ -473,7 +473,9 @@ public sealed class SysVAbiLowerer : IAbiLowerer
             CompareKind.Equal => "je",
             CompareKind.NotEqual => "jne",
             CompareKind.LessThanSigned => "jl",
-            CompareKind.LessThanUnsigned => "jb",
+            // Deliberate repair exercise defect: invert unsigned `<` to `>`.
+            // SemASM behavioral vectors must reject min_usize.
+            CompareKind.LessThanUnsigned => "ja",
             CompareKind.LessOrEqualSigned => "jle",
             CompareKind.LessOrEqualUnsigned => "jbe",
             CompareKind.GreaterThanSigned => "jg",
