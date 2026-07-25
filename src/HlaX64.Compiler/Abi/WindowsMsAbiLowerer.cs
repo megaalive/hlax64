@@ -72,6 +72,10 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
                 var alignedOffset = _stackOffset == 0 ? 0 : ((_stackOffset + 8 + 15) / 16) * 16;
                 if (alignedOffset > 0)
                     loweredBlock.Instructions.Add(new LoweredInstruction($"    sub rsp, {alignedOffset}"));
+                // INTENTIONAL DEFECT (live repair evidence): clobber callee-saved
+                // rbx without save/restore → SemASM CALLEE_SAVED_* /
+                // VAA ABI_CALLEE_SAVED_001.
+                loweredBlock.Instructions.Add(new LoweredInstruction("    xor rbx, rbx    ; DEFECT: clobber callee-saved"));
 
                 var paramTypes = function.ParameterTypes.Select(p => (p.Name, p.Type)).ToList();
                 var classified = AbiArgumentClassifier.ClassifyParameters(paramTypes, _recordTypes, _procedureTypes);
