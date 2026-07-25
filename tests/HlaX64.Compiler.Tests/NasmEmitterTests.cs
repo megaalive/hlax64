@@ -363,6 +363,42 @@ public class NasmEmitterTests
     }
 
     [Fact]
+    public void Emit_SysVFramedProc_BalancesRbpPushPop()
+    {
+        // Regression for live-repair ABI_STACK_BALANCE_001 (SysV twin): framed
+        // SysV procedures must restore rbp before ret (push rbp ↔ pop rbp).
+        // Default CompilationOptions target is linux-x64-sysv.
+        const string source = """
+            program stack_local;
+            export procedure stack_local(x: int64); @returns("rax");
+            var
+                tmp: int64;
+            begin stack_local;
+                mov(x, tmp);
+                mov(tmp, rax);
+            end stack_local;
+            begin stack_local;
+            end stack_local;
+            """;
+
+        var nasm = Emit(source);
+
+        Assert.Contains("push rbp", nasm);
+        Assert.Contains("pop rbp", nasm);
+        var exportIdx = nasm.IndexOf("stack_local:", StringComparison.Ordinal);
+        Assert.True(exportIdx >= 0);
+        var body = nasm[exportIdx..];
+        var retIdx = body.IndexOf("\n    ret", StringComparison.Ordinal);
+        Assert.True(retIdx >= 0);
+        var beforeRet = body[..retIdx];
+        Assert.Contains("push rbp", beforeRet);
+        Assert.Contains("pop rbp", beforeRet);
+        Assert.True(
+            beforeRet.LastIndexOf("push rbp", StringComparison.Ordinal)
+            < beforeRet.LastIndexOf("pop rbp", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Emit_Win64FramedProc_DoesNotClobberRbxUnsaved()
     {
         // Regression for live-repair ABI_CALLEE_SAVED_001: framed stack-local
