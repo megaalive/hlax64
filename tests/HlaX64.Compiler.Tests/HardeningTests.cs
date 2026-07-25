@@ -47,6 +47,13 @@ public sealed class HardeningTests
         Assert.Contains("\"assembly_line\"", vaaJson);
         Assert.Contains("\"ir_node\"", vaaJson);
         Assert.DoesNotContain("\"nasmLine\"", vaaJson);
+
+        // Quality: mapped IR nodes must not all collapse onto one NASM line.
+        var mapped = map.Entries.Where(e => e.NasmLine != null).ToList();
+        Assert.True(mapped.Count >= 2, "expected multiple mapped IR entries");
+        Assert.True(
+            mapped.Select(e => e.NasmLine!.Value).Distinct().Count() >= 2,
+            "IR→NASM lines must be distinct (not stamped onto the function label)");
     }
 
     [Fact]
