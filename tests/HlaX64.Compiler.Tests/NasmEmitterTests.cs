@@ -137,6 +137,33 @@ public class NasmEmitterTests
     }
 
     [Fact]
+    public void Emit_SysVSignedLessThan_UsesLessBranch()
+    {
+        const string source = """
+            program min_signed;
+            export procedure min_signed(a: int64; b: int64); @returns("rax");
+            begin min_signed;
+                mov(a, r8);
+                mov(b, r9);
+                if(r8 < r9) then
+                    mov(r8, rax);
+                else
+                    mov(r9, rax);
+                endif;
+            end min_signed;
+            begin min_signed;
+            end min_signed;
+            """;
+
+        var nasm = Emit(source);
+
+        Assert.Contains("cmp r8, r9", nasm);
+        Assert.Contains("jl then_", nasm);
+        Assert.DoesNotContain("jg then_", nasm);
+        Assert.DoesNotContain("jb then_", nasm);
+    }
+
+    [Fact]
     public void Emit_Win64SignedLessThan_UsesLessBranch()
     {
         const string source = """
