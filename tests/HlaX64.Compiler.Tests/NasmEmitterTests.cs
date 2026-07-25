@@ -137,6 +137,33 @@ public class NasmEmitterTests
     }
 
     [Fact]
+    public void Emit_SysVUnsignedGreaterThan_UsesAboveBranch()
+    {
+        const string source = """
+            program max_unsigned;
+            export procedure max_unsigned(a: int64; b: int64); @returns("rax");
+            begin max_unsigned;
+                mov(a, r8);
+                mov(b, r9);
+                if(r8 >? r9) then
+                    mov(r8, rax);
+                else
+                    mov(r9, rax);
+                endif;
+            end max_unsigned;
+            begin max_unsigned;
+            end max_unsigned;
+            """;
+
+        var nasm = Emit(source);
+
+        Assert.Contains("cmp r8, r9", nasm);
+        Assert.Contains("ja then_", nasm);
+        Assert.DoesNotContain("jb then_", nasm);
+        Assert.DoesNotContain("jg then_", nasm);
+    }
+
+    [Fact]
     public void Emit_SysVSignedLessThan_UsesLessBranch()
     {
         const string source = """
