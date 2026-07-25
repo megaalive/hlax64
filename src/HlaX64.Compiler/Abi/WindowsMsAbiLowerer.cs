@@ -158,10 +158,7 @@ public sealed class WindowsMsAbiLowerer : IAbiLowerer
                 {
                     if (_stackOffset > 0)
                         lastBlock.Instructions.Add(new LoweredInstruction("    mov rsp, rbp"));
-                    // INTENTIONAL DEFECT (live repair evidence): omit pop rbp so
-                    // framed Win64 leaves leave RSP unbalanced at ret
-                    // (SemASM STACK_BALANCE_RET / VAA ABI_STACK_BALANCE_001).
-                    // lastBlock.Instructions.Add(new LoweredInstruction("    pop rbp"));
+                    lastBlock.Instructions.Add(new LoweredInstruction("    pop rbp"));
                     lastBlock.Instructions.Add(new LoweredInstruction("    ret"));
                 }
             }
