@@ -245,6 +245,33 @@ public class NasmEmitterTests
     }
 
     [Fact]
+    public void Emit_Win64SignedGreaterThan_UsesAboveBranch()
+    {
+        const string source = """
+            program max_signed;
+            export procedure max_signed(a: int64; b: int64); @returns("rax");
+            begin max_signed;
+                mov(a, r8);
+                mov(b, r9);
+                if(r8 > r9) then
+                    mov(r8, rax);
+                else
+                    mov(r9, rax);
+                endif;
+            end max_signed;
+            begin max_signed;
+            end max_signed;
+            """;
+
+        var nasm = Emit(source);
+
+        Assert.Contains("cmp r8, r9", nasm);
+        Assert.Contains("jg then_", nasm);
+        Assert.DoesNotContain("jl then_", nasm);
+        Assert.DoesNotContain("ja then_", nasm);
+    }
+
+    [Fact]
     public void Emit_WhileLoop_GeneratesLabels()
     {
         var nasm = Emit("program test;\nbegin test;\nwhile(rax < 10) do\n    add(1, rax);\nendwhile;\nend test;");
