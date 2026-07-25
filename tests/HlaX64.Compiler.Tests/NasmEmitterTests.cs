@@ -110,6 +110,33 @@ public class NasmEmitterTests
     }
 
     [Fact]
+    public void Emit_SysVUnsignedLessThan_UsesBelowBranch()
+    {
+        const string source = """
+            program min_unsigned;
+            export procedure min_unsigned(a: int64; b: int64); @returns("rax");
+            begin min_unsigned;
+                mov(a, r8);
+                mov(b, r9);
+                if(r8 <? r9) then
+                    mov(r8, rax);
+                else
+                    mov(r9, rax);
+                endif;
+            end min_unsigned;
+            begin min_unsigned;
+            end min_unsigned;
+            """;
+
+        var nasm = Emit(source);
+
+        Assert.Contains("cmp r8, r9", nasm);
+        Assert.Contains("jb then_", nasm);
+        Assert.DoesNotContain("ja then_", nasm);
+        Assert.DoesNotContain("jl then_", nasm);
+    }
+
+    [Fact]
     public void Emit_WhileLoop_GeneratesLabels()
     {
         var nasm = Emit("program test;\nbegin test;\nwhile(rax < 10) do\n    add(1, rax);\nendwhile;\nend test;");
