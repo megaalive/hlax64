@@ -1,6 +1,7 @@
 using HlaX64.Compiler;
 using HlaX64.Compiler.Ast;
 using HlaX64.Compiler.Lexing;
+using HlaX64.Compiler.Options;
 using HlaX64.Compiler.Parsing;
 using HlaX64.Compiler.Semantic;
 
@@ -222,5 +223,60 @@ public sealed class ExpressionAssignTests
         var nasm = new HlaX64.Backend.Nasm.Emitters.NasmEmitter().Emit(result.LoweredFunctions, result.StringLiterals);
         Assert.Contains("setl al", nasm, StringComparison.Ordinal);
         Assert.Contains("movzx rax, al", nasm, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("<?", "setb al")]
+    [InlineData(">?", "seta al")]
+    public void Compile_UnsignedComparisonAssign_LowersUnsignedSetcc(string op, string setcc)
+    {
+        var source = $$"""
+            program p;
+            procedure P; @returns("rax");
+            var
+                a: int64;
+                b: int64;
+            begin P;
+                mov(1, a);
+                mov(2, b);
+                rax := a {{op}} b;
+            end P;
+            begin p;
+            end p;
+            """;
+
+        var result = new Compilation("(test)", source).Process();
+        Assert.True(result.Success, string.Join("; ", result.Diagnostics));
+        var nasm = new HlaX64.Backend.Nasm.Emitters.NasmEmitter().Emit(result.LoweredFunctions, result.StringLiterals);
+        Assert.Contains(setcc, nasm, StringComparison.Ordinal);
+        Assert.DoesNotContain("sete al", nasm, StringComparison.Ordinal);
+        Assert.DoesNotContain("setl al", nasm, StringComparison.Ordinal);
+        Assert.Contains("movzx rax, al", nasm, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Compile_UnsignedComparisonAssign_WindowsUsesSetb()
+    {
+        const string source = """
+            program p;
+            procedure P; @returns("rax");
+            var
+                a: int64;
+                b: int64;
+            begin P;
+                mov(1, a);
+                mov(2, b);
+                rax := a <? b;
+            end P;
+            begin p;
+            end p;
+            """;
+
+        var options = CompilationOptions.Default with { Target = TargetTriple.WindowsX64MsAbi };
+        var result = new Compilation("(test)", source, options).Process();
+        Assert.True(result.Success, string.Join("; ", result.Diagnostics));
+        var nasm = new HlaX64.Backend.Nasm.Emitters.NasmEmitter().Emit(result.LoweredFunctions, result.StringLiterals);
+        Assert.Contains("setb al", nasm, StringComparison.Ordinal);
+        Assert.DoesNotContain("sete al", nasm, StringComparison.Ordinal);
     }
 }

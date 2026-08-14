@@ -734,7 +734,8 @@ public sealed class Parser
     {
         var left = ParseRuntimeBitwiseOr();
         while (Peek().Type is TokenType.DoubleEquals or TokenType.NotEquals or TokenType.LessThan
-            or TokenType.GreaterThan or TokenType.LessOrEqual or TokenType.GreaterOrEqual)
+            or TokenType.GreaterThan or TokenType.LessOrEqual or TokenType.GreaterOrEqual
+            or TokenType.LessThanUnsigned or TokenType.GreaterThanUnsigned)
         {
             var op = Advance();
             var right = ParseRuntimeBitwiseOr();

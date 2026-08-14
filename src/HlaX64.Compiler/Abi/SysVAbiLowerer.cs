@@ -394,16 +394,7 @@ public sealed class SysVAbiLowerer : IAbiLowerer
         var right = inst.Operands.Count > 1 ? ResolveOperand(inst.Operands[1]) : "0";
         var dst = ResolveOperand(inst.Destination);
         TrackRbxExitTouch(inst.Destination);
-        var setcc = inst.CmpKind switch
-        {
-            CompareKind.Equal => "sete",
-            CompareKind.NotEqual => "setne",
-            CompareKind.LessThanSigned => "setl",
-            CompareKind.LessOrEqualSigned => "setle",
-            CompareKind.GreaterThanSigned => "setg",
-            CompareKind.GreaterOrEqualSigned => "setge",
-            _ => "sete"
-        };
+        var setcc = CompareConditionEncoding.SetccMnemonic(inst.CmpKind);
 
         var sb = new System.Text.StringBuilder();
         sb.AppendLine($"    {StackMemOperandHelper.EmitCompare(left, right)}");

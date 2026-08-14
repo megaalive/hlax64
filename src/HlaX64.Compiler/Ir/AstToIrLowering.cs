@@ -265,7 +265,7 @@ public sealed class AstToIrLowering
     }
 
     private static bool IsComparisonOperator(string op)
-        => op is "==" or "!=" or "<" or "<=" or ">" or ">=";
+        => op is "==" or "!=" or "<" or "<=" or ">" or ">=" or "<?" or ">?";
 
     private static CompareKind MapComparisonOperator(string op) => op switch
     {
@@ -275,6 +275,8 @@ public sealed class AstToIrLowering
         "<=" => CompareKind.LessOrEqualSigned,
         ">" => CompareKind.GreaterThanSigned,
         ">=" => CompareKind.GreaterOrEqualSigned,
+        "<?" => CompareKind.LessThanUnsigned,
+        ">?" => CompareKind.GreaterThanUnsigned,
         _ => CompareKind.Equal
     };
 

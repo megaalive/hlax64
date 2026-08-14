@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+### Fixed
+
+- Unsigned `<?` / `>?` in `:=` expressions now lower to `setb` / `seta` (SysV and Win64), matching `if` branches
+
 ## [0.2.2-alpha] - 2026-06-10
 
 **Assembly Lab Win32 debug** — native stepping without MinGW GDB, HLA line mapping, debug args prompt, keyboard shortcuts.
