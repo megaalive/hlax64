@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 ### Fixed
 
 - Unsigned `<?` / `>?` in `:=` expressions now lower to `setb` / `seta` (SysV and Win64), matching `if` branches
+- Mem-to-mem `mov`/`add`/`cmp` on stack locals bounce through a register instead of emitting invalid NASM
 
 ## [0.2.2-alpha] - 2026-06-10
 

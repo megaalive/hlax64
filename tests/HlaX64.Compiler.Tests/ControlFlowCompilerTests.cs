@@ -49,6 +49,22 @@ public sealed class ControlFlowCompilerTests
         Assert.Contains("jmp endwhile_", nasm, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Compile_WhileGreaterOrEqual_EmitsJgeExit()
+    {
+        var nasm = Emit("""
+            program t;
+            begin t;
+                mov(3, rcx);
+                while(rcx >= 0) do
+                    sub(1, rcx);
+                endwhile;
+            end t;
+            """);
+        Assert.Contains("cmp rcx, 0", nasm, StringComparison.Ordinal);
+        Assert.Contains("jl endwhile_", nasm, StringComparison.Ordinal);
+    }
+
     private static string Emit(string source)
     {
         var compilation = new Compilation("(test)", source, CompilationOptions.Default);

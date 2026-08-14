@@ -76,7 +76,7 @@ More: [install.md — Troubleshooting](install.md#troubleshooting).
 |---------|--------------|-----|
 | `invalid segment override` / `str:...` in NASM | String literal passed to a normal `call` | Use `call proc(&label)` or static string; see §8 |
 | `unknown instruction` | Typo or unsupported mnemonic | Stick to [language-spec](language-spec.md) table |
-| `Expected 'RightParen'` | `while(x >= 0)` — no `>=` in `while` yet | Use `while(x > -1)` or restructure |
+| `Expected 'RightParen'` | `while` condition is not a comparison | Use `while(x >= 0)` / `while(x > -1)` with a compare operator |
 | HLAX0004 wrong operand count | `mod(3, rax)` needs register divisor | `mov(3, r10); mod(r10, rax)` |
 | Link: undefined `stdout_put_*` | Missing stdlib include / runtime objects | `#include("stdlib64.hhf")` + link with runtime |
 | Program runs, exit code always **0** on Windows | Result left in `rax` not `rbx` | §2 |

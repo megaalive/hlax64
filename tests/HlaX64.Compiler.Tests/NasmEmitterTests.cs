@@ -732,6 +732,33 @@ end t;";
         var result = new Compilation("(test)", source).Process();
         Assert.True(result.Success, string.Join("; ", result.Diagnostics));
     }
+
+    [Fact]
+    public void Emit_LocalToLocalMoveAddCompare_BouncesThroughRegister()
+    {
+        const string source = """
+            program p;
+            procedure P; @returns("rax");
+            var
+                a: int64;
+                b: int64;
+            begin P;
+                mov(1, a);
+                mov(a, b);
+                add(a, b);
+                if(a < b) then
+                    mov(b, rax);
+                endif;
+            end P;
+            begin p;
+            end p;
+            """;
+
+        var nasm = Emit(source);
+        Assert.DoesNotContain("], qword [", nasm);
+        Assert.Contains("mov rax, qword [rbp-", nasm);
+        Assert.Contains("cmp rax, qword [rbp-", nasm);
+    }
 }
 
 public class WindowsMsAbiLowererTests
@@ -1015,5 +1042,27 @@ end test;";
         // (ret), not fall through to another block.
         var tail = string.Join("\n", lines[contIdx..]);
         Assert.Contains("ret", tail);
+    }
+
+    [Fact]
+    public void Emit_LocalToLocalMove_WindowsAlsoBouncesThroughRegister()
+    {
+        const string source = """
+            program p;
+            procedure P; @returns("rax");
+            var
+                a: int64;
+                b: int64;
+            begin P;
+                mov(a, b);
+            end P;
+            begin p;
+            end p;
+            """;
+
+        var nasm = EmitForWindows(source);
+        Assert.DoesNotContain("], qword [", nasm);
+        Assert.Contains("mov rax, qword [rbp-", nasm);
+        Assert.Contains("], rax", nasm);
     }
 }
