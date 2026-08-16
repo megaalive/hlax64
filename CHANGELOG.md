@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+### Changed
+
+- Roadmap next focus: Agent/VAA dogfood + thin runtime (playground remains P2 support)
+
 ### Fixed
 
 - Unsigned `<?` / `>?` in `:=` expressions now lower to `setb` / `seta` (SysV and Win64), matching `if` branches

@@ -120,7 +120,12 @@ when available in your local clone.
 | Build targets | Linux SysV + Windows MS ABI |
 | Product docs | `docs/language-spec.md`, tutorials, RFC 0001–0024 |
 
-**Next focus:** **v0.2.0-alpha** (§5) — onboarding & playground, not new language features.
+**Next focus:** **Agent/VAA dogfood + thin runtime** (local `CONTINUE_PLAN.md`, A+S) —
+compiler mutations under pack Gate, not new language features. Playground /
+onboarding (§5) remains **P2 support** after the dogfood loop is stable.
+
+Working plan (untracked, do not commit): [`CONTINUE_PLAN.md`](../CONTINUE_PLAN.md)
+at the repo root.
 
 ---
 
