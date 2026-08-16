@@ -6,7 +6,7 @@ namespace HlaX64.Compiler.Verification;
 
 /// <summary>
 /// Static verification passes: definite assignment (HLAX0060), CFG (HLAX0061/0062),
-/// register liveness across calls (HLAX0063).
+/// register liveness across calls (HLAX0063), runtime-contract clobbers (HLAX0076).
 /// </summary>
 public sealed class VerificationAnalyzer
 {
@@ -22,11 +22,13 @@ public sealed class VerificationAnalyzer
     };
 
     private readonly CompilerWarnings _warnings;
+    private readonly RuntimeContractCatalog? _runtimeContracts;
     private readonly DiagnosticCollection _diagnostics = new();
 
-    public VerificationAnalyzer(CompilerWarnings warnings)
+    public VerificationAnalyzer(CompilerWarnings warnings, RuntimeContractCatalog? runtimeContracts = null)
     {
         _warnings = warnings;
+        _runtimeContracts = runtimeContracts;
     }
 
     public DiagnosticCollection Analyze(ProgramNode program)
@@ -375,6 +377,21 @@ public sealed class VerificationAnalyzer
     {
         if (!_warnings.Liveness)
             return;
+
+        if (_runtimeContracts != null &&
+            _runtimeContracts.TryGet(call.Name, out var contract))
+        {
+            var clobberSet = new HashSet<string>(contract.Clobbers, StringComparer.OrdinalIgnoreCase);
+            foreach (var reg in liveRegs.Where(clobberSet.Contains).ToList())
+            {
+                _diagnostics.Warning("HLAX0076",
+                    $"Register '{reg}' may hold a live value across call to runtime '{contract.Name}' (clobbered per HLAX64-RUNTIME-FUNCTION contract)",
+                    call.Line, call.Column);
+            }
+
+            liveRegs.RemoveWhere(clobberSet.Contains);
+            return;
+        }
 
         foreach (var reg in liveRegs.Where(CallerSaved.Contains).ToList())
         {

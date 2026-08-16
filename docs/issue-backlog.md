@@ -9,6 +9,7 @@ Last reviewed: 2026-06-09. Use this as the canonical status when GitHub labels l
 | [#2](https://github.com/megaalive/hlax64/issues/2) | uint64 boundary integration test | Merged |
 | [#8](https://github.com/megaalive/hlax64/issues/8) | hello NASM conformance snapshot | PR #23 + `tests/conformance/valid/hello-snapshot/` |
 | [#9](https://github.com/megaalive/hlax64/issues/9) | benchmarks README | `examples/benchmarks/README.md` + JSON schema link |
+| [#18](https://github.com/megaalive/hlax64/issues/18) | Register clobber warnings | HLAX0076 reads `HLAX64-RUNTIME-FUNCTION` headers; HLAX0063 for unknown calls |
 
 ## Closed by maintenance (2026-06-09)
 
@@ -33,7 +34,6 @@ Last reviewed: 2026-06-09. Use this as the canonical status when GitHub labels l
 | [#15](https://github.com/megaalive/hlax64/issues/15) | Curriculum native tests on Windows CI | CI runs curriculum on Linux only; Windows has single exitcode smoke |
 | [#16](https://github.com/megaalive/hlax64/issues/16) | Benchmark HTML/CSV exporter | `hla64 bench --json` only |
 | [#17](https://github.com/megaalive/hlax64/issues/17) | MCP path audit + tests | `docs/mcp-security.md` exists; no automated path-rejection tests |
-| [#18](https://github.com/megaalive/hlax64/issues/18) | Register clobber warnings | HLAX0063 covers call liveness; runtime-contract-driven warnings not done |
 | [#19](https://github.com/megaalive/hlax64/issues/19) | Formatter nested if/while | `AstFormatterTests` minimal; needs conformance round-trip cases |
 | [#20](https://github.com/megaalive/hlax64/issues/20) | GitHub Discussions FAQ | Community task; not started in repo |
 

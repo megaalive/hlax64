@@ -8,6 +8,8 @@ using HlaX64.Compiler.Parsing;
 using HlaX64.Compiler.Semantic;
 using HlaX64.Compiler.Types;
 
+using HlaX64.Compiler.Verification;
+
 namespace HlaX64.Compiler;
 
 public sealed class CompilationResult
@@ -80,7 +82,15 @@ public class Compilation
 
             if (Options.Warnings.DefiniteAssignment || Options.Warnings.Unreachable || Options.Warnings.Liveness)
             {
-                var verification = new Verification.VerificationAnalyzer(Options.Warnings);
+                RuntimeContractCatalog? runtimeContracts = null;
+                if (Options.Warnings.Liveness)
+                {
+                    var runtimeRoot = RuntimeContractCatalog.TryFindRuntimeRoot();
+                    if (runtimeRoot != null)
+                        runtimeContracts = RuntimeContractCatalog.LoadFromRuntimeRoot(runtimeRoot);
+                }
+
+                var verification = new VerificationAnalyzer(Options.Warnings, runtimeContracts);
                 var verifyDiags = verification.Analyze(program);
                 foreach (var diag in verifyDiags.Diagnostics)
                 {

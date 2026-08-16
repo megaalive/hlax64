@@ -528,6 +528,19 @@ The Diagnostics sidebar is **not** debug output — it is live compiler output (
 | **Fix** | Save to stack/callee-saved register before the call, or reload after |
 | **CLI** | `-Wliveness` / `--warn-liveness` or `-Wverify`; enabled in LSP by default |
 
+### HLAX0076 — Register live across runtime call (contract)
+
+| Field | Value |
+|-------|-------|
+| **Severity** | Warning |
+| **Category** | Verification |
+| **Since** | Unreleased |
+| **Cause** | A register listed in a `HLAX64-RUNTIME-FUNCTION` `clobbers:` header may hold a live value across a call to that runtime symbol |
+| **Example** | `mov(42, rcx); call stdout_put_str(...);` when the contract clobbers `rcx` |
+| **Fix** | Save to stack/callee-saved register before the call, or reload after |
+| **CLI** | `-Wliveness` / `-Wverify`; uses `HLAX64_RUNTIME_DIR` or adjacent `src/HlaX64.Runtime` / bundled `runtime/` |
+| **Note** | Prefer this over HLAX0063 when a contract is known. Unknown calls still use HLAX0063 |
+
 ### HLAX0064–HLAX0068 — Stack verification
 
 | Code | Meaning |
