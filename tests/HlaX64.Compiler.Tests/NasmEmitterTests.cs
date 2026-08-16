@@ -759,6 +759,29 @@ end t;";
         Assert.Contains("mov rax, qword [rbp-", nasm);
         Assert.Contains("cmp rax, qword [rbp-", nasm);
     }
+
+    [Fact]
+    public void Emit_ParamCompareWithoutManualLoads_BouncesMemMemCmp()
+    {
+        const string source = """
+            program p;
+            export procedure min_pair(a: int64; b: int64); @returns("rax");
+            begin min_pair;
+                if(a < b) then
+                    mov(a, rax);
+                else
+                    mov(b, rax);
+                endif;
+            end min_pair;
+            begin p;
+            end p;
+            """;
+
+        var nasm = Emit(source);
+        Assert.DoesNotContain("], qword [", nasm);
+        Assert.Contains("cmp rax, qword [rbp-", nasm);
+        Assert.Contains("jl then_", nasm);
+    }
 }
 
 public class WindowsMsAbiLowererTests
