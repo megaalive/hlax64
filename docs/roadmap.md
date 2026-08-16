@@ -140,8 +140,8 @@ at the repo root.
 | Generated NASM pane (cached `explain --json`) | ✅ Done | `docs/playground/cache/`, `scripts/generate-playground-{manifest,cache}.ps1` |
 | Explain-this-line (heuristic tutor) | ✅ Done | Line click + explanation tab |
 | Copy AI Debug / Explain / Optimize prompt | ✅ Done | Playground AI tab |
-| Live explain API (edit source → fresh NASM) | 🔜 Planned | `playground-design.md` Phase 2 |
-| Monaco + syntax highlighting | 🔜 Planned | Reuse `hla64.tmLanguage.json` |
+| Live explain API (edit source → fresh NASM) | 🔜 Deferred (A+S) | After dogfood loop stable ≥2 weeks; see `CONTINUE_PLAN.md` Wave 5 |
+| Monaco + syntax highlighting | 🔜 Deferred (A+S) | Same gate as live explain |
 | Gallery deep links from README | ✅ Done | `/playground?example=hexdump`, etc. |
 | GitHub Pages as “product” (Home / Playground / Course / …) | ✅ Done | `docs/index.html` nav |
 | `cat`, `strings`, `printf` curriculum examples | 🔜 Planned | `wc`/`hexdump`/`filemagic` already exist |
